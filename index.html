@@ -460,540 +460,213 @@
         ]
     };
 
-    // ========== КАРТОЧКИ (отдельно) ==========
-    let currentCardLevel = "A0";
-    let currentCardIndex = 0;
-    let isFlipped = false;
-    let currentCardList = [...vocabDatabase.A0];
+    // ========== КАРТОЧКИ + СИСТЕМА СТАТУСОВ (ИЗУЧЕНО / НА ПОВТОР) ==========
+let currentCardLevel = "A0";
+let currentCardIndex = 0;
+let isFlipped = false;
+let fullCardList = [];              // все карточки текущего уровня
+let filteredCardList = [];          // отфильтрованный список
+let currentFilter = 'all';          // 'all', 'learned', 'repeat'
+let filteredIndex = 0;              // индекс в отфильтрованном списке
 
-    function updateCardUI() {
-        let item = currentCardList[currentCardIndex];
-        if(!item) return;
-        flashcardDiv.textContent = isFlipped ? item.russian : item.german;
-        flashcardDiv.className = isFlipped ? "flashcard card-russian" : "flashcard card-german";
-        cardCounterSpan.textContent = `${currentCardIndex+1} / ${currentCardList.length}`;
-        loadNoteForCard();
-    }
-    function flipCard() { isFlipped = !isFlipped; updateCardUI(); }
-    function setCard(idx) {
-        if(idx<0) idx=0; if(idx>=currentCardList.length) idx=currentCardList.length-1;
-        currentCardIndex=idx; isFlipped=false; updateCardUI();
-    }
-    function nextCard() { setCard(currentCardIndex+1); }
-    function prevCard() { setCard(currentCardIndex-1); }
-    function randomCard() { setCard(Math.floor(Math.random()*currentCardList.length)); }
-    function changeCardLevel(level) {
-        currentCardLevel=level;
-        currentCardList=[...vocabDatabase[level]];
-        if(!currentCardList.length) currentCardList=[{german:"...",russian:"..."}];
-        setCard(0);
-        document.querySelectorAll('#cardLevelBar .level-btn').forEach(btn=>{
-            let lvl=btn.getAttribute('data-level');
-            if(lvl===level) btn.classList.add('active');
-            else btn.classList.remove('active');
-        });
-    }
+// Функции для статусов
+function getStatusKey(level, idx) { return `cardStatus_${level}_${idx}`; }
 
-    // ЗАМЕТКИ для карточек
-    function getNoteKey() { return `note_${currentCardLevel}_${currentCardIndex}`; }
-    function loadNoteForCard() {
-        let saved=localStorage.getItem(getNoteKey());
-        if(saved) { noteTextarea.value=saved; noteStatus.textContent='📌 Заметка сохранена'; }
-        else { noteTextarea.value=''; noteStatus.textContent='✏️ Добавьте заметку'; }
-    }
-    function saveNote() {
-        let text=noteTextarea.value.trim();
-        if(text) localStorage.setItem(getNoteKey(), text);
-        else localStorage.removeItem(getNoteKey());
-        noteStatus.textContent=text?'✅ Сохранено':'🗑 Удалено';
-        setTimeout(loadNoteForCard,1000);
-    }
-    function clearNote() { localStorage.removeItem(getNoteKey()); noteTextarea.value=''; noteStatus.textContent='🗑 Очищено'; setTimeout(loadNoteForCard,800); }
+// Получить статус конкретной карточки
+function getCardStatus(level, idx) {
+    return localStorage.getItem(getStatusKey(level, idx));
+}
 
-    // ========== ВИКТОРИНА (независимая, свои рекорды по уровням) ==========
-    let quizLevel = "A0";
-    let quizVocabList = [];
-    let currentQuizQuestion = null;
-    let quizScore = 0, streak = 0, answered = false, lock = false;
-    let currentCorrectGerman = "";
-    const speakQuizWordBtn = document.getElementById('speakQuizWordBtn');
-    const quizQuestionDiv = document.getElementById('quizQuestion');
-    const optionsContainer = document.getElementById('optionsContainer');
-    const quizFeedbackSpan = document.getElementById('quizFeedback');
-    const quizScoreSpan = document.getElementById('quizScore');
-    const streakSpan = document.getElementById('streakCount');
-    const recordSpan = document.getElementById('recordScore');
-    const nextQuizBtn = document.getElementById('nextQuizBtn');
-    const resetQuizBtn = document.getElementById('resetQuizBtn');
-    const quizLevelSelect = document.getElementById('quizLevelSelect');
-
-    function getQuizVocabulary(level) { return [...(vocabDatabase[level] || [])]; }
-    function getRecordKey() { return `quizRecord_${quizLevel}`; }
-    function loadQuizRecord() { let r = localStorage.getItem(getRecordKey()); r = r?parseInt(r):0; recordSpan.textContent=r; return r; }
-    function updateQuizRecord() {
-        let rec = parseInt(localStorage.getItem(getRecordKey())||'0');
-        if(quizScore>rec) { localStorage.setItem(getRecordKey(), quizScore); recordSpan.textContent=quizScore; }
-    }
-
-    function generateQuizQuestion() {
-        if(!quizVocabList.length) quizVocabList=[{german:"Нет слов",russian:"Пусто"}];
-        let mode = Math.random()<0.5;
-        let item = quizVocabList[Math.floor(Math.random()*quizVocabList.length)];
-        let question, correct;
-        if(mode) { question = `🇩🇪 Как перевести "${item.german}" на русский?`; correct = item.russian; }
-        else { question = `🇷🇺 Что значит по-немецки "${item.russian}"?`; correct = item.german; }
-        currentCorrectGerman = item.german;
-        let wrongs = quizVocabList.filter(w=> (mode ? w.russian!==correct : w.german!==correct)).map(w=> mode ? w.russian : w.german);
-        wrongs = [...new Set(wrongs)];
-        while(wrongs.length<3) wrongs.push("???");
-        wrongs = wrongs.sort(()=>0.5-Math.random()).slice(0,3);
-        let options = [correct, ...wrongs];
-        options.sort(()=>0.5-Math.random());
-        currentQuizQuestion = { question, correctAnswer: correct, options };
-    }
-
-    function renderQuiz() {
-        if(!currentQuizQuestion) return;
-        quizQuestionDiv.innerHTML = currentQuizQuestion.question;
-        optionsContainer.innerHTML = "";
-        currentQuizQuestion.options.forEach(opt=>{
-            let btn = document.createElement('button');
-            btn.textContent=opt;
-            btn.classList.add('option-btn');
-            btn.onclick = ()=>handleQuizAnswer(opt, btn);
-            optionsContainer.appendChild(btn);
-        });
-        quizFeedbackSpan.innerHTML = "Выберите ответ!";
-        answered=false; lock=false;
-        nextQuizBtn.disabled=true;
-        nextQuizBtn.style.opacity='0.6';
-        document.querySelectorAll('.option-btn').forEach(b=>{b.disabled=false; b.style.background="#2A3E48";});
-    }
-
-    function handleQuizAnswer(selected, btn) {
-        if(answered||lock) return;
-        let isCorrect = (selected===currentQuizQuestion.correctAnswer);
-        answered=true; lock=true;
-        let allBtns = document.querySelectorAll('.option-btn');
-        allBtns.forEach(b=>b.disabled=true);
-        if(isCorrect){
-            quizScore+=10; streak++;
-            quizFeedbackSpan.innerHTML = `✅ Верно! +10 очков. Серия: ${streak}`;
-            allBtns.forEach(b=>{ if(b.textContent===currentQuizQuestion.correctAnswer) b.style.background="#2E7D64"; });
-        } else {
-            streak=0;
-            quizFeedbackSpan.innerHTML = `❌ Ошибка! Правильный ответ: "${currentQuizQuestion.correctAnswer}".`;
-            allBtns.forEach(b=>{ if(b.textContent===currentQuizQuestion.correctAnswer) b.style.background="#2E7D64"; });
-            if(btn) btn.style.background="#A1422F";
-        }
-        quizScoreSpan.textContent=quizScore; streakSpan.textContent=streak;
-        updateQuizRecord();
-        nextQuizBtn.disabled=false; nextQuizBtn.style.opacity='1';
-    }
-
-    function nextQuizQuestion(){
-        if(!answered && !lock) { generateQuizQuestion(); renderQuiz(); quizFeedbackSpan.innerHTML = "Вопрос пропущен"; return; }
-        generateQuizQuestion(); renderQuiz();
-    }
-
-    function resetQuizScore(){
-        quizScore=0; streak=0;
-        quizScoreSpan.textContent=0; streakSpan.textContent=0;
-        generateQuizQuestion(); renderQuiz();
-        quizFeedbackSpan.innerHTML="Счёт сброшен. Удачи!";
-    }
-
-    function changeQuizLevel(){
-        quizLevel = quizLevelSelect.value;
-        quizVocabList = getQuizVocabulary(quizLevel);
-        if(!quizVocabList.length) quizVocabList=[{german:"Нет слов",russian:"Пусто"}];
-        quizScore=0; streak=0;
-        quizScoreSpan.textContent=0; streakSpan.textContent=0;
-        generateQuizQuestion(); renderQuiz();
-        loadQuizRecord();
-        quizFeedbackSpan.innerHTML=`Уровень викторины: ${quizLevel}`;
-    }
-
-    // ОЗВУЧКА
-    function speak(text){ if(!text || !window.speechSynthesis) return; window.speechSynthesis.cancel(); let u=new SpeechSynthesisUtterance(text); u.lang='de-DE'; u.rate=0.9; window.speechSynthesis.speak(u); }
-    function speakCurrentCard() { let w=currentCardList[currentCardIndex]?.german; if(w) speak(w); }
-    function speakQuizWord(){ if(currentCorrectGerman) speak(currentCorrectGerman); else if(currentQuizQuestion?.correctAnswer.match(/[A-Za-zäöüß]/)) speak(currentQuizQuestion.correctAnswer); }
-
-    // Обработчики событий
-    const flashcardDiv = document.getElementById('flashcard');
-    const prevCardBtn = document.getElementById('prevCardBtn');
-    const nextCardBtn = document.getElementById('nextCardBtn');
-    const randomCardBtn = document.getElementById('randomCardBtn');
-    const speakCardBtn = document.getElementById('speakCardBtn');
-    const cardCounterSpan = document.getElementById('cardCounter');
-    const noteTextarea = document.getElementById('noteTextarea');
-    const saveNoteBtn = document.getElementById('saveNoteBtn');
-    const clearNoteBtn = document.getElementById('clearNoteBtn');
-    const noteStatus = document.getElementById('noteStatus');
-
-    flashcardDiv.addEventListener('click', flipCard);
-    prevCardBtn.addEventListener('click', prevCard);
-    nextCardBtn.addEventListener('click', nextCard);
-    randomCardBtn.addEventListener('click', randomCard);
-    speakCardBtn.addEventListener('click', speakCurrentCard);
-    saveNoteBtn.addEventListener('click', saveNote);
-    clearNoteBtn.addEventListener('click', clearNote);
-    document.querySelectorAll('#cardLevelBar .level-btn').forEach(btn=>{
-        btn.addEventListener('click',()=>{ changeCardLevel(btn.getAttribute('data-level')); });
-    });
-    nextQuizBtn.addEventListener('click', nextQuizQuestion);
-    resetQuizBtn.addEventListener('click', resetQuizScore);
-    quizLevelSelect.addEventListener('change', changeQuizLevel);
-    speakQuizWordBtn.addEventListener('click', speakQuizWord);
-    // клик по тексту вопроса для озвучки
-    quizQuestionDiv.addEventListener('click', ()=>{
-        let match = quizQuestionDiv.innerText.match(/["„]([^"„]+)["„]/);
-        if(match && match[1]) speak(match[1]);
-        else if(currentCorrectGerman) speak(currentCorrectGerman);
-    });
-    // клик по области фидбека, если там правильный ответ
-    quizFeedbackSpan.addEventListener('click', ()=>{
-        if(currentQuizQuestion && /[A-Za-zäöüß]/i.test(currentQuizQuestion.correctAnswer))
-            speak(currentQuizQuestion.correctAnswer);
-        else if(currentCorrectGerman) speak(currentCorrectGerman);
-    });
-
-    // Старт
-    changeCardLevel("A0");
-    changeQuizLevel();
-
-
-    // ========== СИСТЕМА СТАТУСОВ "ИЗУЧЕНО" / "НА ПОВТОР" ДЛЯ КАРТОЧЕК ==========
-// Хранилище статусов: ключ → "learned" / "repeat" / null
-function getStatusKey(level, index) { return `cardStatus_${level}_${index}`; }
-
-// Загрузить статус текущей карточки и обновить кнопки
-function updateStatusButtons() {
+// Установить статус текущей карточки
+function setCardStatus(status) {
     const key = getStatusKey(currentCardLevel, currentCardIndex);
-    const status = localStorage.getItem(key);
+    if (status === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, status);
+    updateStatusButtonsUI();
+    applyCurrentFilter();  // перестроить фильтр и обновить отображение
+}
+
+// Обновить внешний вид кнопок статуса
+function updateStatusButtonsUI() {
+    const status = getCardStatus(currentCardLevel, currentCardIndex);
     const learnedBtn = document.getElementById('markLearnedBtn');
     const repeatBtn = document.getElementById('markRepeatBtn');
     if (!learnedBtn || !repeatBtn) return;
-    if (status === 'learned') {
-        learnedBtn.classList.add('active-learned');
-        repeatBtn.classList.remove('active-repeat');
-    } else if (status === 'repeat') {
-        repeatBtn.classList.add('active-repeat');
-        learnedBtn.classList.remove('active-learned');
-    } else {
-        learnedBtn.classList.remove('active-learned');
-        repeatBtn.classList.remove('active-repeat');
-    }
+    learnedBtn.classList.remove('active-learned');
+    repeatBtn.classList.remove('active-repeat');
+    if (status === 'learned') learnedBtn.classList.add('active-learned');
+    else if (status === 'repeat') repeatBtn.classList.add('active-repeat');
 }
 
-// Установить статус
-function setCardStatus(status) {
-    const key = getStatusKey(currentCardLevel, currentCardIndex);
-    if (status === null) {
-        localStorage.removeItem(key);
-    } else {
-        localStorage.setItem(key, status);
-    }
-    updateStatusButtons();
-    // Если у нас активен фильтр, перезагрузить отображение карточек
-    applyCurrentFilter();
-}
-
-// Фильтрация списка карточек в зависимости от выбранного фильтра
-let currentFilter = 'all'; // 'all', 'learned', 'repeat'
-let fullCardList = [];      // полный список слов текущего уровня
-let filteredCardList = [];  // отфильтрованный список
-let filteredIndex = 0;      // индекс внутри отфильтрованного списка
-
-function buildFullList() {
-    fullCardList = [...vocabDatabase[currentCardLevel]];
+// Построить полный список текущего уровня
+function rebuildFullList() {
+    fullCardList = [...(vocabDatabase[currentCardLevel] || [])];
     if (!fullCardList.length) fullCardList = [{ german: "Нет слов", russian: "..." }];
 }
 
+// Применить текущий фильтр и обновить отображение
 function applyCurrentFilter() {
-    if (!fullCardList.length) buildFullList();
+    rebuildFullList();
     if (currentFilter === 'all') {
         filteredCardList = [...fullCardList];
     } else {
-        filteredCardList = [];
-        for (let i = 0; i < fullCardList.length; i++) {
-            const key = getStatusKey(currentCardLevel, i);
-            const status = localStorage.getItem(key);
-            if (currentFilter === 'learned' && status === 'learned') {
-                filteredCardList.push(fullCardList[i]);
-            } else if (currentFilter === 'repeat' && status === 'repeat') {
-                filteredCardList.push(fullCardList[i]);
-            }
-        }
+        filteredCardList = fullCardList.filter((_, idx) => {
+            const status = getCardStatus(currentCardLevel, idx);
+            if (currentFilter === 'learned') return status === 'learned';
+            if (currentFilter === 'repeat') return status === 'repeat';
+            return false;
+        });
     }
     if (filteredCardList.length === 0) {
-        filteredCardList = [{ german: "Нет карточек в этом фильтре", russian: "Измените фильтр" }];
+        filteredCardList = [{ german: "Нет карточек в этом фильтре", russian: "Смените фильтр" }];
     }
-    // Сбросить индекс и перерисовать карточку
+    // Сбрасываем индекс фильтра на 0
     filteredIndex = 0;
-    // Нужно синхронизировать currentCardIndex с отфильтрованным списком: 
-    // теперь мы работаем с filteredIndex, а реальный индекс будет вычисляться при сохранении статуса.
-    // Но проще переопределить функции отображения: пусть они работают с filteredCardList и filteredIndex.
-    // Чтобы не ломать существующие функции, мы переопределим оригинальный setCard и updateFlashcardUI.
-    // Вместо этого просто переключаем глобальные переменные.
-    syncFilterToGlobal();
+    syncCurrentCardFromFilter();
 }
 
-function syncFilterToGlobal() {
-    // Заменяем текущий отображаемый список на отфильтрованный
-    if (filteredCardList.length) {
-        currentCardList = filteredCardList;
-        currentCardIndex = filteredIndex;
-    } else {
-        currentCardList = fullCardList;
-        currentCardIndex = 0;
-    }
-    updateFlashcardUI();
-    updateStatusButtons(); // статус уже для правильного индекса
+// Синхронизировать currentCardIndex и отображение карточки из filteredCardList
+function syncCurrentCardFromFilter() {
+    if (filteredCardList.length === 0) return;
+    const item = filteredCardList[filteredIndex];
+    // Найти реальный индекс в полном списке
+    const realIndex = fullCardList.findIndex(w => w.german === item.german && w.russian === item.russian);
+    if (realIndex !== -1) currentCardIndex = realIndex;
+    // Обновить отображение карточки
+    updateCardUI();
+    updateStatusButtonsUI();
 }
 
-// Переопределяем функции переключения карточек, чтобы они работали с фильтром
-const originalNextCard = nextCard;
-const originalPrevCard = prevCard;
-const originalRandomCard = randomCard;
-const originalSetCard = setCard;
+// Обновление интерфейса карточки (использует currentCardIndex, но показывает слово из filteredCardList)
+function updateCardUI() {
+    if (!filteredCardList.length) return;
+    const item = filteredCardList[filteredIndex];
+    if (!item) return;
+    flashcardDiv.textContent = isFlipped ? item.russian : item.german;
+    flashcardDiv.className = isFlipped ? "flashcard card-russian" : "flashcard card-german";
+    cardCounterSpan.textContent = `${filteredIndex+1} / ${filteredCardList.length}`;
+    loadNoteForCard(); // заметки
+}
 
-window.nextCard = function() {
-    if (filteredCardList.length) {
-        filteredIndex = (filteredIndex + 1) % filteredCardList.length;
-        syncFilterToGlobal();
-    } else {
-        originalNextCard();
-    }
-};
-window.prevCard = function() {
-    if (filteredCardList.length) {
-        filteredIndex = (filteredIndex - 1 + filteredCardList.length) % filteredCardList.length;
-        syncFilterToGlobal();
-    } else {
-        originalPrevCard();
-    }
-};
-window.randomCard = function() {
-    if (filteredCardList.length) {
-        filteredIndex = Math.floor(Math.random() * filteredCardList.length);
-        syncFilterToGlobal();
-    } else {
-        originalRandomCard();
-    }
-};
-// Подменяем setCard, но она не используется в фильтре, но оставим
-window.setCard = function(idx) {
-    if (filteredCardList.length) {
-        filteredIndex = Math.min(Math.max(0, idx), filteredCardList.length-1);
-        syncFilterToGlobal();
-    } else {
-        originalSetCard(idx);
-    }
-};
+function flipCard() { isFlipped = !isFlipped; updateCardUI(); }
+
+// Навигация с учётом фильтра
+function nextCardFiltered() {
+    if (filteredCardList.length === 0) return;
+    filteredIndex = (filteredIndex + 1) % filteredCardList.length;
+    syncCurrentCardFromFilter();
+}
+function prevCardFiltered() {
+    if (filteredCardList.length === 0) return;
+    filteredIndex = (filteredIndex - 1 + filteredCardList.length) % filteredCardList.length;
+    syncCurrentCardFromFilter();
+}
+function randomCardFiltered() {
+    if (filteredCardList.length === 0) return;
+    filteredIndex = Math.floor(Math.random() * filteredCardList.length);
+    syncCurrentCardFromFilter();
+}
+
+// Смена уровня карточек
+function changeCardLevel(level) {
+    currentCardLevel = level;
+    currentFilter = 'all';
+    isFlipped = false;
+    applyCurrentFilter();
+    // Обновить активные кнопки уровней в интерфейсе
+    document.querySelectorAll('#cardLevelBar .level-btn').forEach(btn => {
+        const lvl = btn.getAttribute('data-level');
+        if (lvl === level) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+}
 
 // Функции фильтров
 function setFilter(filter) {
     currentFilter = filter;
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
-    if (filter === 'all') document.getElementById('showAllBtn')?.classList.add('active-filter');
-    if (filter === 'learned') document.getElementById('showLearnedBtn')?.classList.add('active-filter');
-    if (filter === 'repeat') document.getElementById('showRepeatBtn')?.classList.add('active-filter');
-    buildFullList();
     applyCurrentFilter();
+    // Обновить активный класс кнопок фильтров
+    const allBtn = document.getElementById('showAllBtn');
+    const learnedBtn = document.getElementById('showLearnedBtn');
+    const repeatBtn = document.getElementById('showRepeatBtn');
+    if (allBtn) allBtn.classList.toggle('active-filter', filter === 'all');
+    if (learnedBtn) learnedBtn.classList.toggle('active-filter', filter === 'learned');
+    if (repeatBtn) repeatBtn.classList.toggle('active-filter', filter === 'repeat');
 }
 
-// Переопределяем смену уровня, чтобы перестраивать фильтр
-const originalSwitchLevelForStatus = switchLevel;
-window.switchLevel = function(level) {
-    originalSwitchLevelForStatus(level);
-    currentCardLevel = level;
-    buildFullList();
-    applyCurrentFilter();
-};
+// ЗАМЕТКИ (оставляем как было)
+function getNoteKey() { return `note_${currentCardLevel}_${currentCardIndex}`; }
+function loadNoteForCard() {
+    const saved = localStorage.getItem(getNoteKey());
+    if (saved) {
+        noteTextarea.value = saved;
+        noteStatus.textContent = '📌 Заметка сохранена';
+    } else {
+        noteTextarea.value = '';
+        noteStatus.textContent = '✏️ Добавьте заметку';
+    }
+}
+function saveNote() {
+    const text = noteTextarea.value.trim();
+    if (text) localStorage.setItem(getNoteKey(), text);
+    else localStorage.removeItem(getNoteKey());
+    noteStatus.textContent = text ? '✅ Сохранено' : '🗑 Удалено';
+    setTimeout(loadNoteForCard, 1000);
+}
+function clearNote() {
+    localStorage.removeItem(getNoteKey());
+    noteTextarea.value = '';
+    noteStatus.textContent = '🗑 Очищено';
+    setTimeout(loadNoteForCard, 800);
+}
 
-// Добавляем обработчики кнопок
-document.getElementById('markLearnedBtn')?.addEventListener('click', () => setCardStatus('learned'));
-document.getElementById('markRepeatBtn')?.addEventListener('click', () => setCardStatus('repeat'));
-document.getElementById('showAllBtn')?.addEventListener('click', () => setFilter('all'));
-document.getElementById('showLearnedBtn')?.addEventListener('click', () => setFilter('learned'));
-document.getElementById('showRepeatBtn')?.addEventListener('click', () => setFilter('repeat'));
+// Озвучка текущей карточки (немецкое слово)
+function speakCurrentCard() {
+    const item = filteredCardList[filteredIndex];
+    if (item && item.german) speak(item.german);
+}
 
-// Инициализация
-buildFullList();
-applyCurrentFilter();
-
-    // ========== ПОЛНОСТЬЮ РАБОЧАЯ СИСТЕМА СТАТУСОВ И ФИЛЬТРОВ ==========
-// (вставлять в конец скрипта, перед </script>)
-
-// Получаем элементы кнопок (если их нет – создаём)
+// Элементы DOM (должны существовать в HTML)
+const flashcardDiv = document.getElementById('flashcard');
+const prevCardBtn = document.getElementById('prevCardBtn');
+const nextCardBtn = document.getElementById('nextCardBtn');
+const randomCardBtn = document.getElementById('randomCardBtn');
+const speakCardBtn = document.getElementById('speakCardBtn');
+const cardCounterSpan = document.getElementById('cardCounter');
+const noteTextarea = document.getElementById('noteTextarea');
+const saveNoteBtn = document.getElementById('saveNoteBtn');
+const clearNoteBtn = document.getElementById('clearNoteBtn');
+const noteStatus = document.getElementById('noteStatus');
 const markLearnedBtn = document.getElementById('markLearnedBtn');
 const markRepeatBtn = document.getElementById('markRepeatBtn');
 const showAllBtn = document.getElementById('showAllBtn');
 const showLearnedBtn = document.getElementById('showLearnedBtn');
 const showRepeatBtn = document.getElementById('showRepeatBtn');
 
-// Хранилище статусов
-function getStatusKey(level, index) { return `cardStatus_${level}_${index}`; }
+// Навешиваем обработчики
+if (flashcardDiv) flashcardDiv.addEventListener('click', flipCard);
+if (prevCardBtn) prevCardBtn.addEventListener('click', nextCardFiltered);
+if (nextCardBtn) nextCardBtn.addEventListener('click', prevCardFiltered);
+if (randomCardBtn) randomCardBtn.addEventListener('click', randomCardFiltered);
+if (speakCardBtn) speakCardBtn.addEventListener('click', speakCurrentCard);
+if (saveNoteBtn) saveNoteBtn.addEventListener('click', saveNote);
+if (clearNoteBtn) clearNoteBtn.addEventListener('click', clearNote);
+if (markLearnedBtn) markLearnedBtn.addEventListener('click', () => setCardStatus('learned'));
+if (markRepeatBtn) markRepeatBtn.addEventListener('click', () => setCardStatus('repeat'));
+if (showAllBtn) showAllBtn.addEventListener('click', () => setFilter('all'));
+if (showLearnedBtn) showLearnedBtn.addEventListener('click', () => setFilter('learned'));
+if (showRepeatBtn) showRepeatBtn.addEventListener('click', () => setFilter('repeat'));
 
-// Текущий фильтр
-let currentFilter = 'all';
-let fullCardList = [];
-let filteredCardList = [];
-
-// Обновить отображение кнопок статусов для текущей карточки
-function updateStatusButtonsUI() {
-    const status = localStorage.getItem(getStatusKey(currentCardLevel, currentCardIndex));
-    if (markLearnedBtn && markRepeatBtn) {
-        if (status === 'learned') {
-            markLearnedBtn.classList.add('active-learned');
-            markRepeatBtn.classList.remove('active-repeat');
-        } else if (status === 'repeat') {
-            markRepeatBtn.classList.add('active-repeat');
-            markLearnedBtn.classList.remove('active-learned');
-        } else {
-            markLearnedBtn.classList.remove('active-learned');
-            markRepeatBtn.classList.remove('active-repeat');
-        }
-    }
-}
-
-// Установить статус
-function setStatus(status) {
-    const key = getStatusKey(currentCardLevel, currentCardIndex);
-    if (status === null) localStorage.removeItem(key);
-    else localStorage.setItem(key, status);
-    updateStatusButtonsUI();
-    // Перестроить фильтр и обновить карточку
-    rebuildFilteredList();
-    // Найти индекс текущей карточки в отфильтрованном списке
-    const newIndex = filteredCardList.findIndex((item, idx) => {
-        const origKey = getStatusKey(currentCardLevel, idx);
-        const itemKey = getStatusKey(currentCardLevel, fullCardList.findIndex(w => w.german === item.german && w.russian === item.russian));
-        return item.german === fullCardList[currentCardIndex]?.german;
+// Обработчики для кнопок уровней
+document.querySelectorAll('#cardLevelBar .level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const level = btn.getAttribute('data-level');
+        if (level) changeCardLevel(level);
     });
-    if (newIndex !== -1) {
-        filteredIndex = newIndex;
-        currentCardIndex = fullCardList.findIndex(w => w.german === filteredCardList[filteredIndex]?.german);
-    } else {
-        // если текущая карточка не попала в фильтр, показываем первую из фильтра
-        filteredIndex = 0;
-        if (filteredCardList.length) {
-            currentCardIndex = fullCardList.findIndex(w => w.german === filteredCardList[0]?.german);
-        }
-    }
-    syncDisplayFromFilter();
-}
-
-// Построить полный список и отфильтрованный
-function rebuildFullList() {
-    fullCardList = [...vocabDatabase[currentCardLevel]];
-    if (!fullCardList.length) fullCardList = [{ german: "Нет слов", russian: "..." }];
-}
-function rebuildFilteredList() {
-    rebuildFullList();
-    if (currentFilter === 'all') {
-        filteredCardList = [...fullCardList];
-    } else {
-        filteredCardList = fullCardList.filter((_, idx) => {
-            const status = localStorage.getItem(getStatusKey(currentCardLevel, idx));
-            if (currentFilter === 'learned') return status === 'learned';
-            if (currentFilter === 'repeat') return status === 'repeat';
-            return true;
-        });
-    }
-    if (filteredCardList.length === 0) {
-        filteredCardList = [{ german: "Нет карточек в этом фильтре", russian: "Смените фильтр" }];
-    }
-}
-
-let filteredIndex = 0;
-function syncDisplayFromFilter() {
-    if (filteredCardList.length === 0) return;
-    const item = filteredCardList[filteredIndex];
-    if (!item) return;
-    // Находим реальный индекс в полном списке для правильного обновления статусов
-    const realIndex = fullCardList.findIndex(w => w.german === item.german && w.russian === item.russian);
-    if (realIndex !== -1) currentCardIndex = realIndex;
-    // Обновляем отображение карточки (используя существующую функцию updateFlashcardUI)
-    if (typeof updateFlashcardUI === 'function') {
-        // Временно подменяем currentVocabList, чтобы updateFlashcardUI показал нужное слово
-        const originalList = currentVocabList;
-        currentVocabList = filteredCardList;
-        const originalIndex = currentCardIndex;
-        currentCardIndex = filteredIndex;
-        updateFlashcardUI();
-        currentVocabList = originalList;
-        currentCardIndex = originalIndex;
-    } else {
-        // fallback
-        flashcardDiv.textContent = isFlipped ? item.russian : item.german;
-        flashcardDiv.className = isFlipped ? "flashcard card-russian" : "flashcard card-german";
-        cardCounterSpan.textContent = `${filteredIndex+1} / ${filteredCardList.length}`;
-    }
-    updateStatusButtonsUI();
-}
-
-// Навигация с учётом фильтра
-function nextCardFiltered() {
-    if (filteredCardList.length === 0) return;
-    filteredIndex = (filteredIndex + 1) % filteredCardList.length;
-    syncDisplayFromFilter();
-}
-function prevCardFiltered() {
-    if (filteredCardList.length === 0) return;
-    filteredIndex = (filteredIndex - 1 + filteredCardList.length) % filteredCardList.length;
-    syncDisplayFromFilter();
-}
-function randomCardFiltered() {
-    if (filteredCardList.length === 0) return;
-    filteredIndex = Math.floor(Math.random() * filteredCardList.length);
-    syncDisplayFromFilter();
-}
-
-// Переключение фильтра
-function setFilter(filter) {
-    currentFilter = filter;
-    rebuildFilteredList();
-    filteredIndex = 0;
-    syncDisplayFromFilter();
-    // Активный класс кнопкам
-    if (showAllBtn) showAllBtn.classList.toggle('active-filter', filter === 'all');
-    if (showLearnedBtn) showLearnedBtn.classList.toggle('active-filter', filter === 'learned');
-    if (showRepeatBtn) showRepeatBtn.classList.toggle('active-filter', filter === 'repeat');
-}
-
-// При смене уровня перестраиваем всё
-if (typeof switchLevel === 'function') {
-    const originalSwitchLevel = switchLevel;
-    window.switchLevel = function(level) {
-        originalSwitchLevel(level);
-        rebuildFullList();
-        rebuildFilteredList();
-        filteredIndex = 0;
-        syncDisplayFromFilter();
-    };
-}
-
-// Прикрепляем обработчики, если кнопки существуют
-if (markLearnedBtn) markLearnedBtn.onclick = () => setStatus('learned');
-if (markRepeatBtn) markRepeatBtn.onclick = () => setStatus('repeat');
-if (showAllBtn) showAllBtn.onclick = () => setFilter('all');
-if (showLearnedBtn) showLearnedBtn.onclick = () => setFilter('learned');
-if (showRepeatBtn) showRepeatBtn.onclick = () => setFilter('repeat');
-
-// Переопределяем стандартные кнопки навигации, если они есть
-const prevBtnOrig = document.getElementById('prevCardBtn');
-const nextBtnOrig = document.getElementById('nextCardBtn');
-const randomBtnOrig = document.getElementById('randomCardBtn');
-if (prevBtnOrig) prevBtnOrig.onclick = nextCardFiltered;
-if (nextBtnOrig) nextBtnOrig.onclick = prevCardFiltered;
-if (randomBtnOrig) randomBtnOrig.onclick = randomCardFiltered;
+});
 
 // Инициализация
-rebuildFullList();
-rebuildFilteredList();
-syncDisplayFromFilter();
+changeCardLevel("A0");
 </script>
 </body>
 </html>
