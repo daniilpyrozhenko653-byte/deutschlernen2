@@ -1167,44 +1167,47 @@ setTimeout(() => {
 }, 100);
 
 
-    // ========== РЕКОРД ВИКТОРИНЫ (СОХРАНЯЕТСЯ В localStorage) ==========
+    // ========== РЕКОРД (РАБОЧАЯ ВЕРСИЯ) ==========
+// Получаем элементы
 const recordSpan = document.getElementById('recordScore');
+if (recordSpan) {
+    // Загружаем сохранённый рекорд
+    let currentRecord = localStorage.getItem('quizHighScore') ? parseInt(localStorage.getItem('quizHighScore')) : 0;
+    recordSpan.textContent = currentRecord;
 
-// Загрузка рекорда
-let currentRecord = localStorage.getItem('quizHighScore') ? parseInt(localStorage.getItem('quizHighScore')) : 0;
-recordSpan.textContent = currentRecord;
-
-// Функция проверки и обновления рекорда
-function updateRecord() {
-    const currentScore = quizScore; // переменная quizScore уже существует в коде
-    if (currentScore > currentRecord) {
-        currentRecord = currentScore;
-        localStorage.setItem('quizHighScore', currentRecord);
-        recordSpan.textContent = currentRecord;
-        // Визуальный эффект (необязательно)
-        recordSpan.style.transform = 'scale(1.2)';
-        setTimeout(() => { recordSpan.style.transform = 'scale(1)'; }, 300);
+    // Функция обновления рекорда на основе текущего счёта
+    function checkAndUpdateRecord() {
+        // Получаем текущие очки из DOM (надёжнее, чем переменная)
+        const scoreElement = document.getElementById('quizScore');
+        if (!scoreElement) return;
+        const currentScore = parseInt(scoreElement.textContent) || 0;
+        
+        if (currentScore > currentRecord) {
+            currentRecord = currentScore;
+            localStorage.setItem('quizHighScore', currentRecord);
+            recordSpan.textContent = currentRecord;
+            // Маленькая анимация
+            recordSpan.style.transform = 'scale(1.2)';
+            setTimeout(() => { if(recordSpan) recordSpan.style.transform = 'scale(1)'; }, 300);
+        }
     }
+
+    // Перехватываем обновление счёта: вызываем checkAndUpdateRecord каждый раз,
+    // когда вызывается оригинальная функция updateQuizUI
+    const originalUpdateQuizUI = window.updateQuizUI;
+    if (typeof originalUpdateQuizUI === 'function') {
+        window.updateQuizUI = function() {
+            originalUpdateQuizUI();
+            checkAndUpdateRecord();
+        };
+    } else {
+        // Если updateQuizUI не найдена, используем MutationObserver или просто проверяем каждую секунду
+        setInterval(checkAndUpdateRecord, 500);
+    }
+
+    // Также при сбросе счёта рекорд не должен сбрасываться, но если кнопка reset выставляет 0,
+    // checkAndUpdateRecord не позволит перезаписать рекорд меньшим числом (условие >)
 }
-
-// Модифицируем функцию handleQuizAnswer, чтобы после начисления очков проверять рекорд
-// Но чтобы не переписывать всю функцию, добавим вызов updateRecord() после того, как quizScore увеличился.
-// Для этого сохраним оригинальную логику и дополним.
-
-// Ищем в коде функцию handleQuizAnswer. В ней после строки quizScore += 10; (когда ответ верный) нужно добавить вызов updateRecord().
-// Но проще переопределить функцию, сохранив старую, и вызвать updateRecord.
-// Однако проще дать готовый блок, который нужно вручную вставить в существующую функцию handleQuizAnswer.
-
-// КОММЕНТАРИЙ: откройте в коде функцию handleQuizAnswer и найдите строку, где написано:
-//    quizScore += 10;
-// Сразу после неё вставьте:
-//    updateRecord();
-
-// Также после вызова resetQuizOnlyState() или когда счёт сбрасывается, рекорд не должен сбрасываться, поэтому updateRecord вызывать не нужно.
-
-// Чтобы не заставлять вас искать, вот точное указание:
-// В функции handleQuizAnswer есть блок if(isCorrect) { quizScore += 10; streak++; ... }
-// Сразу после увеличения quizScore добавьте строку: updateRecord();
 </script>
 </body>
 </html>
