@@ -394,7 +394,8 @@
         <option value="B1">B1 (пороговый)</option>
         <option value="B2">B2 (продвинутый)</option>
         <option value="C1">C1 (опытный)</option>
-        <option value="B2_C1" selected>🔹 Только сложные (B2 + C1)</option>
+        
+        <option value="A0" selected>A0 (новичок)</option>
     </select>
 </div>
                 <div id="optionsContainer" class="options"></div>
@@ -1395,6 +1396,215 @@ if (quizLevelSelect) {
 // Инициализация викторины
 updateQuizForSelectedLevel();
 resetQuizOnlyState();
+    // ========== ОТДЕЛЬНЫЕ РЕКОРДЫ ДЛЯ КАЖДОГО УРОВНЯ ВИКТОРИНЫ ==========
+// Элементы
+const quizLevelSelect = document.getElementById('quizLevelSelect');
+const recordSpan = document.getElementById('recordScore');
+let currentQuizLevel = 'A0';     // текущий уровень викторины
+let currentQuizVocabList = [];
+
+// Функция получения ключа для рекорда
+function getRecordKey() {
+    return `quizHighScore_${currentQuizLevel}`;
+}
+
+// Загрузка рекорда для текущего уровня
+function loadRecordForCurrentLevel() {
+    if (!recordSpan) return;
+    const key = getRecordKey();
+    const saved = localStorage.getItem(key);
+    const record = saved ? parseInt(saved) : 0;
+    recordSpan.textContent = record;
+    return record;
+}
+
+// Сохранение рекорда (если текущий счёт больше)
+function saveRecordIfNeeded() {
+    const currentScore = quizScore; // глобальная переменная
+    const key = getRecordKey();
+    let saved = localStorage.getItem(key);
+    let record = saved ? parseInt(saved) : 0;
+    if (currentScore > record) {
+        localStorage.setItem(key, currentScore);
+        if (recordSpan) recordSpan.textContent = currentScore;
+    }
+}
+
+// Получение списка слов для викторины по выбранному уровню
+function getQuizVocabularyByLevel(levelValue) {
+    if (levelValue === 'B2_C1') {
+        return [...(vocabDatabase['B2'] || []), ...(vocabDatabase['C1'] || [])];
+    } else {
+        return [...(vocabDatabase[levelValue] || [])];
+    }
+}
+
+// Генерация вопроса из текущего списка
+function generateQuizQuestionFromList() {
+    if (!currentQuizVocabList.length) return;
+    const mode = Math.floor(Math.random() * 2);
+    const randomIndex = Math.floor(Math.random() * currentQuizVocabList.length);
+    const correctItem = currentQuizVocabList[randomIndex];
+    let question = "", correctAnswer = "";
+    if (mode === 0) {
+        question = `🇩🇪 Как перевести "${correctItem.german}" на русский?`;
+        correctAnswer = correctItem.russian;
+    } else {
+        question = `🇷🇺 Что значит по-немецки "${correctItem.russian}"?`;
+        correctAnswer = correctItem.german;
+    }
+    window.currentCorrectGermanRaw = correctItem.german;
+    
+    let wrongCandidates = currentQuizVocabList.filter(item => {
+        if (mode === 0) return item.russian !== correctAnswer;
+        else return item.german !== correctAnswer;
+    }).map(item => mode === 0 ? item.russian : item.german);
+    wrongCandidates = [...new Set(wrongCandidates)];
+    while (wrongCandidates.length < 3) wrongCandidates.push("???", "другой вариант");
+    let shuffledWrong = [...wrongCandidates];
+    for (let i = shuffledWrong.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledWrong[i], shuffledWrong[j]] = [shuffledWrong[j], shuffledWrong[i]];
+    }
+    let wrongOptions = shuffledWrong.slice(0, 3);
+    let options = [correctAnswer, ...wrongOptions];
+    for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+    }
+    window.currentQuizQuestion = { questionText: question, correctAnswer, options };
+}
+
+// Рендер викторины
+function renderQuiz() {
+    if (!window.currentQuizQuestion) return;
+    quizQuestionDiv.textContent = window.currentQuizQuestion.questionText;
+    optionsContainer.innerHTML = "";
+    window.currentQuizQuestion.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.classList.add('option-btn');
+        btn.addEventListener('click', (e) => handleQuizAnswer(opt, btn));
+        optionsContainer.appendChild(btn);
+    });
+    quizFeedbackSpan.innerHTML = "Выберите вариант ответа!";
+    window.answered = false;
+    window.quizLocked = false;
+    document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.style.background = "#2A3E48";
+    });
+    if (window.nextQuizBtn) {
+        window.nextQuizBtn.disabled = true;
+        window.nextQuizBtn.style.opacity = '0.6';
+    }
+}
+
+// Обработчик ответа
+function handleQuizAnswer(selected, btnElem) {
+    if (window.answered || window.quizLocked) {
+        quizFeedbackSpan.innerHTML = "⏳ Уже отвечено, нажми 'Следующий вопрос'";
+        return;
+    }
+    const isCorrect = (selected === window.currentQuizQuestion.correctAnswer);
+    window.answered = true;
+    window.quizLocked = true;
+    const allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(btn => btn.disabled = true);
+    if (isCorrect) {
+        window.quizScore += 10;
+        window.streak++;
+        quizFeedbackSpan.innerHTML = `✅ Верно! +10 очков. Серия: ${window.streak}`;
+        if (btnElem) btnElem.style.background = "#2E7D64";
+        allBtns.forEach(btn => {
+            if (btn.textContent === window.currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64";
+        });
+    } else {
+        window.streak = 0;
+        quizFeedbackSpan.innerHTML = `❌ Ошибка! Правильный ответ: "${window.currentQuizQuestion.correctAnswer}". Учим дальше!`;
+        if (btnElem) btnElem.style.background = "#A1422F";
+        allBtns.forEach(btn => {
+            if (btn.textContent === window.currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64";
+        });
+    }
+    updateQuizUI();
+    // Сохраняем рекорд после изменения счёта
+    saveRecordIfNeeded();
+    // Разблокируем кнопку "Следующий вопрос"
+    if (window.nextQuizBtn) {
+        window.nextQuizBtn.disabled = false;
+        window.nextQuizBtn.style.opacity = '1';
+    }
+}
+
+// Обновление UI очков и серии
+function updateQuizUI() {
+    const quizScoreSpan = document.getElementById('quizScore');
+    const streakSpan = document.getElementById('streakCount');
+    if (quizScoreSpan) quizScoreSpan.textContent = window.quizScore;
+    if (streakSpan) streakSpan.textContent = window.streak;
+}
+
+// Сброс счёта (без сброса рекорда)
+function resetQuizOnlyState() {
+    window.quizScore = 0;
+    window.streak = 0;
+    updateQuizUI();
+    generateQuizQuestionFromList();
+    renderQuiz();
+}
+
+// Смена уровня викторины
+function setQuizLevel(levelValue) {
+    currentQuizLevel = levelValue;
+    currentQuizVocabList = getQuizVocabularyByLevel(levelValue);
+    if (currentQuizVocabList.length === 0) {
+        currentQuizVocabList = [{ german: "Нет слов", russian: "Keine Vokabeln" }];
+    }
+    // Сброс счёта и генерация нового вопроса
+    window.quizScore = 0;
+    window.streak = 0;
+    updateQuizUI();
+    generateQuizQuestionFromList();
+    renderQuiz();
+    // Загрузить рекорд для этого уровня
+    loadRecordForCurrentLevel();
+}
+
+// Обработчик изменения select
+if (quizLevelSelect) {
+    quizLevelSelect.addEventListener('change', (e) => {
+        setQuizLevel(e.target.value);
+    });
+    // Устанавливаем начальный уровень из select (должен быть A0)
+    const initialLevel = quizLevelSelect.value;
+    setQuizLevel(initialLevel);
+} else {
+    // fallback
+    setQuizLevel('A0');
+}
+
+// Переопределяем глобальные переменные, если их нет
+if (typeof window.quizScore === 'undefined') window.quizScore = 0;
+if (typeof window.streak === 'undefined') window.streak = 0;
+if (typeof window.answered === 'undefined') window.answered = false;
+if (typeof window.quizLocked === 'undefined') window.quizLocked = false;
+
+// Убедимся, что кнопка "Следующий вопрос" работает правильно
+const nextQuizBtnOrig = document.getElementById('nextQuizBtn');
+if (nextQuizBtnOrig) {
+    nextQuizBtnOrig.addEventListener('click', () => {
+        if (!window.answered && !window.quizLocked) {
+            // пропуск
+            generateQuizQuestionFromList();
+            renderQuiz();
+            quizFeedbackSpan.innerHTML = "Вопрос пропущен, попробуйте следующий!";
+            return;
+        }
+        generateQuizQuestionFromList();
+        renderQuiz();
+    });
+}
 </script>
 </body>
 </html>
