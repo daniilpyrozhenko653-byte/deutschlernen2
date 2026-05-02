@@ -165,6 +165,62 @@
         }
         footer { text-align: center; margin-top: 2rem; font-size: 0.7rem; color: #6c8796; }
         @media (max-width: 700px) { .flashcard { font-size: 1.2rem; } }
+
+
+        /* Статусы карточек */
+.card-status-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    margin: 0.7rem 0;
+}
+.status-btn {
+    flex: 1;
+    background: rgba(244,162,97,0.2);
+    border: 1px solid #F4A261;
+    padding: 0.4rem 0.8rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.status-btn.active-learned {
+    background: #2E7D64;
+    border-color: #8bc34a;
+    color: white;
+}
+.status-btn.active-repeat {
+    background: #F4A261;
+    border-color: #FFB347;
+    color: #1f2c2c;
+}
+.status-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    margin-left: 0.5rem;
+}
+.badge-learned { background: #2E7D64; color: white; }
+.badge-repeat { background: #F4A261; color: #1f2c2c; }
+.filter-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.filter-btn {
+    background: #1e2f3c;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 1.5rem;
+    cursor: pointer;
+    color: #FFE0B5;
+}
+.filter-btn.active-filter {
+    background: #F4A261;
+    color: #1f2c2c;
+}
     </style>
 </head>
 <body>
@@ -190,6 +246,17 @@
             <div style="display: flex; justify-content: center; gap: 1rem; margin: 0.7rem 0;">
                 <button id="speakCardBtn" class="speaker-btn">🔊 Озвучить</button>
             </div>
+
+            <!-- Блок статусов и фильтрации -->
+<div class="card-status-bar">
+    <button id="markLearnedBtn" class="status-btn">✅ Изучено</button>
+    <button id="markRepeatBtn" class="status-btn">🔄 На повтор</button>
+</div>
+<div class="filter-bar">
+    <button id="showAllBtn" class="filter-btn active-filter">📚 Все</button>
+    <button id="showLearnedBtn" class="filter-btn">✅ Изучено</button>
+    <button id="showRepeatBtn" class="filter-btn">🔄 На повтор</button>
+</div>
             <div class="card-nav">
                 <button id="prevCardBtn">◀ Назад</button>
                 <button id="randomCardBtn">🎲 Случайно</button>
@@ -594,6 +661,167 @@
     // Старт
     changeCardLevel("A0");
     changeQuizLevel();
+
+
+    // ========== СИСТЕМА СТАТУСОВ "ИЗУЧЕНО" / "НА ПОВТОР" ДЛЯ КАРТОЧЕК ==========
+// Хранилище статусов: ключ → "learned" / "repeat" / null
+function getStatusKey(level, index) { return `cardStatus_${level}_${index}`; }
+
+// Загрузить статус текущей карточки и обновить кнопки
+function updateStatusButtons() {
+    const key = getStatusKey(currentCardLevel, currentCardIndex);
+    const status = localStorage.getItem(key);
+    const learnedBtn = document.getElementById('markLearnedBtn');
+    const repeatBtn = document.getElementById('markRepeatBtn');
+    if (!learnedBtn || !repeatBtn) return;
+    if (status === 'learned') {
+        learnedBtn.classList.add('active-learned');
+        repeatBtn.classList.remove('active-repeat');
+    } else if (status === 'repeat') {
+        repeatBtn.classList.add('active-repeat');
+        learnedBtn.classList.remove('active-learned');
+    } else {
+        learnedBtn.classList.remove('active-learned');
+        repeatBtn.classList.remove('active-repeat');
+    }
+}
+
+// Установить статус
+function setCardStatus(status) {
+    const key = getStatusKey(currentCardLevel, currentCardIndex);
+    if (status === null) {
+        localStorage.removeItem(key);
+    } else {
+        localStorage.setItem(key, status);
+    }
+    updateStatusButtons();
+    // Если у нас активен фильтр, перезагрузить отображение карточек
+    applyCurrentFilter();
+}
+
+// Фильтрация списка карточек в зависимости от выбранного фильтра
+let currentFilter = 'all'; // 'all', 'learned', 'repeat'
+let fullCardList = [];      // полный список слов текущего уровня
+let filteredCardList = [];  // отфильтрованный список
+let filteredIndex = 0;      // индекс внутри отфильтрованного списка
+
+function buildFullList() {
+    fullCardList = [...vocabDatabase[currentCardLevel]];
+    if (!fullCardList.length) fullCardList = [{ german: "Нет слов", russian: "..." }];
+}
+
+function applyCurrentFilter() {
+    if (!fullCardList.length) buildFullList();
+    if (currentFilter === 'all') {
+        filteredCardList = [...fullCardList];
+    } else {
+        filteredCardList = [];
+        for (let i = 0; i < fullCardList.length; i++) {
+            const key = getStatusKey(currentCardLevel, i);
+            const status = localStorage.getItem(key);
+            if (currentFilter === 'learned' && status === 'learned') {
+                filteredCardList.push(fullCardList[i]);
+            } else if (currentFilter === 'repeat' && status === 'repeat') {
+                filteredCardList.push(fullCardList[i]);
+            }
+        }
+    }
+    if (filteredCardList.length === 0) {
+        filteredCardList = [{ german: "Нет карточек в этом фильтре", russian: "Измените фильтр" }];
+    }
+    // Сбросить индекс и перерисовать карточку
+    filteredIndex = 0;
+    // Нужно синхронизировать currentCardIndex с отфильтрованным списком: 
+    // теперь мы работаем с filteredIndex, а реальный индекс будет вычисляться при сохранении статуса.
+    // Но проще переопределить функции отображения: пусть они работают с filteredCardList и filteredIndex.
+    // Чтобы не ломать существующие функции, мы переопределим оригинальный setCard и updateFlashcardUI.
+    // Вместо этого просто переключаем глобальные переменные.
+    syncFilterToGlobal();
+}
+
+function syncFilterToGlobal() {
+    // Заменяем текущий отображаемый список на отфильтрованный
+    if (filteredCardList.length) {
+        currentCardList = filteredCardList;
+        currentCardIndex = filteredIndex;
+    } else {
+        currentCardList = fullCardList;
+        currentCardIndex = 0;
+    }
+    updateFlashcardUI();
+    updateStatusButtons(); // статус уже для правильного индекса
+}
+
+// Переопределяем функции переключения карточек, чтобы они работали с фильтром
+const originalNextCard = nextCard;
+const originalPrevCard = prevCard;
+const originalRandomCard = randomCard;
+const originalSetCard = setCard;
+
+window.nextCard = function() {
+    if (filteredCardList.length) {
+        filteredIndex = (filteredIndex + 1) % filteredCardList.length;
+        syncFilterToGlobal();
+    } else {
+        originalNextCard();
+    }
+};
+window.prevCard = function() {
+    if (filteredCardList.length) {
+        filteredIndex = (filteredIndex - 1 + filteredCardList.length) % filteredCardList.length;
+        syncFilterToGlobal();
+    } else {
+        originalPrevCard();
+    }
+};
+window.randomCard = function() {
+    if (filteredCardList.length) {
+        filteredIndex = Math.floor(Math.random() * filteredCardList.length);
+        syncFilterToGlobal();
+    } else {
+        originalRandomCard();
+    }
+};
+// Подменяем setCard, но она не используется в фильтре, но оставим
+window.setCard = function(idx) {
+    if (filteredCardList.length) {
+        filteredIndex = Math.min(Math.max(0, idx), filteredCardList.length-1);
+        syncFilterToGlobal();
+    } else {
+        originalSetCard(idx);
+    }
+};
+
+// Функции фильтров
+function setFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+    if (filter === 'all') document.getElementById('showAllBtn')?.classList.add('active-filter');
+    if (filter === 'learned') document.getElementById('showLearnedBtn')?.classList.add('active-filter');
+    if (filter === 'repeat') document.getElementById('showRepeatBtn')?.classList.add('active-filter');
+    buildFullList();
+    applyCurrentFilter();
+}
+
+// Переопределяем смену уровня, чтобы перестраивать фильтр
+const originalSwitchLevelForStatus = switchLevel;
+window.switchLevel = function(level) {
+    originalSwitchLevelForStatus(level);
+    currentCardLevel = level;
+    buildFullList();
+    applyCurrentFilter();
+};
+
+// Добавляем обработчики кнопок
+document.getElementById('markLearnedBtn')?.addEventListener('click', () => setCardStatus('learned'));
+document.getElementById('markRepeatBtn')?.addEventListener('click', () => setCardStatus('repeat'));
+document.getElementById('showAllBtn')?.addEventListener('click', () => setFilter('all'));
+document.getElementById('showLearnedBtn')?.addEventListener('click', () => setFilter('learned'));
+document.getElementById('showRepeatBtn')?.addEventListener('click', () => setFilter('repeat'));
+
+// Инициализация
+buildFullList();
+applyCurrentFilter();
 </script>
 </body>
 </html>
