@@ -309,6 +309,11 @@
     font-size: 1.1rem;
     margin-left: 0.3rem;
 }
+
+
+        #nextQuizBtn {
+    display: none;
+}
     </style>
 </head>
 <body>
@@ -1208,6 +1213,97 @@ if (recordSpan) {
     // Также при сбросе счёта рекорд не должен сбрасываться, но если кнопка reset выставляет 0,
     // checkAndUpdateRecord не позволит перезаписать рекорд меньшим числом (условие >)
 }
+    // ========== НАСТРОЙКИ ВИКТОРИНЫ: СЛОЖНЫЕ СЛОВА И БЛОКИРОВКА ПЕРЕКЛЮЧЕНИЯ ==========
+// Уровни, из которых берутся слова (только B2 и C1)
+const DIFFICULT_LEVELS = ['B2', 'C1'];
+
+// Получаем кнопку "Следующий вопрос"
+const nextBtn = document.getElementById('nextQuizBtn');
+
+// Функция: возвращает объединённый массив слов из выбранных уровней
+function getDifficultVocabulary() {
+    let combined = [];
+    DIFFICULT_LEVELS.forEach(level => {
+        if (vocabDatabase[level]) {
+            combined = combined.concat(vocabDatabase[level]);
+        }
+    });
+    // Если вдруг нет слов в B2/C1, используем B1 как fallback
+    if (combined.length === 0 && vocabDatabase['B1']) {
+        combined = vocabDatabase['B1'];
+    }
+    return combined;
+}
+
+// Переопределяем генерацию вопросов (используем только сложные слова)
+const originalGenerateQuestion = generateNewQuizQuestion;
+window.generateNewQuizQuestion = function() {
+    const difficultList = getDifficultVocabulary();
+    if (difficultList.length === 0) {
+        // Если совсем нет слов — выходим
+        if (originalGenerateQuestion) originalGenerateQuestion();
+        return;
+    }
+    
+    // Временно подменяем currentVocabList на сложные слова для генерации вопроса
+    const originalVocabList = currentVocabList;
+    currentVocabList = difficultList;
+    originalGenerateQuestion();
+    currentVocabList = originalVocabList;
+};
+
+// Блокируем кнопку "Следующий вопрос", пока не дан ответ
+if (nextBtn) {
+    // Отключаем кнопку по умолчанию (активируется после ответа)
+    nextBtn.disabled = true;
+    nextBtn.style.opacity = '0.6';
+    nextBtn.style.cursor = 'not-allowed';
+    
+    // Функция разблокировки
+    function enableNextButton() {
+        nextBtn.disabled = false;
+        nextBtn.style.opacity = '1';
+        nextBtn.style.cursor = 'pointer';
+    }
+    
+    // Функция блокировки
+    function disableNextButton() {
+        nextBtn.disabled = true;
+        nextBtn.style.opacity = '0.6';
+        nextBtn.style.cursor = 'not-allowed';
+    }
+    
+    // Сохраняем оригинальную обработку ответа, чтобы разблокировать кнопку
+    const originalHandleAnswer = handleQuizAnswer;
+    window.handleQuizAnswer = function(selected, btnElem) {
+        originalHandleAnswer(selected, btnElem);
+        // Если ответ уже был дан (answered === true), разблокируем кнопку
+        if (answered === true) {
+            enableNextButton();
+        }
+    };
+    
+    // При загрузке нового вопроса — блокируем кнопку
+    const originalRenderQuiz = renderQuiz;
+    window.renderQuiz = function() {
+        originalRenderQuiz();
+        disableNextButton();
+        // Сбрасываем флаг answered (он уже сброшен в оригинале)
+        answered = false;
+    };
+    
+    // Принудительно вызываем рендер заново
+    renderQuiz();
+}
+
+// Также при смене уровня нужно перегенерировать вопрос со сложными словами
+const originalSwitchLevelForQuiz = switchLevel;
+window.switchLevel = function(level) {
+    originalSwitchLevelForQuiz(level);
+    // После смены уровня перегенерируем вопрос (но используем сложные слова)
+    generateNewQuizQuestion();
+    renderQuiz();
+};
 </script>
 </body>
 </html>
