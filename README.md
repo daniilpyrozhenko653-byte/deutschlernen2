@@ -237,6 +237,64 @@
             .question-text { font-size: 1rem; }
             .section-title { font-size: 1.3rem; }
         }
+
+
+
+        /* ===== БЛОК ЗАМЕТОК ===== */
+.notes-section {
+    margin-top: 1.2rem;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 1.2rem;
+    padding: 0.8rem;
+    border: 1px dashed #F4A261;
+}
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.notes-header label {
+    font-size: 0.85rem;
+    color: #FFE3B5;
+    font-weight: 600;
+}
+.note-textarea {
+    width: 100%;
+    background: #1e2f3a;
+    border: 1px solid #F4A261;
+    border-radius: 1rem;
+    padding: 0.7rem;
+    color: #f0f0f0;
+    font-size: 0.85rem;
+    resize: vertical;
+    font-family: inherit;
+}
+.note-textarea:focus {
+    outline: none;
+    border-color: #FFD966;
+    box-shadow: 0 0 5px #F4A261;
+}
+.save-note-btn, .clear-note-btn {
+    background: rgba(244, 162, 97, 0.25);
+    border: 1px solid #F4A261;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.7rem;
+    border-radius: 1.5rem;
+    cursor: pointer;
+}
+.save-note-btn:hover, .clear-note-btn:hover {
+    background: #F4A261;
+    color: #1f2c2c;
+}
+.note-status {
+    font-size: 0.7rem;
+    color: #aac8d4;
+    margin-top: 0.3rem;
+    text-align: center;
+}
     </style>
 </head>
 <body>
@@ -262,6 +320,19 @@
                 📖 Карточки
                 <span style="font-size:0.7rem;">🔊 нажми на кнопку</span>
             </div>
+
+            <!-- БЛОК ЗАМЕТОК ДЛЯ КАРТОЧКИ -->
+<div class="notes-section" id="notesSection">
+    <div class="notes-header">
+        <label>📝 Моя заметка к этому слову:</label>
+        <div>
+            <button id="saveNoteBtn" class="save-note-btn">💾 Сохранить</button>
+            <button id="clearNoteBtn" class="clear-note-btn">🗑 Очистить</button>
+        </div>
+    </div>
+    <textarea id="noteTextarea" class="note-textarea" rows="2" placeholder="Напишите пример, ассоциацию или свой перевод..."></textarea>
+    <div id="noteStatus" class="note-status"></div>
+</div>
             <div id="flashcard" class="flashcard card-german">Загрузка...</div>
             <div style="display: flex; justify-content: center; margin: 0.7rem 0;">
                 <button id="speakCardBtn" class="speaker-btn">🔊 Озвучить (немецкий)</button>
@@ -813,6 +884,103 @@
     switchLevel("A0");
     generateNewQuizQuestion();
     renderQuiz();
+
+
+    // ========== СИСТЕМА ЗАМЕТОК (сохраняются в localStorage) ==========
+const noteTextarea = document.getElementById('noteTextarea');
+const saveNoteBtn = document.getElementById('saveNoteBtn');
+const clearNoteBtn = document.getElementById('clearNoteBtn');
+const noteStatus = document.getElementById('noteStatus');
+
+// Функция получения ключа для заметки (уровень + индекс карточки)
+function getNoteKey() {
+    return `note_${currentLevel}_card_${currentCardIndex}`;
+}
+
+// Загрузить заметку для текущей карточки
+function loadNoteForCurrentCard() {
+    const key = getNoteKey();
+    const savedNote = localStorage.getItem(key);
+    if (savedNote) {
+        noteTextarea.value = savedNote;
+        noteStatus.textContent = '📌 Заметка сохранена ранее';
+        noteStatus.style.color = '#aac8d4';
+    } else {
+        noteTextarea.value = '';
+        noteStatus.textContent = '✏️ Добавьте свою заметку (пример, перевод, ассоциацию)';
+        noteStatus.style.color = '#9aaeb9';
+    }
+}
+
+// Сохранить заметку
+function saveCurrentNote() {
+    const key = getNoteKey();
+    const noteText = noteTextarea.value.trim();
+    if (noteText) {
+        localStorage.setItem(key, noteText);
+        noteStatus.textContent = '✅ Заметка сохранена!';
+        noteStatus.style.color = '#8bc34a';
+        setTimeout(() => {
+            if (getNoteKey() === key) noteStatus.textContent = '📌 Заметка сохранена ранее';
+        }, 2000);
+    } else {
+        // Если пусто — удаляем запись
+        localStorage.removeItem(key);
+        noteStatus.textContent = '🗑 Заметка удалена';
+        noteStatus.style.color = '#ffaa66';
+        setTimeout(() => {
+            if (getNoteKey() === key && !noteTextarea.value.trim()) {
+                noteStatus.textContent = '✏️ Добавьте свою заметку (пример, перевод, ассоциацию)';
+            }
+        }, 1500);
+    }
+}
+
+// Очистить заметку для текущей карточки
+function clearCurrentNote() {
+    const key = getNoteKey();
+    localStorage.removeItem(key);
+    noteTextarea.value = '';
+    noteStatus.textContent = '🗑 Заметка удалена';
+    noteStatus.style.color = '#ffaa66';
+    setTimeout(() => {
+        if (getNoteKey() === key && !noteTextarea.value.trim()) {
+            noteStatus.textContent = '✏️ Добавьте свою заметку (пример, перевод, ассоциацию)';
+            noteStatus.style.color = '#9aaeb9';
+        }
+    }, 1500);
+}
+
+// ПЕРЕХВАТЫВАЕМ существующие функции смены карточки и уровня, чтобы обновлять заметки
+// Сохраняем оригинальные функции, но добавляем загрузку заметок
+
+// Запоминаем оригинальные функции
+const originalSetCard = setCard;
+const originalSwitchLevel = switchLevel;
+
+// Переопределяем setCard
+window.setCard = function(idx) {
+    originalSetCard(idx);
+    loadNoteForCurrentCard();
+};
+setCard = window.setCard;
+
+// Переопределяем switchLevel
+window.switchLevel = function(level) {
+    originalSwitchLevel(level);
+    loadNoteForCurrentCard();
+};
+switchLevel = window.switchLevel;
+
+// Подключаем события для кнопок заметок
+if (saveNoteBtn) saveNoteBtn.addEventListener('click', saveCurrentNote);
+if (clearNoteBtn) clearNoteBtn.addEventListener('click', clearCurrentNote);
+
+// Также при ручном переключении (следующий/предыдущий) заметка подгружается
+// Добавляем прослушку после инициализации, дополнительно фикс
+setTimeout(() => {
+    loadNoteForCurrentCard();
+}, 100);
 </script>
 </body>
 </html>
