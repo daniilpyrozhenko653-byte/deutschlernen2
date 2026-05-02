@@ -2717,11 +2717,12 @@
     
     area.disabled = false;
     let saved = safeLocalStorageGet('common_notepad');
-    if (saved) { 
+    
+    if (saved && saved !== 'null') { 
         area.value = saved; 
         statusDiv.textContent = '📖 Тетрадь (общие записи)'; 
     } else { 
-        area.value = ''; 
+        area.value = '';  // ← пусто, а не null
         statusDiv.textContent = '📖 Моя тетрадь'; 
     }
 }
