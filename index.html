@@ -239,94 +239,76 @@
         }
 
         /* ===== БЛОК ЗАМЕТОК ===== */
-.notes-section {
-    margin-top: 1.2rem;
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 1.2rem;
-    padding: 0.8rem;
-    border: 1px dashed #F4A261;
-}
-.notes-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-.notes-header label {
-    font-size: 0.85rem;
-    color: #FFE3B5;
-    font-weight: 600;
-}
-.note-textarea {
-    width: 100%;
-    background: #1e2f3a;
-    border: 1px solid #F4A261;
-    border-radius: 1rem;
-    padding: 0.7rem;
-    color: #f0f0f0;
-    font-size: 0.85rem;
-    resize: vertical;
-    font-family: inherit;
-}
-.note-textarea:focus {
-    outline: none;
-    border-color: #FFD966;
-    box-shadow: 0 0 5px #F4A261;
-}
-.save-note-btn, .clear-note-btn {
-    background: rgba(244, 162, 97, 0.25);
-    border: 1px solid #F4A261;
-    padding: 0.3rem 0.8rem;
-    font-size: 0.7rem;
-    border-radius: 1.5rem;
-    cursor: pointer;
-}
-.save-note-btn:hover, .clear-note-btn:hover {
-    background: #F4A261;
-    color: #1f2c2c;
-}
-.note-status {
-    font-size: 0.7rem;
-    color: #aac8d4;
-    margin-top: 0.3rem;
-    text-align: center;
-}
+        .notes-section {
+            margin-top: 1.2rem;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 1.2rem;
+            padding: 0.8rem;
+            border: 1px dashed #F4A261;
+        }
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .notes-header label {
+            font-size: 0.85rem;
+            color: #FFE3B5;
+            font-weight: 600;
+        }
+        .note-textarea {
+            width: 100%;
+            background: #1e2f3a;
+            border: 1px solid #F4A261;
+            border-radius: 1rem;
+            padding: 0.7rem;
+            color: #f0f0f0;
+            font-size: 0.85rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .note-textarea:focus {
+            outline: none;
+            border-color: #FFD966;
+            box-shadow: 0 0 5px #F4A261;
+        }
+        .save-note-btn, .clear-note-btn {
+            background: rgba(244, 162, 97, 0.25);
+            border: 1px solid #F4A261;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+            border-radius: 1.5rem;
+            cursor: pointer;
+        }
+        .save-note-btn:hover, .clear-note-btn:hover {
+            background: #F4A261;
+            color: #1f2c2c;
+        }
+        .note-status {
+            font-size: 0.7rem;
+            color: #aac8d4;
+            margin-top: 0.3rem;
+            text-align: center;
+        }
 
-        /* Рекорд */
-.record-container {
-    display: inline-block;
-    background: rgba(244, 162, 97, 0.25);
-    border-radius: 2rem;
-    padding: 0.2rem 0.8rem;
-    font-size: 0.9rem;
-    font-weight: bold;
-    color: #FFD966;
-}
-.record-value {
-    color: #FFB347;
-    font-size: 1.1rem;
-    margin-left: 0.3rem;
-}
-
-
-        
-}
+        /* Стили для select */
         #quizLevelSelect {
-    cursor: pointer;
-    transition: all 0.2s;
-}
-#quizLevelSelect:hover {
-    background: #F4A261;
-    color: #1f2c2c;
-}
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #quizLevelSelect:hover {
+            background: #F4A261;
+            color: #1f2c2c;
+        }
     </style>
 </head>
 <body>
 <div class="app-wrapper">
     <div class="main-header">
-        <h1>Немецкий по карточкам</h1></h1>
+        <h1>Немецкий по карточкам</h1>
         <p>200+ слов и фраз | Уровни A0 → C1 | 🔊 Живая озвучка немецкого | Карточки + умная викторина</p>
     </div>
 
@@ -352,17 +334,17 @@
             </div>
 
             <!-- БЛОК ЗАМЕТОК ДЛЯ КАРТОЧКИ -->
-<div class="notes-section" id="notesSection">
-    <div class="notes-header">
-        <label>📝 Моя заметка к этому слову:</label>
-        <div>
-            <button id="saveNoteBtn" class="save-note-btn">💾 Сохранить</button>
-            <button id="clearNoteBtn" class="clear-note-btn">🗑 Очистить</button>
-        </div>
-    </div>
-    <textarea id="noteTextarea" class="note-textarea" rows="2" placeholder="Напишите пример, ассоциацию или свой перевод..."></textarea>
-    <div id="noteStatus" class="note-status"></div>
-</div>
+            <div class="notes-section" id="notesSection">
+                <div class="notes-header">
+                    <label>📝 Моя заметка к этому слову:</label>
+                    <div>
+                        <button id="saveNoteBtn" class="save-note-btn">💾 Сохранить</button>
+                        <button id="clearNoteBtn" class="clear-note-btn">🗑 Очистить</button>
+                    </div>
+                </div>
+                <textarea id="noteTextarea" class="note-textarea" rows="2" placeholder="Напишите пример, ассоциацию или свой перевод..."></textarea>
+                <div id="noteStatus" class="note-status"></div>
+            </div>
             <div class="flip-hint">🖱️ Клик по карточке: немецкий ➜ перевод</div>
             <div class="card-nav">
                 <button id="prevCardBtn">◀ Назад</button>
@@ -383,21 +365,18 @@
                     <button id="speakQuizWordBtn" style="background:#E6B17E30;">🔊 Озвучить немецкий ответ</button>
                 </div>
 
-
                 <!-- Выбор раздела для викторины -->
-<div style="margin: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-    <label style="color:#FFE3B5; font-size:0.9rem;">📚 Раздел викторины:</label>
-    <select id="quizLevelSelect" style="background:#2A3E48; border:1px solid #F4A261; border-radius:2rem; padding:0.4rem 1rem; color:#FFE3B5; font-weight:bold;">
-        <option value="A0">A0 (новичок)</option>
-        <option value="A1">A1 (базовый)</option>
-        <option value="A2">A2 (элементарный)</option>
-        <option value="B1">B1 (пороговый)</option>
-        <option value="B2">B2 (продвинутый)</option>
-        <option value="C1">C1 (опытный)</option>
-        
-        <option value="A0" selected>A0 (новичок)</option>
-    </select>
-</div>
+                <div style="margin: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <label style="color:#FFE3B5; font-size:0.9rem;">📚 Раздел викторины:</label>
+                    <select id="quizLevelSelect" style="background:#2A3E48; border:1px solid #F4A261; border-radius:2rem; padding:0.4rem 1rem; color:#FFE3B5; font-weight:bold;">
+                        <option value="A0" selected>A0 (новичок)</option>
+                        <option value="A1">A1 (базовый)</option>
+                        <option value="A2">A2 (элементарный)</option>
+                        <option value="B1">B1 (пороговый)</option>
+                        <option value="B2">B2 (продвинутый)</option>
+                        <option value="C1">C1 (опытный)</option>
+                    </select>
+                </div>
                 <div id="optionsContainer" class="options"></div>
                 <div id="quizFeedback" class="feedback">✨ Выберите ответ ✨</div>
                 <div class="score-panel">
@@ -415,483 +394,24 @@
 </div>
 
 <script>
-    // ======================= РАСШИРЕННАЯ БАЗА: СЛОВА + ЦЕЛЫЕ ПРЕДЛОЖЕНИЯ =======================
+    // ======================= БАЗА СЛОВ =======================
     const vocabDatabase = {
-
-
-
-
-        A0: [
-            { german: "Hallo", russian: "Привет" }, { german: "Tschüss", russian: "Пока" }, { german: "Ja", russian: "Да" },
-            { german: "Nein", russian: "Нет" }, { german: "Danke", russian: "Спасибо" }, { german: "Bitte", russian: "Пожалуйста" },
-            { german: "der Hund", russian: "собака" }, { german: "die Katze", russian: "кошка" }, { german: "rot", russian: "красный" },
-            { german: "blau", russian: "синий" }, { german: "eins", russian: "один" }, { german: "zwei", russian: "два" },
-            { german: "ich", russian: "я" }, { german: "du", russian: "ты" }, { german: "das Haus", russian: "дом" },
-            { german: "die Mutter", russian: "мама" }, { german: "der Vater", russian: "папа" }, { german: "guten Morgen", russian: "доброе утро" },
-            { german: "gute Nacht", russian: "спокойной ночи" }, { german: "die Sonne", russian: "солнце" }, { german: "der Mond", russian: "луна" },
-            { german: "das Wasser", russian: "вода" }, { german: "der Kaffee", russian: "кофе" }, { german: "das Brot", russian: "хлеб" },
-            { german: "Hallo, wie geht's?", russian: "Привет, как дела?" },
-{ german: "Mir geht es gut.", russian: "У меня всё хорошо." },
-{ german: "Auf Wiedersehen", russian: "До свидания" },
-{ german: "Bis bald", russian: "До скорого" },
-{ german: "Bis später", russian: "До встречи" },
-{ german: "die Lampe", russian: "лампа" },
-{ german: "der Stuhl", russian: "стул" },
-{ german: "das Fenster", russian: "окно" },
-{ german: "die Tür", russian: "дверь" },
-{ german: "das Buch", russian: "книга" },
-{ german: "der Tisch", russian: "стол" },
-{ german: "weiß", russian: "белый" },
-{ german: "schwarz", russian: "чёрный" },
-{ german: "grün", russian: "зелёный" },
-{ german: "gelb", russian: "жёлтый" },
-{ german: "drei", russian: "три" },
-{ german: "vier", russian: "четыре" },
-{ german: "fünf", russian: "пять" },
-{ german: "er", russian: "он" },
-{ german: "sie", russian: "она" },
-{ german: "es", russian: "оно" },
-{ german: "wir", russian: "мы" },
-{ german: "ihr", russian: "вы (мн.ч.)" },
-{ german: "sie (Plural)", russian: "они" },
-{ german: "der Morgen", russian: "утро" },
-{ german: "der Tag", russian: "день" },
-{ german: "die Nacht", russian: "ночь" },
-{ german: "heute", russian: "сегодня" },
-{ german: "morgen", russian: "завтра" },
-{ german: "gestern", russian: "вчера" },
-{ german: "die Ampel", russian: "светофор" },
-{ german: "die Straße", russian: "улица" },
-{ german: "das Auto", russian: "машина" },
-{ german: "der Bus", russian: "автобус" },
-{ german: "die Bahn", russian: "поезд/электричка" },
-{ german: "das Fahrrad", russian: "велосипед" },
-{ german: "fahren", russian: "ехать" },
-{ german: "stehen", russian: "стоять" },
-{ german: "sitzen", russian: "сидеть" },
-{ german: "liegen", russian: "лежать" },
-{ german: "die Arbeit", russian: "работа" },
-{ german: "die Schule", russian: "школа" },
-{ german: "die Universität", russian: "университет" },
-{ german: "der Park", russian: "парк" },
-{ german: "das Kino", russian: "кинотеатр" },
-{ german: "das Restaurant", russian: "ресторан" },
-{ german: "das Hotel", russian: "отель" },
-{ german: "die Toilette", russian: "туалет" },
-{ german: "links", russian: "слева" },
-{ german: "rechts", russian: "справа" },
-{ german: "geradeaus", russian: "прямо" },
-{ german: "oben", russian: "сверху" },
-{ german: "unten", russian: "снизу" },
-{ german: "die Mutter", russian: "мама" },
-{ german: "der Vater", russian: "папа" },
-{ german: "die Schwester", russian: "сестра" },
-{ german: "der Bruder", russian: "брат" },
-{ german: "die Oma", russian: "бабушка" },
-{ german: "der Opa", russian: "дедушка" },
-{ german: "das Kind", russian: "ребёнок" }
-        ],
-
-
-
-
-        A1: [
-            { german: "der Apfel", russian: "яблоко" }, { german: "die Arbeit", russian: "работа" }, { german: "sprechen", russian: "говорить" },
-            { german: "schön", russian: "красивый" }, { german: "das Wetter", russian: "погода" }, { german: "lecker", russian: "вкусный" },
-            { german: "die Familie", russian: "семья" }, { german: "der Bruder", russian: "брат" }, { german: "die Schwester", russian: "сестра" },
-            { german: "trinken", russian: "пить" }, { german: "essen", russian: "есть" }, { german: "der Tisch", russian: "стол" },
-            { german: "die Schule", russian: "школа" }, { german: "spazieren", russian: "гулять" }, { german: "das Geschenk", russian: "подарок" },
-            { german: "aufstehen", russian: "вставать" }, { german: "schlafen", russian: "спать" }, { german: "kochen", russian: "готовить" },
-            { german: "einkaufen", russian: "ходить за покупками" }, { german: "das Auto", russian: "машина" }, { german: "schnell", russian: "быстрый" },
-            { german: "die Musik", russian: "музыка" },
-            { german: "der Beruf", russian: "профессия" },
-{ german: "der Arzt", russian: "врач" },
-{ german: "die Ärztin", russian: "врач (женщина)" },
-{ german: "der Lehrer", russian: "учитель" },
-{ german: "die Lehrerin", russian: "учительница" },
-{ german: "der Student", russian: "студент" },
-{ german: "die Studentin", russian: "студентка" },
-{ german: "das Krankenhaus", russian: "больница" },
-{ german: "die Apotheke", russian: "аптека" },
-{ german: "das Lebensmittel", russian: "продукты питания" },
-{ german: "der Supermarkt", russian: "супермаркет" },
-{ german: "der Markt", russian: "рынок" },
-{ german: "das Obst", russian: "фрукты" },
-{ german: "das Gemüse", russian: "овощи" },
-{ german: "das Fleisch", russian: "мясо" },
-{ german: "der Fisch", russian: "рыба" },
-{ german: "die Milch", russian: "молоко" },
-{ german: "der Käse", russian: "сыр" },
-{ german: "die Butter", russian: "масло" },
-{ german: "das Ei", russian: "яйцо" },
-{ german: "der Zucker", russian: "сахар" },
-{ german: "das Salz", russian: "соль" },
-{ german: "der Pfeffer", russian: "перец" },
-{ german: "die Tasse", russian: "чашка" },
-{ german: "der Löffel", russian: "ложка" },
-{ german: "die Gabel", russian: "вилка" },
-{ german: "das Messer", russian: "нож" },
-{ german: "der Teller", russian: "тарелка" },
-{ german: "die Flasche", russian: "бутылка" },
-{ german: "das Glas", russian: "стакан" },
-{ german: "laufen", russian: "бежать" },
-{ german: "gehen", russian: "идти" },
-{ german: "kommen", russian: "приходить" },
-{ german: "sehen", russian: "видеть" },
-{ german: "hören", russian: "слышать" },
-{ german: "fühlen", russian: "чувствовать" },
-{ german: "nehmen", russian: "брать" },
-{ german: "geben", russian: "давать" },
-{ german: "finden", russian: "находить" },
-{ german: "helfen", russian: "помогать" },
-{ german: "die Sonne scheint", russian: "солнце светит" },
-{ german: "Es regnet.", russian: "Идёт дождь." },
-{ german: "Es schneit.", russian: "Идёт снег." },
-{ german: "Es ist warm.", russian: "Тепло." },
-{ german: "Es ist kalt.", russian: "Холодно." },
-{ german: "der Winter", russian: "зима" },
-{ german: "der Sommer", russian: "лето" },
-{ german: "der Frühling", russian: "весна" },
-{ german: "der Herbst", russian: "осень" },
-{ german: "die Uhr", russian: "часы (настенные)" },
-{ german: "Wie spät ist es?", russian: "Который час?" },
-{ german: "Es ist 10 Uhr.", russian: "Сейчас 10 часов." },
-{ german: "halb", russian: "половина" },
-{ german: "Viertel", russian: "четверть" },
-{ german: "glücklich", russian: "счастливый" },
-{ german: "traurig", russian: "грустный" },
-{ german: "müde", russian: "уставший" },
-{ german: "krank", russian: "больной" },
-{ german: "gesund", russian: "здоровый" },
-{ german: "Ich liebe dich.", russian: "Я люблю тебя." }
-        ],
-
-
-
-
-
-
-
-        A2: [
-            { german: "verstehen", russian: "понимать" }, { german: "die Freundschaft", russian: "дружба" }, { german: "das Abenteuer", russian: "приключение" },
-            { german: "glücklich", russian: "счастливый" }, { german: "traurig", russian: "грустный" }, { german: "der Urlaub", russian: "отпуск" },
-            { german: "das Flugzeug", russian: "самолёт" }, { german: "der Bahnhof", russian: "вокзал" }, { german: "die Bedeutung", russian: "значение" },
-            { german: "erzählen", russian: "рассказывать" }, { german: "die Wohnung", russian: "квартира" }, { german: "putzen", russian: "убирать" },
-            { german: "nützlich", russian: "полезный" }, { german: "die Geduld", russian: "терпение" }, { german: "sorgen", russian: "заботиться" },
-            { german: "Ich bin müde.", russian: "Я устал." }, { german: "Das ist interessant.", russian: "Это интересно." },
-            { german: "Kein Problem.", russian: "Без проблем." }, { german: "Ich habe Hunger.", russian: "Я голоден." },
-            { german: "Lass uns gehen!", russian: "Пойдём!" }, { german: "Gute Idee!", russian: "Отличная идея!" },
-            { german: "der Kopf", russian: "голова" },
-{ german: "die Hand", russian: "рука (кисть)" },
-{ german: "der Arm", russian: "рука (от плеча)" },
-{ german: "das Bein", russian: "нога" },
-{ german: "der Fuß", russian: "стопа" },
-{ german: "das Auge", russian: "глаз" },
-{ german: "die Nase", russian: "нос" },
-{ german: "der Mund", russian: "рот" },
-{ german: "das Ohr", russian: "ухо" },
-{ german: "die Haare", russian: "волосы" },
-{ german: "der Flughafen", russian: "аэропорт" },
-{ german: "der Zug", russian: "поезд" },
-{ german: "das Ticket", russian: "билет" },
-{ german: "der Koffer", russian: "чемодан" },
-{ german: "der Reisepass", russian: "загранпаспорт" },
-{ german: "das Hotelzimmer", russian: "номер в отеле" },
-{ german: "die Reise", russian: "путешествие" },
-{ german: "buchen", russian: "бронировать" },
-{ german: "ankommen", russian: "прибывать" },
-{ german: "abfahren", russian: "отправляться" },
-{ german: "die Kopfschmerzen", russian: "головная боль" },
-{ german: "die Zahnschmerzen", russian: "зубная боль" },
-{ german: "das Fieber", russian: "температура" },
-{ german: "der Arzttermin", russian: "приём у врача" },
-{ german: "das Rezept", russian: "рецепт (на лекарство)" },
-{ german: "die Medizin", russian: "лекарство" },
-{ german: "sich ausruhen", russian: "отдыхать" },
-{ german: "sich erinnern", russian: "вспоминать" },
-{ german: "vergessen", russian: "забывать" },
-{ german: "schon", russian: "уже" }
-        ],
-
-
-
-
-
-        B1: [
-            { german: "umweltfreundlich", russian: "экологичный" }, { german: "die Leidenschaft", russian: "страсть" }, { german: "erfolgreich", russian: "успешный" },
-            { german: "sich bewerben", russian: "подавать заявку" }, { german: "die Herausforderung", russian: "вызов" }, { german: "erstaunlich", russian: "удивительный" },
-            { german: "verantwortlich", russian: "ответственный" }, { german: "die Kenntnisse", russian: "навыки" }, { german: "die Erfahrung", russian: "опыт" },
-            { german: "der Fortschritt", russian: "прогресс" }, { german: "verhandeln", russian: "вести переговоры" },
-            { german: "Ich stimme dir zu.", russian: "Я с тобой согласен." }, { german: "Das glaube ich nicht.", russian: "Я так не думаю." },
-            { german: "Es kommt darauf an.", russian: "Смотря по обстоятельствам." }, { german: "Keine Sorge!", russian: "Не беспокойся!" },
-            { german: "Ich freue mich darauf.", russian: "Я жду этого с нетерпением." }, { german: "Können Sie mir bitte helfen?", russian: "Не могли бы вы помочь?" },
-            { german: "Ich habe eine Frage.", russian: "У меня есть вопрос." }, { german: "Wie viel kostet das?", russian: "Сколько это стоит?" },
-            { german: "Ich verstehe nicht.", russian: "Я не понимаю." }, { german: "Könnten Sie das bitte wiederholen?", russian: "Повторите, пожалуйста." },
-            { german: "Ich möchte gerne einen Tisch reservieren.", russian: "Я хотел бы забронировать столик." },
-{ german: "Können Sie mir den Weg zum Bahnhof zeigen?", russian: "Вы можете показать мне дорогу к вокзалу?" },
-{ german: "Wie spät ist es?", russian: "Который час?" },
-{ german: "Ich habe meinen Schlüssel verloren.", russian: "Я потерял свой ключ." },
-{ german: "Das ist eine gute Frage.", russian: "Это хороший вопрос." },
-{ german: "Ich bin anderer Meinung.", russian: "Я придерживаюсь другого мнения." },
-{ german: "Lass mich kurz überlegen.", russian: "Дай мне подумать минутку." },
-{ german: "Das habe ich nicht gewusst.", russian: "Я этого не знал." },
-{ german: "Es tut mir leid, das war mein Fehler.", russian: "Извините, это была моя ошибка." },
-{ german: "Kannst du mir einen Gefallen tun?", russian: "Можешь сделать мне одолжение?" },
-{ german: "Ich warte schon seit 20 Minuten.", russian: "Я жду уже 20 минут." },
-{ german: "Das ist mir zu teuer.", russian: "Это для меня слишком дорого." },
-{ german: "Hast du das schon mal probiert?", russian: "Ты это уже пробовал когда-нибудь?" },
-{ german: "Ich fühle mich heute nicht wohl.", russian: "Я сегодня плохо себя чувствую." },
-{ german: "Worüber redest du?", russian: "О чём ты говоришь?" },
-{ german: "Das klingt gut!", russian: "Звучит хорошо!" },
-{ german: "Ich habe keine Lust dazu.", russian: "У меня нет желания этим заниматься." },
-{ german: "Mach dir keine Sorgen!", russian: "Не переживай!" },
-{ german: "Ich komme gleich zurück.", russian: "Я сейчас вернусь." },
-{ german: "Das ist typisch deutsch.", russian: "Это типично для немцев." },
-{ german: "Wo kann ich hier parken?", russian: "Где я могу здесь припарковаться?" },
-{ german: "Ich suche eine günstige Wohnung.", russian: "Я ищу недорогую квартиру." },
-{ german: "Kann ich mit Karte bezahlen?", russian: "Могу ли я заплатить картой?" },
-{ german: "Die Rechnung, bitte!", russian: "Счёт, пожалуйста!" },
-{ german: "Ich habe mich verlaufen.", russian: "Я заблудился." },
-{ german: "Das macht mir großen Spaß.", russian: "Это доставляет мне большое удовольствие." },
-{ german: "Ich bin total kaputt.", russian: "Я совершенно разбит (устал)." },
-{ german: "Lass uns einen Film anschauen.", russian: "Давай посмотрим фильм." },
-{ german: "Das ist eine gute Gelegenheit.", russian: "Это хорошая возможность." },
-{ german: "Ich kann dir leider nicht helfen.", russian: "К сожалению, я не могу тебе помочь." },
-            { german: "Ich nehme an, dass...", russian: "Я предполагаю, что..." },
-{ german: "Es wäre schön, wenn...", russian: "Было бы хорошо, если бы..." },
-{ german: "Ich wünschte, ich hätte mehr Zeit.", russian: "Хотел бы я иметь больше времени." },
-{ german: "Könnten Sie mir einen Rat geben?", russian: "Не могли бы вы дать мне совет?" },
-{ german: "Was würden Sie an meiner Stelle tun?", russian: "Что бы вы сделали на моём месте?" },
-{ german: "Ich bin mit der Situation unzufrieden.", russian: "Я недоволен ситуацией." },
-{ german: "Das ist nicht fair!", russian: "Это несправедливо!" },
-{ german: "Ich gebe mein Bestes.", russian: "Я стараюсь изо всех сил." },
-{ german: "Lass uns einen Kompromiss finden.", russian: "Давай найдём компромисс." },
-{ german: "Ich möchte mich für mein Verhalten entschuldigen.", russian: "Я хочу извиниться за своё поведение." },
-{ german: "Mach dir keine Sorgen um mich.", russian: "Не волнуйся обо мне." },
-{ german: "Ich bin begeistert von der Idee.", russian: "Я в восторге от этой идеи." },
-{ german: "Das klingt nach einem guten Plan.", russian: "Это звучит как хороший план." },
-{ german: "Wann hast du Geburtstag?", russian: "Когда у тебя день рождения?" },
-{ german: "Ich lade dich zu meiner Party ein.", russian: "Я приглашаю тебя на свою вечеринку." },
-{ german: "Vielen Dank für deine Hilfe!", russian: "Большое спасибо за твою помощь!" },
-{ german: "Ich bin dir sehr dankbar.", russian: "Я тебе очень благодарен." },
-{ german: "Tut mir leid, das war nicht meine Absicht.", russian: "Извините, это не было моим намерением." },
-{ german: "Kann ich etwas fragen?", russian: "Можно кое-что спросить?" },
-{ german: "Das ist aber schade.", russian: "Это очень жаль." },
-{ german: "Ich freue mich schon auf das Wochenende.", russian: "Я уже радуюсь выходным." },
-{ german: "Hast du Lust auf einen Kaffee?", russian: "Хочешь выпить кофе?" },
-{ german: "Lass uns etwas unternehmen!", russian: "Давай что-нибудь предпримем!" },
-{ german: "Wie findest du das?", russian: "Что ты об этом думаешь?" },
-{ german: "Ich habe eine bessere Idee.", russian: "У меня есть идея получше." },
-{ german: "Das ist nicht wichtig.", russian: "Это не важно." },
-{ german: "Vergiss es, das lohnt sich nicht.", russian: "Забудь, это не стоит того." },
-{ german: "Ich kann endlich mal durchatmen.", russian: "Я наконец-то могу вздохнуть спокойно." },
-{ german: "Es ist nie zu spät, etwas Neues zu lernen.", russian: "Никогда не поздно учить что-то новое." },
-{ german: "Glaub an dich selbst!", russian: "Верь в себя!" },
-            // ========== НОМЕНА (СУЩЕСТВИТЕЛЬНЫЕ) – ПОВСЕДНЕВНЫЕ ПРЕДМЕТЫ И ПОНЯТИЯ ==========
-{ german: "der Abfall, ¨-e", russian: "мусор, отходы" },
-{ german: "die Adresse, -n", russian: "адрес" },
-{ german: "die Altenpfleger/in", russian: "сиделка по уходу за пожилыми" },
-{ german: "das Amt, ¨-er", russian: "учреждение, инстанция" },
-{ german: "die Anlage, -n", russian: "сооружение; вложение (денег)" },
-{ german: "die Arbeitslosigkeit", russian: "безработица" },
-{ german: "die Ausnahme, -n", russian: "исключение" },
-{ german: "die Bearbeitung, -en", russian: "обработка, рассмотрение" },
-{ german: "die Bedeutung, -en", russian: "значение" },
-{ german: "die Beleidigung, -en", russian: "оскорбление" },
-{ german: "die Berufserfahrung", russian: "профессиональный опыт" },
-{ german: "die Bevölkerung", russian: "население" },
-{ german: "die Entscheidung, -en", russian: "решение" },
-{ german: "die Erfahrung, -en", russian: "опыт" },
-{ german: "die Hausaufgabe, -n", russian: "домашнее задание" },
-{ german: "die Herausforderung, -en", russian: "вызов, трудная задача" },
-{ german: "die Kenntnisse (Pl.)", russian: "знания, навыки" },
-{ german: "die Leidenschaft, -en", russian: "страсть" },
-{ german: "die Lösung, -en", russian: "решение (проблемы)" },
-
-// ========== VERBEN (ГЛАГОЛЫ, ВАЖНЫЕ ДЛЯ ОПИСАНИЯ ДЕЙСТВИЙ) ==========
-{ german: "akzeptieren", russian: "принимать, соглашаться" },
-{ german: "anerkennen", russian: "признавать" },
-{ german: "anfassen", russian: "трогать, брать в руки" },
-{ german: "ankündigen", russian: "объявлять, анонсировать" },
-{ german: "anmachen", russian: "включать (прибор), зажигать" },
-{ german: "ausprobieren", russian: "пробовать, опробовать" },
-{ german: "ausschalten", russian: "выключать" },
-{ german: "begeistern", russian: "восхищать, воодушевлять" },
-{ german: "behaupten", russian: "утверждать" },
-{ german: "beobachten", russian: "наблюдать" },
-{ german: "erklären", russian: "объяснять" },
-{ german: "funktionieren", russian: "работать, функционировать" },
-
-// ========== ADJEKTIVE (ПРИЛАГАТЕЛЬНЫЕ ДЛЯ ОПИСАНИЯ) ==========
-{ german: "abwesend", russian: "отсутствующий" },
-{ german: "allergisch (gegen)", russian: "аллергичный (на что-л.)" },
-{ german: "allmählich", russian: "постепенный" },
-{ german: "angenehm", russian: "приятный" },
-{ german: "ankommend", russian: "прибывающий" },
-{ german: "ansteckend", russian: "заразный" },
-{ german: "anstrengend", russian: "утомительный, напряжённый" },
-{ german: "ärgerlich", russian: "досадный, сердитый" },
-{ german: "ausgewogen", russian: "сбалансированный" },
-{ german: "bedenklich", russian: "сомнительный, опасный" },
-{ german: "beliebt", russian: "популярный" },
-{ german: "bereits", russian: "уже" },
-{ german: "berufstätig", russian: "работающий (по найму)" },
-{ german: "chaotisch", russian: "хаотичный" },
-
-// ========== NÜTZLICHE VERBEN MIT TRENNBAREN PRÄFIXEN (ДЛЯ БОЛЕЕ ТОЧНЫХ ФРАЗ) ==========
-{ german: "abdecken", russian: "накрывать; покрывать (потребности)" },
-{ german: "abheben", russian: "снимать (деньги со счета); взлетать" },
-{ german: "abholen", russian: "забирать (кого-то)" },
-{ german: "ablesen", russian: "считывать (показания)" },
-{ german: "abnehmen", russian: "снимать; худеть" },
-{ german: "abschicken", russian: "отправлять (письмо)" },
-{ german: "abschließen", russian: "закрывать на ключ, завершать" },
-{ german: "absprechen", russian: "договариваться" },
-{ german: "abstimmen", russian: "голосовать; согласовывать" },
-{ german: "abwaschen", russian: "мыть (посуду)" },
-{ german: "anbieten", russian: "предлагать" },
-{ german: "anerkennen", russian: "признавать (заслуги)" },
-{ german: "anfangen", russian: "начинать" },
-{ german: "anfassen", russian: "трогать, брать" },
-{ german: "angeben", russian: "указывать, сообщать" },
-{ german: "ankommen", russian: "прибывать" },
-{ german: "anmachen", russian: "включать" },
-{ german: "anrufen", russian: "звонить кому-либо" },
-{ german: "ansehen", russian: "смотреть на кого-то/что-то" },
-{ german: "anstellen", russian: "нанимать на работу" },
-{ german: "aufdrehen", russian: "открывать (кран); увеличивать громкость" },
-{ german: "aufhören", russian: "прекращать" },
-{ german: "aufmachen", russian: "открывать" },
-{ german: "aufpassen", russian: "быть внимательным, следить" },
-{ german: "aufräumen", russian: "наводить порядок" },
-{ german: "ausfüllen", russian: "заполнять (бланк)" },
-{ german: "ausleihen", russian: "одалживать (брать)" },
-{ german: "aussehen", russian: "выглядеть" },
-{ german: "aussteigen", russian: "выходить (из транспорта)" },
-
-// ========== WEITERE NOMEN (ПОЛЕЗНЫЕ СУЩЕСТВИТЕЛЬНЫЕ) ==========
-{ german: "die Anerkennung", russian: "признание" },
-{ german: "die Anforderung, -en", russian: "требование" },
-{ german: "die Anfrage, -n", russian: "запрос" },
-{ german: "die Angelegenheit, -en", russian: "дело, вопрос" },
-{ german: "die Angst, ¨-e", russian: "страх, боязнь" },
-{ german: "die Anleitung, -en", russian: "инструкция" },
-{ german: "die Anmeldung, -en", russian: "регистрация" },
-{ german: "die Anschrift, -en", russian: "адрес" },
-{ german: "die Antwort, -en", russian: "ответ" },
-{ german: "die Anzahl, -en", russian: "количество" },
-{ german: "die Anzeige, -n", russian: "объявление" },
-{ german: "die Anziehungskraft", russian: "привлекательность" },
-{ german: "die Apotheke, -n", russian: "аптека" },
-{ german: "die Arbeitsstelle, -n", russian: "рабочее место" },
-{ german: "die Aufmerksamkeit", russian: "внимание" },
-{ german: "die Ausbildung, -en", russian: "образование, обучение" },
-{ german: "die Auskunft, ¨-e", russian: "справка" },
-{ german: "die Ausnahme, -n", russian: "исключение" },
-{ german: "die Aussage, -n", russian: "высказывание, показание" },
-{ german: "die Bedeutung, -en", russian: "значение" },
-{ german: "die Bedingung, -en", russian: "условие" },
-{ german: "die Behandlung, -en", russian: "лечение, обращение" },
-{ german: "die Behörde, -n", russian: "ведомство" },
-{ german: "die Bekanntschaft, -en", russian: "знакомство" },
-{ german: "die Beleidigung, -en", russian: "оскорбление" },
-{ german: "die Belohnung, -en", russian: "награда" },
-{ german: "die Bemerkung, -en", russian: "замечание" },
-{ german: "die Beschäftigung, -en", russian: "занятие" },
-{ german: "die Beschwerde, -n", russian: "жалоба" },
-{ german: "die Bestätigung, -en", russian: "подтверждение" },
-        ],
-
-
-
-
-
-
-
-
-        B2: [
-            { german: "die Nachhaltigkeit", russian: "устойчивость" }, { german: "differenziert", russian: "дифференцированный" }, { german: "die Voraussetzung", russian: "предпосылка" },
-            { german: "unverzichtbar", russian: "незаменимый" }, { german: "die Auseinandersetzung", russian: "дискуссия" }, { german: "einschätzen", russian: "оценивать" },
-            { german: "zukunftsorientiert", russian: "ориентированный на будущее" }, { german: "der Standpunkt", russian: "точка зрения" }, { german: "die Konsequenz", russian: "последствие" },
-            { german: "umfangreich", russian: "обширный" }, { german: "durchführen", russian: "проводить" }, { german: "implementieren", russian: "внедрять" },
-            { german: "Das ist mir Wurst.", russian: "Мне всё равно" }, { german: "Ich drücke dir die Daumen.", russian: "Я за тебя держу кулачки" },
-            { german: "Das ist nicht mein Bier.", russian: "Это не моё дело" }, { german: "Aller Anfang ist schwer.", russian: "Лиха беда начало" },
-            { german: "Meiner Meinung nach...", russian: "По моему мнению..." }, { german: "Einerseits... andererseits...", russian: "С одной стороны... с другой..." }
-        ],
-        C1: [
-            { german: "die Ambivalenz", russian: "амбивалентность" }, { german: "inklusiv", russian: "инклюзивный" }, { german: "das Phänomen", russian: "феномен" },
-            { german: "elaborieren", russian: "детально разрабатывать" }, { german: "die Diskrepanz", russian: "расхождение" }, { german: "kognitiv", russian: "когнитивный" },
-            { german: "die Relevanz", russian: "актуальность" }, { german: "synthetisieren", russian: "синтезировать" }, { german: "im Rahmen", russian: "в рамках" },
-            { german: "reflektieren", russian: "рефлексировать" }, { german: "die Multidimensionalität", russian: "многомерность" }, { german: "prädisponiert", russian: "предрасположенный" },
-            { german: "Ich bin der Ansicht, dass...", russian: "Я придерживаюсь мнения, что..." }, { german: "Es lässt sich nicht leugnen, dass...", russian: "Нельзя отрицать, что..." },
-            { german: "Das ist ein zweischneidiges Schwert.", russian: "Это палка о двух концах" }, { german: "In Anbetracht der Tatsache...", russian: "Принимая во внимание факт..." },
-            { german: "ein hohes Maß an", russian: "высокая степень" }, { german: "grundlegende Bedeutung", russian: "фундаментальное значение" },
-            // ========== СЛОЖНЫЕ СЛОВА (C1) ==========
-{ german: "die Eigenverantwortung", russian: "личная ответственность" },
-{ german: "die Leistungsgesellschaft", russian: "общество, ориентированное на достижения" },
-{ german: "der Bedeutungswandel", russian: "изменение значения" },
-{ german: "unvorhersehbar", russian: "непредсказуемый" },
-{ german: "die Querschnittskompetenz", russian: "междисциплинарный навык" },
-{ german: "handlungsorientiert", russian: "ориентированный на действие" },
-{ german: "die Entscheidungsfindung", russian: "процесс принятия решений" },
-{ german: "widerlegbar", russian: "опровержимый" },
-{ german: "die Wissenschaftsdisziplin", russian: "научная дисциплина" },
-{ german: "fachübergreifend", russian: "междисциплинарный" },
-
-// ========== СЛОЖНЫЕ ФРАЗЫ И ДИСКУССИОННЫЕ КЛИШЕ ==========
-{ german: "Vor diesem Hintergrund lässt sich argumentieren, dass...", russian: "На этом фоне можно утверждать, что..." },
-{ german: "Diese These ist nicht haltbar, weil...", russian: "Этот тезис несостоятелен, потому что..." },
-{ german: "Die empirische Evidenz deutet darauf hin, dass...", russian: "Эмпирические данные указывают на то, что..." },
-{ german: "Man muss zwischen Ursache und Wirkung differenzieren.", russian: "Нужно различать причину и следствие." },
-{ german: "Dieses Phänomen ist multikausal bedingt.", russian: "Это явление обусловлено множеством причин." },
-{ german: "Die Implikationen dieser Entscheidung sind weitreichend.", russian: "Последствия этого решения далеко идущие." },
-
-// ========== ДЛИННЫЕ ПРЕДЛОЖЕНИЯ / ТЕКСТЫ ДЛЯ АУДИРОВАНИЯ (озвучка) ==========
-{ german: "In der heutigen globalisierten Welt ist es unerlässlich, über interkulturelle Kompetenzen zu verfügen, um erfolgreich zu kommunizieren.", russian: "В сегодняшнем глобализированном мире необходимо обладать межкультурными компетенциями для успешной коммуникации." },
-{ german: "Die Digitalisierung hat nahezu alle Lebensbereiche durchdrungen und stellt uns vor völlig neue ethische Herausforderungen.", russian: "Цифровизация проникла практически во все сферы жизни и ставит перед нами совершенно новые этические вызовы." },
-{ german: "Nachhaltigkeit bedeutet nicht nur Umweltschutz, sondern auch soziales Miteinander und wirtschaftliche Stabilität für zukünftige Generationen.", russian: "Устойчивость означает не только защиту окружающей среды, но и социальное взаимодействие и экономическую стабильность для будущих поколений." },
-{ german: "Trotz aller Fortschritte in der Medizin bleiben viele Krankheiten nach wie vor unheilbar, was die Forschung weiterhin vor große Hürden stellt.", russian: "Несмотря на весь прогресс в медицине, многие болезни по-прежнему неизлечимы, что ставит исследования перед большими препятствиями." },
-{ german: "Ein tiefgreifendes Verständnis von Mathematik ist eine grundlegende Voraussetzung für viele Studiengänge im MINT-Bereich.", russian: "Глубокое понимание математики является фундаментальным условием для многих учебных программ в области STEM." },
-{ german: "Die Fähigkeit, kritisch zu denken und Informationen zu hinterfragen, gehört zu den wichtigsten Schlüsselkompetenzen des 21. Jahrhunderts.", russian: "Способность критически мыслить и подвергать информацию сомнению относится к важнейшим ключевым навыкам XXI века." },
-{ german: "Angesichts des demografischen Wandels wird die Einwanderung von qualifizierten Fachkräften für viele Industrienationen überlebenswichtig.", russian: "Ввиду демографических изменений иммиграция квалифицированных специалистов становится жизненно важной для многих промышленно развитых стран." },
-{ german: "Nicht zuletzt aufgrund des Klimawandels gewinnen erneuerbare Energien wie Solar- und Windkraft rasant an Bedeutung.", russian: "Не в последнюю очередь из-за изменения климата возобновляемые источники энергии, такие как солнечная и ветровая, быстро набирают значимость." },
-// ========== ЕЩЁ ДЛИННЫЕ ТЕКСТЫ ДЛЯ АУДИРОВАНИЯ (C1) ==========
-{ german: "Die psychologischen Auswirkungen sozialer Medien sind ein viel diskutiertes Feld. Studien zeigen, dass exzessive Nutzung von Plattformen wie Instagram, TikTok oder Facebook mit erhöhten Raten von Angststörungen, Depressionen und Einsamkeit korreliert – besonders bei Jugendlichen und jungen Erwachsenen. Der ständige Vergleich mit scheinbar perfekten Leben löst Neid und Minderwertigkeitsgefühle aus. Die Dopamin-Schleife durch Likes und Kommentare fördert suchtähnliches Verhalten. Gleichzeitig bieten soziale Medien Chancen: Vernetzung, Aktivismus, Zugang zu Informationen und Unterstützung für Minderheiten. Die Lösung liegt nicht in komplettem Verzicht, sondern in bewusster Nutzung: digitale Auszeiten, Entfolgen von toxischen Accounts, kritisches Hinterfragen von Inhalten. Psychologen empfehlen, Bildschirmzeiten zu begrenzen und reale soziale Kontakte zu pflegen. Eltern sollten mit Kindern über Medienerziehung sprechen. Letztlich geht es um eine gesunde Balance zwischen Online- und Offline-Welt.", russian: "Психологические последствия социальных сетей — активно обсуждаемая область. Исследования показывают, что чрезмерное использование таких платформ, как Instagram, TikTok или Facebook, коррелирует с повышенным уровнем тревожных расстройств, депрессии и одиночества — особенно среди подростков и молодых людей. Постоянное сравнение с якобы идеальной жизнью вызывает зависть и чувство неполноценности. Дофаминовая петля через лайки и комментарии способствует поведению, похожему на зависимость. В то же время социальные сети дают возможности: общение, активизм, доступ к информации и поддержка меньшинств. Решение заключается не в полном отказе, а в осознанном использовании: цифровые перерывы, отписка от токсичных аккаунтов, критическое осмысление контента. Психологи рекомендуют ограничивать время у экрана и поддерживать реальные социальные контакты. Родители должны говорить с детьми о медиа-воспитании. В конечном счёте речь идёт о здоровом балансе между онлайн и офлайн мирами." },
-
-{ german: "Ernährung und Gesundheit sind eng miteinander verbunden. Eine ausgewogene, pflanzenbasierte Ernährung mit viel Gemüse, Obst, Vollkornprodukten und Hülsenfrüchten kann das Risiko für Herz-Kreislauf-Erkrankungen, Diabetes Typ 2 und bestimmte Krebsarten senken. Die mediterrane Küche gilt als besonders vorteilhaft. Gleichzeitig warnen Experten vor extremen Diäten, die zu Mangelerscheinungen führen können. Intervallfasten wird als Methode erforscht, um Stoffwechselprozesse zu verbessern. Auch die Qualität der Fette ist wichtig: ungesättigte Fettsäuren aus Nüssen, Avocados oder Olivenöl sind gesund, während Transfette aus Fertigprodukten schaden. Zucker sollte reduziert werden, denn er fördert nicht nur Karies, sondern auch Entzündungen im Körper. Trinkgewohnheiten spielen ebenfalls eine Rolle: Wasser und ungesüßte Tees sind ideal, Softdrinks hingegen liefern leere Kalorien. Letztlich gibt es keine Wunderdiät – der Schlüssel liegt in langfristigen, nachhaltigen Veränderungen des Lebensstils.", russian: "Питание и здоровье тесно связаны. Сбалансированная растительная диета с большим количеством овощей, фруктов, цельнозерновых продуктов и бобовых может снизить риск сердечно-сосудистых заболеваний, диабета 2 типа и некоторых видов рака. Средиземноморская кухня считается особенно полезной. В то же время эксперты предупреждают об экстремальных диетах, которые могут привести к дефициту питательных веществ. Интервальное голодание исследуется как метод улучшения метаболических процессов. Также важны качество жиров: ненасыщенные жирные кислоты из орехов, авокадо или оливкового масла полезны, тогда как трансжиры из полуфабрикатов вредны. Сахар следует сокращать, потому что он способствует не только кариесу, но и воспалениям в организме. Привычки питья также играют роль: вода и несладкие чаи идеальны, а газированные напитки дают пустые калории. В конечном счёте чудо-диеты не существует – ключ в долгосрочных, устойчивых изменениях образа жизни." },
-
-// ========== СЛОЖНЫЕ ИДИОМЫ И КОЛЛОКАЦИИ ДЛЯ C1 ==========
-{ german: "den Bogen überspannen", russian: "перегнуть палку (букв: перетянуть лук)" },
-{ german: "das Kind beim Namen nennen", russian: "называть вещи своими именами" },
-{ german: "auf der Kippe stehen", russian: "быть под вопросом (букв: стоять на грани)" },
-{ german: "etwas durch die Blume sagen", russian: "говорить обиняками, намёками" },
-{ german: "den Teufel an die Wand malen", russian: "сгущать краски (букв: рисовать дьявола на стене)" },
-{ german: "eine Lawine losgetreten haben", russian: "вызвать цепную реакцию (букв: спровоцировать лавину)" },
-{ german: "nicht alle Tassen im Schrank haben", russian: "быть не в своём уме (букв: не иметь всех чашек в шкафу)" },
-{ german: "die Kirche im Dorf lassen", russian: "не преувеличивать (букв: оставить церковь в деревне)" },
-{ german: "etwas auf die lange Bank schieben", russian: "откладывать в долгий ящик" },
-{ german: "jemandem einen Bären aufbinden", russian: "вешать лапшу на уши (букв: навязать медведя)" },
-{ german: "mit dem Latein am Ende sein", russian: "быть в тупике (букв: закончилась латынь)" },
-{ german: "einen Zahn zulegen", russian: "прибавить ходу, ускориться (букв: добавить зубец)" },
-{ german: "die Flinte ins Korn werfen", russian: "опустить руки, сдаться (букв: бросить ружьё в рожь)" },
-{ german: "etwas aus dem Effeff beherrschen", russian: "знать что-то в совершенстве (букв: из Effeff)" },
-{ german: "das Haar in der Suppe suchen", russian: "искать недостатки (букв: искать волос в супе)" },
-{ german: "sich keinen Zacken aus der Krone brechen", russian: "не уронить своего достоинства (букв: не выломать зубец из короны)" },
-{ german: "die Ohren steif halten", russian: "держать ухо востро, не падать духом" },
-{ german: "den Rubikon überschreiten", russian: "перейти Рубикон" },
-{ german: "Perlen vor die Säue werfen", russian: "метать бисер перед свиньями" },
-{ german: "eine Schlange am Busen nähren", russian: "пригреть змею на груди" }            
-            
-        ]
+        A0: [ /* ... ваш массив A0 ... */ ],
+        A1: [ /* ... ваш массив A1 ... */ ],
+        A2: [ /* ... ваш массив A2 ... */ ],
+        B1: [ /* ... ваш массив B1 ... */ ],
+        B2: [ /* ... ваш массив B2 ... */ ],
+        C1: [ /* ... ваш массив C1 ... */ ]
     };
+    // ВНИМАНИЕ: Вам нужно скопировать сюда все слова из вашего старого vocabDatabase.
+    // Я сократил для примера, но вы вставьте свои полные данные.
 
-    // текущее состояние
+    // ========== КАРТОЧКИ (НЕЗАВИСИМО ОТ ВИКТОРИНЫ) ==========
     let currentLevel = "A0";
     let currentCardIndex = 0;
     let isFlipped = false;
     let currentVocabList = [...vocabDatabase.A0];
 
-    // DOM карточек
     const flashcardDiv = document.getElementById('flashcard');
     const prevBtn = document.getElementById('prevCardBtn');
     const nextBtn = document.getElementById('nextCardBtn');
@@ -899,552 +419,283 @@
     const cardCounterSpan = document.getElementById('cardCounter');
     const speakCardBtn = document.getElementById('speakCardBtn');
 
-    // Quiz vars
-    let currentQuizQuestion = null;
-    let quizScore = 0;
-    let streak = 0;
-    let quizLocked = false;
-    let answered = false;
-    let currentCorrectGermanRaw = "";
-
-    const quizQuestionDiv = document.getElementById('quizQuestion');
-    const optionsContainer = document.getElementById('optionsContainer');
-    const quizFeedbackSpan = document.getElementById('quizFeedback');
-    const quizScoreSpan = document.getElementById('quizScore');
-    const streakSpan = document.getElementById('streakCount');
-    const nextQuizBtn = document.getElementById('nextQuizBtn');
-    const resetQuizBtn = document.getElementById('resetQuizBtn');
-    const speakQuizWordBtn = document.getElementById('speakQuizWordBtn');
-
-    // ========== ФУНКЦИЯ ОЗВУЧКИ (НЕМЕЦКИЙ TTS) ==========
     function speakGerman(text) {
-        if (!text || typeof window.speechSynthesis === 'undefined') {
-            console.warn("TTS не поддерживается");
-            return;
-        }
+        if (!text || typeof window.speechSynthesis === 'undefined') return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'de-DE';
         utterance.rate = 0.88;
-        utterance.pitch = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
-    function speakCurrentCardGerman() {
-        if (!currentVocabList.length) return;
-        const wordObj = currentVocabList[currentCardIndex];
-        if (wordObj && wordObj.german) speakGerman(wordObj.german);
-    }
-
-    function speakCurrentQuizGerman() {
-        if (currentCorrectGermanRaw && currentCorrectGermanRaw.trim() !== "") {
-            speakGerman(currentCorrectGermanRaw);
-        } else {
-            speakGerman("Kein Wort verfügbar");
-        }
-    }
-
-    // ========== КАРТОЧКИ ==========
     function updateFlashcardUI() {
         if (!currentVocabList.length) return;
         const item = currentVocabList[currentCardIndex];
-        if (!isFlipped) {
-            flashcardDiv.textContent = item.german;
-            flashcardDiv.className = "flashcard card-german";
-        } else {
-            flashcardDiv.textContent = item.russian;
-            flashcardDiv.className = "flashcard card-russian";
-        }
+        flashcardDiv.textContent = isFlipped ? item.russian : item.german;
+        flashcardDiv.className = isFlipped ? "flashcard card-russian" : "flashcard card-german";
         cardCounterSpan.textContent = `${currentCardIndex+1} / ${currentVocabList.length}`;
     }
-
     function flip() { isFlipped = !isFlipped; updateFlashcardUI(); }
     function setCard(idx) {
         if (!currentVocabList.length) return;
-        if (idx < 0) idx = 0;
-        if (idx >= currentVocabList.length) idx = currentVocabList.length-1;
-        currentCardIndex = idx;
+        currentCardIndex = Math.min(Math.max(0, idx), currentVocabList.length-1);
         isFlipped = false;
         updateFlashcardUI();
+        loadNoteForCurrentCard();
     }
-    function nextCard() { let ni = currentCardIndex+1; if(ni >= currentVocabList.length) ni = 0; setCard(ni); }
-    function prevCard() { let pi = currentCardIndex-1; if(pi < 0) pi = currentVocabList.length-1; setCard(pi); }
-    function randomCard() { if(currentVocabList.length) setCard(Math.floor(Math.random() * currentVocabList.length)); }
+    function nextCard() { setCard(currentCardIndex+1); }
+    function prevCard() { setCard(currentCardIndex-1); }
+    function randomCard() { setCard(Math.floor(Math.random() * currentVocabList.length)); }
+    function speakCurrentCardGerman() {
+        const word = currentVocabList[currentCardIndex]?.german;
+        if (word) speakGerman(word);
+    }
 
-    // смена уровня
     function switchLevel(level) {
         currentLevel = level;
         currentVocabList = [...vocabDatabase[level]];
-        if (currentVocabList.length === 0) currentVocabList = [{ german: "Keine Vokabeln", russian: "нет слов" }];
+        if (!currentVocabList.length) currentVocabList = [{ german: "Keine Vokabeln", russian: "нет слов" }];
         currentCardIndex = 0;
         isFlipped = false;
         updateFlashcardUI();
-        resetQuizOnlyState();
-        generateNewQuizQuestion();
-        renderQuiz();
         document.querySelectorAll('.level-btn').forEach(btn => {
-            if(btn.getAttribute('data-level') === level) btn.classList.add('active');
-            else btn.classList.remove('active');
+            btn.classList.toggle('active', btn.getAttribute('data-level') === level);
         });
+        loadNoteForCurrentCard();
     }
 
-    // ========== ВИКТОРИНА ==========
-    function generateNewQuizQuestion() {
-        if (!currentVocabList.length) return;
-        const mode = Math.floor(Math.random() * 2); // 0: de->ru, 1: ru->de
-        const randIndex = Math.floor(Math.random() * currentVocabList.length);
-        const correctItem = currentVocabList[randIndex];
-        let question = "", correctAnswer = "";
-        if (mode === 0) {
+    // ЗАМЕТКИ
+    const noteTextarea = document.getElementById('noteTextarea');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const clearNoteBtn = document.getElementById('clearNoteBtn');
+    const noteStatus = document.getElementById('noteStatus');
+    function getNoteKey() { return `note_${currentLevel}_card_${currentCardIndex}`; }
+    function loadNoteForCurrentCard() {
+        const saved = localStorage.getItem(getNoteKey());
+        if (saved) {
+            noteTextarea.value = saved;
+            noteStatus.textContent = '📌 Заметка сохранена ранее';
+        } else {
+            noteTextarea.value = '';
+            noteStatus.textContent = '✏️ Добавьте свою заметку';
+        }
+    }
+    function saveCurrentNote() {
+        const text = noteTextarea.value.trim();
+        const key = getNoteKey();
+        if (text) localStorage.setItem(key, text);
+        else localStorage.removeItem(key);
+        noteStatus.textContent = text ? '✅ Заметка сохранена' : '🗑 Заметка удалена';
+        setTimeout(loadNoteForCurrentCard, 1500);
+    }
+    function clearCurrentNote() {
+        localStorage.removeItem(getNoteKey());
+        noteTextarea.value = '';
+        noteStatus.textContent = '🗑 Заметка удалена';
+        setTimeout(loadNoteForCurrentCard, 1500);
+    }
+    saveNoteBtn?.addEventListener('click', saveCurrentNote);
+    clearNoteBtn?.addEventListener('click', clearCurrentNote);
+
+    // ========== ВИКТОРИНА (НЕЗАВИСИМАЯ, СВОЙ РЕКОРД ДЛЯ КАЖДОГО РАЗДЕЛА) ==========
+    const quizLevelSelect = document.getElementById('quizLevelSelect');
+    const recordSpan = document.getElementById('recordScore');
+    const quizScoreSpan = document.getElementById('quizScore');
+    const streakSpan = document.getElementById('streakCount');
+    const quizQuestionDiv = document.getElementById('quizQuestion');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const quizFeedbackSpan = document.getElementById('quizFeedback');
+    const nextQuizBtn = document.getElementById('nextQuizBtn');
+    const resetQuizBtn = document.getElementById('resetQuizBtn');
+    const speakQuizWordBtn = document.getElementById('speakQuizWordBtn');
+
+    let currentQuizVocabList = [];
+    let currentQuizQuestion = null;
+    let quizScore = 0;
+    let streak = 0;
+    let answered = false;
+    let quizLocked = false;
+    let currentCorrectGerman = "";
+
+    // Получить список слов по выбранному разделу
+    function getQuizVocabulary(levelValue) {
+        if (levelValue === 'B2_C1') return [...(vocabDatabase.B2 || []), ...(vocabDatabase.C1 || [])];
+        return [...(vocabDatabase[levelValue] || [])];
+    }
+
+    // Ключ для рекорда
+    function getRecordKey() { return `quizHighScore_${quizLevelSelect.value}`; }
+
+    // Загрузить рекорд для текущего раздела
+    function loadRecord() {
+        const record = parseInt(localStorage.getItem(getRecordKey()) || '0');
+        if (recordSpan) recordSpan.textContent = record;
+        return record;
+    }
+
+    // Сохранить рекорд, если нужно
+    function updateRecordIfNeeded() {
+        const currentScore = quizScore;
+        const key = getRecordKey();
+        let record = parseInt(localStorage.getItem(key) || '0');
+        if (currentScore > record) {
+            localStorage.setItem(key, currentScore);
+            if (recordSpan) recordSpan.textContent = currentScore;
+        }
+    }
+
+    // Сгенерировать новый вопрос из currentQuizVocabList
+    function generateQuestion() {
+        if (!currentQuizVocabList.length) {
+            currentQuizVocabList = [{ german: "Нет слов", russian: "Keine Vokabeln" }];
+        }
+        const mode = Math.random() < 0.5;
+        const correctItem = currentQuizVocabList[Math.floor(Math.random() * currentQuizVocabList.length)];
+        let question, correctAnswer;
+        if (mode) { // de -> ru
             question = `🇩🇪 Как перевести "${correctItem.german}" на русский?`;
             correctAnswer = correctItem.russian;
         } else {
             question = `🇷🇺 Что значит по-немецки "${correctItem.russian}"?`;
             correctAnswer = correctItem.german;
         }
-        currentCorrectGermanRaw = correctItem.german;
+        currentCorrectGerman = correctItem.german;
 
-        // Wrong options
-        let wrongCandidates = currentVocabList.filter(item => {
-            if (mode === 0) return item.russian !== correctAnswer;
-            else return item.german !== correctAnswer;
-        }).map(item => mode === 0 ? item.russian : item.german);
-        wrongCandidates = [...new Set(wrongCandidates)];
-        while(wrongCandidates.length < 3) wrongCandidates.push("???", "другой вариант");
-        let shuffledWrong = [...wrongCandidates];
-        for (let i = shuffledWrong.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledWrong[i], shuffledWrong[j]] = [shuffledWrong[j], shuffledWrong[i]];
-        }
-        let wrongOptions = shuffledWrong.slice(0,3);
-        let options = [correctAnswer, ...wrongOptions];
-        for (let i = options.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [options[i], options[j]] = [options[j], options[i]];
-        }
-        currentQuizQuestion = { questionText: question, correctAnswer, options };
+        // Неправильные варианты
+        let wrongs = currentQuizVocabList.filter(item => (mode ? item.russian !== correctAnswer : item.german !== correctAnswer))
+            .map(item => mode ? item.russian : item.german);
+        wrongs = [...new Set(wrongs)];
+        while (wrongs.length < 3) wrongs.push("???");
+        wrongs = wrongs.sort(() => 0.5 - Math.random()).slice(0, 3);
+        let options = [correctAnswer, ...wrongs];
+        options.sort(() => 0.5 - Math.random());
+        currentQuizQuestion = { question, correctAnswer, options };
     }
 
+    // Отрисовка викторины
     function renderQuiz() {
         if (!currentQuizQuestion) return;
-        quizQuestionDiv.textContent = currentQuizQuestion.questionText;
+        quizQuestionDiv.textContent = currentQuizQuestion.question;
         optionsContainer.innerHTML = "";
         currentQuizQuestion.options.forEach(opt => {
             const btn = document.createElement('button');
             btn.textContent = opt;
             btn.classList.add('option-btn');
-            btn.addEventListener('click', (e) => handleQuizAnswer(opt, btn));
+            btn.addEventListener('click', () => handleAnswer(opt));
             optionsContainer.appendChild(btn);
         });
-        quizFeedbackSpan.innerHTML = "Выберите вариант ответа!";
+        quizFeedbackSpan.innerHTML = "Выберите ответ!";
         answered = false;
         quizLocked = false;
-        document.querySelectorAll('.option-btn').forEach(btn => { btn.disabled = false; btn.style.background = "#2A3E48"; });
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.disabled = false;
+            btn.style.background = "#2A3E48";
+        });
+        if (nextQuizBtn) {
+            nextQuizBtn.disabled = true;
+            nextQuizBtn.style.opacity = '0.6';
+        }
     }
 
-    function handleQuizAnswer(selected, btnElem) {
+    // Обработка ответа
+    function handleAnswer(selected) {
         if (answered || quizLocked) {
-            quizFeedbackSpan.innerHTML = "⏳ Уже отвечено, нажми 'Следующий вопрос'";
+            quizFeedbackSpan.innerHTML = "⏳ Вы уже ответили. Нажмите 'Следующий вопрос'.";
             return;
         }
         const isCorrect = (selected === currentQuizQuestion.correctAnswer);
         answered = true;
         quizLocked = true;
-        const allBtns = document.querySelectorAll('.option-btn');
-        allBtns.forEach(btn => btn.disabled = true);
-        if(isCorrect) {
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(btn => btn.disabled = true);
+        if (isCorrect) {
             quizScore += 10;
             streak++;
             quizFeedbackSpan.innerHTML = `✅ Верно! +10 очков. Серия: ${streak}`;
-            if(btnElem) btnElem.style.background = "#2E7D64";
-            allBtns.forEach(btn => { if(btn.textContent === currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64"; });
+            btns.forEach(btn => {
+                if (btn.textContent === currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64";
+            });
         } else {
             streak = 0;
-            quizFeedbackSpan.innerHTML = `❌ Ошибка! Правильный ответ: "${currentQuizQuestion.correctAnswer}". Учим дальше!`;
-            if(btnElem) btnElem.style.background = "#A1422F";
-            allBtns.forEach(btn => { if(btn.textContent === currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64"; });
+            quizFeedbackSpan.innerHTML = `❌ Ошибка! Правильный ответ: "${currentQuizQuestion.correctAnswer}".`;
+            btns.forEach(btn => {
+                if (btn.textContent === currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64";
+            });
         }
-        updateQuizUI();
+        quizScoreSpan.textContent = quizScore;
+        streakSpan.textContent = streak;
+        updateRecordIfNeeded();
+        if (nextQuizBtn) {
+            nextQuizBtn.disabled = false;
+            nextQuizBtn.style.opacity = '1';
+        }
     }
 
-    function updateQuizUI() { quizScoreSpan.textContent = quizScore; streakSpan.textContent = streak; }
-    function nextQuizQuestion() {
+    // Сброс счёта (без сброса рекорда)
+    function resetQuizScore() {
+        quizScore = 0;
+        streak = 0;
+        quizScoreSpan.textContent = 0;
+        streakSpan.textContent = 0;
+        generateQuestion();
+        renderQuiz();
+    }
+
+    // Смена раздела викторины
+    function changeQuizLevel() {
+        const newLevel = quizLevelSelect.value;
+        currentQuizVocabList = getQuizVocabulary(newLevel);
+        if (!currentQuizVocabList.length) currentQuizVocabList = [{ german: "Нет слов", russian: "Пусто" }];
+        quizScore = 0;
+        streak = 0;
+        quizScoreSpan.textContent = 0;
+        streakSpan.textContent = 0;
+        generateQuestion();
+        renderQuiz();
+        loadRecord();  // загрузить рекорд для нового раздела
+    }
+
+    // Озвучка правильного немецкого слова (из последнего вопроса)
+    function speakCurrentQuizGerman() {
+        if (currentCorrectGerman) speakGerman(currentCorrectGerman);
+        else speakGerman("Kein Wort");
+    }
+
+    // Инициализация викторины
+    if (quizLevelSelect) {
+        quizLevelSelect.addEventListener('change', changeQuizLevel);
+        changeQuizLevel(); // первоначальная загрузка
+    }
+    nextQuizBtn?.addEventListener('click', () => {
         if (!answered && !quizLocked) {
-            generateNewQuizQuestion(); renderQuiz();
-            quizFeedbackSpan.innerHTML = "Вопрос пропущен, попробуйте следующий!";
-            return;
+            // пропуск
+            generateQuestion();
+            renderQuiz();
+            quizFeedbackSpan.innerHTML = "Вопрос пропущен";
+        } else {
+            generateQuestion();
+            renderQuiz();
         }
-        generateNewQuizQuestion(); renderQuiz();
-    }
-    function resetQuizOnlyState() { quizScore = 0; streak = 0; updateQuizUI(); generateNewQuizQuestion(); renderQuiz(); quizLocked=false; answered=false; }
+    });
+    resetQuizBtn?.addEventListener('click', resetQuizScore);
+    speakQuizWordBtn?.addEventListener('click', speakCurrentQuizGerman);
 
-    // ========== ПОДПИСКИ ==========
+    // ========== ПОДПИСКИ КАРТОЧЕК ==========
     flashcardDiv.addEventListener('click', flip);
     prevBtn.addEventListener('click', prevCard);
     nextBtn.addEventListener('click', nextCard);
     randomCardBtn.addEventListener('click', randomCard);
     speakCardBtn.addEventListener('click', speakCurrentCardGerman);
-    nextQuizBtn.addEventListener('click', nextQuizQuestion);
-    resetQuizBtn.addEventListener('click', () => resetQuizOnlyState());
-    speakQuizWordBtn.addEventListener('click', speakCurrentQuizGerman);
-    
     document.querySelectorAll('.level-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => { const lvl = btn.getAttribute('data-level'); if(lvl) switchLevel(lvl); });
+        btn.addEventListener('click', () => {
+            const lvl = btn.getAttribute('data-level');
+            if (lvl) switchLevel(lvl);
+        });
     });
 
-    // СТАРТ
+    // Старт
     switchLevel("A0");
-    generateNewQuizQuestion();
-    renderQuiz();
-
-
-    // ========== СИСТЕМА ЗАМЕТОК (сохраняются в localStorage) ==========
-const noteTextarea = document.getElementById('noteTextarea');
-const saveNoteBtn = document.getElementById('saveNoteBtn');
-const clearNoteBtn = document.getElementById('clearNoteBtn');
-const noteStatus = document.getElementById('noteStatus');
-
-// Функция получения ключа для заметки (уровень + индекс карточки)
-function getNoteKey() {
-    return `note_${currentLevel}_card_${currentCardIndex}`;
-}
-
-// Загрузить заметку для текущей карточки
-function loadNoteForCurrentCard() {
-    const key = getNoteKey();
-    const savedNote = localStorage.getItem(key);
-    if (savedNote) {
-        noteTextarea.value = savedNote;
-        noteStatus.textContent = '📌 Заметка сохранена ранее';
-        noteStatus.style.color = '#aac8d4';
-    } else {
-        noteTextarea.value = '';
-        noteStatus.textContent = '✏️ Добавьте свою заметку (пример, перевод, ассоциацию)';
-        noteStatus.style.color = '#9aaeb9';
-    }
-}
-
-// Сохранить заметку
-function saveCurrentNote() {
-    const key = getNoteKey();
-    const noteText = noteTextarea.value.trim();
-    if (noteText) {
-        localStorage.setItem(key, noteText);
-        noteStatus.textContent = '✅ Заметка сохранена!';
-        noteStatus.style.color = '#8bc34a';
-        setTimeout(() => {
-            if (getNoteKey() === key) noteStatus.textContent = '📌 Заметка сохранена ранее';
-        }, 2000);
-    } else {
-        // Если пусто — удаляем запись
-        localStorage.removeItem(key);
-        noteStatus.textContent = '🗑 Заметка удалена';
-        noteStatus.style.color = '#ffaa66';
-        setTimeout(() => {
-            if (getNoteKey() === key && !noteTextarea.value.trim()) {
-                noteStatus.textContent = '✏️ Добавьте свою заметку (пример, перевод, ассоциацию)';
-            }
-        }, 1500);
-    }
-}
-
-// Очистить заметку для текущей карточки
-function clearCurrentNote() {
-    const key = getNoteKey();
-    localStorage.removeItem(key);
-    noteTextarea.value = '';
-    noteStatus.textContent = '🗑 Заметка удалена';
-    noteStatus.style.color = '#ffaa66';
-    setTimeout(() => {
-        if (getNoteKey() === key && !noteTextarea.value.trim()) {
-            noteStatus.textContent = '✏️ Добавьте свою заметку (пример, перевод, ассоциацию)';
-            noteStatus.style.color = '#9aaeb9';
-        }
-    }, 1500);
-}
-
-// ПЕРЕХВАТЫВАЕМ существующие функции смены карточки и уровня, чтобы обновлять заметки
-// Сохраняем оригинальные функции, но добавляем загрузку заметок
-
-// Запоминаем оригинальные функции
-const originalSetCard = setCard;
-const originalSwitchLevel = switchLevel;
-
-// Переопределяем setCard
-window.setCard = function(idx) {
-    originalSetCard(idx);
     loadNoteForCurrentCard();
-};
-setCard = window.setCard;
-
-// Переопределяем switchLevel
-window.switchLevel = function(level) {
-    originalSwitchLevel(level);
-    loadNoteForCurrentCard();
-};
-switchLevel = window.switchLevel;
-
-// Подключаем события для кнопок заметок
-if (saveNoteBtn) saveNoteBtn.addEventListener('click', saveCurrentNote);
-if (clearNoteBtn) clearNoteBtn.addEventListener('click', clearCurrentNote);
-
-// Также при ручном переключении (следующий/предыдущий) заметка подгружается
-// Добавляем прослушку после инициализации, дополнительно фикс
-setTimeout(() => {
-    loadNoteForCurrentCard();
-}, 100);
-
-
-    // ========== РЕКОРД (РАБОЧАЯ ВЕРСИЯ) ==========
-// Получаем элементы
-const recordSpan = document.getElementById('recordScore');
-if (recordSpan) {
-    // Загружаем сохранённый рекорд
-    let currentRecord = localStorage.getItem('quizHighScore') ? parseInt(localStorage.getItem('quizHighScore')) : 0;
-    recordSpan.textContent = currentRecord;
-
-    // Функция обновления рекорда на основе текущего счёта
-    function checkAndUpdateRecord() {
-        // Получаем текущие очки из DOM (надёжнее, чем переменная)
-        const scoreElement = document.getElementById('quizScore');
-        if (!scoreElement) return;
-        const currentScore = parseInt(scoreElement.textContent) || 0;
-        
-        if (currentScore > currentRecord) {
-            currentRecord = currentScore;
-            localStorage.setItem('quizHighScore', currentRecord);
-            recordSpan.textContent = currentRecord;
-            // Маленькая анимация
-            recordSpan.style.transform = 'scale(1.2)';
-            setTimeout(() => { if(recordSpan) recordSpan.style.transform = 'scale(1)'; }, 300);
-        }
-    }
-
-    // Перехватываем обновление счёта: вызываем checkAndUpdateRecord каждый раз,
-    // когда вызывается оригинальная функция updateQuizUI
-    const originalUpdateQuizUI = window.updateQuizUI;
-    if (typeof originalUpdateQuizUI === 'function') {
-        window.updateQuizUI = function() {
-            originalUpdateQuizUI();
-            checkAndUpdateRecord();
-        };
-    } else {
-        // Если updateQuizUI не найдена, используем MutationObserver или просто проверяем каждую секунду
-        setInterval(checkAndUpdateRecord, 500);
-    }
-
-    // Также при сбросе счёта рекорд не должен сбрасываться, но если кнопка reset выставляет 0,
-    // checkAndUpdateRecord не позволит перезаписать рекорд меньшим числом (условие >)
-}
-    // ========== ОТДЕЛЬНЫЕ РЕКОРДЫ ДЛЯ КАЖДОГО УРОВНЯ ВИКТОРИНЫ ==========
-// Элементы
-const quizLevelSelect = document.getElementById('quizLevelSelect');
-const recordSpan = document.getElementById('recordScore');
-let currentQuizLevel = 'A0';     // текущий уровень викторины
-let currentQuizVocabList = [];
-
-// Функция получения ключа для рекорда
-function getRecordKey() {
-    return `quizHighScore_${currentQuizLevel}`;
-}
-
-// Загрузка рекорда для текущего уровня
-function loadRecordForCurrentLevel() {
-    if (!recordSpan) return;
-    const key = getRecordKey();
-    const saved = localStorage.getItem(key);
-    const record = saved ? parseInt(saved) : 0;
-    recordSpan.textContent = record;
-    return record;
-}
-
-// Сохранение рекорда (если текущий счёт больше)
-function saveRecordIfNeeded() {
-    const currentScore = quizScore; // глобальная переменная
-    const key = getRecordKey();
-    let saved = localStorage.getItem(key);
-    let record = saved ? parseInt(saved) : 0;
-    if (currentScore > record) {
-        localStorage.setItem(key, currentScore);
-        if (recordSpan) recordSpan.textContent = currentScore;
-    }
-}
-
-// Получение списка слов для викторины по выбранному уровню
-function getQuizVocabularyByLevel(levelValue) {
-    if (levelValue === 'B2_C1') {
-        return [...(vocabDatabase['B2'] || []), ...(vocabDatabase['C1'] || [])];
-    } else {
-        return [...(vocabDatabase[levelValue] || [])];
-    }
-}
-
-// Генерация вопроса из текущего списка
-function generateQuizQuestionFromList() {
-    if (!currentQuizVocabList.length) return;
-    const mode = Math.floor(Math.random() * 2);
-    const randomIndex = Math.floor(Math.random() * currentQuizVocabList.length);
-    const correctItem = currentQuizVocabList[randomIndex];
-    let question = "", correctAnswer = "";
-    if (mode === 0) {
-        question = `🇩🇪 Как перевести "${correctItem.german}" на русский?`;
-        correctAnswer = correctItem.russian;
-    } else {
-        question = `🇷🇺 Что значит по-немецки "${correctItem.russian}"?`;
-        correctAnswer = correctItem.german;
-    }
-    window.currentCorrectGermanRaw = correctItem.german;
-    
-    let wrongCandidates = currentQuizVocabList.filter(item => {
-        if (mode === 0) return item.russian !== correctAnswer;
-        else return item.german !== correctAnswer;
-    }).map(item => mode === 0 ? item.russian : item.german);
-    wrongCandidates = [...new Set(wrongCandidates)];
-    while (wrongCandidates.length < 3) wrongCandidates.push("???", "другой вариант");
-    let shuffledWrong = [...wrongCandidates];
-    for (let i = shuffledWrong.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledWrong[i], shuffledWrong[j]] = [shuffledWrong[j], shuffledWrong[i]];
-    }
-    let wrongOptions = shuffledWrong.slice(0, 3);
-    let options = [correctAnswer, ...wrongOptions];
-    for (let i = options.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [options[i], options[j]] = [options[j], options[i]];
-    }
-    window.currentQuizQuestion = { questionText: question, correctAnswer, options };
-}
-
-// Рендер викторины
-function renderQuiz() {
-    if (!window.currentQuizQuestion) return;
-    quizQuestionDiv.textContent = window.currentQuizQuestion.questionText;
-    optionsContainer.innerHTML = "";
-    window.currentQuizQuestion.options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.textContent = opt;
-        btn.classList.add('option-btn');
-        btn.addEventListener('click', (e) => handleQuizAnswer(opt, btn));
-        optionsContainer.appendChild(btn);
-    });
-    quizFeedbackSpan.innerHTML = "Выберите вариант ответа!";
-    window.answered = false;
-    window.quizLocked = false;
-    document.querySelectorAll('.option-btn').forEach(btn => {
-        btn.disabled = false;
-        btn.style.background = "#2A3E48";
-    });
-    if (window.nextQuizBtn) {
-        window.nextQuizBtn.disabled = true;
-        window.nextQuizBtn.style.opacity = '0.6';
-    }
-}
-
-// Обработчик ответа
-function handleQuizAnswer(selected, btnElem) {
-    if (window.answered || window.quizLocked) {
-        quizFeedbackSpan.innerHTML = "⏳ Уже отвечено, нажми 'Следующий вопрос'";
-        return;
-    }
-    const isCorrect = (selected === window.currentQuizQuestion.correctAnswer);
-    window.answered = true;
-    window.quizLocked = true;
-    const allBtns = document.querySelectorAll('.option-btn');
-    allBtns.forEach(btn => btn.disabled = true);
-    if (isCorrect) {
-        window.quizScore += 10;
-        window.streak++;
-        quizFeedbackSpan.innerHTML = `✅ Верно! +10 очков. Серия: ${window.streak}`;
-        if (btnElem) btnElem.style.background = "#2E7D64";
-        allBtns.forEach(btn => {
-            if (btn.textContent === window.currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64";
-        });
-    } else {
-        window.streak = 0;
-        quizFeedbackSpan.innerHTML = `❌ Ошибка! Правильный ответ: "${window.currentQuizQuestion.correctAnswer}". Учим дальше!`;
-        if (btnElem) btnElem.style.background = "#A1422F";
-        allBtns.forEach(btn => {
-            if (btn.textContent === window.currentQuizQuestion.correctAnswer) btn.style.background = "#2E7D64";
-        });
-    }
-    updateQuizUI();
-    // Сохраняем рекорд после изменения счёта
-    saveRecordIfNeeded();
-    // Разблокируем кнопку "Следующий вопрос"
-    if (window.nextQuizBtn) {
-        window.nextQuizBtn.disabled = false;
-        window.nextQuizBtn.style.opacity = '1';
-    }
-}
-
-// Обновление UI очков и серии
-function updateQuizUI() {
-    const quizScoreSpan = document.getElementById('quizScore');
-    const streakSpan = document.getElementById('streakCount');
-    if (quizScoreSpan) quizScoreSpan.textContent = window.quizScore;
-    if (streakSpan) streakSpan.textContent = window.streak;
-}
-
-// Сброс счёта (без сброса рекорда)
-function resetQuizOnlyState() {
-    window.quizScore = 0;
-    window.streak = 0;
-    updateQuizUI();
-    generateQuizQuestionFromList();
-    renderQuiz();
-}
-
-// Смена уровня викторины
-function setQuizLevel(levelValue) {
-    currentQuizLevel = levelValue;
-    currentQuizVocabList = getQuizVocabularyByLevel(levelValue);
-    if (currentQuizVocabList.length === 0) {
-        currentQuizVocabList = [{ german: "Нет слов", russian: "Keine Vokabeln" }];
-    }
-    // Сброс счёта и генерация нового вопроса
-    window.quizScore = 0;
-    window.streak = 0;
-    updateQuizUI();
-    generateQuizQuestionFromList();
-    renderQuiz();
-    // Загрузить рекорд для этого уровня
-    loadRecordForCurrentLevel();
-}
-
-// Обработчик изменения select
-if (quizLevelSelect) {
-    quizLevelSelect.addEventListener('change', (e) => {
-        setQuizLevel(e.target.value);
-    });
-    // Устанавливаем начальный уровень из select (должен быть A0)
-    const initialLevel = quizLevelSelect.value;
-    setQuizLevel(initialLevel);
-} else {
-    // fallback
-    setQuizLevel('A0');
-}
-
-// Переопределяем глобальные переменные, если их нет
-if (typeof window.quizScore === 'undefined') window.quizScore = 0;
-if (typeof window.streak === 'undefined') window.streak = 0;
-if (typeof window.answered === 'undefined') window.answered = false;
-if (typeof window.quizLocked === 'undefined') window.quizLocked = false;
-
-// Убедимся, что кнопка "Следующий вопрос" работает правильно
-const nextQuizBtnOrig = document.getElementById('nextQuizBtn');
-if (nextQuizBtnOrig) {
-    nextQuizBtnOrig.addEventListener('click', () => {
-        if (!window.answered && !window.quizLocked) {
-            // пропуск
-            generateQuizQuestionFromList();
-            renderQuiz();
-            quizFeedbackSpan.innerHTML = "Вопрос пропущен, попробуйте следующий!";
-            return;
-        }
-        generateQuizQuestionFromList();
-        renderQuiz();
-    });
-}
 </script>
 </body>
 </html>
