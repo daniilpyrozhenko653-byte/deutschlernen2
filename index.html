@@ -2703,50 +2703,41 @@
         else if (filter === 'repeat') document.getElementById('showRepeatBtn')?.classList.add('active-filter');
     }
 
-    // ЗАМЕТКИ
     function getNoteKey() { 
-        const realIdx = currentCardIndexReal();
-        if (realIdx === null) return null;
-        return `note_${currentCardLevel}_${realIdx}`; 
-    }
+    return `common_notepad`;  // общая заметка для всех
+}
     function loadNoteForCurrentCard() {
-        let area = document.getElementById('noteTextarea');
-        let statusDiv = document.getElementById('noteStatus');
-        if (!area) return;
-        const key = getNoteKey();
-        if (!key || isPlaceholderCard(filteredCardList[filteredIdx])) {
-            area.value = '';
-            statusDiv.textContent = '✏️ Добавьте заметку (выберите карточку)';
-            area.disabled = true;
-            return;
-        }
-        area.disabled = false;
-        let saved = safeLocalStorageGet(key);
-        if (saved) { area.value = saved; statusDiv.textContent = '📌 Заметка сохранена'; }
-        else { area.value = ''; statusDiv.textContent = '✏️ Добавьте заметку'; }
+    let area = document.getElementById('noteTextarea');
+    let statusDiv = document.getElementById('noteStatus');
+    if (!area) return;
+    
+    area.disabled = false;
+    let saved = safeLocalStorageGet('common_notepad');
+    if (saved) { 
+        area.value = saved; 
+        statusDiv.textContent = '📖 Тетрадь (общие записи)'; 
+    } else { 
+        area.value = ''; 
+        statusDiv.textContent = '📖 Моя тетрадь'; 
     }
+}
     function saveNote() {
-        let area = document.getElementById('noteTextarea');
-        let statusDiv = document.getElementById('noteStatus');
-        const key = getNoteKey();
-        if (!key || isPlaceholderCard(filteredCardList[filteredIdx])) {
-            statusDiv.textContent = '❌ Невозможно сохранить для этой карточки';
-            return;
-        }
-        let text = area.value.trim();
-        if (text) safeLocalStorageSet(key, text);
-        else safeLocalStorageSet(key, null);
-        statusDiv.textContent = text ? '✅ Сохранено' : '🗑 Удалено';
-        setTimeout(loadNoteForCurrentCard, 800);
-    }
+    let area = document.getElementById('noteTextarea');
+    let statusDiv = document.getElementById('noteStatus');
+    let text = area.value.trim();
+    if (text) safeLocalStorageSet('common_notepad', text);
+    else safeLocalStorageSet('common_notepad', null);
+    statusDiv.textContent = text ? '✅ Записано в тетрадь' : '🗑 Тетрадь очищена';
+    setTimeout(() => { statusDiv.textContent = '📖 Моя тетрадь'; }, 1500);
+}
     function clearNote() {
-        const key = getNoteKey();
-        if (!key || isPlaceholderCard(filteredCardList[filteredIdx])) return;
-        safeLocalStorageSet(key, null);
-        document.getElementById('noteTextarea').value = '';
-        document.getElementById('noteStatus').textContent = '🗑 Очищено';
-        setTimeout(loadNoteForCurrentCard, 800);
-    }
+    safeLocalStorageSet('common_notepad', null);
+    document.getElementById('noteTextarea').value = '';
+    document.getElementById('noteStatus').textContent = '📒 Тетрадь очищена';
+    setTimeout(() => { 
+        document.getElementById('noteStatus').textContent = '📖 Моя тетрадь'; 
+    }, 1500);
+}
 
     function speakCurrentCard() {
         let item = filteredCardList[filteredIdx];
