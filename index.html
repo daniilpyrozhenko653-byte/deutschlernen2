@@ -293,6 +293,22 @@
     margin-top: 0.3rem;
     text-align: center;
 }
+
+        /* Рекорд */
+.record-container {
+    display: inline-block;
+    background: rgba(244, 162, 97, 0.25);
+    border-radius: 2rem;
+    padding: 0.2rem 0.8rem;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #FFD966;
+}
+.record-value {
+    color: #FFB347;
+    font-size: 1.1rem;
+    margin-left: 0.3rem;
+}
     </style>
 </head>
 <body>
@@ -357,6 +373,7 @@
                 <div id="optionsContainer" class="options"></div>
                 <div id="quizFeedback" class="feedback">✨ Выберите ответ ✨</div>
                 <div class="score-panel">
+                    <span>🏆 Рекорд: <span id="recordScore">0</span></span>
                     <span>🏆 Очки: <span id="quizScore">0</span></span>
                     <span>🔥 Серия: <span id="streakCount">0</span></span>
                 </div>
@@ -1148,6 +1165,46 @@ if (clearNoteBtn) clearNoteBtn.addEventListener('click', clearCurrentNote);
 setTimeout(() => {
     loadNoteForCurrentCard();
 }, 100);
+
+
+    // ========== РЕКОРД ВИКТОРИНЫ (СОХРАНЯЕТСЯ В localStorage) ==========
+const recordSpan = document.getElementById('recordScore');
+
+// Загрузка рекорда
+let currentRecord = localStorage.getItem('quizHighScore') ? parseInt(localStorage.getItem('quizHighScore')) : 0;
+recordSpan.textContent = currentRecord;
+
+// Функция проверки и обновления рекорда
+function updateRecord() {
+    const currentScore = quizScore; // переменная quizScore уже существует в коде
+    if (currentScore > currentRecord) {
+        currentRecord = currentScore;
+        localStorage.setItem('quizHighScore', currentRecord);
+        recordSpan.textContent = currentRecord;
+        // Визуальный эффект (необязательно)
+        recordSpan.style.transform = 'scale(1.2)';
+        setTimeout(() => { recordSpan.style.transform = 'scale(1)'; }, 300);
+    }
+}
+
+// Модифицируем функцию handleQuizAnswer, чтобы после начисления очков проверять рекорд
+// Но чтобы не переписывать всю функцию, добавим вызов updateRecord() после того, как quizScore увеличился.
+// Для этого сохраним оригинальную логику и дополним.
+
+// Ищем в коде функцию handleQuizAnswer. В ней после строки quizScore += 10; (когда ответ верный) нужно добавить вызов updateRecord().
+// Но проще переопределить функцию, сохранив старую, и вызвать updateRecord.
+// Однако проще дать готовый блок, который нужно вручную вставить в существующую функцию handleQuizAnswer.
+
+// КОММЕНТАРИЙ: откройте в коде функцию handleQuizAnswer и найдите строку, где написано:
+//    quizScore += 10;
+// Сразу после неё вставьте:
+//    updateRecord();
+
+// Также после вызова resetQuizOnlyState() или когда счёт сбрасывается, рекорд не должен сбрасываться, поэтому updateRecord вызывать не нужно.
+
+// Чтобы не заставлять вас искать, вот точное указание:
+// В функции handleQuizAnswer есть блок if(isCorrect) { quizScore += 10; streak++; ... }
+// Сразу после увеличения quizScore добавьте строку: updateRecord();
 </script>
 </body>
 </html>
