@@ -3955,36 +3955,51 @@ setTimeout(function() {
     }, 4000);
 }, 1000);
 
-// ========== ЗВУК ПРИ ПЕРЕВОРОТЕ КАРТОЧКИ ==========
-function addClickSound() {
+// ========== ЭФФЕКТ ПРИ КЛИКЕ НА КАРТОЧКУ ==========
+function addClickEffect() {
     let card = document.getElementById('flashcard');
     if(card) {
-        card.addEventListener('click', () => {
-            // Создаём простой звук через Web Audio API (работает без файлов)
-            try {
-                let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                let oscillator = audioCtx.createOscillator();
-                let gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = 880;
-                gainNode.gain.value = 0.1;
-                oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-                oscillator.stop(audioCtx.currentTime + 0.3);
-            } catch(e) {
-                console.log("Звук не поддерживается");
-            }
+        card.addEventListener('click', function(e) {
+            // Создаём искру в месте клика
+            let spark = document.createElement('div');
+            spark.innerHTML = '✨';
+            spark.style.cssText = 
+                position: absolute;
+                left: ${e.clientX - 15}px;
+                top: ${e.clientY - 15}px;
+                font-size: 30px;
+                pointer-events: none;
+                z-index: 10000;
+                animation: sparkFade 0.5s ease-out forwards;
+            ;
+            document.body.appendChild(spark);
+            setTimeout(() => spark.remove(), 500);
+            
+            // Добавляем тряску карточки
+            card.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 100);
         });
     }
 }
 
-// Запускаем после загрузки страницы
+// Добавляем анимацию
+let sparkStyle = document.createElement('style');
+sparkStyle.textContent = 
+    @keyframes sparkFade {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(2); opacity: 0; }
+    }
+;
+document.head.appendChild(sparkStyle);
+
+// Запускаем
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addClickSound);
+    document.addEventListener('DOMContentLoaded', addClickEffect);
 } else {
-    addClickSound();
-    
+    addClickEffect();
+}
 </script>
 </body>
 </html>
