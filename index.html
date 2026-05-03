@@ -224,7 +224,27 @@
 <div class="app-container">
     <h1>🇩🇪 Немецкий тренажёр</h1>
     <div class="sub">A0–C1 | Карточки с фильтрами «Все (неизученные)», «Изучено», «На повтор» | Викторина с рекордами</div>
+<!-- Модальное окно для экзамена -->
+<div id="examModal" style="display:none;">
+    <h2>Экзамен</h2>
+    <p>Уровень: <span id="examLevel"></span></p>
+    <div id="examQuestion"></div>
+    <div id="examOptionsContainer"></div>
+    <p id="examFeedback"></p>
+    <p>Счёт: <span id="examScore">0</span></p>
+    <p>Попытки: <span id="examAttempts">0</span></p>
+    <button id="finishExamBtn">Завершить экзамен</button>
+</div>
 
+<!-- Модальное окно для результата экзамена -->
+<div id="examResultModal" style="display:none;">
+    <h2>Результат экзамена</h2>
+    <p id="examResult"></p>
+    <button id="closeExamResultModal">Закрыть</button>
+</div>
+
+<!-- Кнопка для запуска экзамена -->
+<button id="startExamBtn">Сдать экзамен</button>
     <!-- Переключатели уровней для КАРТОЧЕК -->
     <div class="level-bar" id="cardLevelBar">
         <button data-level="A0" class="level-btn active">A0</button>
@@ -304,28 +324,7 @@
             </div>
             <div class="sub" style="font-size:0.7rem;">🔊 Клик по тексту вопроса/ответу – озвучка немецкого</div>
         </div>
-        <!-- Модальное окно для экзамена -->
-<div id="examModal" style="display:none;">
-    <h2>Экзамен</h2>
-    <p>Уровень: <span id="examLevel"></span></p>
-    <div id="examQuestion"></div>
-    <div id="examOptionsContainer"></div>
-    <p id="examFeedback"></p>
-    <p>Счёт: <span id="examScore">0</span></p>
-    <p>Попытки: <span id="examAttempts">0</span></p>
-    <button id="finishExamBtn">Завершить экзамен</button>
-</div>
-
-<!-- Модальное окно для результата экзамена -->
-<div id="examResultModal" style="display:none;">
-    <h2>Результат экзамена</h2>
-    <p id="examResult"></p>
-    <button id="closeExamResultModal">Закрыть</button>
-</div>
-
-<!-- Кнопка для запуска экзамена -->
-<button id="startExamBtn">Сдать экзамен</button>
-    </div>
+        
     <footer>Более 300 слов и фраз. Статусы сохраняются. Фильтр «Все» показывает только неизученные карточки.</footer>
 </div>
 
