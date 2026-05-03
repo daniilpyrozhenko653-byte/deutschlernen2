@@ -4027,23 +4027,24 @@ setInterval(() => {
 }, 500);
 
 
-    // ========== КРУТЫЕ ЗВУКИ ДЛЯ ВИКТОРИНЫ ==========
+    // ========== ВСЕ ЗВУКИ ДЛЯ ВИКТОРИНЫ ==========
 let audioUnlocked = false;
 
 function unlockAudio() {
     if(audioUnlocked) return;
+    let ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume();
     audioUnlocked = true;
 }
 document.addEventListener('click', unlockAudio);
 
+// Звук на ПРАВИЛЬНЫЙ ответ
 function playCorrectSound() {
     try {
         let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let now = audioCtx.currentTime;
         
-        // Весёлая победная мелодия
-        let notes = [523, 659, 784, 1046];
-        
+        let notes = [523, 659, 784];
         notes.forEach((freq, i) => {
             let osc = audioCtx.createOscillator();
             let gain = audioCtx.createGain();
@@ -4052,48 +4053,50 @@ function playCorrectSound() {
             osc.frequency.value = freq;
             osc.type = 'sine';
             gain.gain.value = 0.2;
-            osc.start(now + i * 0.15);
-            gain.gain.exponentialRampToValueAtTime(0.00001, now + i * 0.15 + 0.2);
-            osc.stop(now + i * 0.15 + 0.2);
+            osc.start(now + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.00001, now + i * 0.12 + 0.2);
+            osc.stop(now + i * 0.12 + 0.2);
         });
-        
-        // Фанфары в конце
-        setTimeout(() => {
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.value = 1318;
-            osc.type = 'sine';
-            gain.gain.value = 0.25;
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-            osc.stop(audioCtx.currentTime + 0.3);
-        }, 600);
-        
-    } catch(e) { console.log("Звук ошибка:", e); }
+    } catch(e) {}
 }
 
+// Звук на НЕПРАВИЛЬНЫЙ ответ
 function playWrongSound() {
+    try {
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 220;
+        osc.type = 'sawtooth';
+        gain.gain.value = 0.15;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+        osc.stop(audioCtx.currentTime + 0.5);
+    } catch(e) {}
+}
+
+// Звук на НОВЫЙ РЕКОРД
+function playRecordSound() {
     try {
         let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let now = audioCtx.currentTime;
         
-        // Два грустных "бууу" подряд
-        [196, 174].forEach((freq, i) => {
+        let notes = [523, 659, 784, 1046, 1318, 1567];
+        notes.forEach((freq, i) => {
             let osc = audioCtx.createOscillator();
             let gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.frequency.value = freq;
-            osc.type = 'sawtooth';
-            gain.gain.value = 0.15;
-            osc.start(now + i * 0.4);
-            gain.gain.exponentialRampToValueAtTime(0.00001, now + i * 0.4 + 0.5);
-            osc.stop(now + i * 0.4 + 0.5);
+            osc.type = 'sine';
+            gain.gain.value = 0.25;
+            osc.start(now + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.00001, now + i * 0.1 + 0.2);
+            osc.stop(now + i * 0.1 + 0.2);
         });
-        
-    } catch(e) { console.log("Звук ошибка:", e); }
+    } catch(e) {}
 }
 
 // Перехватываем ответы в викторине
@@ -4110,60 +4113,6 @@ if(originalHandle) {
     };
 }
 
-
-    // ========== ЗВУК ПРИ НОВОМ РЕКОРДЕ ==========
-let audioUnlocked = false;
-
-function unlockAudio() {
-    if(audioUnlocked) return;
-    let ctx = new (window.AudioContext || window.webkitAudioContext)();
-    ctx.resume();
-    audioUnlocked = true;
-}
-document.addEventListener('click', unlockAudio);
-
-function playRecordSound() {
-    try {
-        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let now = audioCtx.currentTime;
-        
-        // Эпичная победная мелодия (как в играх при рекорде!)
-        let notes = [523, 659, 784, 1046, 1318, 1567, 2093, 2637];
-        
-        notes.forEach((freq, i) => {
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.value = freq;
-            osc.type = 'sine';
-            gain.gain.value = 0.25;
-            osc.start(now + i * 0.1);
-            gain.gain.exponentialRampToValueAtTime(0.00001, now + i * 0.1 + 0.2);
-            osc.stop(now + i * 0.1 + 0.2);
-        });
-        
-        // Добавляем барабаны (низкие звуки)
-        setTimeout(() => {
-            for(let i = 0; i < 3; i++) {
-                setTimeout(() => {
-                    let osc = audioCtx.createOscillator();
-                    let gain = audioCtx.createGain();
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.frequency.value = 110;
-                    osc.type = 'triangle';
-                    gain.gain.value = 0.2;
-                    osc.start();
-                    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-                    osc.stop(audioCtx.currentTime + 0.3);
-                }, i * 150);
-            }
-        }, 800);
-        
-    } catch(e) {}
-}
-
 // Следим за рекордом
 let lastRecord = 0;
 setInterval(() => {
@@ -4171,9 +4120,7 @@ setInterval(() => {
     if(recordElement) {
         let currentRecord = parseInt(recordElement.textContent) || 0;
         if(currentRecord > lastRecord && lastRecord !== 0) {
-            // Рекорд побит!
             playRecordSound();
-            
             // Визуальный эффект
             let flash = document.createElement('div');
             flash.innerHTML = '🏆 НОВЫЙ РЕКОРД! 🏆';
@@ -4184,6 +4131,11 @@ setInterval(() => {
         lastRecord = currentRecord;
     }
 }, 500);
+
+// Добавляем анимацию для уведомления
+let style = document.createElement('style');
+style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
+document.head.appendChild(style);
 </script>
 </body>
 </html>
