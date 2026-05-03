@@ -2941,6 +2941,91 @@
     // СТАРТ
     changeCardLevel("A0");
     changeQuizLevel();
+
+
+
+    // ========== ЭКЗАМЕН ==========
+let examLevel = "A0";
+let examVocabList = [];
+let currentExamQuestion = null;
+let examScore = 0, examAttempts = 0, examPassed = false;
+
+function getExamVocabulary(level) { return [...(vocabDatabase[level] || [])]; }
+
+function generateExamQuestion() {
+    if (!examVocabList.length) examVocabList = [{ german: "Нет слов", russian: "Пусто" }];
+    let mode = Math.random() < 0.5;
+    let item = examVocabList[Math.floor(Math.random() * examVocabList.length)];
+    let question, correct;
+    if (mode) { question = `🇩🇪 Как перевести "${item.german}" на русский?`; correct = item.russian; }
+    else { question = `🇷🇺 Что значит по-немецки "${item.russian}"?`; correct = item.german; }
+    let wrongs = examVocabList.filter(w => (mode ? w.russian !== correct : w.german !== correct)).map(w => mode ? w.russian : w.german);
+    wrongs = [...new Set(wrongs)];
+    while (wrongs.length < 3) wrongs.push("???");
+    wrongs = wrongs.sort(() => 0.5 - Math.random()).slice(0, 3);
+    let options = [correct, ...wrongs];
+    options.sort(() => 0.5 - Math.random());
+    currentExamQuestion = { question, correctAnswer: correct, options };
+}
+
+function renderExam() {
+    if (!currentExamQuestion) return;
+    document.getElementById('examQuestion').innerHTML = currentExamQuestion.question;
+    let optionsContainer = document.getElementById('examOptionsContainer');
+    optionsContainer.innerHTML = "";
+    currentExamQuestion.options.forEach(opt => {
+        let btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.classList.add('option-btn');
+        btn.onclick = () => handleExamAnswer(opt, btn);
+        optionsContainer.appendChild(btn);
+    });
+    document.getElementById('examFeedback').innerHTML = "Выберите ответ!";
+}
+
+function handleExamAnswer(selected, btn) {
+    let isCorrect = (selected === currentExamQuestion.correctAnswer);
+    if (isCorrect) {
+        examScore += 1;
+        document.getElementById('examFeedback').innerHTML = `✅ Верно!`;
+    } else {
+        document.getElementById('examFeedback').innerHTML = `❌ Ошибка! Правильный ответ: "${currentExamQuestion.correctAnswer}".`;
+    }
+    document.getElementById('examScore').textContent = examScore;
+    setTimeout(nextExamQuestion, 1000);
+}
+
+function nextExamQuestion() {
+    generateExamQuestion();
+    renderExam();
+}
+
+function startExam(level) {
+    examLevel = level;
+    examVocabList = getExamVocabulary(examLevel);
+    examScore = 0;
+    examAttempts += 1;
+    examPassed = false;
+    document.getElementById('examScore').textContent = examScore;
+    document.getElementById('examAttempts').textContent = examAttempts;
+    generateExamQuestion();
+    renderExam();
+    document.getElementById('examModal').style.display = 'block';
+}
+
+function finishExam() {
+    let passScore = 7; // Минимальное количество правильных ответов для сдачи
+    examPassed = examScore >= passScore;
+    document.getElementById('examModal').style.display = 'none';
+    document.getElementById('examResult').textContent = examPassed ? "🎉 Вы сдали экзамен!" : "❌ Вы не сдали экзамен.";
+    document.getElementById('examResultModal').style.display = 'block';
+}
+
+document.getElementById('startExamBtn')?.addEventListener('click', () => startExam(currentCardLevel));
+document.getElementById('finishExamBtn')?.addEventListener('click', finishExam);
+document.getElementById('closeExamResultModal')?.addEventListener('click', () => {
+    document.getElementById('examResultModal').style.display = 'none';
+});
 </script>
 </body>
 </html>
