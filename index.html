@@ -3955,7 +3955,35 @@ setTimeout(function() {
     }, 4000);
 }, 1000);
 
+// ========== ЗВУК ПРИ ПЕРЕВОРОТЕ КАРТОЧКИ ==========
+function addClickSound() {
+    let card = document.getElementById('flashcard');
+    if(card) {
+        card.addEventListener('click', () => {
+            // Создаём простой звук через Web Audio API (работает без файлов)
+            try {
+                let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                let oscillator = audioCtx.createOscillator();
+                let gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.1;
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch(e) {
+                console.log("Звук не поддерживается");
+            }
+        });
+    }
+}
 
+// Запускаем после загрузки страницы
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addClickSound);
+} else {
+    addClickSound();
     
 </script>
 </body>
