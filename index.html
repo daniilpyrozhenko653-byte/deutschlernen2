@@ -263,11 +263,6 @@
 <div class="app-container">
     <h1>🇩🇪 Немецкий тренажёр</h1>
     <div class="sub">A0–C1 | Карточки с фильтрами «Все (неизученные)», «Изучено», «На повтор» | Викторина с рекордами</div>
-<h2>📨 Обратная связь</h2>
-    <input type="text" id="name" placeholder="Ваше имя">
-    <textarea id="message" rows="4" placeholder="Ваше сообщение"></textarea>
-    <button id="sendBtn">📤 Отправить в Telegram</button>
-    <div id="status">Заполните поля и нажмите "Отправить"</div>
 
 <div id="cardLevelBar">
     <button class="level-btn" data-level="A0">A0</button>
@@ -3640,48 +3635,7 @@ function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 
-     // ============ ВСТАВЬТЕ СВОИ ДАННЫЕ ============
-        const BOT_TOKEN = '8727047085:AAF57jZm69QTTthyaxjt3vP3VyxxFLIUFWg';
-        const CHAT_ID   = '8086179119';
-        // =============================================
-
-        const sendBtn = document.getElementById('sendBtn');
-        const statusDiv = document.getElementById('status');
-
-        sendBtn.onclick = async () => {
-            const name = document.getElementById('name').value.trim();
-            const message = document.getElementById('message').value.trim();
-
-            if (!name || !message) {
-                statusDiv.innerText = '❌ Заполните имя и сообщение';
-                return;
-            }
-
-            const text = 📩 Новое сообщение\n👤 Имя: ${name}\n💬 Сообщение: ${message};
-            statusDiv.innerText = '📡 Отправка...';
-            sendBtn.disabled = true;
-
-            try {
-                const url = https://api.telegram.org/bot${BOT_TOKEN}/sendMessage;
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: CHAT_ID, text: text })
-                });
-                const data = await response.json();
-                if (data.ok) {
-                    statusDiv.innerText = '✅ Отправлено! Спасибо.';
-                    document.getElementById('name').value = '';
-                    document.getElementById('message').value = '';
-                } else {
-                    statusDiv.innerText = '❌ Ошибка: ' + data.description;
-                }
-            } catch (err) {
-                statusDiv.innerText = '❌ Ошибка сети: ' + err.message;
-            }
-            sendBtn.disabled = false;
-        };
-    
+     
          
 </script>
 </body>
