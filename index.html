@@ -263,10 +263,9 @@
 <div class="app-container">
     <h1>🇩🇪 Немецкий тренажёр</h1>
     <div class="sub">A0–C1 | Карточки с фильтрами «Все (неизученные)», «Изучено», «На повтор» | Викторина с рекордами</div>
-<audio controls>
-  <source src="audio_2026-05-03_18-59-28.ogg" type="audio/ogg">
-  Ваш браузер не поддерживает элемент audio.
-</audio>
+<button id="recordBtn">⏺ Запись</button>
+<button id="stopBtn" disabled>⏹️ Стоп</button>
+<audio id="audioPlayback" controls></audio>
 <div id="cardLevelBar">
     <button class="level-btn" data-level="A0">A0</button>
     <button class="level-btn" data-level="A1">A1</button>
@@ -3636,6 +3635,37 @@ function initApp() {
 
 // Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', initApp);
+
+
+    let mediaRecorder;
+let audioChunks = [];
+
+// Запрашиваем доступ к микрофону при загрузке страницы
+navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = event => {
+      audioChunks.push(event.data);
+    };
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      document.getElementById('audioPlayback').src = audioUrl;
+    };
+  });
+
+// Логика кнопок
+document.getElementById('recordBtn').onclick = () => {
+  audioChunks = [];
+  mediaRecorder.start();
+  document.getElementById('recordBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+};
+document.getElementById('stopBtn').onclick = () => {
+  mediaRecorder.stop();
+  document.getElementById('stopBtn').disabled = true;
+  document.getElementById('recordBtn').disabled = false;
+};
 
 </script>
 </body>
