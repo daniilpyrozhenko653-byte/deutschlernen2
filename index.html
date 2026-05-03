@@ -2834,28 +2834,40 @@
         document.querySelectorAll('.option-btn').forEach(b => { b.disabled = false; b.style.background = "#2A3E48"; });
     }
 
-    function handleQuizAnswer(selected, btn) {
-        if (answered || lock) return;
-        let isCorrect = (selected === currentQuizQuestion.correctAnswer);
-        answered = true; lock = true;
-        let allBtns = document.querySelectorAll('.option-btn');
-        allBtns.forEach(b => b.disabled = true);
-        if (isCorrect) {
-            quizScore += 10; streak++;
-            quizFeedbackSpan.innerHTML = `✅ Верно! +10 очков. Серия: ${streak}`;
-            allBtns.forEach(b => { if (b.textContent === currentQuizQuestion.correctAnswer) b.style.background = "#2E7D64"; });
-        } else {
-            streak = 0;
-            quizFeedbackSpan.innerHTML = `❌ Ошибка! Правильный ответ: "${currentQuizQuestion.correctAnswer}".`;
-            allBtns.forEach(b => { if (b.textContent === currentQuizQuestion.correctAnswer) b.style.background = "#2E7D64"; });
-            if (btn) btn.style.background = "#A1422F";
-        }
-        quizScoreSpan.textContent = quizScore;
-        streakSpan.textContent = streak;
-        updateQuizRecord();
-        nextQuizBtn.disabled = false;
-        nextQuizBtn.style.opacity = '1';
+   function handleQuizAnswer(selected, btn) {
+    if (answered || lock) return;
+    let isCorrect = (selected === currentQuizQuestion.correctAnswer);
+    answered = true; lock = true;
+    let allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(b => b.disabled = true);
+    
+    if (isCorrect) {
+        quizScore += 10; 
+        streak++;
+        quizFeedbackSpan.innerHTML = `✅ Верно! +10 очков. Серия: ${streak}`;
+        allBtns.forEach(b => { 
+            if (b.textContent === currentQuizQuestion.correctAnswer) 
+                b.style.background = "#2E7D64"; 
+        });
+    } else {
+        // Сбрасываем очки и серию при неправильном ответе
+        quizScore = 0;
+        streak = 0;
+        quizFeedbackSpan.innerHTML = `❌ Ошибка! Очки сброшены. Правильный ответ: "${currentQuizQuestion.correctAnswer}".`;
+        allBtns.forEach(b => { 
+            if (b.textContent === currentQuizQuestion.correctAnswer) 
+                b.style.background = "#2E7D64"; 
+        });
+        if (btn) btn.style.background = "#A1422F";
     }
+    
+    quizScoreSpan.textContent = quizScore;
+    streakSpan.textContent = streak;
+    updateQuizRecord();
+    nextQuizBtn.disabled = false;
+    nextQuizBtn.style.opacity = '1';
+}
+
 
     function nextQuizQuestion() {
         if (!answered && !lock) {
