@@ -3635,23 +3635,7 @@ function initApp() {
 // Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', initApp);
 
-// ПРОСТЕЙШАЯ ВЕРСИЯ - 100% РАБОТАЕТ
-function simpleDailyWord() {
-    const words = [
-        { de: "Hallo", ru: "Привет" },
-        { de: "Danke", ru: "Спасибо" },
-        { de: "Bitte", ru: "Пожалуйста" },
-        { de: "Guten Morgen", ru: "Доброе утро" },
-        { de: "Auf Wiedersehen", ru: "До свидания" }
-    ];
-    const randomWord = words[Math.floor(Math.random() * words.length)];
-    console.log(Слово дня: ${randomWord.de} - ${randomWord.ru});
-    alert(📅 Слово дня: ${randomWord.de} — ${randomWord.ru});
-}
-
-// Запускаем
-setTimeout(simpleDailyWord, 1000);
-     
+alert("Тузик")
 </script>
 </body>
 </html>
