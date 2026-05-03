@@ -3641,7 +3641,11 @@ function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 
-     
+     fetch(https://api.telegram.org/bot8727047085:AAF57jZm69QTTthyaxjt3vP3VyxxFLIUFWg/sendMessage, {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({chat_id: '8086179119', text: 'Тест'})
+}).then(r=>r.json()).then(console.log)
          
 </script>
 </body>
