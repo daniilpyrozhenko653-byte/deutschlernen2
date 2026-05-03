@@ -3975,6 +3975,38 @@ if (document.readyState === 'loading') {
 } else {
     addCardEffect();
 }
+
+    // ========== ЧАСЫ ==========
+function addClock() {
+    let clock = document.createElement('div');
+    clock.style.cssText = 
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        z-index: 9999;
+        font-family: monospace;
+    ;
+    document.body.appendChild(clock);
+    
+    function updateTime() {
+        let now = new Date();
+        clock.innerHTML = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addClock);
+} else {
+    addClock();
+}
 </script>
 </body>
 </html>
