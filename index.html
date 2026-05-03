@@ -3990,7 +3990,17 @@ document.addEventListener('click', function() {
         setTimeout(() => motivDiv.remove(), 1000);
     }
 });
-    
+
+    // ========== СЛУЧАЙНАЯ КАРТОЧКА ==========
+setTimeout(() => {
+    if(typeof filteredCardList !== 'undefined' && filteredCardList.length > 0) {
+        let randomIdx = Math.floor(Math.random() * filteredCardList.length);
+        filteredIdx = randomIdx;
+        isFlipped = false;
+        if(typeof updateCardUI === 'function') updateCardUI();
+        if(typeof updateStatusButtonsUI === 'function') updateStatusButtonsUI();
+    }
+}, 100);
 </script>
 </body>
 </html>
