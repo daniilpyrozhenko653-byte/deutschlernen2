@@ -3634,7 +3634,31 @@ function initApp() {
 // Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', initApp);
 
-
+function setDailyCard() {
+    const today = new Date().toISOString().split('T')[0];
+    let dailyCard = safeLocalStorageGet(daily_${today});
+    
+    if (!dailyCard) {
+        const allCards = [];
+        for (let level in vocabDatabase) {
+            if (vocabDatabase[level] && Array.isArray(vocabDatabase[level])) {
+                allCards.push(...vocabDatabase[level]);
+            }
+        }
+        
+        if (allCards.length === 0) return;
+        
+        const randomCard = allCards[Math.floor(Math.random() * allCards.length)];
+        dailyCard = JSON.stringify(randomCard);
+        safeLocalStorageSet(daily_${today}, dailyCard);
+        
+        // Показываем уведомление при первом посещении в день
+        setTimeout(() => {
+            const card = JSON.parse(dailyCard);
+            showNotification(📅 Слово дня: ${card.german} — ${card.russian});
+        }, 1000);
+    }
+}
      
 </script>
 </body>
