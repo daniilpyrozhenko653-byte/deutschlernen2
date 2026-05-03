@@ -263,13 +263,12 @@
 <div class="app-container">
     <h1>🇩🇪 Немецкий тренажёр</h1>
     <div class="sub">A0–C1 | Карточки с фильтрами «Все (неизученные)», «Изучено», «На повтор» | Викторина с рекордами</div>
-<div class="voice-feedback">
-  <button id="startRecordBtn">🎙️ Записать сообщение</button>
-  <button id="stopRecordBtn" disabled>⏹️ Стоп</button>
-  <button id="sendToServerBtn" disabled>📤 Отправить</button>
-  <audio id="audioPlayback" controls style="display:none;"></audio>
-  <p id="statusMsg"></p>
-</div>
+<h2>📢 Оставьте голосовое сообщение</h2>
+    <button id="startBtn">🎙️ Запись</button>
+    <button id="stopBtn" disabled>⏹️ Стоп</button>
+    <button id="sendBtn" disabled>📤 Отправить в Telegram</button>
+    <audio id="playback" controls style="display:none;"></audio>
+    <div id="status">Готов к записи</div>
 <div id="cardLevelBar">
     <button class="level-btn" data-level="A0">A0</button>
     <button class="level-btn" data-level="A1">A1</button>
@@ -3641,94 +3640,92 @@ function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 
-     // Ждём полной загрузки HTML
-  document.addEventListener('DOMContentLoaded', function() {
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let recordedBlob = null;
+     
+        // ============ НАСТРОЙКИ (ЗАМЕНИТЕ НА СВОИ) ============
+        const BOT_TOKEN = '8727047085:AAF57jZm69QTTthyaxjt3vP3VyxxFLIUFWg';   // Например: '1234567890:ABCdefGHIjklmNOPqrstUVwxyz'
+        const CHAT_ID   = '8086179119';    // Например: '123456789'
+        // =====================================================
 
-    const startBtn = document.getElementById('startRecordBtn');
-    const stopBtn = document.getElementById('stopRecordBtn');
-    const sendBtn = document.getElementById('sendToServerBtn');
-    const playbackAudio = document.getElementById('audioPlayback');
-    const statusMsg = document.getElementById('statusMsg');
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedBlob = null;
 
-    // Проверка поддержки браузером
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      statusMsg.innerText = '❌ Ваш браузер не поддерживает запись звука';
-      startBtn.disabled = true;
-      return;
-    }
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const playback = document.getElementById('playback');
+        const statusDiv = document.getElementById('status');
 
-    // Запрашиваем доступ к микрофону
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
-
-        mediaRecorder.ondataavailable = (event) => {
-          audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          recordedBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-          const audioUrl = URL.createObjectURL(recordedBlob);
-          playbackAudio.src = audioUrl;
-          playbackAudio.style.display = 'block';
-          sendBtn.disabled = false;
-          statusMsg.innerText = '✅ Готово. Прослушайте и нажмите "Отправить"';
-        };
-
-        // Кнопка "Записать"
-        startBtn.onclick = () => {
-          audioChunks = [];
-          mediaRecorder.start();
-          startBtn.disabled = true;
-          stopBtn.disabled = false;
-          sendBtn.disabled = true;
-          playbackAudio.style.display = 'none';
-          statusMsg.innerText = '🎤 ГОВОРИТЕ... Нажмите "Стоп" когда закончите.';
-        };
-
-        // Кнопка "Стоп"
-        stopBtn.onclick = () => {
-          mediaRecorder.stop();
-          stopBtn.disabled = true;
-          startBtn.disabled = false;
-          statusMsg.innerText = '⏹️ Запись остановлена.';
-        };
-      })
-      .catch((err) => {
-        console.error('Ошибка микрофона:', err);
-        statusMsg.innerText = '❌ Нет доступа к микрофону. Разрешите доступ и обновите страницу.';
-        startBtn.disabled = true;
-      });
-
-    // Кнопка "Отправить"
-    sendBtn.onclick = async () => {
-      if (!recordedBlob) return;
-      const formData = new FormData();
-      formData.append('voice_message', recordedBlob, 'voice_message.ogg');
-      statusMsg.innerText = '📡 Отправляю...';
-      try {
-        const response = await fetch('/sendToTelegram.php', {
-          method: 'POST',
-          body: formData
-        });
-        const text = await response.text();
-        if (response.ok && text === 'OK') {
-          statusMsg.innerText = '🎉 Голосовое сообщение отправлено!';
-          sendBtn.disabled = true;
-          playbackAudio.style.display = 'none';
-          recordedBlob = null;
+        // Проверка поддержки
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            statusDiv.innerText = '❌ Ваш браузер не поддерживает запись звука';
+            startBtn.disabled = true;
         } else {
-          statusMsg.innerText = '❌ Ошибка отправки: ' + text;
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        recordedBlob = new Blob(audioChunks, { type: 'audio/ogg' });
+                        const audioUrl = URL.createObjectURL(recordedBlob);
+                        playback.src = audioUrl;
+                        playback.style.display = 'block';
+                        sendBtn.disabled = false;
+                        statusDiv.innerText = '✅ Запись готова. Можете отправить.';
+                    };
+                    startBtn.onclick = () => {
+                        audioChunks = [];
+                        mediaRecorder.start();
+                        startBtn.disabled = true;
+                        stopBtn.disabled = false;
+                        sendBtn.disabled = true;
+                        playback.style.display = 'none';
+                        statusDiv.innerText = '🎤 Запись... Говорите, потом нажмите "Стоп"';
+                    };
+                    stopBtn.onclick = () => {
+                        mediaRecorder.stop();
+                        stopBtn.disabled = true;
+                        startBtn.disabled = false;
+                        statusDiv.innerText = '⏹️ Запись остановлена.';
+                    };
+                })
+                .catch(() => {
+                    statusDiv.innerText = '❌ Нет доступа к микрофону. Разрешите и обновите страницу.';
+                    startBtn.disabled = true;
+                });
         }
-      } catch (e) {
-        console.error('Ошибка сети:', e);
-        statusMsg.innerText = '❌ Ошибка сети. Проверьте соединение или путь к sendToTelegram.php';
-      }
-    };
-  });
+
+        // Отправка файла напрямую в Telegram Bot API
+        sendBtn.onclick = async () => {
+            if (!recordedBlob) return;
+            statusDiv.innerText = '📡 Отправка в Telegram...';
+            sendBtn.disabled = true;
+
+            const formData = new FormData();
+            // Telegram API ожидает поле 'voice' для аудио (или 'document' для любого файла)
+            // Используем 'voice' – тогда сообщение будет как голосовое (удобно слушать в один клик)
+            formData.append('voice', recordedBlob, 'voice_message.ogg');
+[03.05.2026 20:10] Д: try {
+                const response = await fetch(https://api.telegram.org/bot${BOT_TOKEN}/sendVoice, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.ok) {
+                    statusDiv.innerText = '🎉 Отправлено! Сообщение пришло в Telegram.';
+                    sendBtn.disabled = true;
+                    playback.style.display = 'none';
+                    recordedBlob = null;
+                } else {
+                    statusDiv.innerText = '❌ Ошибка Telegram: ' + (result.description || 'неизвестная ошибка');
+                    sendBtn.disabled = false;
+                }
+            } catch (err) {
+                statusDiv.innerText = '❌ Ошибка сети: ' + err.message;
+                sendBtn.disabled = false;
+            }
+        };
+   
 </script>
 </body>
 </html>
