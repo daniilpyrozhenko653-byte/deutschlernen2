@@ -2974,6 +2974,451 @@ document.getElementById('finishExamBtn')?.addEventListener('click', finishExam);
 document.getElementById('closeExamResultModal')?.addEventListener('click', () => {
     document.getElementById('examResultModal').style.display = 'none';
 });
+
+
+    // ========== Утилиты ==========
+    function safeLocalStorageGet(key, defaultValue = null) {
+        try { return localStorage.getItem(key); } catch(e) { console.warn(e); return defaultValue; }
+    }
+    function safeLocalStorageSet(key, value) {
+        try { localStorage.setItem(key, value); return true; } catch(e) { console.warn(e); return false; }
+    }
+    function speak(text) { 
+        if(!text || !window.speechSynthesis) return; 
+        window.speechSynthesis.cancel(); 
+        let u = new SpeechSynthesisUtterance(text); 
+        u.lang = 'de-DE'; 
+        u.rate = 0.9; 
+        window.speechSynthesis.speak(u); 
+    }
+
+    // ========== КАРТОЧКИ ==========
+    let currentCardLevel = "A0";
+    let isFlipped = false;
+    let fullCardList = [];          // все карточки текущего уровня в исходном порядке
+    let filteredCardList = [];      // отфильтрованный список (с учётом статусов и фильтра)
+    let filteredIdx = 0;            // индекс в отфильтрованном списке
+    let currentFilter = 'all';      // 'all' (неизученные), 'learned', 'repeat'
+
+    function isPlaceholderCard(item) {
+        return item && (item.german === "Нет карточек" || item.russian === "...");
+    }
+
+    function statusKey(lvl, idx) { return `cardStatus_${lvl}_${idx}`; }
+    function getCardStatus(idx) {
+        if (idx < 0 || idx >= fullCardList.length) return null;
+        return safeLocalStorageGet(statusKey(currentCardLevel, idx));
+    }
+    function setCardStatusTo(status) {
+        const realIdx = currentCardIndexReal();
+        if (realIdx === null || isPlaceholderCard(filteredCardList[filteredIdx])) return;
+        if (status === null) {
+            safeLocalStorageSet(statusKey(currentCardLevel, realIdx), null);
+        } else {
+            safeLocalStorageSet(statusKey(currentCardLevel, realIdx), status);
+        }
+        applyFilterAndSync();
+    }
+    // toggle статуса: если уже имеет такой статус, снимаем (null)
+    function toggleStatus(status) {
+        const realIdx = currentCardIndexReal();
+        if (realIdx === null || isPlaceholderCard(filteredCardList[filteredIdx])) return;
+        const current = getCardStatus(realIdx);
+        if (current === status) {
+            setCardStatusTo(null);
+        } else {
+            setCardStatusTo(status);
+        }
+    }
+
+    function currentCardIndexReal() {
+        if (!filteredCardList.length || filteredIdx >= filteredCardList.length) return null;
+        let item = filteredCardList[filteredIdx];
+        if (isPlaceholderCard(item)) return null;
+        return fullCardList.findIndex(w => w.german === item.german && w.russian === item.russian);
+    }
+
+    function rebuildFullList() {
+        fullCardList = [...(vocabDatabase[currentCardLevel] || [])];
+        if (!fullCardList.length) fullCardList = [{ german: "Нет слов", russian: "..." }];
+    }
+
+    function applyFilterAndSync() {
+        rebuildFullList();
+        if (currentFilter === 'all') {
+            // Все неизученные (статус не 'learned')
+            filteredCardList = fullCardList.filter((_, idx) => getCardStatus(idx) !== 'learned');
+        } else if (currentFilter === 'learned') {
+            filteredCardList = fullCardList.filter((_, idx) => getCardStatus(idx) === 'learned');
+        } else if (currentFilter === 'repeat') {
+            filteredCardList = fullCardList.filter((_, idx) => getCardStatus(idx) === 'repeat');
+        }
+        if (filteredCardList.length === 0) {
+            filteredCardList = [{ german: "Нет карточек", russian: "Смените фильтр" }];
+        }
+        if (filteredIdx >= filteredCardList.length) filteredIdx = 0;
+        updateCardUI();
+        updateStatusButtonsUI();
+    }
+
+    function updateCardUI() {
+        if (!filteredCardList.length) return;
+        let item = filteredCardList[filteredIdx];
+        let cardDiv = document.getElementById('flashcard');
+        let counterSpan = document.getElementById('cardCounter');
+        if (cardDiv) {
+            cardDiv.textContent = isFlipped ? item.russian : item.german;
+            cardDiv.className = isFlipped ? "flashcard card-russian" : "flashcard card-german";
+        }
+        if (counterSpan) counterSpan.textContent = `${filteredIdx+1} / ${filteredCardList.length}`;
+        loadNoteForCurrentCard();
+    }
+
+    function updateStatusButtonsUI() {
+        let realIdx = currentCardIndexReal();
+        let status = (realIdx !== null) ? getCardStatus(realIdx) : null;
+        let learnedBtn = document.getElementById('markLearnedBtn');
+        let repeatBtn = document.getElementById('markRepeatBtn');
+        if (!learnedBtn || !repeatBtn) return;
+        learnedBtn.classList.remove('active-learned');
+        repeatBtn.classList.remove('active-repeat');
+        if (status === 'learned') learnedBtn.classList.add('active-learned');
+        else if (status === 'repeat') repeatBtn.classList.add('active-repeat');
+        
+        // Если карточка-заглушка, отключаем кнопки статуса визуально
+        const isDummy = filteredCardList.length && isPlaceholderCard(filteredCardList[filteredIdx]);
+        if (isDummy) {
+            learnedBtn.classList.add('disabled-btn');
+            repeatBtn.classList.add('disabled-btn');
+        } else {
+            learnedBtn.classList.remove('disabled-btn');
+            repeatBtn.classList.remove('disabled-btn');
+        }
+    }
+
+    function flip() { isFlipped = !isFlipped; updateCardUI(); }
+    function nextCard() { if (filteredCardList.length) { filteredIdx = (filteredIdx + 1) % filteredCardList.length; updateCardUI(); updateStatusButtonsUI(); } }
+    function prevCard() { if (filteredCardList.length) { filteredIdx = (filteredIdx - 1 + filteredCardList.length) % filteredCardList.length; updateCardUI(); updateStatusButtonsUI(); } }
+    function randomCard() { if (filteredCardList.length) { filteredIdx = Math.floor(Math.random() * filteredCardList.length); updateCardUI(); updateStatusButtonsUI(); } }
+    
+    function changeCardLevel(level) {
+        currentCardLevel = level;
+        isFlipped = false;
+        currentFilter = 'all';
+        filteredIdx = 0;
+        applyFilterAndSync();
+        // обновить активную кнопку уровня
+        document.querySelectorAll('#cardLevelBar .level-btn').forEach(btn => {
+            let lvl = btn.getAttribute('data-level');
+            if (lvl === level) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        // сбросить активные фильтры на 'all'
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+        const allBtn = document.getElementById('showAllBtn');
+        if (allBtn) allBtn.classList.add('active-filter');
+    }
+
+    function setFilter(filter) {
+        currentFilter = filter;
+        filteredIdx = 0;
+        isFlipped = false;   // сброс переворота при смене фильтра
+        applyFilterAndSync();
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+        if (filter === 'all') document.getElementById('showAllBtn')?.classList.add('active-filter');
+        else if (filter === 'learned') document.getElementById('showLearnedBtn')?.classList.add('active-filter');
+        else if (filter === 'repeat') document.getElementById('showRepeatBtn')?.classList.add('active-filter');
+    }
+
+    function getNoteKey() { 
+    return `common_notepad`;  // общая заметка для всех
+}
+    function loadNoteForCurrentCard() {
+    let area = document.getElementById('noteTextarea');
+    let statusDiv = document.getElementById('noteStatus');
+    if (!area) return;
+    
+    area.disabled = false;
+    let saved = safeLocalStorageGet('common_notepad');
+    
+    if (saved && saved !== 'null') { 
+        area.value = saved; 
+        statusDiv.textContent = '📖 Тетрадь (общие записи)'; 
+    } else { 
+        area.value = '';  // ← пусто, а не null
+        statusDiv.textContent = '📖 Моя тетрадь'; 
+    }
+}
+    function saveNote() {
+    let area = document.getElementById('noteTextarea');
+    let statusDiv = document.getElementById('noteStatus');
+    let text = area.value.trim();
+    if (text) safeLocalStorageSet('common_notepad', text);
+    else safeLocalStorageSet('common_notepad', null);
+    statusDiv.textContent = text ? '✅ Записано в тетрадь' : '🗑 Тетрадь очищена';
+    setTimeout(() => { statusDiv.textContent = '📖 Моя тетрадь'; }, 1500);
+}
+    function clearNote() {
+    safeLocalStorageSet('common_notepad', null);
+    document.getElementById('noteTextarea').value = '';
+    document.getElementById('noteStatus').textContent = '📒 Тетрадь очищена';
+    setTimeout(() => { 
+        document.getElementById('noteStatus').textContent = '📖 Моя тетрадь'; 
+    }, 1500);
+}
+
+    function speakCurrentCard() {
+        let item = filteredCardList[filteredIdx];
+        if (item && item.german && !isPlaceholderCard(item)) speak(item.german);
+    }
+
+    // Обработчики карточек
+    document.getElementById('flashcard')?.addEventListener('click', flip);
+    document.getElementById('prevCardBtn')?.addEventListener('click', prevCard);
+    document.getElementById('nextCardBtn')?.addEventListener('click', nextCard);
+    document.getElementById('randomCardBtn')?.addEventListener('click', randomCard);
+    document.getElementById('speakCardBtn')?.addEventListener('click', speakCurrentCard);
+    document.getElementById('saveNoteBtn')?.addEventListener('click', saveNote);
+    document.getElementById('clearNoteBtn')?.addEventListener('click', clearNote);
+    document.getElementById('markLearnedBtn')?.addEventListener('click', () => toggleStatus('learned'));
+    document.getElementById('markRepeatBtn')?.addEventListener('click', () => toggleStatus('repeat'));
+    document.getElementById('showAllBtn')?.addEventListener('click', () => setFilter('all'));
+    document.getElementById('showLearnedBtn')?.addEventListener('click', () => setFilter('learned'));
+    document.getElementById('showRepeatBtn')?.addEventListener('click', () => setFilter('repeat'));
+    document.querySelectorAll('#cardLevelBar .level-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeCardLevel(btn.getAttribute('data-level')));
+    });
+
+    // ========== ВИКТОРИНА (НЕЗАВИСИМАЯ) ==========
+    let quizLevel = "A0";
+    let quizVocabList = [];
+    let currentQuizQuestion = null;
+    let quizScore = 0, streak = 0, answered = false, lock = false;
+    let currentCorrectGerman = "";
+    const quizQuestionDiv = document.getElementById('quizQuestion');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const quizFeedbackSpan = document.getElementById('quizFeedback');
+    const quizScoreSpan = document.getElementById('quizScore');
+    const streakSpan = document.getElementById('streakCount');
+    const recordSpan = document.getElementById('recordScore');
+    const nextQuizBtn = document.getElementById('nextQuizBtn');
+    const resetQuizBtn = document.getElementById('resetQuizBtn');
+    const quizLevelSelect = document.getElementById('quizLevelSelect');
+    const speakQuizWordBtn = document.getElementById('speakQuizWordBtn');
+
+    function getQuizVocabulary(level) { return [...(vocabDatabase[level] || [])]; }
+    function getRecordKey() { return `quizRecord_${quizLevel}`; }
+    function loadQuizRecord() { 
+        let r = safeLocalStorageGet(getRecordKey()); 
+        r = r ? parseInt(r) : 0; 
+        recordSpan.textContent = r; 
+        return r; 
+    }
+    function updateQuizRecord() { 
+        let rec = parseInt(safeLocalStorageGet(getRecordKey()) || '0'); 
+        if (quizScore > rec) { 
+            safeLocalStorageSet(getRecordKey(), quizScore.toString()); 
+            recordSpan.textContent = quizScore; 
+        } 
+    }
+
+    function generateQuizQuestion() {
+        if (!quizVocabList.length) quizVocabList = [{ german: "Нет слов", russian: "Пусто" }];
+        let mode = Math.random() < 0.5;
+        let item = quizVocabList[Math.floor(Math.random() * quizVocabList.length)];
+        let question, correct;
+        if (mode) { question = `🇩🇪 Как перевести "${item.german}" на русский?`; correct = item.russian; }
+        else { question = `🇷🇺 Что значит по-немецки "${item.russian}"?`; correct = item.german; }
+        currentCorrectGerman = item.german;
+        let wrongs = quizVocabList.filter(w => (mode ? w.russian !== correct : w.german !== correct)).map(w => mode ? w.russian : w.german);
+        wrongs = [...new Set(wrongs)];
+        while (wrongs.length < 3) wrongs.push("???");
+        wrongs = wrongs.sort(() => 0.5 - Math.random()).slice(0, 3);
+        let options = [correct, ...wrongs];
+        options.sort(() => 0.5 - Math.random());
+        currentQuizQuestion = { question, correctAnswer: correct, options };
+    }
+
+    function renderQuiz() {
+        if (!currentQuizQuestion) return;
+        quizQuestionDiv.innerHTML = currentQuizQuestion.question;
+        optionsContainer.innerHTML = "";
+        currentQuizQuestion.options.forEach(opt => {
+            let btn = document.createElement('button');
+            btn.textContent = opt;
+            btn.classList.add('option-btn');
+            btn.onclick = () => handleQuizAnswer(opt, btn);
+            optionsContainer.appendChild(btn);
+        });
+        quizFeedbackSpan.innerHTML = "Выберите ответ!";
+        answered = false; lock = false;
+        nextQuizBtn.disabled = true;
+        nextQuizBtn.style.opacity = '0.6';
+        document.querySelectorAll('.option-btn').forEach(b => { b.disabled = false; b.style.background = "#2A3E48"; });
+    }
+
+   function handleQuizAnswer(selected, btn) {
+    if (answered || lock) return;
+    let isCorrect = (selected === currentQuizQuestion.correctAnswer);
+    answered = true; lock = true;
+    let allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(b => b.disabled = true);
+    
+    if (isCorrect) {
+        quizScore += 10; 
+        streak++;
+        quizFeedbackSpan.innerHTML = `✅ Верно! +10 очков. Серия: ${streak}`;
+        allBtns.forEach(b => { 
+            if (b.textContent === currentQuizQuestion.correctAnswer) 
+                b.style.background = "#2E7D64"; 
+        });
+    } else {
+        // Сбрасываем очки и серию при неправильном ответе
+        quizScore = 0;
+        streak = 0;
+        quizFeedbackSpan.innerHTML = `❌ Ошибка! Очки сброшены. Правильный ответ: "${currentQuizQuestion.correctAnswer}".`;
+        allBtns.forEach(b => { 
+            if (b.textContent === currentQuizQuestion.correctAnswer) 
+                b.style.background = "#2E7D64"; 
+        });
+        if (btn) btn.style.background = "#A1422F";
+    }
+    
+    quizScoreSpan.textContent = quizScore;
+    streakSpan.textContent = streak;
+    updateQuizRecord();
+    nextQuizBtn.disabled = false;
+    nextQuizBtn.style.opacity = '1';
+}
+
+
+    function nextQuizQuestion() {
+        if (!answered && !lock) {
+            // пропуск вопроса — сбрасываем серию
+            streak = 0;
+            streakSpan.textContent = streak;
+            generateQuizQuestion(); 
+            renderQuiz(); 
+            quizFeedbackSpan.innerHTML = "Вопрос пропущен, серия сброшена.";
+            return;
+        }
+        generateQuizQuestion(); 
+        renderQuiz();
+    }
+    function resetQuizScore() { 
+        quizScore = 0; 
+        streak = 0; 
+        quizScoreSpan.textContent = 0; 
+        streakSpan.textContent = 0; 
+        generateQuizQuestion(); 
+        renderQuiz(); 
+        quizFeedbackSpan.innerHTML = "Счёт сброшен. Удачи!"; 
+    }
+    function changeQuizLevel() {
+        quizLevel = quizLevelSelect.value;
+        quizVocabList = getQuizVocabulary(quizLevel);
+        if (!quizVocabList.length) quizVocabList = [{ german: "Нет слов", russian: "Пусто" }];
+        quizScore = 0; streak = 0;
+        quizScoreSpan.textContent = 0; streakSpan.textContent = 0;
+        generateQuizQuestion(); renderQuiz(); loadQuizRecord();
+        quizFeedbackSpan.innerHTML = `Уровень викторины: ${quizLevel}`;
+    }
+    function speakQuizWord() { 
+        if (currentCorrectGerman) speak(currentCorrectGerman); 
+        else if (currentQuizQuestion?.correctAnswer.match(/[A-Za-zäöüß]/)) speak(currentQuizQuestion.correctAnswer); 
+    }
+
+    nextQuizBtn?.addEventListener('click', nextQuizQuestion);
+    resetQuizBtn?.addEventListener('click', resetQuizScore);
+    quizLevelSelect?.addEventListener('change', changeQuizLevel);
+    speakQuizWordBtn?.addEventListener('click', speakQuizWord);
+    quizQuestionDiv?.addEventListener('click', () => {
+        if (currentCorrectGerman) speak(currentCorrectGerman);
+    });
+    quizFeedbackSpan?.addEventListener('click', () => {
+        if (currentCorrectGerman) speak(currentCorrectGerman);
+        else if (currentQuizQuestion && /[A-Za-zäöüß]/i.test(currentQuizQuestion.correctAnswer)) speak(currentQuizQuestion.correctAnswer);
+    });
+
+    // СТАРТ
+    changeCardLevel("A0");
+    changeQuizLevel();
+
+
+
+    
+
+function renderExam() {
+    if (!currentExamQuestion) return;
+    document.getElementById('examQuestion').innerHTML = currentExamQuestion.question;
+    let optionsContainer = document.getElementById('examOptionsContainer');
+    optionsContainer.innerHTML = "";
+    currentExamQuestion.options.forEach(opt => {
+        let btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.classList.add('option-btn');
+        btn.onclick = () => handleExamAnswer(opt, btn);
+        optionsContainer.appendChild(btn);
+    });
+    document.getElementById('examFeedback').innerHTML = "Выберите ответ!";
+}
+
+function handleExamAnswer(selected, btn) {
+    let isCorrect = (selected === currentExamQuestion.correctAnswer);
+    if (isCorrect) {
+        examScore += 1;
+        document.getElementById('examFeedback').innerHTML = `✅ Верно!`;
+    } else {
+        document.getElementById('examFeedback').innerHTML = `❌ Ошибка! Правильный ответ: "${currentExamQuestion.correctAnswer}".`;
+    }
+    document.getElementById('examScore').textContent = examScore;
+    setTimeout(nextExamQuestion, 1000);
+}
+
+function nextExamQuestion() {
+    generateExamQuestion();
+    renderExam();
+}
+
+function startExam(level) {
+    examLevel = level;
+    examVocabList = getExamVocabulary(examLevel);
+    examScore = 0;
+    examAttempts += 1;
+    examPassed = false;
+    document.getElementById('examScore').textContent = examScore;
+    document.getElementById('examAttempts').textContent = examAttempts;
+    generateExamQuestion();
+    renderExam();
+    document.getElementById('examModal').style.display = 'block';
+}
+
+function finishExam() {
+let passScore = 7; // Минимальное количество правильных ответов для сдачи
+examPassed = examScore >= passScore;
+document.getElementById('examModal').style.display = 'none';
+document.getElementById('examResult').textContent = examPassed ? "🎉 Вы сдали экзамен!" : "❌ Вы не сдали экзамен.";
+document.getElementById('examResultModal').style.display = 'block';
+}
+document.getElementById('startExamBtn')?.addEventListener('click', () => startExam(currentCardLevel));
+document.getElementById('finishExamBtn')?.addEventListener('click', finishExam);
+document.getElementById('closeExamResultModal')?.addEventListener('click', () => {
+document.getElementById('examResultModal').style.display = 'none';
+});
+
+
+    function addCustomCard(german, russian) {
+    if (!vocabDatabase[currentCardLevel]) vocabDatabase[currentCardLevel] = [];
+    vocabDatabase[currentCardLevel].push({ german, russian });
+    rebuildFullList();
+    applyFilterAndSync();
+}
+
+document.getElementById('addCardBtn')?.addEventListener('click', () => {
+    let german = prompt("Введите слово на немецком:");
+    let russian = prompt("Введите перевод на русский:");
+    if (german && russian) addCustomCard(german, russian);
+});
 </script>
 </body>
 </html>
