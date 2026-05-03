@@ -3635,7 +3635,43 @@ function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 
-     
+     let achievements = {
+    perfectRound: false,
+    masterLevel: {},
+    streakMaster: false
+};
+
+function updateAchievements() {
+    // 10 правильных ответов подряд
+    if (streak >= 10 && !achievements.streakMaster) {
+        achievements.streakMaster = true;
+        showNotification('🏅 Достижение: Мастер серии!');
+    }
+    
+    // Выучить все слова уровня
+    const level = currentCardLevel;
+    const total = fullCardList.length;
+    const learned = fullCardList.filter((_, idx) => getCardStatus(idx) === 'learned').length;
+    
+    if (total > 0 && learned === total && !achievements.masterLevel[level]) {
+        achievements.masterLevel[level] = true;
+        showNotification(🏆 Достижение: Мастер уровня ${level}!);
+    }
+    
+    safeLocalStorageSet('achievements', JSON.stringify(achievements));
+}
+
+function showNotification(text) {
+    const notif = document.createElement('div');
+    notif.textContent = text;
+    notif.style.cssText = 
+        position: fixed; top: 20px; right: 20px; background: #4CAF50;
+        color: white; padding: 12px 20px; border-radius: 8px;
+        animation: slideIn 0.3s ease-out; z-index: 2000;
+    ;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
+}
          
 </script>
 </body>
