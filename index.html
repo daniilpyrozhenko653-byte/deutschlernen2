@@ -3629,11 +3629,13 @@ function initApp() {
     initEventListeners();
     changeCardLevel("A0");
     changeQuizLevel();
+     setDailyCard();
 }
 
 // Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', initApp);
 
+// ========== СЛОВО ДНЯ ==========
 function setDailyCard() {
     const today = new Date().toISOString().split('T')[0];
     let dailyCard = safeLocalStorageGet(daily_${today});
@@ -3652,12 +3654,30 @@ function setDailyCard() {
         dailyCard = JSON.stringify(randomCard);
         safeLocalStorageSet(daily_${today}, dailyCard);
         
-        // Показываем уведомление при первом посещении в день
         setTimeout(() => {
             const card = JSON.parse(dailyCard);
             showNotification(📅 Слово дня: ${card.german} — ${card.russian});
         }, 1000);
     }
+}
+
+// ========== УВЕДОМЛЕНИЯ (если нет) ==========
+function showNotification(text) {
+    const notif = document.createElement('div');
+    notif.textContent = text;
+    notif.style.cssText = 
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        animation: slideIn 0.3s ease-out;
+        z-index: 2000;
+    ;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
 }
      
 </script>
