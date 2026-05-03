@@ -4025,6 +4025,56 @@ setInterval(() => {
         lastStreak = currentStreak;
     }
 }, 500);
+
+
+    // ========== ЗВУК ДЛЯ ВИКТОРИНЫ (с разблокировкой) ==========
+let audioUnlocked = false;
+
+function unlockAudio() {
+    if(audioUnlocked) return;
+    let ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume();
+    audioUnlocked = true;
+    console.log("Звук разблокирован");
+}
+
+document.addEventListener('click', unlockAudio);
+
+function playQuizSound(isCorrect) {
+    try {
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let oscillator = audioCtx.createOscillator();
+        let gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if(isCorrect) {
+            oscillator.frequency.value = 880;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.2;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        } else {
+            oscillator.frequency.value = 440;
+            oscillator.type = 'sawtooth';
+            gainNode.gain.value = 0.15;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+    } catch(e) {}
+}
+
+let originalHandle = window.handleQuizAnswer;
+if(originalHandle) {
+    window.handleQuizAnswer = function(selected, btn) {
+        let wasCorrect = (selected === this.currentQuizQuestion?.correctAnswer);
+        playQuizSound(wasCorrect);
+        originalHandle(selected, btn);
+    };
+}
 </script>
 </body>
 </html>
