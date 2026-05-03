@@ -3955,7 +3955,26 @@ setTimeout(function() {
     }, 4000);
 }, 1000);
 
+// ========== ЭФФЕКТ ПРИ КЛИКЕ ==========
+function addCardEffect() {
+    let card = document.getElementById('flashcard');
+    if(card) {
+        card.addEventListener('click', function() {
+            // Эффект нажатия
+            this.style.transform = 'scale(0.97)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 120);
+        });
+    }
+}
 
+// Запуск
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addCardEffect);
+} else {
+    addCardEffect();
+}
 </script>
 </body>
 </html>
