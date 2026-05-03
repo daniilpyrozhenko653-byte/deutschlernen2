@@ -3403,7 +3403,7 @@ function updateStatusButtonsUI() {
     }
 }
 
-function flip() { isFlipped = !isFlipped; updateCardUI(); safeMarkProgress(); }
+function flip() { isFlipped = !isFlipped; updateCardUI();  }
 function nextCard() { if (filteredCardList.length) { filteredIdx = (filteredIdx + 1) % filteredCardList.length; updateCardUI(); updateStatusButtonsUI(); } }
 function prevCard() { if (filteredCardList.length) { filteredIdx = (filteredIdx - 1 + filteredCardList.length) % filteredCardList.length; updateCardUI(); updateStatusButtonsUI(); } }
 function randomCard() { if (filteredCardList.length) { filteredIdx = Math.floor(Math.random() * filteredCardList.length); updateCardUI(); updateStatusButtonsUI(); } }
@@ -3985,130 +3985,7 @@ setTimeout(function() {
 }, 1000);
 
 
-    // Загрузка данных прогресса
-function loadProgressData() {
-    let data = localStorage.getItem('progressData');
-    if (!data) {
-        return {
-            firstDay: new Date().toISOString().split('T')[0],
-            days: {},
-            totalSessions: 0
-        };
-    }
-    return JSON.parse(data);
-}
-
-function saveProgressData(data) {
-    localStorage.setItem('progressData', JSON.stringify(data));
-}
-
-// Отметить сегодняшний день
-function markTodayProgress() {
-    try {
-        let data = loadProgressData();
-        const today = new Date().toISOString().split('T')[0];
-        
-        if (!data.days[today]) {
-            data.days[today] = {
-                date: today,
-                wordsLearned: 0
-            };
-            data.totalSessions = Object.keys(data.days).length;
-            saveProgressData(data);
-        }
-    } catch(e) {
-        console.log("Ошибка сохранения прогресса:", e);
-    }
-}
-
-// Показать дневник
-function showProgressDiary() {
-    try {
-        const data = loadProgressData();
-        const totalDays = Object.keys(data.days).length;
-        const totalWords = fullCardList ? fullCardList.length : 0;
-        const learnedWords = fullCardList ? fullCardList.filter((_, idx) => getCardStatus(idx) === 'learned').length : 0;
-        
-        let html = 
-        <div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#667eea; color:white; padding:25px; border-radius:20px; z-index:10000; min-width:300px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-            <h3 style="margin:0 0 20px 0;">📊 Дневник прогресса</h3>
-            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:15px; margin-bottom:20px;">
-                <div style="background:rgba(255,255,255,0.2); padding:15px; border-radius:15px;">
-                    <div style="font-size:32px; font-weight:bold;">${totalDays}</div>
-                    <div style="font-size:12px;">Дней занятий</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.2); padding:15px; border-radius:15px;">
-                    <div style="font-size:32px; font-weight:bold;">${totalWords}</div>
-                    <div style="font-size:12px;">Всего слов</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.2); padding:15px; border-radius:15px;">
-                    <div style="font-size:32px; font-weight:bold;">${learnedWords}</div>
-                    <div style="font-size:12px;">Изучено</div>
-                </div>
-            </div>
-            <div style="margin-bottom:15px; max-height:200px; overflow-y:auto;">
-                <h4>📅 Последние дни:</h4>
-                ${Object.keys(data.days).slice(-7).reverse().map(day => <div style="background:rgba(255,255,255,0.2); margin:5px; padding:8px; border-radius:10px;">✅ ${day}</div>).join('')}
-                ${Object.keys(data.days).length === 0 ? '<div>Пока нет отметок</div>' : ''}
-            </div>
-            <button onclick="document.getElementById('progressModal').remove();" style="background:#4CAF50; border:none; color:white; padding:10px 20px; border-radius:25px; cursor:pointer;">Закрыть</button>
-            <button onclick="localStorage.removeItem('progressData'); location.reload();" style="background:#ff4757; border:none; color:white; padding:10px 20px; border-radius:25px; cursor:pointer; margin-left:10px;">Сбросить</button>
-        </div>
-        <div id="progressModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;" onclick="if(event.target.id==='progressModal') this.remove();"></div>
-        ;
-        
-        // Создаём модальное окно
-        const modal = document.createElement('div');
-        modal.id = 'progressModal';
-        modal.innerHTML = html;
-        document.body.appendChild(modal);
-    } catch(e) {
-        console.log("Ошибка отображения дневника:", e);
-    }
-}// Кнопка для открытия дневника
-function addProgressButton() {
-    const existingBtn = document.getElementById('progressDiaryBtn');
-    if (existingBtn) return;
     
-    // Добавляем кнопку в верхнюю часть
-    const toolbar = document.querySelector('#cardLevelBar') || document.body;
-    const btn = document.createElement('button');
-    btn.id = 'progressDiaryBtn';
-    btn.innerHTML = '📊 Прогресс';
-    btn.style.cssText = 'background:#4CAF50; border:none; color:white; padding:8px 16px; border-radius:20px; cursor:pointer; margin:10px;';
-    btn.onclick = showProgressDiary;
-    
-    if (document.querySelector('.top-bar')) {
-        document.querySelector('.top-bar').appendChild(btn);
-    } else {
-        // Вставляем после уровня
-        const levelBar = document.getElementById('cardLevelBar');
-        if (levelBar) {
-            levelBar.parentNode.insertBefore(btn, levelBar.nextSibling);
-        }
-    }
-}
-
-// Отмечаем прогресс при активности (не ломает кнопки)
-let lastActivityMark = 0;
-function safeMarkProgress() {
-    const now = Date.now();
-    if (now - lastActivityMark > 60000) { // раз в минуту
-        lastActivityMark = now;
-        markTodayProgress();
-    }
-}
-
-// Запускаем
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        addProgressButton();
-        setInterval(safeMarkProgress, 60000);
-    });
-} else {
-    addProgressButton();
-    setInterval(safeMarkProgress, 60000);
-}
 </script>
 </body>
 </html>
