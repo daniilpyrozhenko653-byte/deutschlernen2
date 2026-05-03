@@ -3636,30 +3636,35 @@ function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 
-    // ========== МОТИВАЦИОННЫЕ ФРАЗЫ ==========
+    // ========== МОТИВАЦИОННЫЕ ФРАЗЫ (не блокирует) ==========
 setTimeout(function() {
-    // Список фраз
     var messages = [
         "💪 Ты молодец! Продолжай учить немецкий!",
-        "🎯 15 минут в день = 90 часов в год. Так держать!",
+        "🎯 15 минут в день = 90 часов в год! Так держать!",
         "🧠 Каждое новое слово делает твой мозг сильнее!",
-        "⭐️ Даже 5 слов в день = 1825 слов за год!",
+        "⭐️ 5 слов в день = 1825 слов за год!",
         "🚀 Не бойся ошибок - они делают тебя лучше!",
         "📚 Ты уже знаешь больше, чем думаешь!",
         "🎧 Совет: слушай немецкую музыку с субтитрами",
-        "💡 Немецкий - логичный язык, ты сможешь!",
+        "💡 Немецкий - логичный язык, у тебя получится!",
         "🏆 Каждая карточка приближает к цели!",
         "🌟 Du schaffst das! (Ты сможешь это!)"
     ];
     
-    // Выбираем случайную фразу
     var randomIndex = Math.floor(Math.random() * messages.length);
     var msg = messages[randomIndex];
     
-    // Показываем сообщение
-    alert(msg);
+    // Создаем уведомление (НЕ блокирует)
+    var notif = document.createElement('div');
+    notif.innerHTML = "✨ " + msg;
+    notif.style.cssText = "position:fixed;bottom:20px;right:20px;background:#4CAF50;color:white;padding:12px 20px;border-radius:10px;z-index:9999;font-size:14px;box-shadow:0 4px 6px rgba(0,0,0,0.1);";
+    document.body.appendChild(notif);
+    
+    // Удаляем через 4 секунды
+    setTimeout(function() { 
+        notif.remove(); 
+    }, 4000);
 }, 1000);
-
 </script>
 </body>
 </html>
