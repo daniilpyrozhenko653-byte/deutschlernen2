@@ -3344,6 +3344,60 @@ document.getElementById('closeExamResultModal')?.addEventListener('click', () =>
     changeCardLevel("A0");
     changeQuizLevel();
 
+    function renderExam() {
+if (!currentExamQuestion) return;
+document.getElementById('examQuestion').innerHTML = currentExamQuestion.question;
+let optionsContainer = document.getElementById('examOptionsContainer');
+optionsContainer.innerHTML = "";
+currentExamQuestion.options.forEach(opt => {
+let btn = document.createElement('button');
+btn.textContent = opt;
+btn.classList.add('option-btn');
+btn.onclick = () => handleExamAnswer(opt, btn);
+optionsContainer.appendChild(btn);
+});
+document.getElementById('examFeedback').innerHTML = "Выберите ответ!";
+}
+function handleExamAnswer(selected, btn) {
+let isCorrect = (selected === currentExamQuestion.correctAnswer);
+if (isCorrect) {
+examScore += 1;
+document.getElementById('examFeedback').innerHTML = ✅ Верно!;
+} else {
+document.getElementById('examFeedback').innerHTML = ❌ Ошибка! Правильный ответ: "${currentExamQuestion.correctAnswer}".;
+}
+document.getElementById('examScore').textContent = examScore;
+setTimeout(nextExamQuestion, 1000);
+}
+function nextExamQuestion() {
+generateExamQuestion();
+renderExam();
+}
+function startExam(level) {
+examLevel = level;
+examVocabList = getExamVocabulary(examLevel);
+examScore = 0;
+examAttempts += 1;
+examPassed = false;
+document.getElementById('examScore').textContent = examScore;
+document.getElementById('examAttempts').textContent = examAttempts;
+generateExamQuestion();
+renderExam();
+document.getElementById('examModal').style.display = 'block';
+}
+function finishExam() {
+let passScore = 7; // Минимальное количество правильных ответов для сдачи
+examPassed = examScore >= passScore;
+document.getElementById('examModal').style.display = 'none';
+document.getElementById('examResult').textContent = examPassed ? "🎉 Вы сдали экзамен!" : "❌ Вы не сдали экзамен.";
+document.getElementById('examResultModal').style.display = 'block';
+}
+document.getElementById('startExamBtn')?.addEventListener('click', () => startExam(currentCardLevel));
+document.getElementById('finishExamBtn')?.addEventListener('click', finishExam);
+document.getElementById('closeExamResultModal')?.addEventListener('click', () => {
+document.getElementById('examResultModal').style.display = 'none';
+});
+
 
 
     
