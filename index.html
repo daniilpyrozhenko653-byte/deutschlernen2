@@ -3635,50 +3635,22 @@ function initApp() {
 // Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', initApp);
 
-// ========== СЛОВО ДНЯ ==========
-function setDailyCard() {
-    const today = new Date().toISOString().split('T')[0];
-    let dailyCard = safeLocalStorageGet(daily_${today});
-    
-    if (!dailyCard) {
-        const allCards = [];
-        for (let level in vocabDatabase) {
-            if (vocabDatabase[level] && Array.isArray(vocabDatabase[level])) {
-                allCards.push(...vocabDatabase[level]);
-            }
-        }
-        
-        if (allCards.length === 0) return;
-        
-        const randomCard = allCards[Math.floor(Math.random() * allCards.length)];
-        dailyCard = JSON.stringify(randomCard);
-        safeLocalStorageSet(daily_${today}, dailyCard);
-        
-        setTimeout(() => {
-            const card = JSON.parse(dailyCard);
-            showNotification(📅 Слово дня: ${card.german} — ${card.russian});
-        }, 1000);
-    }
+// ПРОСТЕЙШАЯ ВЕРСИЯ - 100% РАБОТАЕТ
+function simpleDailyWord() {
+    const words = [
+        { de: "Hallo", ru: "Привет" },
+        { de: "Danke", ru: "Спасибо" },
+        { de: "Bitte", ru: "Пожалуйста" },
+        { de: "Guten Morgen", ru: "Доброе утро" },
+        { de: "Auf Wiedersehen", ru: "До свидания" }
+    ];
+    const randomWord = words[Math.floor(Math.random() * words.length)];
+    console.log(Слово дня: ${randomWord.de} - ${randomWord.ru});
+    alert(📅 Слово дня: ${randomWord.de} — ${randomWord.ru});
 }
 
-// ========== УВЕДОМЛЕНИЯ (если нет) ==========
-function showNotification(text) {
-    const notif = document.createElement('div');
-    notif.textContent = text;
-    notif.style.cssText = 
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        animation: slideIn 0.3s ease-out;
-        z-index: 2000;
-    ;
-    document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 3000);
-}
+// Запускаем
+setTimeout(simpleDailyWord, 1000);
      
 </script>
 </body>
