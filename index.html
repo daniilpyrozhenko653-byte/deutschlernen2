@@ -2916,29 +2916,7 @@
 
 
 
-    // ========== ЭКЗАМЕН ==========
-let examLevel = "A0";
-let examVocabList = [];
-let currentExamQuestion = null;
-let examScore = 0, examAttempts = 0, examPassed = false;
-
-function getExamVocabulary(level) { return [...(vocabDatabase[level] || [])]; }
-
-function generateExamQuestion() {
-    if (!examVocabList.length) examVocabList = [{ german: "Нет слов", russian: "Пусто" }];
-    let mode = Math.random() < 0.5;
-    let item = examVocabList[Math.floor(Math.random() * examVocabList.length)];
-    let question, correct;
-    if (mode) { question = `🇩🇪 Как перевести "${item.german}" на русский?`; correct = item.russian; }
-    else { question = `🇷🇺 Что значит по-немецки "${item.russian}"?`; correct = item.german; }
-    let wrongs = examVocabList.filter(w => (mode ? w.russian !== correct : w.german !== correct)).map(w => mode ? w.russian : w.german);
-    wrongs = [...new Set(wrongs)];
-    while (wrongs.length < 3) wrongs.push("???");
-    wrongs = wrongs.sort(() => 0.5 - Math.random()).slice(0, 3);
-    let options = [correct, ...wrongs];
-    options.sort(() => 0.5 - Math.random());
-    currentExamQuestion = { question, correctAnswer: correct, options };
-}
+    
 
 function renderExam() {
     if (!currentExamQuestion) return;
