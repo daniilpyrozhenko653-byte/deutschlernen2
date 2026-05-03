@@ -3976,7 +3976,20 @@ if (document.readyState === 'loading') {
     addCardEffect();
 }
 
-
+// ========== МОТИВАЦИЯ ==========
+let clickCountAll = 0;
+let motivPhrases = ['💪 Так держать!', '⭐️ Ты крутой!', '🚀 Вперёд!', '🎯 Почти готов!', '🌟 Молодец!', '🔥 Огонь!'];
+document.addEventListener('click', function() {
+    clickCountAll++;
+    if(clickCountAll % 10 === 0) {
+        let msg = motivPhrases[Math.floor(Math.random() * motivPhrases.length)];
+        let motivDiv = document.createElement('div');
+        motivDiv.innerHTML = msg;
+        motivDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:white;padding:15px 25px;border-radius:30px;z-index:10000;font-size:24px;animation:fadeOut 1s forwards;';
+        document.body.appendChild(motivDiv);
+        setTimeout(() => motivDiv.remove(), 1000);
+    }
+});
     
 </script>
 </body>
