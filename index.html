@@ -3976,6 +3976,26 @@ if (document.readyState === 'loading') {
     addCardEffect();
 }
 
+
+    // ========== ЦВЕТ КАРТОЧКИ (надёжная версия) ==========
+function addColorFlip() {
+    let card = document.getElementById('flashcard');
+    let originalFlip = window.flip;
+    
+    if(originalFlip) {
+        window.flip = function() {
+            originalFlip();
+            let colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+            if(window.isFlipped) {
+                card.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                card.style.transition = 'background-color 0.3s';
+            } else {
+                card.style.backgroundColor = '';
+            }
+        };
+    }
+}
+addColorFlip();
     
 </script>
 </body>
