@@ -3643,7 +3643,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 function updateAchievements() {
     // 10 правильных ответов подряд
-    if (streak >= 10 && !achievements.streakMaster) {
+    if (typeof streak !== 'undefined' && streak >= 10 && !achievements.streakMaster) {
         achievements.streakMaster = true;
         showNotification('🏅 Достижение: Мастер серии!');
     }
@@ -3655,7 +3655,7 @@ function updateAchievements() {
     
     if (total > 0 && learned === total && !achievements.masterLevel[level]) {
         achievements.masterLevel[level] = true;
-        showNotification(🏆 Достижение: Мастер уровня ${level}!);
+        showNotification(🏆 Достижение: Мастер уровня ${level}!);  // ← ИСПРАВЛЕНО: добавил кавычки и обратные кавычки
     }
     
     safeLocalStorageSet('achievements', JSON.stringify(achievements));
@@ -3664,10 +3664,16 @@ function updateAchievements() {
 function showNotification(text) {
     const notif = document.createElement('div');
     notif.textContent = text;
-    notif.style.cssText = 
-        position: fixed; top: 20px; right: 20px; background: #4CAF50;
-        color: white; padding: 12px 20px; border-radius: 8px;
-        animation: slideIn 0.3s ease-out; z-index: 2000;
+    notif.style.cssText =   // ← ИСПРАВЛЕНО: добавил обратные кавычки
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        animation: slideIn 0.3s ease-out;
+        z-index: 2000;
     ;
     document.body.appendChild(notif);
     setTimeout(() => notif.remove(), 3000);
