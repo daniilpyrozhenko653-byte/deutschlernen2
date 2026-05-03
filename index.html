@@ -4109,6 +4109,81 @@ if(originalHandle) {
         originalHandle(selected, btn);
     };
 }
+
+
+    // ========== ЗВУК ПРИ НОВОМ РЕКОРДЕ ==========
+let audioUnlocked = false;
+
+function unlockAudio() {
+    if(audioUnlocked) return;
+    let ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume();
+    audioUnlocked = true;
+}
+document.addEventListener('click', unlockAudio);
+
+function playRecordSound() {
+    try {
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let now = audioCtx.currentTime;
+        
+        // Эпичная победная мелодия (как в играх при рекорде!)
+        let notes = [523, 659, 784, 1046, 1318, 1567, 2093, 2637];
+        
+        notes.forEach((freq, i) => {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            gain.gain.value = 0.25;
+            osc.start(now + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.00001, now + i * 0.1 + 0.2);
+            osc.stop(now + i * 0.1 + 0.2);
+        });
+        
+        // Добавляем барабаны (низкие звуки)
+        setTimeout(() => {
+            for(let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = 110;
+                    osc.type = 'triangle';
+                    gain.gain.value = 0.2;
+                    osc.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }, i * 150);
+            }
+        }, 800);
+        
+    } catch(e) {}
+}
+
+// Следим за рекордом
+let lastRecord = 0;
+setInterval(() => {
+    let recordElement = document.getElementById('recordScore');
+    if(recordElement) {
+        let currentRecord = parseInt(recordElement.textContent) || 0;
+        if(currentRecord > lastRecord && lastRecord !== 0) {
+            // Рекорд побит!
+            playRecordSound();
+            
+            // Визуальный эффект
+            let flash = document.createElement('div');
+            flash.innerHTML = '🏆 НОВЫЙ РЕКОРД! 🏆';
+            flash.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#FFD700,#FF8C00);color:white;padding:20px 40px;border-radius:30px;z-index:10000;font-size:28px;font-weight:bold;animation:fadeOut 2s forwards;';
+            document.body.appendChild(flash);
+            setTimeout(() => flash.remove(), 2000);
+        }
+        lastRecord = currentRecord;
+    }
+}, 500);
 </script>
 </body>
 </html>
