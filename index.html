@@ -263,9 +263,14 @@
 <div class="app-container">
     <h1>🇩🇪 Немецкий тренажёр</h1>
     <div class="sub">A0–C1 | Карточки с фильтрами «Все (неизученные)», «Изучено», «На повтор» | Викторина с рекордами</div>
-<button id="recordBtn">⏺ Запись</button>
-<button id="stopBtn" disabled>⏹️ Стоп</button>
-<audio id="audioPlayback" controls></audio>
+<div class="voice-feedback">
+  <button id="startRecord">🎙️ Записать сообщение</button>
+  <button id="stopRecord" disabled>⏹️ Стоп</button>
+  <button id="sendRecord" disabled>📤 Отправить</button>
+  
+  <audio id="playback" controls style="display:none; margin-top:15px;"></audio>
+  <p id="status"></p>
+</div>
 <div id="cardLevelBar">
     <button class="level-btn" data-level="A0">A0</button>
     <button class="level-btn" data-level="A1">A1</button>
@@ -3638,35 +3643,82 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 
     let mediaRecorder;
-let audioChunks = [];
+  let audioChunks = [];
+  let recordedBlob = null;
 
-// Запрашиваем доступ к микрофону при загрузке страницы
-navigator.mediaDevices.getUserMedia({ audio: true })
-  .then(stream => {
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = event => {
-      audioChunks.push(event.data);
-    };
-    mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      document.getElementById('audioPlayback').src = audioUrl;
-    };
-  });
+  const startBtn = document.getElementById('startRecord');
+  const stopBtn = document.getElementById('stopRecord');
+  const sendBtn = document.getElementById('sendRecord');
+  const playbackAudio = document.getElementById('playback');
+  const statusDiv = document.getElementById('status');
 
-// Логика кнопок
-document.getElementById('recordBtn').onclick = () => {
-  audioChunks = [];
-  mediaRecorder.start();
-  document.getElementById('recordBtn').disabled = true;
-  document.getElementById('stopBtn').disabled = false;
-};
-document.getElementById('stopBtn').onclick = () => {
-  mediaRecorder.stop();
-  document.getElementById('stopBtn').disabled = true;
-  document.getElementById('recordBtn').disabled = false;
-};
+  // 1. Запрос доступа к микрофону при загрузке страницы
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
 
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      
+      mediaRecorder.onstop = () => {
+        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(recordedBlob);
+        playbackAudio.src = audioUrl;
+        playbackAudio.style.display = 'block';
+        sendBtn.disabled = false;
+        statusDiv.innerText = '✅ Готово – прослушайте и отправьте.';
+      };
+
+      // Старт записи
+      startBtn.onclick = () => {
+        audioChunks = [];
+        mediaRecorder.start();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        sendBtn.disabled = true;
+        playbackAudio.style.display = 'none';
+        statusDiv.innerText = '🎤 Запись... говорите громче.';
+      };
+
+      // Остановка записи
+      stopBtn.onclick = () => {
+        mediaRecorder.stop();
+        stopBtn.disabled = true;
+        startBtn.disabled = false;
+        statusDiv.innerText = '📼 Запись остановлена.';
+      };
+    })
+    .catch(err => {
+      statusDiv.innerText = '❌ Нет доступа к микрофону. Разрешите доступ и обновите страницу.';
+      console.error(err);
+    });
+
+  // 2. Отправка на сервер (замените URL на свой обработчик)
+  sendBtn.onclick = async () => {
+    if (!recordedBlob) return;
+
+    const formData = new FormData();
+    formData.append('voice_message', recordedBlob, `feedback_${Date.now()}.webm`);
+
+    statusDiv.innerText = '📡 Отправка...';
+
+    try {
+      const response = await fetch('/send-voice-feedback.php', { // <- Ваш бэкенд
+        method: 'POST',
+        body: formData
+      });
+      if (response.ok) {
+        statusDiv.innerText = '🎉 Спасибо! Голосовое сообщение отправлено.';
+        sendBtn.disabled = true;
+        playbackAudio.style.display = 'none';
+        recordedBlob = null;
+      } else {
+        statusDiv.innerText = '⚠️ Ошибка отправки. Попробуйте позже.';
+      }
+    } catch (e) {
+      statusDiv.innerText = '❌ Сеть недоступна.';
+    }
+  };
+    
 </script>
 </body>
 </html>
