@@ -257,6 +257,120 @@
     border-radius: 4px; /* Скругление углов */
     box-sizing: border-box; /* Учитывать padding в ширине и высоте */
 }
+
+
+        .progress-diary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 800px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.progress-diary h3 {
+    margin: 0 0 15px 0;
+    text-align: center;
+    font-size: 24px;
+}
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin: 20px 0;
+}
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.calendar-day:hover {
+    transform: scale(1.05);
+    background: rgba(255,255,255,0.4);
+}
+.calendar-day.learned {
+    background: #4CAF50;
+    box-shadow: 0 0 10px rgba(76,175,80,0.5);
+}
+.calendar-day.today {
+    border: 2px solid #FFD700;
+    box-shadow: 0 0 15px rgba(255,215,0,0.5);
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+    text-align: center;
+}
+.stat-card {
+    background: rgba(255,255,255,0.15);
+    border-radius: 15px;
+    padding: 15px;
+}
+.stat-number {
+    font-size: 32px;
+    font-weight: bold;
+}
+.stat-label {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+.chart-container {
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+    padding: 15px;
+    margin-top: 15px;
+}
+.chart-bar {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    gap: 10px;
+}
+.chart-label {
+    width: 80px;
+    font-size: 12px;
+}
+.chart-fill {
+    flex: 1;
+    height: 25px;
+    background: #4CAF50;
+    border-radius: 12px;
+    transition: width 0.5s;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 11px;
+    color: white;
+}
+.diary-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+.diary-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.diary-btn:hover {
+    background: rgba(255,255,255,0.4);
+    transform: scale(1.02);
+}
     </style>
 </head>
 <body>
@@ -273,6 +387,39 @@
     <button class="level-btn" data-level="C1">C1</button>
 </div>
 
+
+    <div class="progress-diary" id="progressDiary">
+    <h3>📊 Дневник прогресса</h3>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="totalDays">0</div>
+            <div class="stat-label">Дней занятий</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalWords">0</div>
+            <div class="stat-label">Всего слов</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="learnedWords">0</div>
+            <div class="stat-label">Изучено слов</div>
+        </div>
+    </div>
+    
+    <div class="calendar-grid" id="calendarGrid"></div>
+    
+    <div class="chart-container">
+        <div class="chart-bar" id="dailyChart"></div>
+    </div>
+    
+    <div class="diary-actions">
+        <button class="diary-btn" onclick="resetProgress()">🔄 Сбросить прогресс</button>
+        <button class="diary-btn" onclick="exportProgress()">📥 Экспорт данных</button>
+    </div>
+</div>
+
+
+    
 
     <div class="double-panel">
         <!-- ЛЕВАЯ ПАНЕЛЬ: КАРТОЧКИ + СТАТУСЫ + ЗАМЕТКИ -->
@@ -3367,7 +3514,7 @@ function updateStatusButtonsUI() {
     }
 }
 
-function flip() { isFlipped = !isFlipped; updateCardUI(); }
+function flip() { isFlipped = !isFlipped; updateCardUI(); markProgressIfActivity(); }
 function nextCard() { if (filteredCardList.length) { filteredIdx = (filteredIdx + 1) % filteredCardList.length; updateCardUI(); updateStatusButtonsUI(); } }
 function prevCard() { if (filteredCardList.length) { filteredIdx = (filteredIdx - 1 + filteredCardList.length) % filteredCardList.length; updateCardUI(); updateStatusButtonsUI(); } }
 function randomCard() { if (filteredCardList.length) { filteredIdx = Math.floor(Math.random() * filteredCardList.length); updateCardUI(); updateStatusButtonsUI(); } }
@@ -3947,6 +4094,194 @@ setTimeout(function() {
         notif.remove(); 
     }, 4000);
 }, 1000);
+
+
+    // ========== ДНЕВНИК ПРОГРЕССА ==========
+
+// Загрузка данных прогресса
+function loadProgressData() {
+    let data = safeLocalStorageGet('progressData');
+    if (!data) {
+        return {
+            firstDay: new Date().toISOString().split('T')[0],
+            days: {},
+            totalSessions: 0
+        };
+    }
+    return JSON.parse(data);
+}
+
+function saveProgressData(data) {
+    safeLocalStorageSet('progressData', JSON.stringify(data));
+}
+    // Отметить сегодняшний день как "занимался"
+function markTodayProgress() {
+    let data = loadProgressData();
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (!data.days[today]) {
+        // Считаем сколько слов выучено сегодня
+        const learned = fullCardList.filter((_, idx) => getCardStatus(idx) === 'learned').length;
+        
+        data.days[today] = {
+            date: today,
+            wordsLearned: learned,
+            cardsReviewed: filteredCardList.length
+        };
+        data.totalSessions = Object.keys(data.days).length;
+        saveProgressData(data);
+        
+        showNotification("🎉 Прогресс сохранён! +1 день занятий!");
+    }
+    
+    updateProgressDisplay();
+}
+
+// Показать прогресс
+function updateProgressDisplay() {
+    const data = loadProgressData();
+    const totalDays = Object.keys(data.days).length;
+    const totalWords = fullCardList.length;
+    const learnedWords = fullCardList.filter((_, idx) => getCardStatus(idx) === 'learned').length;
+    
+    document.getElementById('totalDays').textContent = totalDays;
+    document.getElementById('totalWords').textContent = totalWords;
+    document.getElementById('learnedWords').textContent = learnedWords;
+    
+    // Рисуем календарь за последние 30 дней
+    drawCalendar(data);
+    
+    // Рисуем график занятий за неделю
+    drawWeeklyChart(data);
+}
+
+// Рисуем календарь
+function drawCalendar(data) {
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    
+    const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    weekdays.forEach(day => {
+        const dayLabel = document.createElement('div');
+        dayLabel.textContent = day;
+        dayLabel.style.textAlign = 'center';
+        dayLabel.style.fontWeight = 'bold';
+        dayLabel.style.fontSize = '12px';
+        grid.appendChild(dayLabel);
+    });
+    
+    const today = new Date();
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - 29);
+    startDate.setHours(0, 0, 0, 0);
+    
+    for (let i = 0; i < 30; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const isLearned = data.days[dateStr];
+        const isToday = dateStr === today.toISOString().split('T')[0];
+        
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        if (isLearned) dayCell.classList.add('learned');
+        if (isToday) dayCell.classList.add('today');
+        dayCell.textContent = date.getDate();
+        dayCell.title = isLearned ? 📚 ${isLearned.wordsLearned} слов выучено : 'Без занятий';
+        
+        grid.appendChild(dayCell);
+    }
+}
+
+// Рисуем график занятий за неделю
+function drawWeeklyChart(data) {
+    const container = document.getElementById('dailyChart');
+    container.innerHTML = '';
+    
+    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const weekData = new Array(7).fill(0);
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        const dateStr = date.toISOString().split('T')[0];
+        if (data.days[dateStr]) {
+            weekData[i] = data.days[dateStr].wordsLearned || 1;
+        }
+    }
+    
+    const maxValue = Math.max(...weekData, 1);
+    
+    days.forEach((day, idx) => {
+        const barDiv = document.createElement('div');
+        barDiv.className = 'chart-bar';
+        
+        const label = document.createElement('div');
+        label.className = 'chart-label';
+        label.textContent = day;
+        
+        const fill = document.createElement('div');
+        fill.className = 'chart-fill';
+        const percent = (weekData[idx] / maxValue) * 100;
+        fill.style.width = percent + '%';
+        fill.textContent = weekData[idx] > 0 ? weekData[idx] + ' слов' : '';
+        
+        barDiv.appendChild(label);
+        barDiv.appendChild(fill);
+        container.appendChild(barDiv);
+    });
+}
+    // Сброс прогресса
+function resetProgress() {
+    if (confirm('⚠️ Вы уверены? Весь прогресс будет сброшен!')) {
+        safeLocalStorageSet('progressData', null);
+        updateProgressDisplay();
+        showNotification('🗑 Прогресс сброшен');
+    }
+}
+
+// Экспорт прогресса
+function exportProgress() {
+    const data = loadProgressData();
+    const exportData = {
+        ...data,
+        exportDate: new Date().toISOString(),
+        totalCards: fullCardList.length,
+        cardStatuses: fullCardList.map((_, idx) => getCardStatus(idx))
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = german_progress_${new Date().toISOString().split('T')[0]}.json;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('📥 Прогресс экспортирован!');
+}
+
+// Автоматически отмечать день при занятиях
+// Добавляем в нужные функции:
+function markProgressIfActivity() {
+    // Автоматически отмечаем день при перевороте карточки или ответе в викторине
+    markTodayProgress();
+}
+
+// Вставляем вызовы в существующие функции
+// В конец функции flip(), nextCard(), handleQuizAnswer() добавить:
+// markProgressIfActivity();
+
+// Инициализируем дневник
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        updateProgressDisplay();
+        // Автоматическая отметка при активности
+        setInterval(markTodayProgress, 60000); // Раз в минуту проверяем
+    });
+} else {
+    updateProgressDisplay();
+    setInterval(markTodayProgress, 60000);
+}
 </script>
 </body>
 </html>
