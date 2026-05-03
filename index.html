@@ -4027,13 +4027,14 @@ setInterval(() => {
 }, 500);
 
 
-    // ========== ОЗВУЧКА ДЛЯ ВИКТОРИНЫ ==========
+    // ========== КРУТЫЕ ЗВУКИ ДЛЯ ВИКТОРИНЫ ==========
 let audioUnlocked = false;
 
 function unlockAudio() {
     if(audioUnlocked) return;
+    let ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume();
     audioUnlocked = true;
-    console.log("Звук разблокирован");
 }
 
 document.addEventListener('click', unlockAudio);
@@ -4043,45 +4044,38 @@ function playCorrectSound() {
         let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let now = audioCtx.currentTime;
         
-        // Первая нота
-        let osc1 = audioCtx.createOscillator();
-        let gain1 = audioCtx.createGain();
-        osc1.connect(gain1);
-        gain1.connect(audioCtx.destination);
-        osc1.frequency.value = 523.25; // До
-        osc1.type = 'sine';
-        gain1.gain.value = 0.15;
-        osc1.start();
-        gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.3);
-        osc1.stop(now + 0.3);
+        // Победная мелодия (как в играх!)
+        let notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25, 523.25];
+        let durations = [0.2, 0.2, 0.2, 0.3, 0.2, 0.2, 0.4];
         
-        // Вторая нота (чуть позже)
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                gain.gain.value = 0.15;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + durations[i]);
+                osc.stop(audioCtx.currentTime + durations[i]);
+            }, i * 200);
+        });
+        
+        // Добавляем "лучики" - высокий звук в конце
         setTimeout(() => {
             let osc2 = audioCtx.createOscillator();
             let gain2 = audioCtx.createGain();
             osc2.connect(gain2);
             gain2.connect(audioCtx.destination);
-            osc2.frequency.value = 659.25; // Ми
+            osc2.frequency.value = 1567.98;
             osc2.type = 'sine';
-            gain2.gain.value = 0.15;
+            gain2.gain.value = 0.1;
             osc2.start();
-            gain2.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-            osc2.stop(audioCtx.currentTime + 0.3);
-        }, 150);
-        
-        // Третья нота (ещё позже)
-        setTimeout(() => {
-            let osc3 = audioCtx.createOscillator();
-            let gain3 = audioCtx.createGain();
-            osc3.connect(gain3);
-            gain3.connect(audioCtx.destination);
-            osc3.frequency.value = 783.99; // Соль
-            osc3.type = 'sine';
-            gain3.gain.value = 0.15;
-            osc3.start();
-            gain3.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-            osc3.stop(audioCtx.currentTime + 0.3);
-        }, 300);
+            gain2.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            osc2.stop(audioCtx.currentTime + 0.5);
+        }, 1400);
         
     } catch(e) {}
 }
@@ -4091,16 +4085,33 @@ function playWrongSound() {
         let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let now = audioCtx.currentTime;
         
+        // "Падающий" звук с вибрацией
         let osc = audioCtx.createOscillator();
         let gain = audioCtx.createGain();
+        let vibrato = audioCtx.createOscillator();
+        let vibratoGain = audioCtx.createGain();
+        
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.frequency.value = 220;
+        
+        // Основной звук
+        osc.frequency.value = 349.23;
         osc.type = 'sawtooth';
         gain.gain.value = 0.12;
+        
+        // Вибрация (дрожание)
+        vibrato.frequency.value = 5;
+        vibrato.connect(vibratoGain);
+        vibratoGain.connect(osc.frequency);
+        vibratoGain.gain.value = 10;
+        vibrato.start();
+        
         osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.6);
-        osc.stop(now + 0.6);
+        // Плавно затухаем и понижаем тон
+        osc.frequency.exponentialRampToValueAtTime(87.31, now + 1);
+        gain.gain.exponentialRampToValueAtTime(0.00001, now + 1);
+        osc.stop(now + 1);
+        vibrato.stop(now + 1);
         
     } catch(e) {}
 }
