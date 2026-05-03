@@ -3635,7 +3635,39 @@ function initApp() {
 // Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', initApp);
 
-alert("Тузик")
+// ========== СЛОВО ДНЯ ==========
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        // Список слов
+        var words = [
+            {de: "Hallo", ru: "Привет"},
+            {de: "Danke", ru: "Спасибо"},
+            {de: "Bitte", ru: "Пожалуйста"},
+            {de: "Guten Morgen", ru: "Доброе утро"},
+            {de: "Auf Wiedersehen", ru: "До свидания"},
+            {de: "Ja", ru: "Да"},
+            {de: "Nein", ru: "Нет"},
+            {de: "Ich liebe dich", ru: "Я тебя люблю"},
+            {de: "Schön", ru: "Красиво"},
+            {de: "Gut", ru: "Хорошо"}
+        ];
+        
+        // Выбираем случайное слово
+        var randomIndex = Math.floor(Math.random() * words.length);
+        var word = words[randomIndex];
+        
+        // Показываем уведомление
+        var notif = document.createElement('div');
+        notif.innerHTML = "📅 Слово дня: " + word.de + " — " + word.ru;
+        notif.style.cssText = "position:fixed;top:20px;right:20px;background:#4CAF50;color:white;padding:12px 20px;border-radius:8px;z-index:9999;box-shadow:0 4px 6px rgba(0,0,0,0.1);font-size:16px;";
+        document.body.appendChild(notif);
+        
+        // Удаляем через 5 секунд
+        setTimeout(function() { 
+            notif.remove(); 
+        }, 5000);
+    }, 1000);
+});
 </script>
 </body>
 </html>
