@@ -4027,7 +4027,7 @@ setInterval(() => {
 }, 500);
 
 
-    // ========== ЗВУК ДЛЯ ВИКТОРИНЫ (с разблокировкой) ==========
+    // ========== РАДОСТНЫЙ И ГРУСТНЫЙ ЗВУК ДЛЯ ВИКТОРИНЫ ==========
 let audioUnlocked = false;
 
 function unlockAudio() {
@@ -4035,7 +4035,6 @@ function unlockAudio() {
     let ctx = new (window.AudioContext || window.webkitAudioContext)();
     ctx.resume();
     audioUnlocked = true;
-    console.log("Звук разблокирован");
 }
 
 document.addEventListener('click', unlockAudio);
@@ -4050,23 +4049,44 @@ function playQuizSound(isCorrect) {
         gainNode.connect(audioCtx.destination);
         
         if(isCorrect) {
-            oscillator.frequency.value = 880;
+            // РАДОСТНЫЙ ЗВУК - весёлая мелодия из двух нот
+            oscillator.frequency.value = 1046.50; // Нота До (высокая)
             oscillator.type = 'sine';
+            gainNode.gain.value = 0.25;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+            oscillator.stop(audioCtx.currentTime + 0.2);
+            
+            // Вторая нота для радости
+            setTimeout(() => {
+                let osc2 = audioCtx.createOscillator();
+                let gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.frequency.value = 1318.52; // Нота Ми
+                osc2.type = 'sine';
+                gain2.gain.value = 0.25;
+                osc2.start();
+                gain2.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+                osc2.stop(audioCtx.currentTime + 0.2);
+            }, 150);
+        } else {
+            // ГРУСТНЫЙ ЗВУК - низкий падающий звук
+            oscillator.frequency.value = 349.23; // Нота Фа
+            oscillator.type = 'sawtooth';
             gainNode.gain.value = 0.2;
             oscillator.start();
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-            oscillator.stop(audioCtx.currentTime + 0.3);
-        } else {
-            oscillator.frequency.value = 440;
-            oscillator.type = 'sawtooth';
-            gainNode.gain.value = 0.15;
-            oscillator.start();
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
-            oscillator.stop(audioCtx.currentTime + 0.4);
+            // Плавно понижаем тон
+            oscillator.frequency.exponentialRampToValueAtTime(174.61, audioCtx.currentTime + 0.5);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            oscillator.stop(audioCtx.currentTime + 0.5);
         }
-    } catch(e) {}
+    } catch(e) {
+        console.log("Звук не поддерживается");
+    }
 }
 
+// Перехватываем ответы в викторине
 let originalHandle = window.handleQuizAnswer;
 if(originalHandle) {
     window.handleQuizAnswer = function(selected, btn) {
