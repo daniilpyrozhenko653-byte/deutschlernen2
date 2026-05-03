@@ -3977,30 +3977,6 @@ if (document.readyState === 'loading') {
 }
 
 
-    // ========== ЦВЕТ КАРТОЧКИ ==========
-function changeCardColor() {
-    let card = document.getElementById('flashcard');
-    if(card) {
-        let colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FFB347', '#77DD77'];
-        if(!card.hasAttribute('data-original-color')) {
-            card.setAttribute('data-original-color', card.style.backgroundColor);
-        }
-        
-        if(card.classList.contains('card-russian') || (card.textContent && card.textContent !== card.getAttribute('data-german'))) {
-            card.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        } else {
-            card.style.backgroundColor = card.getAttribute('data-original-color') || '';
-        }
-    }
-}
-
-// Следим за кликами по карточке
-document.addEventListener('click', function(e) {
-    let card = document.getElementById('flashcard');
-    if(card && (e.target === card || card.contains(e.target))) {
-        setTimeout(changeCardColor, 10);
-    }
-});
     
 </script>
 </body>
