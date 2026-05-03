@@ -3976,25 +3976,24 @@ if (document.readyState === 'loading') {
     addCardEffect();
 }
 
-    // ========== ЧАСЫ ==========
-function addClock() {
-    let clock = document.createElement('div');
-    clock.id = 'simpleClock';
-    clock.style.cssText = 'position:fixed;top:10px;right:10px;background:black;color:white;padding:5px 10px;border-radius:10px;z-index:9999;font-size:14px;';
-    document.body.appendChild(clock);
-    
-    function update() {
-        let d = new Date();
-        let h = d.getHours();
-        let m = d.getMinutes();
-        clock.innerHTML = (h<10?'0'+h:h) + ':' + (m<10?'0'+m:m);
-    }
-    
-    update();
-    setInterval(update, 60000);
-}
+    // ========== СЕКУНДОМЕР ==========
+let seconds = 0;
+let timerDiv = document.createElement('div');
+timerDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:#4CAF50;color:white;padding:5px 10px;border-radius:10px;z-index:9999;font-size:12px;cursor:pointer;';
+timerDiv.innerHTML = '⏱️ 0c';
+document.body.appendChild(timerDiv);
 
-addClock();
+let interval = setInterval(() => {
+    seconds++;
+    let mins = Math.floor(seconds / 60);
+    let secs = seconds % 60;
+    timerDiv.innerHTML = '⏱️ ' + (mins > 0 ? mins + 'м ' : '') + secs + 'c';
+}, 1000);
+
+timerDiv.onclick = () => {
+    seconds = 0;
+    timerDiv.innerHTML = '⏱️ 0c';
+};
 </script>
 </body>
 </html>
