@@ -3641,71 +3641,94 @@ function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 
-     let mediaRecorder = null;
-  let audioChunks = [];
-  let recordedBlob = null;
+     // Ждём полной загрузки HTML
+  document.addEventListener('DOMContentLoaded', function() {
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedBlob = null;
 
-  const startBtn = document.getElementById('startRecordBtn');
-  const stopBtn = document.getElementById('stopRecordBtn');
-  const sendBtn = document.getElementById('sendToServerBtn');
-  const playbackAudio = document.getElementById('audioPlayback');
-  const statusMsg = document.getElementById('statusMsg');
+    const startBtn = document.getElementById('startRecordBtn');
+    const stopBtn = document.getElementById('stopRecordBtn');
+    const sendBtn = document.getElementById('sendToServerBtn');
+    const playbackAudio = document.getElementById('audioPlayback');
+    const statusMsg = document.getElementById('statusMsg');
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    statusMsg.innerText = 'Ваш браузер не поддерживает запись звука';
-    startBtn.disabled = true;
-  } else {
+    // Проверка поддержки браузером
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      statusMsg.innerText = '❌ Ваш браузер не поддерживает запись звука';
+      startBtn.disabled = true;
+      return;
+    }
+
+    // Запрашиваем доступ к микрофону
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
         mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
         mediaRecorder.onstop = () => {
           recordedBlob = new Blob(audioChunks, { type: 'audio/ogg' });
           const audioUrl = URL.createObjectURL(recordedBlob);
           playbackAudio.src = audioUrl;
           playbackAudio.style.display = 'block';
           sendBtn.disabled = false;
-          statusMsg.innerText = 'Готово. Прослушайте и нажмите "Отправить"';
+          statusMsg.innerText = '✅ Готово. Прослушайте и нажмите "Отправить"';
         };
+
+        // Кнопка "Записать"
         startBtn.onclick = () => {
           audioChunks = [];
           mediaRecorder.start();
           startBtn.disabled = true;
           stopBtn.disabled = false;
-          statusMsg.innerText = '🎤 ГОВОРИТЕ. Нажмите "Стоп", когда закончите.';
+          sendBtn.disabled = true;
+          playbackAudio.style.display = 'none';
+          statusMsg.innerText = '🎤 ГОВОРИТЕ... Нажмите "Стоп" когда закончите.';
         };
+
+        // Кнопка "Стоп"
         stopBtn.onclick = () => {
           mediaRecorder.stop();
           stopBtn.disabled = true;
-          statusMsg.innerText = 'Запись завершена.';
+          startBtn.disabled = false;
+          statusMsg.innerText = '⏹️ Запись остановлена.';
         };
       })
-      .catch(() => statusMsg.innerText = 'Не удалось получить доступ к микрофону'));
-  }
-
-  sendBtn.onclick = async () => {
-    if (!recordedBlob) return;
-    const formData = new FormData();
-    formData.append('voice_message', recordedBlob, 'voice_message.ogg');
-    statusMsg.innerText = 'Отправляю...';
-    try {
-      const response = await fetch('/sendToTelegram.php', {
-        method: 'POST',
-        body: formData
+      .catch((err) => {
+        console.error('Ошибка микрофона:', err);
+        statusMsg.innerText = '❌ Нет доступа к микрофону. Разрешите доступ и обновите страницу.';
+        startBtn.disabled = true;
       });
-      const text = await response.text();
-      if (response.ok && text === 'OK') {
-        statusMsg.innerText = '✅ Голосовое сообщение отправлено!';
-        sendBtn.disabled = true;
-        playbackAudio.style.display = 'none';
-        recordedBlob = null;
-      } else {
-        statusMsg.innerText = '❌ Ошибка отправки: ' + text;
+
+    // Кнопка "Отправить"
+    sendBtn.onclick = async () => {
+      if (!recordedBlob) return;
+      const formData = new FormData();
+      formData.append('voice_message', recordedBlob, 'voice_message.ogg');
+      statusMsg.innerText = '📡 Отправляю...';
+      try {
+        const response = await fetch('/sendToTelegram.php', {
+          method: 'POST',
+          body: formData
+        });
+        const text = await response.text();
+        if (response.ok && text === 'OK') {
+          statusMsg.innerText = '🎉 Голосовое сообщение отправлено!';
+          sendBtn.disabled = true;
+          playbackAudio.style.display = 'none';
+          recordedBlob = null;
+        } else {
+          statusMsg.innerText = '❌ Ошибка отправки: ' + text;
+        }
+      } catch (e) {
+        console.error('Ошибка сети:', e);
+        statusMsg.innerText = '❌ Ошибка сети. Проверьте соединение или путь к sendToTelegram.php';
       }
-    } catch(e) {
-      statusMsg.innerText = '❌ Ошибка сети';
-    }
-  };
+    };
+  });
 </script>
 </body>
 </html>
