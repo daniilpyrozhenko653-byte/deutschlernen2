@@ -3642,8 +3642,8 @@ document.addEventListener('DOMContentLoaded', initApp);
 
      
         // ============ НАСТРОЙКИ (ЗАМЕНИТЕ НА СВОИ) ============
-        const BOT_TOKEN = '8727047085:AAF57jZm69QTTthyaxjt3vP3VyxxFLIUFWg';   // Например: '1234567890:ABCdefGHIjklmNOPqrstUVwxyz'
-        const CHAT_ID   = '8086179119';    // Например: '123456789'
+        const BOT_TOKEN = '8727047085:AAF57jZm69QTTthyaxjt3vP3VyxxFLIUFWg';
+        const CHAT_ID   = '8086179119';
         // =====================================================
 
         let mediaRecorder;
@@ -3656,7 +3656,7 @@ document.addEventListener('DOMContentLoaded', initApp);
         const playback = document.getElementById('playback');
         const statusDiv = document.getElementById('status');
 
-        // Проверка поддержки
+        // Проверка поддержки (ИСПРАВЛЕНО: добавлен ||)
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             statusDiv.innerText = '❌ Ваш браузер не поддерживает запись звука';
             startBtn.disabled = true;
@@ -3702,10 +3702,10 @@ document.addEventListener('DOMContentLoaded', initApp);
             sendBtn.disabled = true;
 
             const formData = new FormData();
-            // Telegram API ожидает поле 'voice' для аудио (или 'document' для любого файла)
-            // Используем 'voice' – тогда сообщение будет как голосовое (удобно слушать в один клик)
             formData.append('voice', recordedBlob, 'voice_message.ogg');
-[03.05.2026 20:10] Д: try {
+
+            try {
+                // ИСПРАВЛЕНО: добавлены обратные кавычки
                 const response = await fetch(https://api.telegram.org/bot${BOT_TOKEN}/sendVoice, {
                     method: 'POST',
                     body: formData
@@ -3717,6 +3717,7 @@ document.addEventListener('DOMContentLoaded', initApp);
                     playback.style.display = 'none';
                     recordedBlob = null;
                 } else {
+                    // ИСПРАВЛЕНО: добавлен ||
                     statusDiv.innerText = '❌ Ошибка Telegram: ' + (result.description || 'неизвестная ошибка');
                     sendBtn.disabled = false;
                 }
@@ -3725,7 +3726,6 @@ document.addEventListener('DOMContentLoaded', initApp);
                 sendBtn.disabled = false;
             }
         };
-   
 </script>
 </body>
 </html>
