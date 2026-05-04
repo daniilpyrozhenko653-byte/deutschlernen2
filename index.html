@@ -6377,41 +6377,255 @@ document.head.appendChild(style);
 })();
 
 
-            // ========== МИНИ-ЧАТ ДЛЯ ТРЕНИРОВКИ СЛОВ ==========
-    let miniChatBtn = document.createElement('div');
-    miniChatBtn.innerHTML = '💬';
-    miniChatBtn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#9b59b6; color:white; width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:24px; display:flex; align-items:center; justify-content:center; z-index:100002; box-shadow:0 2px 10px rgba(0,0,0,0.2);';
+               // ========== ПОЛНОЦЕННЫЙ ЧАТ-БОТ (ОБЩАЕТСЯ, ПЕРЕВОДИТ, ПОМОГАЕТ) ==========
     
-    let miniChatWin = document.createElement('div');
-    miniChatWin.style.cssText = 'position:fixed; bottom:80px; left:20px; width:320px; height:400px; background:#1a1a2e; border-radius:15px; z-index:100003; display:none; flex-direction:column; overflow:hidden; border:1px solid #9b59b6;';
-    miniChatWin.innerHTML = `
-        <div style="background:#9b59b6; padding:10px; text-align:center; color:white; font-weight:bold;">🤖 Deutsch-Bot</div>
-        <div id="miniChatMsg" style="flex:1; overflow:auto; padding:10px; font-size:13px;">
-            <div style="background:#2c3e50; padding:8px; border-radius:10px; margin-bottom:8px; color:white;">Hallo! Schreibe ein Wort auf Deutsch, ich übersetze es!</div>
-        </div>
-        <div style="display:flex; padding:8px; gap:8px; background:#16213e;">
-            <input id="miniChatInp" placeholder="z.B. Haus" style="flex:1; padding:8px; border-radius:20px; border:none; background:#2c3e50; color:white;">
-            <button id="miniChatSend" style="background:#9b59b6; border:none; color:white; padding:5px 12px; border-radius:20px; cursor:pointer;">OK</button>
-        </div>
-    `;
-    document.body.appendChild(miniChatBtn);
-    document.body.appendChild(miniChatWin);
-    
-    miniChatBtn.onclick = () => miniChatWin.style.display = miniChatWin.style.display === 'flex' ? 'none' : 'flex';
-    document.getElementById('miniChatSend').onclick = () => {
-        let inp = document.getElementById('miniChatInp');
-        let word = inp.value.trim();
-        if (!word) return;
-        let msgDiv = document.getElementById('miniChatMsg');
-        msgDiv.innerHTML += `<div style="background:#9b59b6; padding:8px; border-radius:10px; margin-bottom:8px; text-align:right; color:white;">👤 ${word}</div>`;
-        let clean = word.replace(/[.,!?]/g,'');
-        let trans = localDict[clean] || localDict[clean.charAt(0).toUpperCase() + clean.slice(1)];
-        let answer = trans ? `🤖 ${word} → ${trans}` : `🤖 Слово "${word}" не найдено в словаре. Нажми на него в тексте!`;
-        msgDiv.innerHTML += `<div style="background:#2c3e50; padding:8px; border-radius:10px; margin-bottom:8px; color:white;">${answer}</div>`;
-        msgDiv.scrollTop = msgDiv.scrollHeight;
-        inp.value = '';
-    };
-    document.getElementById('miniChatInp').onkeypress = (e) => { if(e.key === 'Enter') document.getElementById('miniChatSend').onclick(); };
+    if (!document.getElementById('talkChatBtn')) {
+        
+        // Создаём кнопку чата
+        let talkChatBtn = document.createElement('div');
+        talkChatBtn.id = 'talkChatBtn';
+        talkChatBtn.innerHTML = '💬';
+        talkChatBtn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#9b59b6; color:white; width:55px; height:55px; border-radius:50%; cursor:pointer; font-size:28px; display:flex; align-items:center; justify-content:center; z-index:100002; box-shadow:0 3px 12px rgba(0,0,0,0.3); transition:0.2s;';
+        talkChatBtn.onmouseover = () => talkChatBtn.style.transform = 'scale(1.05)';
+        talkChatBtn.onmouseout = () => talkChatBtn.style.transform = 'scale(1)';
+        document.body.appendChild(talkChatBtn);
+        
+        // Окно чата
+        let talkChatWin = document.createElement('div');
+        talkChatWin.id = 'talkChatWin';
+        talkChatWin.style.cssText = 'position:fixed; bottom:85px; left:20px; width:350px; height:500px; background:#1a1a2e; border-radius:20px; z-index:100003; display:none; flex-direction:column; overflow:hidden; box-shadow:0 5px 20px rgba(0,0,0,0.5); border:1px solid #9b59b6;';
+        talkChatWin.innerHTML = `
+            <div style="background:#9b59b6; padding:12px 15px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="color:white; font-weight:bold;">🤖 Deutsch-Bot – plaudere mit mir!</span>
+                <button id="closeTalkChat" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">✖</button>
+            </div>
+            <div id="talkChatMessages" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:10px;">
+                <div style="background:#2c3e50; padding:10px 14px; border-radius:18px; max-width:85%; align-self:flex-start; color:white; font-size:13px; line-height:1.4;">
+                    🤖 Hallo! Ich bin dein Deutsch-Bot! 👋<br><br>
+                    Ich kann:<br>
+                    📝 Wörter übersetzen (schreib "Haus" oder "was bedeutet X")<br>
+                    💬 Mit dir plaudern (wie geht's? was machst du?)<br>
+                    📖 Über den Text sprechen ("worum geht es?")<br>
+                    🎓 Deutsch lernen helfen!<br><br>
+                    Probier's einfach aus! 😊
+                </div>
+            </div>
+            <div style="padding:12px; background:#16213e; display:flex; gap:10px;">
+                <input type="text" id="talkChatInput" placeholder="Schreib etwas auf Deutsch oder Russisch..." style="flex:1; padding:12px; border-radius:25px; border:none; background:#2c3e50; color:white; outline:none; font-size:14px;">
+                <button id="talkChatSend" style="background:#9b59b6; border:none; color:white; padding:8px 18px; border-radius:25px; cursor:pointer; font-weight:bold;">📤</button>
+            </div>
+        `;
+        document.body.appendChild(talkChatWin);
+        
+        // Контекст для бота (текущий текст)
+        let botContext = currentText || (texts ? texts.a1 : '');
+        
+        // Функция обновления контекста
+        window.updateBotContext = function(text) {
+            botContext = text;
+        };
+        
+        // ========== ЯДРО БОТА: УМНЫЕ ОТВЕТЫ ==========
+        function getBotAnswer(userMessage) {
+            const msg = userMessage.toLowerCase().trim();
+            
+            // === 1. ПЕРЕВОД СЛОВА (если пользователь написал слово или спросил перевод) ===
+            // Проверяем, является ли сообщение одним словом (немецкие буквы)
+            const isGermanWord = /^[a-zäöüß]+$/i.test(msg) && msg.length > 1 && msg.length < 30;
+            
+            // Ищем фразы типа "was bedeutet X", "übersetze X"
+            let wordToTranslate = null;
+            const translatePhrases = [
+                /was bedeutet (\w+)/i,
+                /übersetze (\w+)/i,
+                /was heisst (\w+)/i,
+                /bedeutung von (\w+)/i
+            ];
+            for (let pattern of translatePhrases) {
+                const match = msg.match(pattern);
+                if (match) {
+                    wordToTranslate = match[1];
+                    break;
+                }
+            }
+            
+            // Если пользователь просто написал слово
+            if (isGermanWord && !wordToTranslate) {
+                wordToTranslate = msg;
+            }
+            
+            // Если есть слово для перевода
+            if (wordToTranslate) {
+                const clean = wordToTranslate.toLowerCase();
+                const cap = clean.charAt(0).toUpperCase() + clean.slice(1);
+                const trans = localDict[clean] || localDict[cap] || localDict[wordToTranslate];
+                if (trans) {
+                    return `🤖 "${wordToTranslate}" bedeutet: **${trans}**\n\nMöchtest du einen Beispielsatz?`;
+                } else {
+                    return `🤖 Das Wort "${wordToTranslate}" kenne ich noch nicht. Versuche, im Text darauf zu klicken! 📖`;
+                }
+            }
+            
+            // === 2. ПРИВЕТСТВИЯ ===
+            if (msg.match(/hallo|hi|servus|hey|grüß|guten (tag|morgen|abend|nacht)/)) {
+                const greetings = [
+                    "Hallo! 😊 Wie geht es dir?",
+                    "Hi! Schön, dass du da bist! Was möchtest du heute lernen?",
+                    "Servus! Bereit für ein bisschen Deutsch? 🎓",
+                    "Guten Tag! Ich freue mich auf unser Gespräch!"
+                ];
+                return `🤖 ${greetings[Math.floor(Math.random() * greetings.length)]}`;
+            }
+            
+            // === 3. ПРОЩАНИЯ ===
+            if (msg.match(/tschüss|auf wiedersehen|bis bald|bye|ciao|wiedersehen/)) {
+                const goodbyes = [
+                    "Tschüss! Bis zum nächsten Mal! 👋",
+                    "Auf Wiedersehen! Viel Erfolg beim Deutschlernen!",
+                    "Bis bald! Wenn du Hilfe brauchst, ich bin hier! 😊"
+                ];
+                return `🤖 ${goodbyes[Math.floor(Math.random() * goodbyes.length)]}`;
+            }
+            
+            // === 4. КАК ДЕЛА? ===
+            if (msg.match(/wie geht|wie läuft|alles gut|was machst/)) {
+                return "🤖 Mir geht es gut, danke der Nachfrage! 😊 Ich helfe gerne beim Deutschlernen. Und dir? Wie läuft dein Studium?";
+            }
+            
+            // === 5. СПРАВКА ===
+            if (msg.match(/help|hilfe|was kannst du|befehle|kommandos|was kann ich fragen/)) {
+                return `🤖 **Ich kann dir helfen mit:**\n\n📝 Übersetzungen – schreib einfach ein Wort (z.B. "Haus")\n❓ Fragen wie "was bedeutet Liebe"\n📖 Fragen zum Text – "worum geht es?"\n💬 Einfache Gespräche – "wie geht's?", "was machst du?"\n🎓 Tipps zum Deutschlernen – "wie lerne ich besser?"\n\nProbier's aus!`;
+            }
+            
+            // === 6. FRAGEN ZUM TEXT ===
+            if (msg.match(/text|thema|worum|inhalt|handelt|worüber|was steht/)) {
+                if (botContext && botContext.length > 50) {
+                    const shortPreview = botContext.substring(0, 200).replace(/\n/g, ' ');
+                    return `🤖 Der aktuelle Text handelt von:\n\n"${shortPreview}...\n\nMöchtest du ein bestimmtes Wort aus dem Text übersetzen?`;
+                } else {
+                    return "🤖 Ich sehe gerade keinen aktiven Text. Öffne zuerst einen Text mit '📖 Читать'!";
+                }
+            }
+            
+            // === 7. FRAGEN ZUM DEUTSCHLERNEN ===
+            if (msg.match(/tipps|wie lerne|deutsch lernen|besser lernen|methode|ratschläge/)) {
+                return `🤖 **Tipps zum Deutschlernen:**\n\n1. Lerne Vokabeln mit Beispielsätzen! 📝\n2. Lies täglich kurze Texte (wie hier!) 📖\n3. Höre deutsche Musik oder Podcasts 🎵\n4. Sprich so viel wie möglich! 🗣️\n5. Wiederhole neue Wörter regelmäßig 🔁\n\nBleib dran – du schaffst das! 💪`;
+            }
+            
+            // === 8. DANK ===
+            if (msg.match(/danke|thank|merci|спасибо/)) {
+                return "🤖 Bitte schön! 😊 Gerne geschehen! Wenn du mehr wissen möchtest, frag einfach!";
+            }
+            
+            // === 9. WITZ / LUSTIG ===
+            if (msg.match(/witz|lustig|joke|haha|lachen/)) {
+                const jokes = [
+                    "Warum lernen Deutsche so gerne Englisch? – Weil sie 'Haus' aufgaben! 😄",
+                    "Was ist der Lieblingsbuchstabe der Deutschen? – Das 'ß'!",
+                    "Treffen sich zwei Germanisten. Sagt der eine: 'Ich habe ein Seminar über angloamerikanische Lehnwörter besucht.' Sagt der andere: 'Jo, cool!' 😂"
+                ];
+                return `🤖 ${jokes[Math.floor(Math.random() * jokes.length)]}`;
+            }
+            
+            // === 10. NAMEN FRAGEN ===
+            if (msg.match(/wie heißt du|dein name|wer bist du/)) {
+                return "🤖 Ich bin dein persönlicher Deutsch-Bot! Ich helfe dir beim Vokabeln lernen, Übersetzen und Plaudern. Nenn mich einfach 'Bot' oder 'Deutsch-Helfer'! 😊";
+            }
+            
+            // === 11. RUSSIAN PHRASES (помощь на русском) ===
+            if (msg.match(/привет|здравствуй|добрый день/)) {
+                return "🤖 Hallo! Привет! Wie kann ich dir helfen? Могу перевести слово или просто поболтать на немецком! 😊";
+            }
+            if (msg.match(/как дела|как ты|как жизнь/)) {
+                return "🤖 Mir geht es gut, danke! Спасибо, у меня всё отлично! Помогаю учить немецкий – это моя радость! Und dir?";
+            }
+            if (msg.match(/спасибо|благодарю/)) {
+                return "🤖 Bitte schön! Пожалуйста! Immer gerne! 😊";
+            }
+            if (msg.match(/помощь|что ты умеешь|команды/)) {
+                return "🤖 Я умею:\n📝 Переводить слова (напиши слово или 'что значит X')\n💬 Болтать на немецком ('как дела?', 'что делаешь?')\n📖 Рассказывать о тексте\n🎓 Давать советы по изучению\n\nПопробуй что-нибудь!";
+            }
+            
+            // === 12. STANDARD ANTWORT (если ничего не подошло) ===
+            const standardAnswers = [
+                "Interessant! 🤔 Kannst du mir mehr erzählen? Oder frag mich nach einem Wort aus dem Text!",
+                "Verstehe. Möchtest du ein bestimmtes Wort übersetzen? Oder lieber ein bisschen plaudern?",
+                "Gute Frage! Frag mich doch nach dem Text ('worum geht es?') oder nach einem Wort ('was bedeutet X')",
+                "Ich lerne jeden Tag dazu! Was möchtest du heute auf Deutsch üben?"
+            ];
+            return `🤖 ${standardAnswers[Math.floor(Math.random() * standardAnswers.length)]}`;
+        }
+        
+        // Функция добавления сообщения в чат
+        function addMessage(text, isUser) {
+            const container = document.getElementById('talkChatMessages');
+            const div = document.createElement('div');
+            div.style.cssText = isUser 
+                ? 'background:#9b59b6; padding:10px 14px; border-radius:18px; max-width:85%; align-self:flex-end; color:white; font-size:13px; line-height:1.4; word-wrap:break-word;'
+                : 'background:#2c3e50; padding:10px 14px; border-radius:18px; max-width:85%; align-self:flex-start; color:white; font-size:13px; line-height:1.4; word-wrap:break-word;';
+            div.innerText = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Отправка сообщения
+        async function sendTalkMessage() {
+            const input = document.getElementById('talkChatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            addMessage(message, true);
+            input.value = '';
+            
+            // Показываем, что бот "печатает"
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.style.cssText = 'background:#2c3e50; padding:8px 14px; border-radius:18px; max-width:60%; align-self:flex-start; color:#aaa; font-size:12px;';
+            typingDiv.innerText = '🤖 tippt...';
+            document.getElementById('talkChatMessages').appendChild(typingDiv);
+            document.getElementById('talkChatMessages').scrollTop = document.getElementById('talkChatMessages').scrollHeight;
+            
+            // Имитация задержки (человекоподобно)
+            await new Promise(r => setTimeout(r, 500 + Math.random() * 700));
+            
+            // Получаем ответ
+            const answer = getBotAnswer(message);
+            
+            // Удаляем индикатор печати
+            typingDiv.remove();
+            
+            addMessage(answer, false);
+        }
+        
+        // Обработчики
+        talkChatBtn.onclick = () => {
+            if (talkChatWin.style.display === 'none' || talkChatWin.style.display === '') {
+                talkChatWin.style.display = 'flex';
+            } else {
+                talkChatWin.style.display = 'none';
+            }
+        };
+        
+        document.getElementById('closeTalkChat').onclick = () => {
+            talkChatWin.style.display = 'none';
+        };
+        
+        document.getElementById('talkChatSend').onclick = sendTalkMessage;
+        document.getElementById('talkChatInput').onkeypress = (e) => {
+            if (e.key === 'Enter') sendTalkMessage();
+        };
+        
+        // Обновляем контекст при смене текста (если есть функция displayText)
+        if (typeof window.originalDisplayText === 'undefined' && typeof displayText === 'function') {
+            const origDisplay = displayText;
+            window.displayText = function(text) {
+                origDisplay(text);
+                window.updateBotContext(text);
+            };
+        }
+        
+        console.log('✅ Полноценный чат-бот запущен! Общается, переводит, помогает учить немецкий.');
+    }
 </script>
 </body>
 </html>
