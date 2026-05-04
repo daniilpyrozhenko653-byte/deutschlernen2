@@ -6377,194 +6377,164 @@ window.localDict = localDict;
 })();
 
 
-               // ========== РАСШИРЕННЫЙ ЧАТ-БОТ (русский+немецкий, перевод в обе стороны, озвучка) ==========
+               // ========== ЧАТ-БОТ С ПЕРЕВОДОМ И ОЗВУЧКОЙ (ТОЛЬКО СЛОВА) ==========
 (function() {
-    if (document.getElementById('fullChatBtn')) return;
+    if (document.getElementById('finalChatWithVoice')) return;
 
-    // Получаем доступ к словарю (он уже должен быть глобальным)
+    // Словарь (глобальный или локальный)
     const dict = window.localDict || {};
-    console.log('📚 Словарь загружен, слов:', Object.keys(dict).length);
+    if (Object.keys(dict).length === 0) console.warn('Словарь не найден');
 
-    // Функция перевода слова (немецкий -> русский)
+    // Перевод немецкого -> русский
     function de2ru(word) {
-        if (!word) return null;
-        let clean = word.trim().toLowerCase().replace(/[.,!?;:()]/g, '');
-        if (!clean) return null;
-        // Поиск в исходном виде и с заглавной буквы
-        return dict[clean] || dict[clean.charAt(0).toUpperCase() + clean.slice(1)] || null;
+        let w = word.trim().toLowerCase().replace(/[.,!?;:()]/g, '');
+        if (!w) return null;
+        return dict[w] || dict[w.charAt(0).toUpperCase() + w.slice(1)] || null;
     }
 
-    // Функция обратного перевода (русский -> немецкий)
+    // Перевод русского -> немецкий (по значениям словаря)
     function ru2de(word) {
-        if (!word) return null;
-        let clean = word.trim().toLowerCase().replace(/[.,!?;:()]/g, '');
-        if (!clean) return null;
-        // Ищем в словаре, где значение содержит это русское слово
+        let w = word.trim().toLowerCase().replace(/[.,!?;:()]/g, '');
+        if (!w) return null;
         for (let [de, ru] of Object.entries(dict)) {
-            if (ru.toLowerCase().includes(clean)) {
-                return de;
-            }
+            if (ru.toLowerCase().includes(w)) return de;
         }
         return null;
     }
 
-    // Озвучка текста (немецкого)
-    function speak(text) {
-        if (!text) return;
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'de-DE';
-        utterance.rate = 0.85;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
+    // Озвучка отдельного слова (без лишнего текста)
+    function speakWord(word) {
+        if (!word) return;
+        try {
+            let utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'de-DE';
+            utterance.rate = 0.85;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        } catch(e) { console.warn("Ошибка озвучки", e); }
     }
 
-    // Создаём интерфейс
+    // Создаём кнопку чата
     let btn = document.createElement('div');
-    btn.id = 'fullChatBtn';
+    btn.id = 'finalChatWithVoice';
     btn.innerHTML = '💬';
     btn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#9b59b6; color:white; width:55px; height:55px; border-radius:50%; cursor:pointer; font-size:28px; display:flex; align-items:center; justify-content:center; z-index:100000; box-shadow:0 2px 10px black;';
     document.body.appendChild(btn);
 
+    // Окно чата
     let win = document.createElement('div');
-    win.id = 'fullChatWin';
     win.style.cssText = 'position:fixed; bottom:85px; left:20px; width:360px; height:500px; background:#1e1e2e; border-radius:15px; z-index:100000; display:none; flex-direction:column; border:1px solid #9b59b6; overflow:hidden;';
     win.innerHTML = `
         <div style="background:#9b59b6; padding:12px; color:white; font-weight:bold; text-align:center; display:flex; justify-content:space-between;">
-            <span>🤖 Deutsch-Russisch Bot</span>
-            <button id="closeFullChat" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">✖</button>
+            <span>🤖 Переводчик + озвучка</span>
+            <button id="closeVoiceChat" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">✖</button>
         </div>
-        <div id="fullChatMsgs" style="flex:1; overflow:auto; padding:12px; font-size:13px; display:flex; flex-direction:column; gap:8px;"></div>
+        <div id="voiceChatMsgs" style="flex:1; overflow:auto; padding:12px; font-size:13px; display:flex; flex-direction:column; gap:8px;"></div>
+        <div style="padding:6px; text-align:center; background:#2a2a3a; font-size:11px; color:#aaa;">🔊 Нажми на слово в ответе бота — озвучим</div>
         <div style="display:flex; padding:10px; gap:8px; background:#2a2a3a;">
-            <input id="fullChatInput" placeholder="Введите слово или фразу (нем./рус.)..." style="flex:1; padding:10px; border-radius:25px; border:none; background:#3a3a4a; color:white; outline:none;">
-            <button id="fullChatSend" style="background:#9b59b6; border:none; color:white; padding:8px 16px; border-radius:25px; cursor:pointer;">➤</button>
-        </div>
-        <div style="padding:8px; text-align:center; background:#2a2a3a; font-size:11px; color:#aaa;">
-            🔊 Нажми на любое слово в чате, чтобы озвучить (немецкое произношение)
+            <input id="voiceChatInput" placeholder="Введите слово (нем. или рус.)..." style="flex:1; padding:10px; border-radius:25px; border:none; background:#3a3a4a; color:white; outline:none;">
+            <button id="voiceChatSend" style="background:#9b59b6; border:none; color:white; padding:8px 16px; border-radius:25px; cursor:pointer;">➤</button>
         </div>
     `;
     document.body.appendChild(win);
 
-    // Контейнер сообщений
-    let msgContainer = document.getElementById('fullChatMsgs');
+    let msgBox = document.getElementById('voiceChatMsgs');
 
-    // Добавление сообщения в чат (с поддержкой клика для озвучки слов)
-    function addMessage(text, isUser, extraClass = '') {
+    function addMessage(text, isUser) {
         let div = document.createElement('div');
-        div.className = 'chat-message ' + (isUser ? 'user' : 'bot');
         div.style.cssText = isUser 
             ? 'background:#9b59b6; padding:8px 12px; border-radius:18px; align-self:flex-end; color:white; max-width:80%; word-wrap:break-word; margin-bottom:5px;'
             : 'background:#3a3a4a; padding:8px 12px; border-radius:18px; align-self:flex-start; color:white; max-width:80%; word-wrap:break-word; margin-bottom:5px;';
-        div.innerText = text;
-        
-        // Если это сообщение бота, ищем в нём немецкие слова, делаем их кликабельными для озвучки
         if (!isUser) {
-            // Разбиваем текст на слова и оборачиваем немецкие слова в спаны с возможностью озвучки
-            const words = text.split(/(\s+)/);
-            let newHtml = '';
+            // Разбираем ответ бота на слова, делаем немецкие слова кликабельными
+            let words = text.split(/(\s+)/);
+            let html = '';
             for (let w of words) {
-                const clean = w.trim().replace(/[.,!?;:]/g, '');
-                // Проверяем, является ли слово немецким (латиница с умлаутами) и есть в словаре
-                if (clean.length > 1 && /[A-Za-zÄäÖöÜüß]/i.test(clean) && de2ru(clean)) {
-                    newHtml += `<span class="speakable-word" style="cursor:pointer; border-bottom:1px dotted #9b59b6; margin:0 2px;" onclick="window.speakWordFromChat('${clean.replace(/'/g, "\\'")}')">${w}</span>`;
+                let clean = w.trim().replace(/[.,!?;:]/g, '');
+                let isGermanWord = /^[A-Za-zÄäÖöÜüß]+$/.test(clean) && clean.length > 1;
+                if (isGermanWord && de2ru(clean)) {
+                    // Экранируем для onclick
+                    let safeWord = clean.replace(/'/g, "\\'");
+                    html += `<span style="cursor:pointer; border-bottom:1px dotted #9b59b6; margin:0 2px;" onclick="window.speakThisWord('${safeWord}')">${w}</span>`;
                 } else {
-                    newHtml += w;
+                    html += w;
                 }
             }
-            div.innerHTML = newHtml;
+            div.innerHTML = '🤖 ' + html;
+        } else {
+            div.innerText = '👤 ' + text;
         }
-        
-        msgContainer.appendChild(div);
-        msgContainer.scrollTop = msgContainer.scrollHeight;
+        msgBox.appendChild(div);
+        msgBox.scrollTop = msgBox.scrollHeight;
     }
 
-    // Глобальная функция для озвучки слов из чата
-    window.speakWordFromChat = function(word) {
-        speak(word);
-        // Можно добавить визуальную обратную связь
-        console.log('🔊 Озвучиваю:', word);
+    // Глобальная функция озвучки (чтобы работало из динамических элементов)
+    window.speakThisWord = function(word) {
+        speakWord(word);
     };
 
     // Генерация ответа бота
     function getBotReply(userText) {
-        let text = userText.trim();
-        if (!text) return 'Напишите что-нибудь!';
+        let txt = userText.trim();
+        if (!txt) return 'Напишите слово или фразу.';
 
-        // Проверяем, является ли введённая строка одним словом (немецким или русским)
-        const isGermanWord = /^[A-Za-zÄäÖöÜüß]+$/.test(text);
-        const isRussianWord = /^[А-Яа-яё]+$/.test(text);
+        let firstWord = txt.split(/\s+/)[0];
+        let isGerman = /^[A-Za-zÄäÖöÜüß]+$/.test(firstWord);
+        let isRussian = /^[А-Яа-яё]+$/.test(firstWord);
 
-        // Случай 1: немецкое слово -> перевести на русский
-        if (isGermanWord) {
-            let translation = de2ru(text);
-            if (translation) {
-                return `🔹 "${text}" → **${translation}**\n\n(Нажмите на слово "${text}" выше, чтобы услышать произношение)`;
-            } else {
-                return `❌ Слово "${text}" не найдено в словаре. Попробуйте кликнуть на него в тексте плеера, чтобы добавить.`;
+        // Если введено одно слово
+        if (txt.split(/\s+/).length === 1) {
+            if (isGerman) {
+                let trans = de2ru(firstWord);
+                if (trans) return `🔹 ${firstWord} → ${trans}\n\n(нажми на слово "${firstWord}", чтобы услышать)`;
+                else return `❌ Слово "${firstWord}" не найдено в словаре. Попробуйте кликнуть на него в тексте плеера.`;
+            }
+            if (isRussian) {
+                let trans = ru2de(firstWord);
+                if (trans) return `🔹 ${firstWord} → ${trans}\n\n(нажми на слово "${trans}", чтобы услышать)`;
+                else return `❌ Перевод для "${firstWord}" не найден.`;
             }
         }
-        // Случай 2: русское слово -> найти немецкий эквивалент
-        else if (isRussianWord) {
-            let germanWord = ru2de(text);
-            if (germanWord) {
-                return `🔹 Русское "${text}" → немецкий **${germanWord}**\n\n(Нажмите на слово "${germanWord}", чтобы услышать)`;
-            } else {
-                return `❌ Перевод для "${text}" не найден. Возможно, этого слова нет в словаре.`;
-            }
+
+        // Фразы
+        let lower = txt.toLowerCase();
+        if (lower.match(/привет|здравствуй|hallo|hi/)) return "Привет! Я переводчик и озвучка. Напишите слово по-немецки или по-русски — я переведу. Нажмите на немецкое слово в моём ответе, чтобы услышать!";
+        if (lower.match(/как дела|как ты|wie geht/)) return "У меня всё отлично! 😊 А вы? Могу перевести слово.";
+        if (lower.match(/спасибо|danke/)) return "Пожалуйста! Рад помочь.";
+        if (lower.match(/пока|до свидания|tschüss/)) return "До встречи! Учите немецкий дальше! 👋";
+        if (lower.match(/помощь|что умеешь|help/)) return "Я умею:\n• Переводить слова с немецкого на русский (напишите, например, «Haus»)\n• Переводить с русского на немецкий (напишите «дом»)\n• Озвучивать немецкие слова (нажмите на них в моём ответе)";
+
+        // Если первое слово немецкое или русское, но фраза длиннее одного слова
+        if (isGerman) {
+            let trans = de2ru(firstWord);
+            if (trans) return `Слово "${firstWord}" → ${trans}. Остальное я не понимаю, пишите слова по одному.`;
+        } else if (isRussian) {
+            let trans = ru2de(firstWord);
+            if (trans) return `Слово "${firstWord}" по-немецки: ${trans}. Нажмите на него, чтобы услышать.`;
         }
-        // Случай 3: фраза или приветствие
-        else {
-            let lower = text.toLowerCase();
-            if (lower.match(/привет|здравствуй|hallo|hi|hey/)) {
-                return "Привет! 😊 Я умею переводить слова с немецкого на русский и обратно. Просто напиши слово! А ещё можешь нажать на любое немецкое слово в моём ответе, чтобы услышать его произношение.";
-            }
-            if (lower.match(/как дела|how are you|wie geht's/)) {
-                return "У меня всё отлично! Помогаю изучать немецкий. А у тебя? Напиши любое немецкое или русское слово, я переведу.";
-            }
-            if (lower.match(/спасибо|danke|thank/)) {
-                return "Пожалуйста! 😊 Рад помочь.";
-            }
-            if (lower.match(/пока|tschüss|bye|до свидания/)) {
-                return "До свидания! Возвращайся ещё, учить немецкий вместе веселее! 👋";
-            }
-            if (lower.match(/помощь|help|что ты умеешь/)) {
-                return "Я умею:\n• Переводить немецкие слова на русский (напиши слово, например 'Haus')\n• Переводить русские слова на немецкий (например 'дом')\n• Озвучивать немецкие слова – просто нажми на них в моём ответе.\n• Общаться на простые темы.\nПопробуй!";
-            }
-            // Если фраза, попробуем выделить первое слово
-            let firstWord = text.split(/\s+/)[0];
-            if (isGermanWord.test(firstWord) && de2ru(firstWord)) {
-                return `Первое слово "${firstWord}" переводится как "${de2ru(firstWord)}". Остальное я не понял. Напишите отдельные слова для перевода.`;
-            }
-            if (isRussianWord.test(firstWord) && ru2de(firstWord)) {
-                return `Слово "${firstWord}" по-немецки: "${ru2de(firstWord)}".`;
-            }
-            return "Я пока умею переводить только отдельные слова (немецкие или русские). Напиши, например, 'Haus' или 'дом'.";
-        }
+        return "Я перевожу только отдельные слова. Пример: «Haus» или «дом».";
     }
 
-    // Отправка сообщения
     function sendMessage() {
-        let input = document.getElementById('fullChatInput');
-        let message = input.value.trim();
-        if (!message) return;
-        addMessage('👤 ' + message, true);
-        input.value = '';
-        let reply = getBotReply(message);
-        setTimeout(() => {
-            addMessage('🤖 ' + reply, false);
-        }, 300);
+        let inp = document.getElementById('voiceChatInput');
+        let msg = inp.value.trim();
+        if (!msg) return;
+        addMessage(msg, true);
+        inp.value = '';
+        let reply = getBotReply(msg);
+        setTimeout(() => addMessage(reply, false), 300);
     }
 
-    // Обработчики
     btn.onclick = () => {
-        let isVisible = win.style.display === 'flex';
-        win.style.display = isVisible ? 'none' : 'flex';
-        if (!isVisible && msgContainer.children.length === 0) {
-            addMessage('🤖 Привет! Я бот-переводчик немецкого и русского. Напиши слово (например, "Haus" или "дом").\n\n💡 Совет: нажми на любое немецкое слово в моём ответе, чтобы услышать его произношение!', false);
+        let visible = win.style.display === 'flex';
+        win.style.display = visible ? 'none' : 'flex';
+        if (!visible && msgBox.children.length === 0) {
+            addMessage('Привет! Я бот-переводчик. Напишите слово, например, «Haus» (дом) или «дом» (Haus). Нажмите на немецкое слово в ответе — я его произнесу!', false);
         }
     };
-    document.getElementById('closeFullChat').onclick = () => win.style.display = 'none';
-    document.getElementById('fullChatSend').onclick = sendMessage;
-    document.getElementById('fullChatInput').onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
+    document.getElementById('closeVoiceChat').onclick = () => win.style.display = 'none';
+    document.getElementById('voiceChatSend').onclick = sendMessage;
+    document.getElementById('voiceChatInput').onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
 })();
 </script>
 </body>
