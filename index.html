@@ -7182,45 +7182,7 @@ window.localDict = localDict;
 })();
 
 
-        // ========== ВКЛАДКА "ИГРЫ" С ИГРОЙ "КОТ И КАКТУСЫ" (ИСПРАВЛЕННАЯ) ==========
-(function() {
-    if (document.getElementById('gamesTabBtn2')) return;
-
-    // ---- 1. Кнопка "Игры" (справа от кнопки "Читать") ----
-    let readBtn = document.getElementById('simpleReaderBtn');
-    if (!readBtn) {
-        console.warn('Кнопка Читать не найдена');
-        return;
-    }
-    let gamesBtn = document.createElement('div');
-    gamesBtn.id = 'gamesTabBtn2';
-    gamesBtn.innerHTML = '🎮 Игры';
-    gamesBtn.style.cssText = 'position:absolute; top:20px; right:' + (parseInt(readBtn.style.right) + 80) + 'px; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:0.2s;';
-    gamesBtn.onmouseover = () => gamesBtn.style.transform = 'scale(1.02)';
-    gamesBtn.onmouseout = () => gamesBtn.style.transform = 'scale(1)';
-    document.body.appendChild(gamesBtn);
-
-    // ---- 2. Панель выбора игр (модальное окно) ----
-    let gamesPanel = document.createElement('div');
-    gamesPanel.id = 'gamesPanel2';
-    gamesPanel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:300px; background:#1a1a2e; border-radius:20px; z-index:100001; display:none; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.7); border:1px solid #2ecc71;';
-    gamesPanel.innerHTML = `
-        <div style="background:#2ecc71; padding:12px; border-radius:20px 20px 0 0; display:flex; justify-content:space-between;">
-            <span style="color:white; font-weight:bold;">🎮 Выбери игру</span>
-            <button id="closeGamesPanel2" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
-        </div>
-        <div id="gamesList2" style="display:flex; flex-wrap:wrap; gap:15px; padding:20px; justify-content:center;">
-            <div id="gameCatCactus2" class="gameIcon" style="text-align:center; cursor:pointer; background:#2c3e50; padding:10px; border-radius:15px; width:100px;">
-                <div style="font-size:48px;">🐱🌵</div>
-                <div style="color:white;">Кот и кактусы</div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(gamesPanel);
-
-    let activeGameContainer = null;
-
-    // ---- 3. Игра "Кот и кактусы" (с улучшениями) ----
+            // ---- 3. Игра "Кот и кактусы" (без мышей, очки за перепрыгивание, рекорд) ----
     function startCatCactusGameV2() {
         if (activeGameContainer) activeGameContainer.remove();
         activeGameContainer = document.createElement('div');
@@ -7228,11 +7190,11 @@ window.localDict = localDict;
         activeGameContainer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
         activeGameContainer.innerHTML = `
             <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:hidden; position:relative;">
-                <div style="background:#e67e22; padding:8px; text-align:center; color:white; font-weight:bold;">🐱 Кот и кактусы (прыгай, лови мышей, избегай кактусы)</div>
+                <div style="background:#e67e22; padding:8px; text-align:center; color:white; font-weight:bold;">🐱 Кот и кактусы (перепрыгивай кактусы)</div>
                 <canvas id="cactusCanvasV2" width="600" height="250" style="display:block; width:100%; background:#87CEEB;"></canvas>
                 <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
-                    <span>🐭 Очки: <span id="cactusScoreV2">0</span></span>
-                    <span>📖 <span id="cactusWordV2">—</span></span>
+                    <span>🏆 Очки: <span id="cactusScoreV2">0</span></span>
+                    <span>⭐ Рекорд: <span id="highScoreV2">0</span></span>
                 </div>
                 <div id="cactusGameOverV2" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px 25px; border-radius:20px; text-align:center; z-index:10;">
                     💀 <strong>Game Over</strong> 💀<br>
@@ -7246,7 +7208,7 @@ window.localDict = localDict;
         const canvas = document.getElementById('cactusCanvasV2');
         const ctx = canvas.getContext('2d');
         const scoreSpan = document.getElementById('cactusScoreV2');
-        const wordSpan = document.getElementById('cactusWordV2');
+        const highScoreSpan = document.getElementById('highScoreV2');
         const gameOverDiv = document.getElementById('cactusGameOverV2');
         const restartBtn = document.getElementById('cactusRestartV2');
         const closeBtn = document.getElementById('closeCactusGameV2');
@@ -7259,16 +7221,18 @@ window.localDict = localDict;
             x: 70, y: groundY - 35, width: 35, height: 35,
             vy: 0, grounded: true
         };
-        let mice = [];
         let cacti = [];
         let score = 0;
         let gameRunning = true;
         let frame = 0;
         let currentSpeed = 3;
-        let wordTimeout = null;
         let animationId = null;
+        
+        // Рекорд из localStorage
+        let highScore = localStorage.getItem('catCactusHighScore') ? parseInt(localStorage.getItem('catCactusHighScore')) : 0;
+        highScoreSpan.innerText = highScore;
 
-        // Звук мяу (реальный)
+        // Звук мяу
         let meowSound = new Audio('https://www.myinstants.com/media/sounds/meow_Cc2Vger.mp3');
         meowSound.load();
         function playMeow() {
@@ -7278,61 +7242,30 @@ window.localDict = localDict;
                 sound.play().catch(e => console.warn(e));
             } catch(e) {}
         }
-        function playEat() {
-            try {
-                let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 880;
-                gain.gain.value = 0.1;
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
-                osc.stop(audioCtx.currentTime + 0.2);
-                setTimeout(() => audioCtx.close(), 300);
-            } catch(e) {}
-        }
 
-        let wordList = [];
-        if (window.localDict && Object.keys(window.localDict).length) {
-            wordList = Object.entries(window.localDict).filter(([de, ru]) => 
-                typeof de === 'string' && de.length > 1 && !de.match(/[А-Я]/)
-            ).slice(0, 200);
-        } else {
-            wordList = [['Hallo','Привет'],['Katze','Кошка'],['Maus','Мышь'],['Haus','Дом']];
-        }
-
-        function showRandomWord() {
-            if (!gameRunning) return;
-            if (wordList.length) {
-                let [de, ru] = wordList[Math.floor(Math.random() * wordList.length)];
-                wordSpan.innerText = `${de} – ${ru}`;
-                if (wordTimeout) clearTimeout(wordTimeout);
-                wordTimeout = setTimeout(() => wordSpan.innerText = '—', 2500);
+        // Функция обновления рекорда
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                highScoreSpan.innerText = highScore;
+                localStorage.setItem('catCactusHighScore', highScore);
             }
         }
 
-        function spawnMouse() {
-            mice.push({
-                x: cw,
-                y: groundY - 18,
-                width: 22, height: 18,
-                vx: -currentSpeed
-            });
-        }
+        // Спавн кактуса
         function spawnCactus() {
             cacti.push({
                 x: cw,
                 y: groundY - 35,
                 width: 16, height: 35,
-                vx: -currentSpeed
+                vx: -currentSpeed,
+                alreadyScored: false  // флаг, чтобы засчитывать очки только один раз за кактус
             });
         }
 
         function update() {
             if (!gameRunning) return;
-            // Прыжок сильнее: -11 вместо -9
+            // Прыжок
             if (cat.grounded && jumpRequested) {
                 cat.vy = -11;
                 cat.grounded = false;
@@ -7346,29 +7279,25 @@ window.localDict = localDict;
                 cat.grounded = true;
             }
 
-            // Мыши
-            for (let i=0; i<mice.length; i++) {
-                let m = mice[i];
-                m.x += m.vx;
-                if (m.x + m.width < 0) {
-                    mice.splice(i,1); i--; continue;
-                }
-                if (cat.x < m.x + m.width && cat.x + cat.width > m.x &&
-                    cat.y < m.y + m.height && cat.y + cat.height > m.y) {
-                    mice.splice(i,1);
-                    score++;
-                    scoreSpan.innerText = score;
-                    playEat();
-                    showRandomWord();
-                    currentSpeed = Math.min(3 + Math.floor(score / 25), 7);
-                    i--;
-                }
-            }
-            // Кактусы
+            // Движение кактусов и проверка столкновений / начисления очков
             for (let i=0; i<cacti.length; i++) {
                 let c = cacti[i];
                 c.x += c.vx;
-                if (c.x + c.width < 0) { cacti.splice(i,1); i--; continue; }
+                if (c.x + c.width < 0) {
+                    cacti.splice(i,1);
+                    i--;
+                    continue;
+                }
+                // Начисление очков, если кот перепрыгнул кактус (кактус прошёл мимо, не задев кота)
+                if (!c.alreadyScored && c.x + c.width < cat.x && cat.grounded) {
+                    c.alreadyScored = true;
+                    score++;
+                    scoreSpan.innerText = score;
+                    updateHighScore();
+                    // Увеличиваем скорость плавно
+                    currentSpeed = Math.min(3 + Math.floor(score / 25), 7);
+                }
+                // Столкновение
                 if (cat.x < c.x + c.width && cat.x + cat.width > c.x &&
                     cat.y < c.y + c.height && cat.y + cat.height > c.y) {
                     gameRunning = false;
@@ -7379,15 +7308,16 @@ window.localDict = localDict;
                 }
             }
 
-            // Спавн: мыши реже (каждые 60 кадров), кактусы с бОльшим интервалом (каждые 50 кадров)
-            if (frame % 60 === 0 && mice.length < 4) spawnMouse();
-            if (frame % 50 === 0 && cacti.length < 5) spawnCactus();
-
-            // Дополнительная проверка: если кактусы слишком близко (расстояние < 80), удаляем последний
-            for (let i=1; i<cacti.length; i++) {
-                if (cacti[i].x - cacti[i-1].x < 70) {
-                    cacti.splice(i,1);
-                    i--;
+            // Спавн кактусов с интервалом 45-55 кадров (чтобы не было слишком часто)
+            if (frame % 50 === 0 && cacti.length < 5) {
+                spawnCactus();
+                // Дополнительно: если последние два кактуса слишком близко, отодвигаем
+                if (cacti.length >= 2) {
+                    let last = cacti[cacti.length-1];
+                    let prev = cacti[cacti.length-2];
+                    if (last.x - prev.x < 90) {
+                        cacti.pop();
+                    }
                 }
             }
 
@@ -7396,6 +7326,7 @@ window.localDict = localDict;
 
         function draw() {
             ctx.clearRect(0, 0, cw, ch);
+            // Земля
             ctx.fillStyle = '#5d3a1a';
             ctx.fillRect(0, groundY, cw, ch-groundY);
             // Кот
@@ -7404,14 +7335,6 @@ window.localDict = localDict;
             ctx.fillStyle = '#d35400';
             ctx.fillRect(cat.x+5, cat.y-8, 8, 8);
             ctx.fillRect(cat.x+cat.width-13, cat.y-8, 8, 8);
-            // Мыши
-            for (let m of mice) {
-                ctx.fillStyle = '#7f8c8d';
-                ctx.fillRect(m.x, m.y, m.width, m.height);
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(m.x+m.width-8, m.y+4, 6, 6);
-                ctx.fillRect(m.x-6, m.y+8, 6, 6);
-            }
             // Кактусы
             for (let c of cacti) {
                 ctx.fillStyle = '#27ae60';
@@ -7420,9 +7343,10 @@ window.localDict = localDict;
                 ctx.fillRect(c.x+4, c.y-5, 4, 8);
                 ctx.fillRect(c.x+10, c.y-8, 4, 12);
             }
+            // Очки и рекорд на canvas
             ctx.fillStyle = 'white';
             ctx.font = 'bold 14px sans-serif';
-            ctx.fillText(`${score}`, cw-40, 30);
+            ctx.fillText(`Score: ${score}`, cw-80, 30);
         }
 
         let jumpRequested = false;
@@ -7440,7 +7364,6 @@ window.localDict = localDict;
             frame = 0;
             score = 0;
             scoreSpan.innerText = '0';
-            mice = [];
             cacti = [];
             currentSpeed = 3;
             cat.y = groundY - cat.height;
@@ -7470,15 +7393,6 @@ window.localDict = localDict;
         };
         restart();
     }
-
-    // ---- 4. Открытие панели и выбор игры ----
-    gamesBtn.onclick = () => { gamesPanel.style.display = 'flex'; };
-    document.getElementById('closeGamesPanel2').onclick = () => { gamesPanel.style.display = 'none'; };
-    document.getElementById('gameCatCactus2').onclick = () => {
-        gamesPanel.style.display = 'none';
-        startCatCactusGameV2();
-    };
-})();
 </script>
 </body>
 </html>
