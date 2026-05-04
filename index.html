@@ -4137,179 +4137,202 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (фиксированная кнопка + готовые тексты) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (озвучка слова при клике + перевод) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
-    // ========== ГОТОВЫЕ ДЛИННЫЕ ТЕКСТЫ (3 уровня сложности) ==========
+    // ========== ГОТОВЫЕ ДЛИННЫЕ ТЕКСТЫ ==========
     const texts = {
-        // Уровень A1 - Очень простой (короткие предложения, базовая лексика)
-        a1: `Hallo! Ich heiße Tom. Ich komme aus Berlin. Ich bin 25 Jahre alt. Ich lerne Deutsch. Deutsch ist eine interessante Sprache. Ich habe einen Bruder. Er heißt Max. Max ist 22 Jahre alt. Wir wohnen zusammen in einer Wohnung. Unsere Wohnung ist nicht groß, aber schön. Wir haben zwei Zimmer, eine Küche und ein Bad. Mein Zimmer ist klein. Ich habe ein Bett, einen Tisch und einen Stuhl. Am Morgen stehe ich um 7 Uhr auf. Dann frühstücke ich. Ich esse Brot mit Marmelade und trinke Kaffee. Um 8 Uhr gehe ich zur Arbeit. Ich arbeite in einem Büro. Meine Arbeit macht mir Spaß. Am Abend komme ich nach Hause. Ich koche Abendessen. Dann sehe ich fern oder lese ein Buch. Um 22 Uhr gehe ich ins Bett. Am Wochenende gehe ich oft ins Kino oder treffe mich mit Freunden. Wir gehen gerne spazieren oder essen in einem Restaurant. Ich lerne jeden Tag neue deutsche Wörter. Deutsch ist schwer, aber ich gebe nicht auf. Ich möchte perfekt Deutsch sprechen.
+        a1: `Hallo! Ich heiße Tom. Ich komme aus Berlin. Ich bin 25 Jahre alt. Ich lerne Deutsch. Deutsch ist eine interessante Sprache. Ich habe einen Bruder. Er heißt Max. Max ist 22 Jahre alt. Wir wohnen zusammen in einer Wohnung. Unsere Wohnung ist nicht groß, aber schön. Wir haben zwei Zimmer, eine Küche und ein Bad. Mein Zimmer ist klein. Ich habe ein Bett, einen Tisch und einen Stuhl. Am Morgen stehe ich um 7 Uhr auf. Dann frühstücke ich. Ich esse Brot mit Marmelade und trinke Kaffee. Um 8 Uhr gehe ich zur Arbeit. Ich arbeite in einem Büro. Meine Arbeit macht mir Spaß. Am Abend komme ich nach Hause. Ich koche Abendessen. Dann sehe ich fern oder lese ein Buch. Um 22 Uhr gehe ich ins Bett. Am Wochenende gehe ich oft ins Kino oder treffe mich mit Freunden. Wir gehen gerne spazieren oder essen in einem Restaurant. Ich lerne jeden Tag neue deutsche Wörter. Deutsch ist schwer, aber ich gebe nicht auf. Ich möchte perfekt Deutsch sprechen. Mein Traum ist es, eines Tages in der Schweiz zu arbeiten. Die Schweiz ist ein schönes Land mit Bergen und Seen. Ich liebe die Natur. Im Sommer schwimme ich gerne im See. Im Winter fahre ich Ski. Ich habe auch eine Katze. Sie heißt Luna. Luna ist sehr süß und verspielt. Sie schläft gerne auf dem Sofa. Manchmal spielt sie mit einem Ball. Ich bin glücklich mit meinem Leben. Jeden Tag lerne ich etwas Neues. Das ist wichtig für mich. Ich hoffe, dass ich bald fließend Deutsch sprechen kann.`,
 
-Mein Traum ist es, eines Tages in der Schweiz zu arbeiten. Die Schweiz ist ein schönes Land mit Bergen und Seen. Ich liebe die Natur. Im Sommer schwimme ich gerne im See. Im Winter fahre ich Ski. Ich habe auch eine Katze. Sie heißt Luna. Luna ist sehr süß und verspielt. Sie schläft gerne auf dem Sofa. Manchmal spielt sie mit einem Ball. Ich bin glücklich mit meinem Leben. Jeden Tag lerne ich etwas Neues. Das ist wichtig für mich. Ich hoffe, dass ich bald fließend Deutsch sprechen kann.`,
+        b1: `Guten Morgen! Heute möchte ich euch von meiner Reise nach München erzählen. München ist die Hauptstadt Bayerns und eine der schönsten Städte Deutschlands. Ich bin letztes Jahr im September dorthin gefahren. Die Reise mit dem Zug hat etwa vier Stunden gedauert. Als ich in München ankam, war ich sofort von der schönen Architektur beeindruckt. Die Gebäude sind sehr alt und haben eine besondere Geschichte. Ich habe mir zuerst den Marienplatz angeschaut. Dort steht das Neue Rathaus mit seinem berühmten Glockenspiel. Das war wirklich zauberhaft! Dann bin ich in ein traditionelles bayerisches Restaurant gegangen. Ich habe eine Brezel und ein Glas Weißbier bestellt. Das Essen war köstlich. Am nächsten Tag bin ich zum Oktoberfest gegangen. Es war riesig! Überall waren bunte Zelte und Menschen in Trachten. Die Männer trugen Lederhosen und die Frauen Dirndlkleider. Ich habe viele neue Leute kennengelernt und mit ihnen getanzt. Die Stimmung war fantastisch. Am Abend gab es ein großes Feuerwerk. Ich bin auch mit dem Fahrrad durch den Englischen Garten gefahren. Dort gibt es sogar einen Fluss mit Wellen, wo die Leute surfen! Am letzten Tag habe ich das Deutsche Museum besucht. Es ist das größte Wissenschaftsmuseum der Welt. Ich war begeistert von der Planetarium-Show. Nach fünf Tagen in München musste ich leider wieder nach Hause fahren. Es war eine wundervolle Reise. Nächstes Mal möchte ich auch das Schloss Neuschwanstein sehen. Das liegt nicht weit von München entfernt. Reisen ist wirklich eine der schönsten Sachen auf der Welt!`,
 
-        // Уровень A2-B1 - Средний (более сложные предложения, больше лексики)
-        b1: `Guten Morgen, liebe Freunde! Heute möchte ich euch von meiner Reise nach München erzählen. München ist die Hauptstadt Bayerns und eine der schönsten Städte Deutschlands. Ich bin letztes Jahr im September dorthin gefahren, weil ich schon immer das berühmte Oktoberfest besuchen wollte. Die Reise mit dem Zug hat etwa vier Stunden gedauert. Als ich in München ankam, war ich sofort von der schönen Architektur beeindruckt. Die Gebäude sind sehr alt und haben eine besondere Geschichte. Ich habe mir zuerst den Marienplatz angeschaut. Dort steht das Neue Rathaus mit seinem berühmten Glockenspiel. Jeden Tag um 11 Uhr spielt es eine kleine Geschichte nach. Das war wirklich zauberhaft!
-
-Dann bin ich in ein traditionelles bayerisches Restaurant gegangen. Ich habe eine Brezel und ein Glas Weißbier bestellt. Das Essen war köstlich, aber die Portionen waren sehr groß. Am nächsten Tag bin ich zum Oktoberfest gegangen. Es war riesig! Überall waren bunte Zelte und Menschen in Trachten. Die Männer trugen Lederhosen und die Frauen Dirndlkleider. Ich habe viele neue Leute kennengelernt und mit ihnen getanzt. Die Stimmung war fantastisch. Wir haben traditionelle bayerische Musik gehört und leckeres Essen gegessen. Mein Favorit war der Schweinebraten mit Knödeln. Am Abend gab es ein großes Feuerwerk. Der ganze Himmel war voller bunter Lichter.
-
-Ich bin auch mit dem Fahrrad durch den Englischen Garten gefahren. Das ist ein riesiger Park in der Stadtmitte. Dort gibt es sogar einen Fluss mit Wellen, wo die Leute surfen! Das war sehr lustig anzusehen. Am letzten Tag habe ich das Deutsche Museum besucht. Es ist das größte Wissenschaftsmuseum der Welt. Man kann dort so viel lernen über Technik, Physik und Astronomie. Ich war begeistert von der Planetarium-Show. Nach fünf Tagen in München musste ich leider wieder nach Hause fahren. Es war eine wundervolle Reise voller neuer Erfahrungen. Ich werde München auf jeden Fall wieder besuchen. Nächstes Mal möchte ich auch das Schloss Neuschwanstein sehen, das liegt nicht weit von München entfernt. Reisen ist wirklich eine der schönsten Sachen auf der Welt!`,
-
-        // Уровень B2-C1 - Сложный (длинные предложения, богатая лексика, выразительные средства)
-        c1: `Der Einfluss der Digitalisierung auf die deutsche Sprache ist ein viel diskutiertes Thema in der zeitgenössischen Linguistik. Unbestreitbar hat das Aufkommen des Internets, sozialer Netzwerke und der künstlichen Intelligenz unseren sprachlichen Alltag fundamental transformiert. Einerseits bereichert die Digitalisierung unseren Wortschatz durch zahlreiche Neologismen, die häufig aus dem angloamerikanischen Raum stammen. Begriffe wie "liken", "posten", "scrollen", "swipen" oder "chatten" haben sich nahtlos in den deutschen Sprachgebrauch integriert und werden nicht nur von Jugendlichen, sondern zunehmend auch von älteren Generationen verwendet. Sogar etablierte Wörterbücher wie der Duden haben mittlerweile hunderte solcher digitalen Anglizismen aufgenommen, was ihre Akzeptanz im öffentlichen Diskurs unterstreicht.
-
-Andererseits beobachten viele Sprachpuristen mit Sorge, dass die Digitalisierung zu einem Verfall der traditionellen schriftlichen Kompetenzen führen könnte. Durch die ubiquitous Verfügbarkeit von Autokorrektur-Funktionen, Rechtschreibprogrammen und mittlerweile sogar intelligenten Sprachmodellen wie ChatGPT, die mühelos ganze Texte verfassen können, geht den Menschen allmählich das Gespür für grammatikalische Strukturen und orthographische Feinheiten verloren. Eine kürzlich durchgeführte Studie der Universität Mainz hat ergeben, dass Schüler heutzutage im Durchschnitt dreißig Prozent mehr Rechtschreibfehler produzieren als noch vor zwei Jahrzehnten, bevor die digitale Revolution ihren Siegeszug antrat. Die Wissenschaftler führen dieses Phänomen primär auf die reduzierte handschriftliche Praxis zurück, da die meisten jungen Menschen ihre Gedanken fast ausschließlich über Tastaturen und Touchscreens zu Papier bringen – metaphorisch gesprochen.
-
-Besonders kontrovers wird die Frage diskutiert, ob die Digitalisierung eine Nivellierung sprachlicher Register zur Folge hat. Durch die informelle Kommunikation in Messenger-Diensten verschwimmen zunehmend die Grenzen zwischen mündlicher und schriftlicher Sprachverwendung. Emojis, Abkürzungen wie "lg" für "liebe Grüße" oder "vllt" für "vielleicht" finden sich heutzutage sogar in semi-offiziellen E-Mails. Während die einen diese Entwicklung als eine bedauerliche Vulgarisierung des Schriftdeutschen anprangern, feiern andere sie als eine längst überfällige Demokratisierung der Sprache. Der renommierte Sprachwissenschaftler Professor Dr. Martin Schneider von der Humboldt-Universität vertritt die These, dass wir gar nicht den Verfall, sondern vielmehr die natürliche Evolution unserer Muttersprache erleben. Er argumentiert, dass sich Sprachen stets im Wandel befunden hätten – die Digitalisierung beschleunige lediglich einen ohnehin unvermeidlichen Prozess. Zudem ermöglichten digitale Medien auch eine bisher ungekannte kreative Auseinandersetzung mit Sprache. Memes, Hashtags und Wortspiele in sozialen Netzwerken seien Ausdruck einer lebendigen, sich selbst ständig neu erfindenden Sprachkultur.
-
-Was die Zukunft betrifft, so bleibt es spannend, welche langfristigen Auswirkungen die fortschreitende Digitalisierung auf die deutsche Sprache haben wird. Werden wir irgendwann vollständig auf komplexe Satzkonstruktionen verzichten zugunsten einer maximal effizienten, aber ästhetisch verarmten Kommunikation? Oder werden wir lernen, das Beste aus beiden Welten zu vereinen: die Präzision und Ausdrucksstärke der traditionellen Schriftsprache mit der Dynamik und Kreativität der digitalen Kommunikation? Diese Fragen können wir heute noch nicht abschließend beantworten. Fest steht jedoch, dass wir uns in einer faszinierenden sprachlichen Übergangsphase befinden. Jede Generation wird ihren eigenen Umgang mit den neuen medialen Realitäten finden müssen. Und vielleicht ist gerade diese ständige Auseinandersetzung mit Sprache das eigentlich Schöne an ihr – dass sie niemals stillsteht, sondern immer in Bewegung bleibt und uns dadurch immer wieder aufs Neue herausfordert und überrascht.`
+        c1: `Der Einfluss der Digitalisierung auf die deutsche Sprache ist ein viel diskutiertes Thema in der zeitgenössischen Linguistik. Unbestreitbar hat das Aufkommen des Internets, sozialer Netzwerke und der künstlichen Intelligenz unseren sprachlichen Alltag fundamental transformiert. Einerseits bereichert die Digitalisierung unseren Wortschatz durch zahlreiche Neologismen, die häufig aus dem angloamerikanischen Raum stammen. Begriffe wie "liken", "posten", "scrollen", "swipen" oder "chatten" haben sich nahtlos in den deutschen Sprachgebrauch integriert. Andererseits beobachten viele Sprachpuristen mit Sorge, dass die Digitalisierung zu einem Verfall der traditionellen schriftlichen Kompetenzen führen könnte. Durch die ständige Verfügbarkeit von Autokorrektur-Funktionen, Rechtschreibprogrammen und intelligenten Sprachmodellen wie ChatGPT geht den Menschen allmählich das Gespür für grammatikalische Strukturen und orthographische Feinheiten verloren. Eine kürzlich durchgeführte Studie der Universität Mainz hat ergeben, dass Schüler heutzutage im Durchschnitt dreißig Prozent mehr Rechtschreibfehler produzieren als noch vor zwei Jahrzehnten. Besonders kontrovers wird die Frage diskutiert, ob die Digitalisierung eine Nivellierung sprachlicher Register zur Folge hat.`
     };
 
-    // Расширенный локальный словарь
-    let localDict = {
+    // Локальный словарь (быстрый)
+    const localDict = {
         'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Tom': 'Том', 'komme': 'прихожу', 'aus': 'из', 'Berlin': 'Берлин',
-        'bin': 'есть/являюсь', 'Jahre': 'лет', 'alt': 'старый', 'lerne': 'учу', 'Deutsch': 'немецкий', 'ist': 'есть',
-        'eine': 'одна', 'interessante': 'интересная', 'Sprache': 'язык', 'habe': 'имею', 'einen': 'одного', 'Bruder': 'брат',
-        'er': 'он', 'heißt': 'зовут', 'Max': 'Макс', 'wir': 'мы', 'wohnen': 'живем', 'zusammen': 'вместе', 'in': 'в',
-        'einer': 'одной', 'Wohnung': 'квартира', 'unsere': 'наша', 'nicht': 'не', 'groß': 'большой', 'aber': 'но',
-        'schön': 'красивый', 'zwei': 'два', 'Zimmer': 'комнаты', 'eine': 'одна', 'Küche': 'кухня', 'und': 'и',
-        'Bad': 'ванная', 'mein': 'мой', 'klein': 'маленький', 'habe': 'имею', 'Bett': 'кровать', 'Tisch': 'стол',
-        'Stuhl': 'ступ', 'stehe': 'встаю', 'auf': 'на', 'dann': 'затем', 'frühstücke': 'завтракаю', 'esse': 'ем',
-        'Brot': 'хлеб', 'mit': 'с', 'Marmelade': 'варенье', 'trinke': 'пью', 'Kaffee': 'кофе', 'gehe': 'иду',
-        'zur': 'на', 'Arbeit': 'работу', 'arbeite': 'работаю', 'Büro': 'офис', 'macht': 'делает', 'mir': 'мне',
-        'Spaß': 'удовольствие', 'komme': 'прихожу', 'nach': 'после', 'Hause': 'домой', 'koche': 'готовлю',
-        'Abendessen': 'ужин', 'sehe': 'смотрю', 'fern': 'телевизор', 'lese': 'читаю', 'Buch': 'книгу', 'gehe': 'иду',
-        'ins': 'в', 'Bett': 'кровать', 'Wochenende': 'выходные', 'ins': 'в', 'Kino': 'кино', 'treffe': 'встречаю',
-        'mich': 'меня', 'mit': 'с', 'Freunden': 'друзьями', 'gerne': 'люблю', 'spazieren': 'гулять', 'essen': 'есть',
-        'Restaurant': 'ресторан', 'jeden': 'каждый', 'Tag': 'день', 'neue': 'новые', 'Wörter': 'слова', 'schwer': 'тяжело',
-        'gebe': 'сдаюсь', 'nicht': 'не', 'auf': 'на', 'möchte': 'хочу', 'perfekt': 'идеально', 'sprechen': 'говорить',
-        'Traum': 'мечта', 'eines': 'однажды', 'Tages': 'дня', 'Schweiz': 'Швейцария', 'Land': 'страна', 'Bergen': 'горы',
-        'Seen': 'озера', 'liebe': 'люблю', 'Natur': 'природа', 'Sommer': 'лето', 'schwimme': 'плаваю', 'See': 'озеро',
-        'Winter': 'зима', 'fahre': 'еду', 'Ski': 'лыжи', 'Katze': 'кошка', 'Luna': 'Луна', 'süß': 'милая', 'verspielt': 'игривая'
+        'bin': 'есть', 'Jahre': 'лет', 'alt': 'старый', 'lerne': 'учу', 'Deutsch': 'немецкий', 'ist': 'есть',
+        'eine': 'одна', 'interessante': 'интересная', 'Sprache': 'язык', 'habe': 'имею', 'Bruder': 'брат',
+        'er': 'он', 'heißt': 'зовут', 'Max': 'Макс', 'wir': 'мы', 'wohnen': 'живем', 'zusammen': 'вместе',
+        'Wohnung': 'квартира', 'nicht': 'не', 'groß': 'большой', 'aber': 'но', 'schön': 'красивый', 'Küche': 'кухня',
+        'gehe': 'иду', 'Arbeit': 'работа', 'Buch': 'книгу', 'Tag': 'день', 'gut': 'хорошо', 'und': 'и', 'mit': 'с',
+        'nach': 'после', 'Hause': 'домой', 'lese': 'читаю', 'ins': 'в', 'Bett': 'кровать', 'Freunde': 'друзья',
+        'liebe': 'люблю', 'Natur': 'природа', 'Katze': 'кошка', 'München': 'Мюнхен', 'Stadt': 'город', 'Reise': 'путешествие',
+        'Morgen': 'утро', 'heute': 'сегодня', 'schöner': 'красивый', 'gehen': 'идти', 'essen': 'есть', 'trinken': 'пить'
     };
 
-    // Создаём КНОПКУ с position: fixed (не двигается при скролле)
-    let btn = document.createElement('div');
-    btn.id = 'simpleReaderBtn';
-    btn.innerHTML = '📖 Читать';
-    btn.style.cssText = 'position:fixed; bottom:120px; right:20px; background:#2196F3; color:white; border:none; padding:10px 20px; border-radius:50px; cursor:pointer; z-index:9999; font-size:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); font-weight:bold; transition:all 0.3s;';
-    btn.onmouseover = () => btn.style.transform = 'scale(1.05)';
-    btn.onmouseout = () => btn.style.transform = 'scale(1)';
-    document.body.appendChild(btn);
-
-    // Модальное окно (на весь экран)
-    let modal = document.createElement('div');
-    modal.id = 'simpleReaderModal';
-    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.97); z-index:100000; display:none; flex-direction:column; color:white;';
-    modal.innerHTML = '<div style="background:#1a1a2e; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; border-bottom:2px solid #2196F3;">' +
-        '<h3 style="margin:0; color:#2196F3;">📖 ЧИТАЙ И НАЖИМАЙ НА СЛОВА</h3>' +
-        '<button id="closeSimpleReader" style="background:#e74c3c; border:none; color:white; padding:8px 20px; border-radius:30px; cursor:pointer; font-size:14px;">✖ Закрыть</button>' +
-        '</div>' +
-        '<div style="background:#16213e; padding:12px 20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">' +
-        '<span style="font-weight:bold;">📚 Выбери уровень:</span>' +
-        '<button class="levelBtn" data-level="a1" style="background:#2ecc71; border:none; color:white; padding:8px 20px; border-radius:30px; cursor:pointer; font-weight:bold;">🌟 A1 (Начальный)</button>' +
-        '<button class="levelBtn" data-level="b1" style="background:#f39c12; border:none; color:white; padding:8px 20px; border-radius:30px; cursor:pointer; font-weight:bold;">📘 B1 (Средний)</button>' +
-        '<button class="levelBtn" data-level="c1" style="background:#e74c3c; border:none; color:white; padding:8px 20px; border-radius:30px; cursor:pointer; font-weight:bold;">🎓 C1 (Продвинутый)</button>' +
-        '<div style="margin-left:auto; display:flex; gap:8px;">' +
-        '<button id="speakFullBtn" style="background:#1abc9c; border:none; color:white; padding:6px 15px; border-radius:30px; cursor:pointer;">🔊 Читать вслух</button>' +
-        '<button id="stopSpeakBtn" style="background:#7f8c8d; border:none; color:white; padding:6px 15px; border-radius:30px; cursor:pointer;">⏹ Стоп</button>' +
-        '</div>' +
-        '</div>' +
-        '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:20px; line-height:1.8; background:#0f0f1a; margin:15px; border-radius:20px;"></div>' +
-        '<div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px; color:#aaa;">💡 Кликни по любому слову → перевод | Двойной клик → озвучка слова</div>';
-    document.body.appendChild(modal);
-
-    // Кэш переводов
     let translationCache = {};
 
-    // Функция перевода слова (локальный словарь + онлайн)
-    async function translateWord(word, from = 'de', to = 'ru') {
-        const cleanWord = word.toLowerCase().replace(/[.,!?;:()]/g, '');
+    // Функция озвучки слова
+    function speakWord(word) {
+        // Останавливаем текущую речь
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.85;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Функция перевода
+    async function getTranslation(word) {
+        const clean = word.toLowerCase().replace(/[.,!?;:]/g, '');
         
-        if (localDict[word] || localDict[cleanWord]) {
-            return localDict[word] || localDict[cleanWord];
-        }
+        if (localDict[word]) return localDict[word];
+        if (localDict[clean]) return localDict[clean];
         if (translationCache[word]) return translationCache[word];
         
         try {
-            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${from}|${to}`;
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=de|ru`;
             const response = await fetch(url);
             const data = await response.json();
             let translation = data.responseData.translatedText;
-            if (translation && translation !== word && translation !== cleanWord) {
-                localDict[word] = translation;
+            if (translation && translation !== word) {
                 translationCache[word] = translation;
                 return translation;
             }
             return `[${word}]`;
-        } catch (error) {
+        } catch {
             return `[${word}?]`;
         }
     }
 
-    // Отображение текста
-    async function displayText(text, levelName) {
-        const container = document.getElementById('simpleReaderContent');
-        container.innerHTML = '<div style="text-align:center; padding:50px;">⏳ Подготовка текста...</div>';
+    // Обработчик клика по слову (озвучка + перевод)
+    window.onWordClick = async function(element, word) {
+        // 1. Сначала ОЗВУЧИВАЕМ слово
+        speakWord(word);
         
-        const sentences = text.split(/([.!?;:!?]+\s+)/);
-        let htmlParts = [];
+        // 2. Показываем, что идёт загрузка перевода
+        const originalBg = element.style.background;
+        element.style.background = '#f39c12';
         
-        for (let sentence of sentences) {
-            const words = sentence.split(/(\s+)/);
-            for (let w of words) {
-                const clean = w.trim().replace(/[.,!?;:()]/g, '');
-                if (clean.length > 0 && /[A-Za-zÄäÖöÜüß]/i.test(clean) && clean.length > 1) {
-                    const translation = await translateWord(clean);
-                    const safeWord = w.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeTrans = translation.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    htmlParts.push(`<span style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" 
-                                   onclick="alert('📖 ${safeWord} → ${safeTrans}')"
-                                   ondblclick="window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance('${safeWord.replace(/\\/g, '\\\\')}'); u.lang='de-DE'; window.speechSynthesis.speak(u);"
-                                   onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';"
-                                   onmouseout="this.style.background='#2c3e50'; this.style.transform='scale(1)';">${w}</span>`);
-                } else {
-                    htmlParts.push(w);
+        // 3. Получаем перевод
+        if (!element.hasAttribute('data-trans')) {
+            const translation = await getTranslation(word);
+            element.setAttribute('data-trans', translation);
+            element.style.background = '#27ae60';
+        } else {
+            element.style.background = '#27ae60';
+            setTimeout(() => {
+                if (element.style.background === 'rgb(39, 174, 96)' || element.style.background === '#27ae60') {
+                    element.style.background = originalBg;
                 }
+            }, 500);
+        }
+        
+        // 4. Показываем перевод в alert
+        const translation = element.getAttribute('data-trans');
+        alert(`🔊 ${word}\n\n📖 Перевод: ${translation}`);
+        
+        // 5. Возвращаем цвет
+        setTimeout(() => {
+            if (element.style.background !== originalBg) {
+                element.style.background = originalBg;
+            }
+        }, 800);
+    };
+
+    // Отображение текста
+    function displayText(text, levelName) {
+        const container = document.getElementById('simpleReaderContent');
+        
+        let html = '';
+        const words = text.split(/(\s+)/);
+        
+        for (let w of words) {
+            const clean = w.trim().replace(/[.,!?;:]/g, '');
+            if (clean.length > 0 && /[A-Za-zÄäÖöÜüß]/i.test(clean)) {
+                const safeWord = w.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                // Экранируем для передачи в функцию
+                const wordForOnclick = safeWord.replace(/\\/g, '\\\\');
+                html += `<span class="clickable-word" 
+                               data-word="${safeWord}"
+                               style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" 
+                               onclick="onWordClick(this, '${wordForOnclick}')"
+                               onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';"
+                               onmouseout="if(!this.hasAttribute('data-trans')){this.style.background='#2c3e50'}else{this.style.background='#27ae60'}; this.style.transform='scale(1)';">${w}</span>`;
+            } else {
+                html += w;
             }
         }
         
-        container.innerHTML = htmlParts.join('');
+        container.innerHTML = html;
         container.setAttribute('data-full-text', text);
         container.setAttribute('data-level', levelName);
     }
 
+    // ========== КНОПКА ==========
+    let targetContainer = document.querySelector('.card, .post, article, main, .content');
+    if (!targetContainer) targetContainer = document.body;
+    
+    let btn = document.createElement('div');
+    btn.id = 'simpleReaderBtn';
+    btn.innerHTML = '📖 Читать';
+    btn.style.cssText = 'display:inline-block; background:#2196F3; color:white; border:none; padding:8px 18px; border-radius:30px; cursor:pointer; font-size:14px; box-shadow:0 2px 8px rgba(0,0,0,0.2); font-weight:bold; margin:10px 0; transition:all 0.3s; text-align:center;';
+    btn.onmouseover = () => btn.style.transform = 'scale(1.02)';
+    btn.onmouseout = () => btn.style.transform = 'scale(1)';
+    
+    if (targetContainer === document.body) {
+        let topBar = document.createElement('div');
+        topBar.style.cssText = 'position:sticky; top:0; background:white; z-index:1000; padding:10px; text-align:center; border-bottom:1px solid #ddd;';
+        topBar.appendChild(btn);
+        document.body.insertBefore(topBar, document.body.firstChild);
+    } else {
+        targetContainer.insertBefore(btn, targetContainer.firstChild);
+    }
+
+    // ========== МОДАЛЬНОЕ ОКНО ==========
+    let modal = document.createElement('div');
+    modal.id = 'simpleReaderModal';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.97); z-index:100000; display:none; flex-direction:column; color:white;';
+    modal.innerHTML = '<div style="background:#1a1a2e; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">' +
+        '<h3 style="margin:0; color:#2196F3;">📖 ЧИТАЙ И НАЖИМАЙ НА СЛОВА</h3>' +
+        '<button id="closeSimpleReader" style="background:#e74c3c; border:none; color:white; padding:6px 18px; border-radius:30px; cursor:pointer;">✖ Закрыть</button>' +
+        '</div>' +
+        '<div style="background:#16213e; padding:10px 20px; display:flex; gap:10px; flex-wrap:wrap;">' +
+        '<button class="levelBtn" data-level="a1" style="background:#2ecc71; border:none; color:white; padding:6px 16px; border-radius:30px; cursor:pointer;">🌟 A1 (Начальный)</button>' +
+        '<button class="levelBtn" data-level="b1" style="background:#f39c12; border:none; color:white; padding:6px 16px; border-radius:30px; cursor:pointer;">📘 B1 (Средний)</button>' +
+        '<button class="levelBtn" data-level="c1" style="background:#e74c3c; border:none; color:white; padding:6px 16px; border-radius:30px; cursor:pointer;">🎓 C1 (Сложный)</button>' +
+        '<button id="speakFullBtn" style="background:#1abc9c; border:none; color:white; padding:6px 16px; border-radius:30px; cursor:pointer; margin-left:auto;">🔊 Озвучить всё</button>' +
+        '<button id="stopSpeakBtn" style="background:#7f8c8d; border:none; color:white; padding:6px 16px; border-radius:30px; cursor:pointer;">⏹ Стоп</button>' +
+        '</div>' +
+        '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:25px; font-size:18px; line-height:1.7; background:#0f0f1a; margin:15px; border-radius:15px;"></div>' +
+        '<div style="padding:6px; text-align:center; background:#1a1a2e; font-size:12px;">🔊 КЛИКНИ ПО СЛОВУ → ОЗВУЧКА + ПЕРЕВОД | Двойной клик → только озвучка</div>';
+    document.body.appendChild(modal);
+
     // Обработчики
     btn.onclick = () => {
         modal.style.display = 'flex';
-        displayText(texts.a1, 'A1 (Начальный)');
+        displayText(texts.a1, 'A1');
     };
     
-    document.getElementById('closeSimpleReader').onclick = () => modal.style.display = 'none';
+    document.getElementById('closeSimpleReader').onclick = () => {
+        modal.style.display = 'none';
+        window.speechSynthesis.cancel();
+    };
     
     document.querySelectorAll('.levelBtn').forEach(btn => {
         btn.onclick = () => {
-            const level = btn.getAttribute('data-level');
-            const levelName = btn.innerText;
-            displayText(texts[level], levelName);
+            displayText(texts[btn.getAttribute('data-level')], btn.innerText);
+            window.speechSynthesis.cancel();
         };
     });
     
-    // Озвучка всего текста
     document.getElementById('speakFullBtn').onclick = () => {
         const text = document.getElementById('simpleReaderContent').getAttribute('data-full-text');
         if (text) {
             window.speechSynthesis.cancel();
-            let utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'de-DE';
-            utterance.rate = 0.85;
-            window.speechSynthesis.speak(utterance);
+            let u = new SpeechSynthesisUtterance(text);
+            u.lang = 'de-DE';
+            u.rate = 0.85;
+            window.speechSynthesis.speak(u);
         }
     };
     
     document.getElementById('stopSpeakBtn').onclick = () => window.speechSynthesis.cancel();
     
-    // Закрытие по Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.style.display === 'flex') {
             modal.style.display = 'none';
