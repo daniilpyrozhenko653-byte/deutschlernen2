@@ -4244,7 +4244,7 @@ document.head.appendChild(style);
     function scrollToWord(index) {
         if (index < 0 || index >= allWordElements.length) return;
         const el = allWordElements[index];
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.scrollIntoView({ behavior: 'auto', block: 'center' });
     }
 
     // Остановка автопрокрутки
@@ -4299,7 +4299,7 @@ document.head.appendChild(style);
 
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
         utterance.lang = 'de-DE';
-        utterance.rate = 0.30;
+        utterance.rate = 0.75;
         utterance.onend = () => {
             isSpeaking = false;
             stopAutoScroll();
