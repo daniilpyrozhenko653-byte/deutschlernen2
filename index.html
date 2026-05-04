@@ -7196,20 +7196,16 @@ window.localDict = localDict;
     document.body.appendChild(gamesBtn);
 
     // ---- Панель выбора игр ----
+        // ---- Панель выбора игр (минималистичная, без зелёного фона и заголовка) ----
     let panel = document.createElement('div');
     panel.id = 'gamePanel';
-    panel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:300px; background:#1a1a2e; border-radius:20px; display:none; z-index:100001; box-shadow:0 0 0 1000px rgba(0,0,0,0.7);';
+    panel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:transparent; z-index:100001; display:none; gap:20px; justify-content:center; align-items:center;';
     panel.innerHTML = `
-        <div style="background:#2ecc71; padding:12px; border-radius:20px 20px 0 0; display:flex; justify-content:space-between;">
-            <span style="color:white;">🎮 Выбери игру</span>
-            <button id="closePanelBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button>
+        <div id="startCactusGame" style="background:#2c3e50; padding:15px 25px; border-radius:20px; cursor:pointer; text-align:center; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+            <div style="font-size:48px;">🐱🌵</div>
+            <div style="color:white; margin-top:5px;">Кот и кактусы</div>
         </div>
-        <div style="padding:20px; text-align:center;">
-            <div id="startCactusGame" style="background:#2c3e50; padding:10px; border-radius:15px; cursor:pointer;">
-                <div style="font-size:48px;">🐱🌵</div>
-                <div style="color:white;">Кот и кактусы</div>
-            </div>
-        </div>
+        <!-- сюда можно добавить другие игры в будущем -->
     `;
     document.body.appendChild(panel);
 
