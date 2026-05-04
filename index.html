@@ -7182,171 +7182,107 @@ window.localDict = localDict;
 })();
 
 
-                // ---- 3. ИГРА "КОТ И КАКТУСЫ" (СО ЗВУКАМИ И МУЗЫКОЙ) ----
-    function startCactusRunner() {
-        if (activeGameDiv) activeGameDiv.remove();
-        activeGameDiv = document.createElement('div');
-        activeGameDiv.id = 'cactusRunnerGame';
-        activeGameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
-        activeGameDiv.innerHTML = `
-            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:hidden; position:relative;">
-                <div style="background:#e67e22; padding:8px; text-align:center; color:white; font-weight:bold;">🐱 Кот и кактусы (прыгай, чтобы перепрыгивать кактусы)</div>
-                <canvas id="cactusRunnerCanvas" width="600" height="250" style="display:block; width:100%; background:#87CEEB;"></canvas>
+                // ========== ИГРА "КОТ И КАКТУСЫ" С МУЗЫКОЙ И ЗВУКАМИ ==========
+(function() {
+    if (document.getElementById('cactusGameRoot')) return;
+
+    // ---- Кнопка "Игры" (рядом с "Читать") ----
+    let readBtn = document.getElementById('simpleReaderBtn');
+    if (!readBtn) return;
+    let gamesBtn = document.createElement('div');
+    gamesBtn.id = 'cactusGameRoot';
+    gamesBtn.innerHTML = '🎮 Игры';
+    gamesBtn.style.cssText = 'position:absolute; top:20px; right:' + (parseInt(readBtn.style.right) + 80) + 'px; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000;';
+    document.body.appendChild(gamesBtn);
+
+    // ---- Панель выбора игр ----
+    let panel = document.createElement('div');
+    panel.id = 'gamePanel';
+    panel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:300px; background:#1a1a2e; border-radius:20px; display:none; z-index:100001; box-shadow:0 0 0 1000px rgba(0,0,0,0.7);';
+    panel.innerHTML = `
+        <div style="background:#2ecc71; padding:12px; border-radius:20px 20px 0 0; display:flex; justify-content:space-between;">
+            <span style="color:white;">🎮 Выбери игру</span>
+            <button id="closePanelBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button>
+        </div>
+        <div style="padding:20px; text-align:center;">
+            <div id="startCactusGame" style="background:#2c3e50; padding:10px; border-radius:15px; cursor:pointer;">
+                <div style="font-size:48px;">🐱🌵</div>
+                <div style="color:white;">Кот и кактусы</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(panel);
+
+    let activeGame = null;
+
+    // ---- Игра ----
+    function launchGame() {
+        if (activeGame) activeGame.remove();
+        activeGame = document.createElement('div');
+        activeGame.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
+        activeGame.innerHTML = `
+            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:hidden;">
+                <div style="background:#e67e22; padding:8px; text-align:center; color:white;">🐱 Кот и кактусы (прыгай, чтобы перепрыгнуть кактус)</div>
+                <canvas id="gameCanvas" width="600" height="250" style="width:100%; background:#87CEEB;"></canvas>
                 <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
-                    <span>🌵 Очки: <span id="cactusScore">0</span></span>
-                    <span>🏆 Рекорд: <span id="cactusHighScore">0</span></span>
-                    <button id="musicToggleBtn" style="background:#555; border:none; color:white; border-radius:10px; padding:2px 8px; cursor:pointer;">🔊 Музыка</button>
+                    <span>🌵 Очки: <span id="gameScore">0</span></span>
+                    <span>🏆 Рекорд: <span id="gameHighScore">0</span></span>
                 </div>
-                <div id="cactusGameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px 25px; border-radius:20px; text-align:center; z-index:10;">
-                    💀 <strong>Game Over</strong> 💀<br>
-                    <button id="cactusRestartButton" style="background:#e67e22; border:none; color:white; padding:8px 20px; border-radius:20px; margin-top:10px; cursor:pointer;">🔄 Снова</button>
+                <div id="gameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px; border-radius:20px; text-align:center;">
+                    Game Over <br><button id="restartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
                 </div>
-                <button id="closeCactusGameButton" style="background:#c0392b; border:none; color:white; width:100%; padding:8px; cursor:pointer;">Закрыть</button>
+                <button id="closeGameBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:8px;">Закрыть</button>
             </div>
         `;
-        document.body.appendChild(activeGameDiv);
+        document.body.appendChild(activeGame);
 
-        const canvas = document.getElementById('cactusRunnerCanvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const scoreSpan = document.getElementById('cactusScore');
-        const highScoreSpan = document.getElementById('cactusHighScore');
-        const gameOverDiv = document.getElementById('cactusGameOverMsg');
-        const restartButton = document.getElementById('cactusRestartButton');
-        const closeButton = document.getElementById('closeCactusGameButton');
-        const musicToggleBtn = document.getElementById('musicToggleBtn');
+        const scoreSpan = document.getElementById('gameScore');
+        const highScoreSpan = document.getElementById('gameHighScore');
+        const gameOverDiv = document.getElementById('gameOverMsg');
+        const restartGameBtn = document.getElementById('restartBtn');
+        const closeGameBtn = document.getElementById('closeGameBtn');
 
-        // --- Звуки ---
-        let meowSound = null;
-        let pointSound = null;
-        let jumpSound = null;
-        let bgMusic = null;
-        let musicEnabled = true;
-
-        function initSounds() {
-            // Мяу (реальный)
-            meowSound = new Audio('https://www.myinstants.com/media/sounds/meow_Cc2Vger.mp3');
-            meowSound.volume = 0.6;
-            // Короткий писк для очка (на базе Web Audio, надёжнее)
-            pointSound = new (window.AudioContext || window.webkitAudioContext)();
-            // Звук прыжка
-            jumpSound = new (window.AudioContext || window.webkitAudioContext)();
-            // Фоновая музыка (петля) – лёгкий ретро-трек из публичного источника
-            bgMusic = new Audio('https://actions.google.com/sound/zip/loop_8bit_melody.mp3'); // заменим на рабочий URL
-            // Проверяем, если не загружается, используем другой URL
-            bgMusic.loop = true;
-            bgMusic.volume = 0.3;
-            bgMusic.onerror = () => { console.warn('Музыка не загружена, использую тишину'); bgMusic = null; };
-            bgMusic.load();
-        }
-
-        function playPoint() {
-            try {
-                let ctx = new (window.AudioContext || window.webkitAudioContext)();
-                let osc = ctx.createOscillator();
-                let gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = 880;
-                gain.gain.value = 0.15;
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.2);
-                osc.stop(ctx.currentTime + 0.2);
-                setTimeout(() => ctx.close(), 300);
-            } catch(e) {}
-        }
-
-        function playJump() {
-            try {
-                let ctx = new (window.AudioContext || window.webkitAudioContext)();
-                let osc = ctx.createOscillator();
-                let gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = 660;
-                gain.gain.value = 0.1;
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.1);
-                osc.stop(ctx.currentTime + 0.1);
-                setTimeout(() => ctx.close(), 200);
-            } catch(e) {}
-        }
-
-        function playMeow() {
-            if (meowSound) {
-                let clone = meowSound.cloneNode();
-                clone.volume = 0.5;
-                clone.play().catch(e => console.warn(e));
-            }
-        }
-
-        function startMusic() {
-            if (bgMusic && musicEnabled) {
-                bgMusic.play().catch(e => console.warn('Музыка не играет', e));
-            }
-        }
-        function stopMusic() {
-            if (bgMusic) {
-                bgMusic.pause();
-                bgMusic.currentTime = 0;
-            }
-        }
-        function toggleMusic() {
-            musicEnabled = !musicEnabled;
-            if (musicEnabled) {
-                startMusic();
-                musicToggleBtn.innerHTML = '🔊 Музыка';
-            } else {
-                stopMusic();
-                musicToggleBtn.innerHTML = '🔇 Музыка';
-            }
-        }
-
-        // Размеры
         let cw = 600, ch = 250;
         canvas.width = cw; canvas.height = ch;
         let groundY = ch - 40;
 
-        let cat = {
-            x: 70, y: groundY - 35, width: 35, height: 35,
-            vy: 0, grounded: true
-        };
+        let cat = { x: 70, y: groundY - 35, width: 35, height: 35, vy: 0, grounded: true };
         let cacti = [];
         let score = 0;
-        let highScore = localStorage.getItem('cactusHighScore') ? parseInt(localStorage.getItem('cactusHighScore')) : 0;
+        let highScore = localStorage.getItem('cactusHighScoreV2') ? parseInt(localStorage.getItem('cactusHighScoreV2')) : 0;
         highScoreSpan.innerText = highScore;
         let gameRunning = true;
         let frame = 0;
-        let baseSpeed = 3;
-        let currentSpeed = baseSpeed;
-        let animationId = null;
-        let jumpRequested = false;
+        let currentSpeed = 3;
+        let jumpRequest = false;
+        let animId = null;
 
-        function updateHighScore() {
-            if (score > highScore) {
-                highScore = score;
-                highScoreSpan.innerText = highScore;
-                localStorage.setItem('cactusHighScore', highScore);
-            }
-        }
+        // Звуки
+        let meowSound = new Audio('https://www.myinstants.com/media/sounds/meow_Cc2Vger.mp3');
+        let coinSound = new Audio('https://www.soundjay.com/misc/sounds/coin-drop-2.mp3');
+        let bgMusic = new Audio('https://www.soundjay.com/nature/sounds/forest-birds-02.mp3'); // приятная фоновая музыка
+        bgMusic.loop = true;
+        bgMusic.volume = 0.2;
+
+        function playMeow() { meowSound.cloneNode().play().catch(e=>{}); }
+        function playCoin() { coinSound.cloneNode().play().catch(e=>{}); }
+        function startMusic() { bgMusic.play().catch(e=>{}); }
+        function stopMusic() { bgMusic.pause(); bgMusic.currentTime = 0; }
+
+        startMusic();
 
         function spawnCactus() {
-            cacti.push({
-                x: cw,
-                y: groundY - 35,
-                width: 16,
-                height: 35,
-                vx: -currentSpeed,
-                counted: false
-            });
+            cacti.push({ x: cw, y: groundY - 35, width: 16, height: 35, vx: -currentSpeed, counted: false });
         }
 
         function update() {
             if (!gameRunning) return;
-            if (jumpRequested && cat.grounded) {
+            if (jumpRequest && cat.grounded) {
                 cat.vy = -11;
                 cat.grounded = false;
-                jumpRequested = false;
-                playJump();
+                jumpRequest = false;
             }
             cat.vy += 0.8;
             cat.y += cat.vy;
@@ -7355,112 +7291,114 @@ window.localDict = localDict;
                 cat.vy = 0;
                 cat.grounded = true;
             }
-
-            for (let i = 0; i < cacti.length; i++) {
+            for (let i=0; i<cacti.length; i++) {
                 let c = cacti[i];
                 c.x += c.vx;
                 if (c.x + c.width < 0) {
                     if (!c.counted) {
                         score++;
                         scoreSpan.innerText = score;
-                        updateHighScore();
-                        playPoint();  // звук очка
-                        currentSpeed = Math.min(baseSpeed + Math.floor(score / 20), baseSpeed * 2.5);
+                        if (score > highScore) {
+                            highScore = score;
+                            highScoreSpan.innerText = highScore;
+                            localStorage.setItem('cactusHighScoreV2', highScore);
+                        }
+                        playCoin();
+                        currentSpeed = Math.min(3 + Math.floor(score / 20), 8);
                         c.counted = true;
                     }
-                    cacti.splice(i, 1);
-                    i--;
+                    cacti.splice(i,1); i--;
                     continue;
                 }
-                if (cat.x < c.x + c.width && cat.x + cat.width > c.x &&
-                    cat.y < c.y + c.height && cat.y + cat.height > c.y) {
+                // collision
+                if (cat.x < c.x + c.width && cat.x+cat.width > c.x && cat.y < c.y+c.height && cat.y+cat.height > c.y) {
                     gameRunning = false;
                     playMeow();
                     stopMusic();
-                    if (animationId) cancelAnimationFrame(animationId);
+                    if (animId) cancelAnimationFrame(animId);
                     gameOverDiv.style.display = 'flex';
                     return;
                 }
             }
-
-            if (frame % 48 === 0 && cacti.length < 5) spawnCactus();
-            for (let c of cacti) { c.vx = -currentSpeed; }
+            // синхронизация скорости
+            for (let c of cacti) c.vx = -currentSpeed;
+            if (frame % 50 === 0 && cacti.length < 5) spawnCactus();
             frame++;
         }
 
         function draw() {
-            ctx.clearRect(0, 0, cw, ch);
-            ctx.fillStyle = '#5d3a1a';
-            ctx.fillRect(0, groundY, cw, ch - groundY);
-            ctx.fillStyle = '#e67e22';
-            ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
-            ctx.fillStyle = '#d35400';
-            ctx.fillRect(cat.x+5, cat.y-8, 8, 8);
-            ctx.fillRect(cat.x+cat.width-13, cat.y-8, 8, 8);
+            ctx.clearRect(0,0,cw,ch);
+            ctx.fillStyle='#5d3a1a';
+            ctx.fillRect(0,groundY,cw,ch-groundY);
+            ctx.fillStyle='#e67e22';
+            ctx.fillRect(cat.x,cat.y,cat.width,cat.height);
+            ctx.fillStyle='#d35400';
+            ctx.fillRect(cat.x+5,cat.y-8,8,8);
+            ctx.fillRect(cat.x+cat.width-13,cat.y-8,8,8);
             for (let c of cacti) {
-                ctx.fillStyle = '#27ae60';
-                ctx.fillRect(c.x, c.y, c.width, c.height);
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(c.x+4, c.y-5, 4, 8);
-                ctx.fillRect(c.x+10, c.y-8, 4, 12);
+                ctx.fillStyle='#27ae60';
+                ctx.fillRect(c.x,c.y,c.width,c.height);
+                ctx.fillStyle='#2c3e50';
+                ctx.fillRect(c.x+4,c.y-5,4,8);
+                ctx.fillRect(c.x+10,c.y-8,4,12);
             }
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillText(`${score}`, cw-40, 30);
+            ctx.fillStyle='white';
+            ctx.fillText(score, cw-40, 30);
         }
 
         function gameLoop() {
             if (!gameRunning) return;
             update();
             draw();
-            animationId = requestAnimationFrame(gameLoop);
+            animId = requestAnimationFrame(gameLoop);
         }
 
-        function jump() { if (gameRunning) jumpRequested = true; }
-
-        canvas.addEventListener('click', (e) => { e.preventDefault(); jump(); });
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
-        window.addEventListener('keydown', (e) => {
-            if ((e.code === 'Space' || e.code === 'ArrowUp') && activeGameDiv && activeGameDiv.style.display !== 'none') {
-                e.preventDefault();
-                jump();
-            }
-        });
-
-        function restartGame() {
+        function restart() {
             gameRunning = true;
             score = 0;
             scoreSpan.innerText = '0';
             cacti = [];
-            currentSpeed = baseSpeed;
+            currentSpeed = 3;
             frame = 0;
             cat.y = groundY - cat.height;
             cat.vy = 0;
             cat.grounded = true;
-            jumpRequested = false;
+            jumpRequest = false;
             gameOverDiv.style.display = 'none';
-            if (musicEnabled && bgMusic) {
-                bgMusic.currentTime = 0;
-                bgMusic.play().catch(e => console.warn(e));
-            }
-            if (animationId) cancelAnimationFrame(animationId);
+            startMusic();
+            if (animId) cancelAnimationFrame(animId);
             gameLoop();
         }
 
-        restartButton.onclick = () => restartGame();
-        closeButton.onclick = () => {
+        function jump() { if (gameRunning) jumpRequest = true; }
+
+        canvas.addEventListener('click', (e) => { e.preventDefault(); jump(); });
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+        window.addEventListener('keydown', (e) => {
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && activeGame && activeGame.style.display !== 'none') {
+                e.preventDefault(); jump();
+            }
+        });
+
+        restartGameBtn.onclick = () => restart();
+        closeGameBtn.onclick = () => {
             gameRunning = false;
             stopMusic();
-            if (animationId) cancelAnimationFrame(animationId);
-            activeGameDiv.remove();
-            activeGameDiv = null;
+            if (animId) cancelAnimationFrame(animId);
+            activeGame.remove();
+            activeGame = null;
         };
-        musicToggleBtn.onclick = toggleMusic;
-
-        initSounds();
-        restartGame();
-        if (musicEnabled) startMusic();
+        restart();
     }
+
+    // Обработчики
+    gamesBtn.onclick = () => panel.style.display = 'flex';
+    document.getElementById('closePanelBtn').onclick = () => panel.style.display = 'none';
+    document.getElementById('startCactusGame').onclick = () => {
+        panel.style.display = 'none';
+        launchGame();
+    };
+})();
 </script>
 </body>
 </html>
