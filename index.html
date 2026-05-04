@@ -4142,6 +4142,47 @@ let testDiv = document.createElement('div');
 testDiv.textContent = '✅ Если вы видите этот текст, значит скрипт работает!';
 testDiv.style.cssText = 'position:fixed;bottom:0;left:0;background:green;color:white;padding:5px;z-index:999999;';
 document.body.appendChild(testDiv);
+
+
+    // Простейшее чтение для вашего сайта
+(function() {
+    if (document.getElementById('myOwnRead')) return;
+    
+    // Кнопка
+    let b = document.createElement('button');
+    b.id = 'myOwnRead';
+    b.textContent = '📖 Читать';
+    b.style.cssText = 'position:fixed;top:120px;right:10px;background:#9C27B0;color:white;border:none;padding:6px 12px;border-radius:15px;z-index:9999;cursor:pointer;';
+    document.body.appendChild(b);
+    
+    // Окно
+    let w = document.createElement('div');
+    w.style.cssText = 'position:fixed;top:10%;left:10%;width:80%;height:80%;background:#1e1e2e;z-index:100000;display:none;border-radius:20px;padding:15px;color:white;overflow:auto;';
+    w.innerHTML = '<div style="text-align:right"><button id="closeReadNow" style="background:red;border:none;color:white;padding:5px 15px;border-radius:10px;">Закрыть</button></div><div id="readTextHere" style="font-size:18px;line-height:1.6;"></div>';
+    document.body.appendChild(w);
+    
+    // Текст
+    const story = "Hallo! Ich heiße Tom. Ich wohne in Berlin. Ich lerne Deutsch. Das ist gut.";
+    const dict = {Hallo:'Привет',heiße:'зовут',Tom:'Том',wohne:'живу',Berlin:'Берлин',lerne:'учу',Deutsch:'немецкий',Das:'это',ist:'есть',gut:'хорошо'};
+    
+    function showStory() {
+        let div = document.getElementById('readTextHere');
+        let words = story.split(' ');
+        let html = '';
+        for(let w of words) {
+            let trans = dict[w];
+            if(trans) {
+                html += <span style="cursor:pointer;background:#333;padding:2px 6px;margin:2px;border-radius:10px;display:inline-block;" onclick="alert('${w} → ${trans}'); let u=new SpeechSynthesisUtterance('${w}');u.lang='de-DE';speechSynthesis.cancel();speechSynthesis.speak(u);">${w}</span> ;
+            } else {
+                html += w + ' ';
+            }
+        }
+        div.innerHTML = html;
+    }
+    
+    b.onclick = () => { w.style.display = 'block'; showStory(); };
+    document.getElementById('closeReadNow').onclick = () => w.style.display = 'none';
+})();
 </script>
 </body>
 </html>
