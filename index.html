@@ -4137,6 +4137,25 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
+
+    // ========== СЛУЧАЙНАЯ НЕМЕЦКАЯ ПЕСНЯ ==========
+let songs = [
+    {name: "Rammstein - Deutschland", url: "https://www.youtube.com/watch?v=NeQM1c-XCDc"},
+    {name: "Nena - 99 Luftballons", url: "https://www.youtube.com/watch?v=La4Dcd1aUcE"},
+    {name: "Die Toten Hosen - Tage wie diese", url: "https://www.youtube.com/watch?v=2UyD7v4MS4E"},
+    {name: "Mark Forster - Auf anderen Wegen", url: "https://www.youtube.com/watch?v=G1cM-4APlx8"},
+    {name: "Namika - Lieblingsmensch", url: "https://www.youtube.com/watch?v=D1nNRUpW4vY"},
+    {name: "AnnenMayKantereit - Pocahontas", url: "https://www.youtube.com/watch?v=GHCQ5P1yGjQ"}
+];
+let songBtn = document.createElement('button');
+songBtn.innerHTML = '🎵 Случайная песня';
+songBtn.style.cssText = 'position:fixed;bottom:80px;right:130px;background:#E91E63;border:none;color:white;padding:8px 15px;border-radius:20px;cursor:pointer;z-index:9999;font-size:11px;';
+songBtn.onclick = () => {
+    let randomSong = songs[Math.floor(Math.random() * songs.length)];
+    window.open(randomSong.url, '_blank');
+};
+document.body.appendChild(songBtn);
+
     
 </script>
 </body>
