@@ -4137,94 +4137,109 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (кнопка под карточками + расширенный словарь) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (кнопка сверху справа + ВСЕ слова из текстов) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
-    // ========== ОГРОМНЫЙ РАСШИРЕННЫЙ СЛОВАРЬ (800+ слов) ==========
+    // ========== ВСЕ СЛОВА ИЗ ТЕКСТОВ A1, B1, C1 ==========
     const localDict = {
-        // Местоимения и основы
-        'ich': 'я', 'du': 'ты', 'er': 'он', 'sie': 'она', 'es': 'оно', 'wir': 'мы', 'ihr': 'вы', 'sie': 'они',
-        'mich': 'меня', 'dich': 'тебя', 'sich': 'себя', 'mir': 'мне', 'dir': 'тебе', 'uns': 'нам', 'euch': 'вам',
+        // ========== ТЕКСТ A1 (ВСЕ СЛОВА) ==========
+        'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Tom': 'Том', 'komme': 'прихожу', 'aus': 'из', 'Berlin': 'Берлин',
+        'bin': 'являюсь', '25': 'двадцать пять', 'Jahre': 'лет', 'alt': 'старый', 'lerne': 'учу', 'Deutsch': 'немецкий',
+        'ist': 'есть', 'eine': 'одна', 'interessante': 'интересная', 'Sprache': 'язык', 'habe': 'имею', 'einen': 'одного',
+        'Bruder': 'брат', 'Er': 'Он', 'heißt': 'зовут', 'Max': 'Макс', '22': 'двадцать два', 'Wir': 'Мы', 'wohnen': 'живем',
+        'zusammen': 'вместе', 'in': 'в', 'einer': 'одной', 'Wohnung': 'квартире', 'Unsere': 'Наша', 'Wohnung': 'квартира',
+        'nicht': 'не', 'groß': 'большая', 'aber': 'но', 'schön': 'красивая', 'haben': 'имеем', 'zwei': 'две', 'Zimmer': 'комнаты',
+        'eine': 'одна', 'Küche': 'кухня', 'und': 'и', 'ein': 'одна', 'Bad': 'ванная', 'Mein': 'Моя', 'Zimmer': 'комната',
+        'klein': 'маленькая', 'habe': 'имею', 'ein': 'одну', 'Bett': 'кровать', 'einen': 'один', 'Tisch': 'стол',
+        'einen': 'один', 'Stuhl': 'стул', 'Am': 'В', 'Morgen': 'утро', 'stehe': 'встаю', 'um': 'в', '7': 'семь', 'Uhr': 'часов',
+        'auf': '', 'Dann': 'Затем', 'frühstücke': 'завтракаю', 'Ich': 'Я', 'esse': 'ем', 'Brot': 'хлеб', 'mit': 'с',
+        'Marmelade': 'вареньем', 'und': 'и', 'trinke': 'пью', 'Kaffee': 'кофе', 'Um': 'В', '8': 'восемь', 'gehe': 'иду',
+        'zur': 'на', 'Arbeit': 'работу', 'arbeite': 'работаю', 'in': 'в', 'einem': 'одном', 'Büro': 'офисе', 'Meine': 'Моя',
+        'Arbeit': 'работа', 'macht': 'делает', 'mir': 'мне', 'Spaß': 'удовольствие', 'Am': 'Вечером', 'Abend': 'вечер',
+        'komme': 'прихожу', 'nach': 'после', 'Hause': 'домой', 'koche': 'готовлю', 'Abendessen': 'ужин', 'sehe': 'смотрю',
+        'fern': 'телевизор', 'oder': 'или', 'lese': 'читаю', 'ein': 'одну', 'Buch': 'книгу', 'Um': 'В', '22': 'двадцать два',
+        'gehe': 'ложусь', 'ins': 'в', 'Bett': 'кровать', 'Am': 'На', 'Wochenende': 'выходных', 'gehe': 'хожу', 'oft': 'часто',
+        'ins': 'в', 'Kino': 'кино', 'treffe': 'встречаюсь', 'mich': 'я', 'mit': 'с', 'Freunden': 'друзьями', 'gehen': 'ходим',
+        'gerne': 'любим', 'spazieren': 'гулять', 'essen': 'едим', 'in': 'в', 'einem': 'одном', 'Restaurant': 'ресторане',
+        'jeden': 'каждый', 'Tag': 'день', 'neue': 'новые', 'Wörter': 'слова', 'schwer': 'трудный', 'gebe': 'сдаюсь',
+        'nicht': 'не', 'auf': '', 'möchte': 'хочу', 'perfekt': 'безупречно', 'sprechen': 'говорить', 'Mein': 'Моя',
+        'Traum': 'мечта', 'ist': 'есть', 'es': 'это', 'eines': 'однажды', 'Tages': 'дня', 'der': 'в', 'Schweiz': 'Швейцарии',
+        'zu': 'работать', 'arbeiten': 'работать', 'Die': 'Это', 'ist': 'есть', 'ein': 'одна', 'schönes': 'красивая',
+        'Land': 'страна', 'mit': 'с', 'Bergen': 'горами', 'und': 'и', 'Seen': 'озерами', 'liebe': 'люблю', 'die': '',
+        'Natur': 'природу', 'Im': 'Летом', 'Sommer': 'лето', 'schwimme': 'плаваю', 'gerne': 'люблю', 'im': 'в', 'See': 'озере',
+        'Im': 'Зимой', 'Winter': 'зима', 'fahre': 'езжу', 'Ski': 'на лыжах', 'auch': 'также', 'Katze': 'кошка', 'Sie': 'Она',
+        'heißt': 'зовут', 'Luna': 'Луна', 'ist': 'есть', 'sehr': 'очень', 'süß': 'милая', 'und': 'и', 'verspielt': 'игривая',
+        'schläft': 'спит', 'gerne': 'любит', 'auf': 'на', 'dem': '', 'Sofa': 'диване', 'Manchmal': 'Иногда', 'spielt': 'играет',
+        'mit': 'с', 'einem': 'одним', 'Ball': 'мячом', 'bin': 'являюсь', 'glücklich': 'счастлив', 'mit': 'с', 'meinem': 'моей',
+        'Leben': 'жизнью', 'Jeden': 'Каждый', 'Tag': 'день', 'lerne': 'учу', 'etwas': 'чему-то', 'Neues': 'новому', 'Das': 'Это',
+        'ist': 'есть', 'wichtig': 'важно', 'für': 'для', 'mich': 'меня', 'hoffe': 'надеюсь', 'dass': 'что', 'bald': 'скоро',
+        'fließend': 'бегло', 'kann': 'могу',
         
-        // Глаголы (основные)
-        'sein': 'быть', 'haben': 'иметь', 'werden': 'становиться', 'können': 'мочь', 'wollen': 'хотеть',
-        'müssen': 'долженствовать', 'dürfen': 'разрешать', 'sollen': 'следовать', 'mögen': 'любить',
-        'gehen': 'идти', 'kommen': 'приходить', 'leben': 'жить', 'arbeiten': 'работать', 'lernen': 'учить',
-        'sprechen': 'говорить', 'sagen': 'сказать', 'denken': 'думать', 'wissen': 'знать', 'verstehen': 'понимать',
-        'finden': 'находить', 'helfen': 'помогать', 'zeigen': 'показывать', 'geben': 'давать', 'nehmen': 'брать',
-        'bringen': 'приносить', 'machen': 'делать', 'lesen': 'читать', 'schreiben': 'писать', 'hören': 'слышать',
-        'sehen': 'видеть', 'fühlen': 'чувствовать', 'glauben': 'верить', 'hoffen': 'надеяться', 'lieben': 'любить',
-        'hassen': 'ненавидеть', 'essen': 'есть', 'trinken': 'пить', 'schlafen': 'спать', 'aufwachen': 'просыпаться',
-        'stehen': 'стоять', 'sitzen': 'сидеть', 'liegen': 'лежать', 'laufen': 'бежать', 'fahren': 'ехать',
-        'fliegen': 'лететь', 'schwimmen': 'плавать', 'spielen': 'играть', 'arbeiten': 'работать', 'studieren': 'учиться',
-        'reisen': 'путешествовать', 'besuchen': 'посещать', 'treffen': 'встречать', 'feiern': 'праздновать',
+        // ========== ТЕКСТ B1 (ВСЕ СЛОВА) ==========
+        'Guten': 'Доброе', 'Morgen': 'утро', 'Heute': 'Сегодня', 'möchte': 'хочу', 'euch': 'вам', 'von': 'о', 'meiner': 'моем',
+        'Reise': 'путешествии', 'nach': 'в', 'München': 'Мюнхен', 'erzählen': 'рассказать', 'ist': 'является', 'die': '',
+        'Hauptstadt': 'столицей', 'Bayerns': 'Баварии', 'und': 'и', 'eine': 'одним', 'der': '', 'schönsten': 'самых красивых',
+        'Städte': 'городов', 'Deutschlands': 'Германии', 'bin': 'поехал', 'letztes': 'в прошлом', 'Jahr': 'году', 'im': 'в',
+        'September': 'сентябре', 'dorthin': 'туда', 'gefahren': 'поехал', 'Die': 'Путешествие', 'Reise': 'путешествие', 'mit': 'на',
+        'dem': '', 'Zug': 'поезде', 'hat': 'длилось', 'etwa': 'около', 'vier': 'четырех', 'Stunden': 'часов', 'gedauert': 'длилось',
+        'Als': 'Когда', 'ich': 'я', 'in': 'в', 'München': 'Мюнхен', 'ankam': 'прибыл', 'war': 'был', 'ich': 'я', 'sofort': 'немедленно',
+        'von': 'от', 'der': '', 'schönen': 'красивой', 'Architektur': 'архитектуры', 'beeindruckt': 'впечатлен', 'Die': 'Здания',
+        'Gebäude': 'здания', 'sind': 'являются', 'sehr': 'очень', 'alt': 'старыми', 'und': 'и', 'haben': 'имеют', 'eine': 'особую',
+        'besondere': 'особую', 'Geschichte': 'историю', 'habe': 'посмотрел', 'mir': 'себе', 'zuerst': 'сначала', 'den': '',
+        'Marienplatz': 'Мариенплац', 'angeschaut': 'посмотрел', 'Dort': 'Там', 'steht': 'стоит', 'das': '', 'Neue': 'Новая',
+        'Rathaus': 'ратуша', 'mit': 'с', 'seinem': 'ее', 'berühmten': 'знаменитым', 'Glockenspiel': 'глокеншпилем', 'Das': 'Это',
+        'war': 'было', 'wirklich': 'действительно', 'zauberhaft': 'волшебно', 'Dann': 'Затем', 'bin': 'пошел', 'in': 'в',
+        'ein': 'один', 'traditionelles': 'традиционный', 'bayerisches': 'баварский', 'Restaurant': 'ресторан', 'gegangen': 'пошел',
+        'habe': 'заказал', 'eine': 'один', 'Brezel': 'крендель', 'und': 'и', 'ein': 'один', 'Glas': 'стакан', 'Weißbier': 'белого пива',
+        'bestellt': 'заказал', 'Das': 'Еда', 'Essen': 'еда', 'war': 'была', 'köstlich': 'восхитительной', 'Am': 'На', 'nächsten': 'следующий',
+        'Tag': 'день', 'bin': 'пошел', 'zum': 'на', 'Oktoberfest': 'Октоберфест', 'gegangen': 'пошел', 'Es': 'Он', 'war': 'был',
+        'riesig': 'огромным', 'Überall': 'Везде', 'waren': 'были', 'bunte': 'цветные', 'Zelte': 'шатры', 'und': 'и', 'Menschen': 'люди',
+        'in': 'в', 'Trachten': 'костюмах', 'Die': 'Мужчины', 'Männer': 'мужчины', 'trugen': 'носили', 'Lederhosen': 'кожаные штаны',
+        'und': 'и', 'die': 'женщины', 'Frauen': 'женщины', 'Dirndlkleider': 'платья дирндль', 'habe': 'познакомился', 'viele': 'много',
+        'neue': 'новых', 'Leute': 'людей', 'kennengelernt': 'познакомился', 'und': 'и', 'mit': 'с', 'ihnen': 'ними', 'getanzt': 'танцевал',
+        'Die': 'Настроение', 'Stimmung': 'настроение', 'war': 'было', 'fantastisch': 'фантастическим', 'Am': 'Вечером', 'Abend': 'вечер',
+        'gab': 'был', 'es': '', 'ein': 'один', 'großes': 'большой', 'Feuerwerk': 'салют', 'bin': 'проехался', 'auch': 'также', 'mit': 'на',
+        'dem': '', 'Fahrrad': 'велосипеде', 'durch': 'через', 'den': '', 'Englischen': 'Английский', 'Garten': 'сад', 'gefahren': 'проехал',
         
-        // Существительные (частотные)
-        'Mensch': 'человек', 'Kind': 'ребенок', 'Frau': 'женщина', 'Mann': 'мужчина', 'Vater': 'отец', 'Mutter': 'мать',
-        'Bruder': 'брат', 'Schwester': 'сестра', 'Freund': 'друг', 'Familie': 'семья', 'Name': 'имя', 'Haus': 'дом',
-        'Wohnung': 'квартира', 'Zimmer': 'комната', 'Tür': 'дверь', 'Fenster': 'окно', 'Tisch': 'стол', 'Stuhl': 'стул',
-        'Bett': 'кровать', 'Küche': 'кухня', 'Bad': 'ванная', 'Garten': 'сад', 'Strasse': 'улица', 'Stadt': 'город',
-        'Land': 'страна', 'Welt': 'мир', 'Natur': 'природа', 'Wald': 'лес', 'Berg': 'гора', 'See': 'озеро', 'Fluss': 'река',
-        'Tag': 'день', 'Nacht': 'ночь', 'Morgen': 'утро', 'Abend': 'вечер', 'Woche': 'неделя', 'Monat': 'месяц', 'Jahr': 'год',
-        'Uhr': 'час', 'Minute': 'минута', 'Sekunde': 'секунда', 'Arbeit': 'работа', 'Schule': 'школа', 'Universität': 'университет',
-        'Büro': 'офис', 'Auto': 'машина', 'Zug': 'поезд', 'Flugzeug': 'самолет', 'Fahrrad': 'велосипед', 'Buch': 'книга',
-        'Zeitung': 'газета', 'Handy': 'телефон', 'Computer': 'компьютер', 'Internet': 'интернет', 'Sprache': 'язык',
-        'Wort': 'слово', 'Satz': 'предложение', 'Bedeutung': 'значение', 'Frage': 'вопрос', 'Antwort': 'ответ',
-        
-        // Прилагательные
-        'gut': 'хороший', 'schlecht': 'плохой', 'groß': 'большой', 'klein': 'маленький', 'hoch': 'высокий', 'niedrig': 'низкий',
-        'lang': 'длинный', 'kurz': 'короткий', 'breit': 'широкий', 'eng': 'узкий', 'schwer': 'тяжелый', 'leicht': 'легкий',
-        'schnell': 'быстрый', 'langsam': 'медленный', 'alt': 'старый', 'neu': 'новый', 'jung': 'молодой', 'schön': 'красивый',
-        'hässlich': 'некрасивый', 'reich': 'богатый', 'arm': 'бедный', 'glücklich': 'счастливый', 'traurig': 'грустный',
-        'laut': 'громкий', 'leise': 'тихий', 'hell': 'светлый', 'dunkel': 'темный', 'warm': 'теплый', 'kalt': 'холодный',
-        'interessant': 'интересный', 'langweilig': 'скучный', 'wichtig': 'важный', 'richtig': 'правильный', 'falsch': 'неправильный',
-        
-        // Цвета
-        'rot': 'красный', 'blau': 'синий', 'grün': 'зеленый', 'gelb': 'желтый', 'schwarz': 'черный', 'weiß': 'белый',
-        'grau': 'серый', 'braun': 'коричневый', 'rosa': 'розовый', 'lila': 'фиолетовый',
-        
-        // Предлоги и союзы
-        'und': 'и', 'aber': 'но', 'oder': 'или', 'denn': 'потому что', 'weil': 'потому что', 'dass': 'что',
-        'ob': 'ли', 'wenn': 'если', 'als': 'чем/когда', 'dann': 'затем', 'so': 'так', 'auch': 'тоже', 'nur': 'только',
-        'sehr': 'очень', 'ziemlich': 'довольно', 'ganz': 'совсем', 'etwas': 'немного', 'viel': 'много', 'wenig': 'мало',
-        'in': 'в', 'auf': 'на', 'über': 'над', 'unter': 'под', 'neben': 'рядом', 'zwischen': 'между', 'vor': 'перед',
-        'hinter': 'позади', 'an': 'у', 'bei': 'при', 'nach': 'после', 'zu': 'к', 'von': 'от', 'aus': 'из', 'mit': 'с',
-        'ohne': 'без', 'für': 'для', 'durch': 'через', 'gegen': 'против', 'um': 'вокруг',
-        
-        // Числа
-        'eins': 'один', 'zwei': 'два', 'drei': 'три', 'vier': 'четыре', 'fünf': 'пять', 'sechs': 'шесть', 'sieben': 'семь',
-        'acht': 'восемь', 'neun': 'девять', 'zehn': 'десять', 'hundert': 'сто', 'tausend': 'тысяча',
-        
-        // Вопросительные слова
-        'wer': 'кто', 'was': 'что', 'wo': 'где', 'woher': 'откуда', 'wohin': 'куда', 'wann': 'когда', 'warum': 'почему',
-        'wie': 'как', 'welcher': 'который', 'wessen': 'чей',
-        
-        // Из текстов
-        'Digitalisierung': 'цифровизация', 'Einfluss': 'влияние', 'Linguistik': 'лингвистика', 'Netzwerke': 'сети',
-        'Alltag': 'повседневность', 'fundamental': 'фундаментально', 'transformiert': 'преобразовано',
-        'einerseits': 'с одной стороны', 'bereichert': 'обогащает', 'Wortschatz': 'словарный запас',
-        'zahlreiche': 'многочисленные', 'Neologismen': 'неологизмы', 'häufig': 'часто', 'stammen': 'происходят',
-        'Begriffe': 'понятия', 'nahtlos': 'бесшовно', 'integriert': 'интегрированы', 'andererseits': 'с другой стороны',
-        'beobachten': 'наблюдают', 'Sprachpuristen': 'языковые пуристы', 'Sorge': 'беспокойство', 'Verfall': 'упадок',
-        'traditionellen': 'традиционный', 'schriftlichen': 'письменный', 'Kompetenzen': 'компетенции', 'Verfügbarkeit': 'доступность',
-        'Autokorrektur': 'автокоррекция', 'Rechtschreibprogrammen': 'программы правописания', 'intelligenten': 'интеллектуальный',
-        'Sprachmodellen': 'языковые модели', 'Gespür': 'чутье', 'grammatikalische': 'грамматические', 'Strukturen': 'структуры',
-        'orthographische': 'орфографические', 'Feinheiten': 'тонкости', 'durchgeführte': 'проведенное', 'Studie': 'исследование',
-        'ergeben': 'показали', 'Schüler': 'ученики', 'Durchschnitt': 'среднее значение', 'produzieren': 'производят',
-        'Jahrzehnten': 'десятилетия'
+        // ========== ТЕКСТ C1 (ВСЕ СЛОВА) ==========
+        'Der': 'Влияние', 'Einfluss': 'влияние', 'der': 'цифровизации', 'Digitalisierung': 'цифровизация', 'auf': 'на',
+        'die': 'немецкий', 'deutsche': 'немецкий', 'Sprache': 'язык', 'ist': 'является', 'ein': 'очень', 'viel': 'много',
+        'diskutiertes': 'обсуждаемая', 'Thema': 'тема', 'in': 'в', 'der': 'современной', 'zeitgenössischen': 'современной',
+        'Linguistik': 'лингвистике', 'Unbestreitbar': 'Неоспоримо', 'hat': '', 'das': 'появление', 'Aufkommen': 'появление',
+        'des': 'интернета', 'Internets': 'интернета', 'sozialer': 'социальных', 'Netzwerke': 'сетей', 'und': 'и', 'der': 'искусственного',
+        'künstlichen': 'искусственного', 'Intelligenz': 'интеллекта', 'unseren': 'нашу', 'sprachlichen': 'языковую', 'Alltag': 'повседневность',
+        'fundamental': 'фундаментально', 'transformiert': 'преобразовал', 'Einerseits': 'С одной стороны', 'bereichert': 'обогащает',
+        'unseren': 'наш', 'Wortschatz': 'словарный запас', 'durch': 'через', 'zahlreiche': 'многочисленные', 'Neologismen': 'неологизмы',
+        'die': 'которые', 'häufig': 'часто', 'aus': 'из', 'dem': 'англо-американского', 'angloamerikanischen': 'англо-американского',
+        'Raum': 'пространства', 'stammen': 'происходят', 'Begriffe': 'Понятия', 'wie': 'как', 'liken': 'лайкать', 'posten': 'постить',
+        'scrollen': 'скроллить', 'swipen': 'свайпать', 'oder': 'или', 'chatten': 'чатиться', 'haben': 'себя', 'sich': 'себя',
+        'nahtlos': 'бесшовно', 'in': 'в', 'den': 'немецкий', 'deutschen': 'немецкий', 'Sprachgebrauch': 'языковой обиход',
+        'integriert': 'интегрировали', 'Andererseits': 'С другой стороны', 'beobachten': 'наблюдают', 'viele': 'многие',
+        'Sprachpuristen': 'языковые пуристы', 'mit': 'с', 'Sorge': 'беспокойством', 'dass': 'что', 'die': 'цифровизация',
+        'Digitalisierung': 'цифровизация', 'zu': 'к', 'einem': 'упадку', 'Verfall': 'упадку', 'der': 'традиционных',
+        'traditionellen': 'традиционных', 'schriftlichen': 'письменных', 'Kompetenzen': 'компетенций', 'führen': 'привести',
+        'könnte': 'может', 'Durch': 'Из-за', 'die': 'постоянной', 'ständige': 'постоянной', 'Verfügbarkeit': 'доступности',
+        'von': '', 'Autokorrektur': 'автокоррекции', 'Funktionen': 'функций', 'Rechtschreibprogrammen': 'программами проверки орфографии',
+        'und': 'и', 'intelligenten': 'интеллектуальных', 'Sprachmodellen': 'языковых моделей', 'wie': 'таких как', 'ChatGPT': 'ЧатДжипити',
+        'geht': 'теряют', 'den': '', 'Menschen': 'люди', 'allmählich': 'постепенно', 'das': 'чутье', 'Gespür': 'чутье',
+        'für': 'к', 'grammatikalische': 'грамматическим', 'Strukturen': 'структурам', 'und': 'и', 'orthographische': 'орфографическим',
+        'Feinheiten': 'тонкостям', 'verloren': 'теряют', 'Eine': 'Одно', 'kürzlich': 'недавно', 'durchgeführte': 'проведенное',
+        'Studie': 'исследование', 'der': '', 'Universität': 'университета', 'Mainz': 'Майнца', 'hat': 'показало', 'ergeben': 'показало',
+        'dass': 'что', 'Schüler': 'ученики', 'heutzutage': 'в наши дни', 'im': 'в', 'Durchschnitt': 'среднем', 'dreißig': 'тридцать',
+        'Prozent': 'процентов', 'mehr': 'больше', 'Rechtschreibfehler': 'орфографических ошибок', 'produzieren': 'производят',
+        'als': 'чем', 'noch': 'еще', 'vor': 'перед', 'zwei': 'двумя', 'Jahrzehnten': 'десятилетиями'
     };
 
     // ========== ТЕКСТЫ ==========
     const texts = {
-        a1: `Hallo! Ich heiße Tom. Ich komme aus Berlin. Ich bin 25 Jahre alt. Ich lerne Deutsch. Deutsch ist eine interessante Sprache. Ich habe einen Bruder. Er heißt Max. Max ist 22 Jahre alt. Wir wohnen zusammen in einer Wohnung. Unsere Wohnung ist nicht groß, aber schön. Wir haben zwei Zimmer, eine Küche und ein Bad. Mein Zimmer ist klein. Ich habe ein Bett, einen Tisch und einen Stuhl. Am Morgen stehe ich um 7 Uhr auf. Dann frühstücke ich. Ich esse Brot mit Marmelade und trinke Kaffee. Um 8 Uhr gehe ich zur Arbeit. Ich arbeite in einem Büro. Meine Arbeit macht mir Spaß. Am Abend komme ich nach Hause. Ich koche Abendessen. Dann sehe ich fern oder lese ein Buch. Um 22 Uhr gehe ich ins Bett. Am Wochenende gehe ich oft ins Kino oder treffe mich mit Freunden. Wir gehen gerne spazieren oder essen in einem Restaurant. Ich lerne jeden Tag neue deutsche Wörter. Deutsch ist schwer, aber ich gebe nicht auf. Ich möchte perfekt Deutsch sprechen.`,
+        a1: `Hallo! Ich heiße Tom. Ich komme aus Berlin. Ich bin 25 Jahre alt. Ich lerne Deutsch. Deutsch ist eine interessante Sprache. Ich habe einen Bruder. Er heißt Max. Max ist 22 Jahre alt. Wir wohnen zusammen in einer Wohnung. Unsere Wohnung ist nicht groß, aber schön. Wir haben zwei Zimmer, eine Küche und ein Bad. Mein Zimmer ist klein. Ich habe ein Bett, einen Tisch und einen Stuhl. Am Morgen stehe ich um 7 Uhr auf. Dann frühstücke ich. Ich esse Brot mit Marmelade und trinke Kaffee. Um 8 Uhr gehe ich zur Arbeit. Ich arbeite in einem Büro. Meine Arbeit macht mir Spaß. Am Abend komme ich nach Hause. Ich koche Abendessen. Dann sehe ich fern oder lese ein Buch. Um 22 Uhr gehe ich ins Bett. Am Wochenende gehe ich oft ins Kino oder treffe mich mit Freunden. Wir gehen gerne spazieren oder essen in einem Restaurant. Ich lerne jeden Tag neue deutsche Wörter. Deutsch ist schwer, aber ich gebe nicht auf. Ich möchte perfekt Deutsch sprechen`,
 
-        b1: `Guten Morgen! Heute möchte ich euch von meiner Reise nach München erzählen. München ist die Hauptstadt Bayerns und eine der schönsten Städte Deutschlands. Ich bin letztes Jahr im September dorthin gefahren. Die Reise mit dem Zug hat etwa vier Stunden gedauert. Als ich in München ankam, war ich sofort von der schönen Architektur beeindruckt. Die Gebäude sind sehr alt und haben eine besondere Geschichte. Ich habe mir zuerst den Marienplatz angeschaut. Dort steht das Neue Rathaus mit seinem berühmten Glockenspiel. Das war wirklich zauberhaft! Dann bin ich in ein traditionelles bayerisches Restaurant gegangen. Ich habe eine Brezel und ein Glas Weißbier bestellt. Das Essen war köstlich. Am nächsten Tag bin ich zum Oktoberfest gegangen. Es war riesig! Überall waren bunte Zelte und Menschen in Trachten. Die Männer trugen Lederhosen und die Frauen Dirndlkleider. Ich habe viele neue Leute kennengelernt und mit ihnen getanzt.`,
+        b1: `Guten Morgen! Heute möchte ich euch von meiner Reise nach München erzählen. München ist die Hauptstadt Bayerns und eine der schönsten Städte Deutschlands. Ich bin letztes Jahr im September dorthin gefahren. Die Reise mit dem Zug hat etwa vier Stunden gedauert. Als ich in München ankam, war ich sofort von der schönen Architektur beeindruckt. Die Gebäude sind sehr alt und haben eine besondere Geschichte. Ich habe mir zuerst den Marienplatz angeschaut. Dort steht das Neue Rathaus mit seinem berühmten Glockenspiel. Das war wirklich zauberhaft! Dann bin ich in ein traditionelles bayerisches Restaurant gegangen. Ich habe eine Brezel und ein Glas Weißbier bestellt. Das Essen war köstlich. Am nächsten Tag bin ich zum Oktoberfest gegangen. Es war riesig! Überall waren bunte Zelte und Menschen in Trachten. Die Männer trugen Lederhosen und die Frauen Dirndlkleider. Ich habe viele neue Leute kennengelernt und mit ihnen getanzt`,
 
-        c1: `Der Einfluss der Digitalisierung auf die deutsche Sprache ist ein viel diskutiertes Thema in der zeitgenössischen Linguistik. Unbestreitbar hat das Aufkommen des Internets, sozialer Netzwerke und der künstlichen Intelligenz unseren sprachlichen Alltag fundamental transformiert. Einerseits bereichert die Digitalisierung unseren Wortschatz durch zahlreiche Neologismen, die häufig aus dem angloamerikanischen Raum stammen. Begriffe wie "liken", "posten", "scrollen", "swipen" oder "chatten" haben sich nahtlos in den deutschen Sprachgebrauch integriert. Andererseits beobachten viele Sprachpuristen mit Sorge, dass die Digitalisierung zu einem Verfall der traditionellen schriftlichen Kompetenzen führen könnte.`
+        c1: `Der Einfluss der Digitalisierung auf die deutsche Sprache ist ein viel diskutiertes Thema in der zeitgenössischen Linguistik. Unbestreitbar hat das Aufkommen des Internets, sozialer Netzwerke und der künstlichen Intelligenz unseren sprachlichen Alltag fundamental transformiert. Einerseits bereichert die Digitalisierung unseren Wortschatz durch zahlreiche Neologismen, die häufig aus dem angloamerikanischen Raum stammen. Begriffe wie "liken", "posten", "scrollen", "swipen" oder "chatten" haben sich nahtlos in den deutschen Sprachgebrauch integriert. Andererseits beobachten viele Sprachpuristen mit Sorge, dass die Digitalisierung zu einem Verfall der traditionellen schriftlichen Kompetenzen führen könnte`
     };
 
-    let translationCache = {};
     let currentText = texts.a1;
 
     function speakWord(word) {
@@ -4237,35 +4252,21 @@ document.head.appendChild(style);
 
     function getTranslation(word) {
         const cleanWord = word.replace(/[.,!?;:()"']/g, '').trim();
-        const lowerWord = cleanWord.toLowerCase();
-        
-        // Быстрый поиск в словаре (без API)
+        // Прямой поиск в словаре
         if (localDict[cleanWord]) return localDict[cleanWord];
-        if (localDict[lowerWord]) return localDict[lowerWord];
-        if (translationCache[cleanWord]) return translationCache[cleanWord];
-        
-        // Если нет в словаре - просто возвращаем слово с пометкой
-        translationCache[cleanWord] = `[${cleanWord}]`;
         return `[${cleanWord}]`;
     }
 
     window.onWordClick = function(element, word) {
-        // Озвучиваем
         speakWord(word);
-        
-        // Меняем цвет
         element.style.background = '#f39c12';
-        
-        // Получаем перевод (мгновенно из словаря)
         let translation = element.getAttribute('data-trans');
         if (!translation) {
             translation = getTranslation(word);
             element.setAttribute('data-trans', translation);
         }
-        
         element.style.background = '#27ae60';
         alert(`🔊 ${word}\n\n📖 Перевод: ${translation}`);
-        
         setTimeout(() => {
             element.style.background = '#2c3e50';
         }, 1000);
@@ -4307,37 +4308,19 @@ document.head.appendChild(style);
         }
     }
 
-    // ========== СОЗДАЁМ КНОПКУ ПОД КАРТОЧКАМИ ==========
-    // Ищем карточку или создаём
-    let cardContainer = document.querySelector('.card, .post, article, main');
-    if (!cardContainer) {
-        cardContainer = document.createElement('div');
-        cardContainer.style.cssText = 'max-width:800px; margin:20px auto; padding:20px; background:#f5f5f5; border-radius:15px;';
-        
-        const firstChild = document.body.firstChild;
-        document.body.insertBefore(cardContainer, firstChild);
-    }
-    
-    // Создаём кнопку ЧИТАТЬ
+    // ========== КНОПКА СВЕРХУ СПРАВА ==========
     let readBtn = document.createElement('div');
     readBtn.id = 'simpleReaderBtn';
     readBtn.innerHTML = '📖 Читать';
-    readBtn.style.cssText = 'background:#2196F3; color:white; border:none; padding:12px 28px; border-radius:30px; cursor:pointer; font-size:15px; font-weight:bold; transition:all 0.3s; display:inline-block; margin-top:15px;';
+    readBtn.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; border:none; padding:10px 24px; border-radius:30px; cursor:pointer; font-size:15px; font-weight:bold; z-index:10000; box-shadow:0 2px 10px rgba(0,0,0,0.2); transition:all 0.3s;';
     readBtn.onmouseover = () => readBtn.style.transform = 'scale(1.02)';
     readBtn.onmouseout = () => readBtn.style.transform = 'scale(1)';
-    
-    // Вставляем кнопку ПОСЛЕ карточки
-    cardContainer.parentNode.insertBefore(readBtn, cardContainer.nextSibling);
-    
-    // Добавляем отступ после кнопки
-    const spacer = document.createElement('div');
-    spacer.style.cssText = 'height:20px;';
-    readBtn.parentNode.insertBefore(spacer, readBtn.nextSibling);
+    document.body.appendChild(readBtn);
 
     // ========== МОДАЛЬНОЕ ОКНО ==========
     let modal = document.createElement('div');
     modal.id = 'simpleReaderModal';
-    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.97); z-index:100000; display:none; flex-direction:column; color:white;';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100000; display:none; flex-direction:column; color:white;';
     modal.innerHTML = '<div style="background:#1a1a2e; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">' +
         '<h3 style="margin:0; color:#2196F3;">📖 ЧИТАЙ И НАЖИМАЙ НА СЛОВА</h3>' +
         '<button id="closeSimpleReader" style="background:#e74c3c; border:none; color:white; padding:6px 18px; border-radius:30px; cursor:pointer;">✖ Закрыть</button>' +
@@ -4352,7 +4335,7 @@ document.head.appendChild(style);
         '</div>' +
         '</div>' +
         '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:25px; font-size:18px; line-height:1.7; background:#0f0f1a; margin:15px; border-radius:15px;"></div>' +
-        '<div style="padding:6px; text-align:center; background:#1a1a2e; font-size:12px;">🔊 КЛИКНИ ПО СЛОВУ → ОЗВУЧКА + ПЕРЕВОД (из словаря 800+ слов)</div>';
+        '<div style="padding:6px; text-align:center; background:#1a1a2e; font-size:12px;">🔊 КЛИКНИ ПО СЛОВУ → ОЗВУЧКА + ПЕРЕВОД</div>';
     document.body.appendChild(modal);
 
     // ========== ОБРАБОТЧИКИ ==========
