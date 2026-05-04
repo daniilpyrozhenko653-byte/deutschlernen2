@@ -4137,11 +4137,11 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (ОДИН КЛИК + КНОПКА «ОЗВУЧИТЬ ОТСЮДА», АВТОПРОКРУТКА БЕЗ ПОДСВЕТКИ) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (АВТОПРОКРУТКА БЕЗ ПОДСВЕТКИ, МГНОВЕННАЯ) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
-    // ========== ПОЛНЫЙ СЛОВАРЬ (ВСЕ слова из текстов) ==========
+    // ========== ПОЛНЫЙ СЛОВАРЬ ==========
     const localDict = {
         'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Tom': 'Том', 'komme': 'прихожу', 'aus': 'из', 'Berlin': 'Берлин',
         'bin': 'являюсь', '25': 'двадцать пять', 'Jahre': 'лет', 'alt': 'старый', 'lerne': 'учу', 'Deutsch': 'немецкий',
@@ -4214,10 +4214,8 @@ document.head.appendChild(style);
     let allWordElements = [];
     let isSpeaking = false;
     let currentUtterance = null;
-    let scrollInterval = null;
     let floatingBtn = null;
     let btnHideTimeout = null;
-    let currentScrollIndex = 0;
 
     // Перевод
     function getTranslation(word) {
@@ -4225,7 +4223,7 @@ document.head.appendChild(style);
         return localDict[clean] || `[${clean}]`;
     }
 
-    // Панель перевода внизу
+    // Панель перевода
     let panelTimeout = null;
     function showTranslation(word, translation) {
         const panel = document.getElementById('translationPanel');
@@ -4238,89 +4236,6 @@ document.head.appendChild(style);
             panel.style.opacity = '0';
             setTimeout(() => { if (panel.style.opacity === '0') panel.style.display = 'none'; panel.style.opacity = '1'; }, 300);
         }, 4000);
-    }
-
-    // Автопрокрутка к слову по индексу
-    function scrollToWord(index) {
-        if (index < 0 || index >= allWordElements.length) return;
-        const el = allWordElements[index];
-        el.scrollIntoView({ behavior: 'auto', block: 'center' });
-    }
-
-    // Остановка автопрокрутки
-    function stopAutoScroll() {
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
-        }
-    }
-
-    // Озвучка одного слова
-    function speakSingleWord(word) {
-        window.speechSynthesis.cancel();
-        const utt = new SpeechSynthesisUtterance(word);
-        utt.lang = 'de-DE';
-        utt.rate = 0.85;
-        window.speechSynthesis.speak(utt);
-    }
-
-    // Озвучка всего текста с указанного индекса с автопрокруткой (без подсветки)
-    function speakFromIndex(startIdx) {
-        if (startIdx >= allWordElements.length) return;
-        if (isSpeaking) {
-            window.speechSynthesis.cancel();
-            isSpeaking = false;
-            stopAutoScroll();
-            setTimeout(() => speakFromIndex(startIdx), 100);
-            return;
-        }
-        // Собираем текст от startIdx до конца
-        let textToSpeak = '';
-        for (let i = startIdx; i < allWordElements.length; i++) {
-            textToSpeak += allWordElements[i].getAttribute('data-word') + ' ';
-        }
-        if (!textToSpeak.trim()) return;
-
-        isSpeaking = true;
-        currentScrollIndex = startIdx;
-        // Первая прокрутка к начальному слову
-        scrollToWord(currentScrollIndex);
-
-        // Запускаем интервал для автопрокрутки (примерно каждые 0.8 секунды, подбираем под темп речи)
-        stopAutoScroll();
-        scrollInterval = setInterval(() => {
-            if (isSpeaking && currentScrollIndex < allWordElements.length) {
-                scrollToWord(currentScrollIndex);
-                currentScrollIndex++;
-            } else if (!isSpeaking || currentScrollIndex >= allWordElements.length) {
-                stopAutoScroll();
-            }
-        }, 750); // скорость прокрутки, можно изменить
-
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'de-DE';
-        utterance.rate = 0.85;
-        utterance.onend = () => {
-            isSpeaking = false;
-            stopAutoScroll();
-            currentUtterance = null;
-        };
-        utterance.onerror = () => {
-            isSpeaking = false;
-            stopAutoScroll();
-            currentUtterance = null;
-        };
-        currentUtterance = utterance;
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function stopSpeaking() {
-        if (currentUtterance) {
-            window.speechSynthesis.cancel();
-            isSpeaking = false;
-            stopAutoScroll();
-            currentUtterance = null;
-        }
     }
 
     // Плавающая кнопка "Озвучить отсюда"
@@ -4344,7 +4259,78 @@ document.head.appendChild(style);
         }, 5000);
     }
 
-    // Обработчик клика по слову
+    // Озвучка одного слова
+    function speakSingleWord(word) {
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(word);
+        utt.lang = 'de-DE';
+        utt.rate = 0.9;
+        window.speechSynthesis.speak(utt);
+    }
+
+    // МГНОВЕННАЯ ПРОКРУТКА (auto) – без задержек
+    function autoScrollToWord(index) {
+        if (index >= 0 && index < allWordElements.length) {
+            allWordElements[index].scrollIntoView({ behavior: 'auto', block: 'center' });
+        }
+    }
+
+    // Озвучка всего текста с указанного индекса
+    function speakFromIndex(startIdx) {
+        if (startIdx >= allWordElements.length) return;
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            setTimeout(() => speakFromIndex(startIdx), 100);
+            return;
+        }
+
+        let textToSpeak = '';
+        for (let i = startIdx; i < allWordElements.length; i++) {
+            textToSpeak += allWordElements[i].getAttribute('data-word') + ' ';
+        }
+        if (!textToSpeak.trim()) return;
+
+        isSpeaking = true;
+        // Прокрутка к первому слову
+        autoScrollToWord(startIdx);
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.9;
+
+        const wordsArray = textToSpeak.trim().split(/\s+/);
+        let wordCounter = 1; // первое слово уже прокручено
+        utterance.onboundary = (event) => {
+            if (event.name === 'word') {
+                const globalIdx = startIdx + wordCounter;
+                if (globalIdx < allWordElements.length) {
+                    autoScrollToWord(globalIdx);
+                }
+                wordCounter++;
+            }
+        };
+        utterance.onend = () => {
+            isSpeaking = false;
+            currentUtterance = null;
+        };
+        utterance.onerror = () => {
+            isSpeaking = false;
+            currentUtterance = null;
+        };
+        currentUtterance = utterance;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function stopSpeaking() {
+        if (currentUtterance) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            currentUtterance = null;
+        }
+    }
+
+    // Клик по слову
     window.onWordClick = function(element, word, index) {
         speakSingleWord(word);
         let translation = element.getAttribute('data-trans');
@@ -4353,14 +4339,10 @@ document.head.appendChild(style);
             element.setAttribute('data-trans', translation);
         }
         showTranslation(word, translation);
-        // Визуальный эффект (жёлтый, затем зелёный)
+        // Кратковременное изменение цвета (не подсветка, просто визуальный отклик)
+        const original = element.style.background;
         element.style.background = '#f39c12';
-        setTimeout(() => {
-            if (element.style.background === '#f39c12') element.style.background = '#27ae60';
-            setTimeout(() => {
-                if (element.style.background === '#27ae60' && !isSpeaking) element.style.background = '#2c3e50';
-            }, 600);
-        }, 200);
+        setTimeout(() => { element.style.background = '#27ae60'; setTimeout(() => { if (element.style.background === '#27ae60') element.style.background = '#2c3e50'; }, 500); }, 150);
         showFloatingButton(index);
     };
 
@@ -4374,7 +4356,7 @@ document.head.appendChild(style);
             const clean = w.trim().replace(/[.,!?;:]/g, '');
             if (clean.length > 0 && /[A-Za-zÄäÖöÜüß]/i.test(clean)) {
                 const safe = w.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                html += `<span class="clickable-word" data-word="${safe}" data-index="${wordIdx}" style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" onclick="onWordClick(this, '${safe.replace(/\\/g, '\\\\')}', ${wordIdx})" onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';" onmouseout="if(this.style.background!='#f39c12' && this.style.background!='#ff6b6b'){this.style.background='#2c3e50'}; this.style.transform='scale(1)';">${w}</span>`;
+                html += `<span class="clickable-word" data-word="${safe}" data-index="${wordIdx}" style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" onclick="onWordClick(this, '${safe.replace(/\\/g, '\\\\')}', ${wordIdx})" onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';" onmouseout="this.style.background='#2c3e50'; this.style.transform='scale(1)';">${w}</span>`;
                 wordIdx++;
             } else {
                 html += w;
@@ -4384,15 +4366,13 @@ document.head.appendChild(style);
         allWordElements = document.querySelectorAll('#simpleReaderContent .clickable-word');
     }
 
-    // ========== СОЗДАНИЕ ИНТЕРФЕЙСА ==========
-    // Панель перевода
+    // ========== ИНТЕРФЕЙС ==========
     let transPanel = document.createElement('div');
     transPanel.id = 'translationPanel';
     transPanel.style.cssText = 'position:fixed; bottom:20px; left:20px; right:20px; background:#1a1a2e; color:#2196F3; padding:12px 20px; border-radius:12px; font-size:16px; text-align:center; z-index:100001; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.3); border-left:4px solid #2196F3;';
     transPanel.innerHTML = '🔊 <span id="transWord" style="color:#f39c12; font-weight:bold;"></span> → 📖 <span id="transText" style="color:#2ecc71; font-weight:bold;"></span>';
     document.body.appendChild(transPanel);
 
-    // Кнопка "Читать"
     let readBtn = document.createElement('div');
     readBtn.id = 'simpleReaderBtn';
     readBtn.innerHTML = '📖 Читать';
@@ -4401,7 +4381,6 @@ document.head.appendChild(style);
     readBtn.onmouseout = () => readBtn.style.transform = 'scale(1)';
     document.body.appendChild(readBtn);
 
-    // Модальное окно
     let modal = document.createElement('div');
     modal.id = 'simpleReaderModal';
     modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100000; display:none; flex-direction:column; color:white;';
@@ -4420,14 +4399,13 @@ document.head.appendChild(style);
             </div>
         </div>
         <div style="padding:8px 25px; background:#0a0a15; font-size:13px; color:#aaa; border-bottom:1px solid #2c3e50;">
-            💡 <strong>Как пользоваться:</strong> ОДИН клик → озвучка слова + перевод. Появляется кнопка <strong>"🎧 Озвучить отсюда"</strong> → нажмите, чтобы прочитать весь текст с этого слова (страница сама прокручивается).
+            💡 <strong>Как пользоваться:</strong> Один клик → озвучка слова + перевод. Появляется кнопка <strong>"🎧 Озвучить отсюда"</strong> → автопрокрутка к каждому слову (мгновенно, без задержек).
         </div>
         <div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:18px; line-height:1.8; background:#0f0f1a; margin:15px 20px; border-radius:20px;"></div>
-        <div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 ОДИН КЛИК → озвучка слова + перевод | Кнопка "Озвучить отсюда" → чтение с этого слова (автопрокрутка)</div>
+        <div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 Мгновенная автопрокрутка к произносимому слову (без подсветки). Скорость речи 0.9.</div>
     `;
     document.body.appendChild(modal);
 
-    // Обработчики
     readBtn.onclick = () => {
         modal.style.display = 'flex';
         displayText(texts.a1);
