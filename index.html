@@ -7182,11 +7182,10 @@ window.localDict = localDict;
 })();
 
 
-                // ========== ИГРА "КОТ И КАКТУСЫ" С МУЗЫКОЙ И ЗВУКАМИ ==========
+                // ========== ИГРА "КОТ И КАКТУСЫ" (МИНИМАЛИСТИЧНАЯ ПАНЕЛЬ) ==========
 (function() {
     if (document.getElementById('cactusGameRoot')) return;
 
-    // ---- Кнопка "Игры" (рядом с "Читать") ----
     let readBtn = document.getElementById('simpleReaderBtn');
     if (!readBtn) return;
     let gamesBtn = document.createElement('div');
@@ -7195,8 +7194,7 @@ window.localDict = localDict;
     gamesBtn.style.cssText = 'position:absolute; top:20px; right:' + (parseInt(readBtn.style.right) + 80) + 'px; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000;';
     document.body.appendChild(gamesBtn);
 
-    // ---- Панель выбора игр ----
-        // ---- Панель выбора игр (минималистичная, без зелёного фона и заголовка) ----
+    // Панель выбора (без зелёного фона, без заголовка)
     let panel = document.createElement('div');
     panel.id = 'gamePanel';
     panel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:transparent; z-index:100001; display:none; gap:20px; justify-content:center; align-items:center;';
@@ -7205,20 +7203,18 @@ window.localDict = localDict;
             <div style="font-size:48px;">🐱🌵</div>
             <div style="color:white; margin-top:5px;">Кот и кактусы</div>
         </div>
-        <!-- сюда можно добавить другие игры в будущем -->
     `;
     document.body.appendChild(panel);
 
     let activeGame = null;
 
-    // ---- Игра ----
     function launchGame() {
         if (activeGame) activeGame.remove();
         activeGame = document.createElement('div');
         activeGame.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
         activeGame.innerHTML = `
             <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:hidden;">
-                <div style="background:#e67e22; padding:8px; text-align:center; color:white;">🐱 Кот и кактусы (прыгай, чтобы перепрыгнуть кактус)</div>
+                <div style="background:#e67e22; padding:8px; text-align:center; color:white;">🐱 Кот и кактусы (прыгай)</div>
                 <canvas id="gameCanvas" width="600" height="250" style="width:100%; background:#87CEEB;"></canvas>
                 <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
                     <span>🌵 Очки: <span id="gameScore">0</span></span>
@@ -7243,7 +7239,6 @@ window.localDict = localDict;
         let cw = 600, ch = 250;
         canvas.width = cw; canvas.height = ch;
         let groundY = ch - 40;
-
         let cat = { x: 70, y: groundY - 35, width: 35, height: 35, vy: 0, grounded: true };
         let cacti = [];
         let score = 0;
@@ -7255,18 +7250,15 @@ window.localDict = localDict;
         let jumpRequest = false;
         let animId = null;
 
-        // Звуки
         let meowSound = new Audio('https://www.myinstants.com/media/sounds/meow_Cc2Vger.mp3');
         let coinSound = new Audio('https://www.soundjay.com/misc/sounds/coin-drop-2.mp3');
-        let bgMusic = new Audio('https://www.soundjay.com/nature/sounds/forest-birds-02.mp3'); // приятная фоновая музыка
+        let bgMusic = new Audio('https://www.soundjay.com/nature/sounds/forest-birds-02.mp3');
         bgMusic.loop = true;
         bgMusic.volume = 0.2;
-
         function playMeow() { meowSound.cloneNode().play().catch(e=>{}); }
         function playCoin() { coinSound.cloneNode().play().catch(e=>{}); }
         function startMusic() { bgMusic.play().catch(e=>{}); }
         function stopMusic() { bgMusic.pause(); bgMusic.currentTime = 0; }
-
         startMusic();
 
         function spawnCactus() {
@@ -7306,7 +7298,6 @@ window.localDict = localDict;
                     cacti.splice(i,1); i--;
                     continue;
                 }
-                // collision
                 if (cat.x < c.x + c.width && cat.x+cat.width > c.x && cat.y < c.y+c.height && cat.y+cat.height > c.y) {
                     gameRunning = false;
                     playMeow();
@@ -7316,7 +7307,6 @@ window.localDict = localDict;
                     return;
                 }
             }
-            // синхронизация скорости
             for (let c of cacti) c.vx = -currentSpeed;
             if (frame % 50 === 0 && cacti.length < 5) spawnCactus();
             frame++;
@@ -7387,9 +7377,7 @@ window.localDict = localDict;
         restart();
     }
 
-    // Обработчики
     gamesBtn.onclick = () => panel.style.display = 'flex';
-    document.getElementById('closePanelBtn').onclick = () => panel.style.display = 'none';
     document.getElementById('startCactusGame').onclick = () => {
         panel.style.display = 'none';
         launchGame();
