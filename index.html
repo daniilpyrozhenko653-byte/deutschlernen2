@@ -4137,35 +4137,12 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (простая и надёжная) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (с переводом ЛЮБЫХ слов и длинных текстов) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
-    // Кнопка для открытия
-    let btn = document.createElement('button');
-    btn.id = 'simpleReaderBtn';
-    btn.textContent = '📖 Читать';
-    btn.style.cssText = 'position:fixed; bottom:150px; left:20px; background:#2196F3; color:white; border:none; padding:8px 16px; border-radius:25px; cursor:pointer; z-index:9999; font-size:14px;';
-    document.body.appendChild(btn);
-
-    // Модальное окно
-    let modal = document.createElement('div');
-    modal.id = 'simpleReaderModal';
-    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100000; display:none; flex-direction:column; color:white;';
-    modal.innerHTML = '<div style="background:#2c3e50; padding:15px; display:flex; justify-content:space-between; align-items:center;">' +
-        '<h3 style="margin:0;">📖 Читай и нажимай на слова</h3>' +
-        '<button id="closeSimpleReader" style="background:#c0392b; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">Закрыть</button>' +
-        '</div>' +
-        '<div style="padding:15px;">' +
-        '<button id="simpleText1" style="background:#2ecc71; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">📘 Лёгкий текст</button>' +
-        '<button id="simpleText2" style="background:#f39c12; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer; margin-left:10px;">📙 Средний текст</button>' +
-        '</div>' +
-        '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:25px; font-size:20px; line-height:1.6; background:#1a1a2e; margin:10px; border-radius:15px;"></div>' +
-        '<div style="padding:10px; text-align:center; background:#2c3e50; font-size:14px;">💡 Кликни по любому слову — увидишь перевод</div>';
-    document.body.appendChild(modal);
-
-    // Словарь (немецкое слово -> перевод)
-    const dict = {
+    // Расширенный локальный словарь (немецкий -> русский)
+    let localDict = {
         'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Anna': 'Анна', 'komme': 'прихожу',
         'aus': 'из', 'Berlin': 'Берлин', 'lerne': 'учу', 'Deutsch': 'немецкий', 'Familie': 'семья',
         'Vater': 'отец', 'Mutter': 'мать', 'Bruder': 'брат', 'Name': 'имя', 'wohne': 'живу',
@@ -4173,42 +4150,200 @@ document.head.appendChild(style);
         'schön': 'красивый', 'Tag': 'день', 'gehe': 'иду', 'Schule': 'школа', 'Freunde': 'друзья',
         'spiele': 'играю', 'Fußball': 'футбол', 'lese': 'читаю', 'Buch': 'книгу', 'Bett': 'кровать',
         'und': 'и', 'am': 'в', 'Abend': 'вечер', 'dann': 'затем', 'ins': 'в', 'meine': 'моя',
-        'meinen': 'моего', 'ist': 'есть', 'ein': 'один', 'Das': 'Это', 'gut': 'хорошо'
+        'meinen': 'моего', 'ist': 'есть', 'ein': 'один', 'Das': 'Это', 'gut': 'хорошо', 'sehr': 'очень',
+        'auch': 'также', 'aber': 'но', 'denn': 'потому что', 'dann': 'затем', 'immer': 'всегда',
+        'noch': 'ещё', 'nur': 'только', 'schon': 'уже', 'wieder': 'снова', 'beim': 'при',
+        'vom': 'от', 'zum': 'к', 'zur': 'к', 'kann': 'могу', 'will': 'хочу', 'muss': 'должен',
+        'weiß': 'знаю', 'sehe': 'вижу', 'höre': 'слышу', 'spreche': 'говорю', 'arbeite': 'работаю'
     };
 
-    const lightText = "Hallo! Ich heiße Anna. Ich lerne Deutsch. Das ist meine Familie. Ich liebe meinen Bruder.";
-    const mediumText = "Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Am Abend lese ich ein Buch. Dann gehe ich ins Bett.";
+    // Кнопка для открытия
+    let btn = document.createElement('button');
+    btn.id = 'simpleReaderBtn';
+    btn.textContent = '📖 Читать';
+    btn.style.cssText = 'position:fixed; bottom:150px; left:20px; background:#2196F3; color:white; border:none; padding:8px 16px; border-radius:25px; cursor:pointer; z-index:9999; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.2);';
+    document.body.appendChild(btn);
 
-    // Функция отображения текста с кликабельными словами
-    function displayText(text) {
-        const container = document.getElementById('simpleReaderContent');
-        const words = text.split(/(\s+)/);
-        let html = '';
-        for (let w of words) {
-            const clean = w.replace(/[.,!?;:]/g, '');
-            const translation = dict[clean];
-            if (translation && w.trim().length > 0) {
-                const safeWord = w.replace(/'/g, "\\'");
-                const safeTrans = translation.replace(/'/g, "\\'");
-                html += `<span style="cursor:pointer; display:inline-block; margin:0 2px; padding:0 6px; border-radius:8px; background:#34495e;" 
-                               onclick="alert('Перевод: ${safeWord} → ${safeTrans}')"
-                               onmouseover="this.style.background='#16a085'"
-                               onmouseout="this.style.background='#34495e'">${w}</span>`;
-            } else {
-                html += w;
-            }
+    // Модальное окно
+    let modal = document.createElement('div');
+    modal.id = 'simpleReaderModal';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100000; display:none; flex-direction:column; color:white;';
+    modal.innerHTML = '<div style="background:#2c3e50; padding:15px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">' +
+        '<h3 style="margin:0;">📖 Читай и нажимай на слова</h3>' +
+        '<div>' +
+        '<button id="closeSimpleReader" style="background:#c0392b; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer; margin-left:10px;">Закрыть</button>' +
+        '</div>' +
+        '</div>' +
+        '<div style="padding:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">' +
+        '<button id="simpleText1" style="background:#2ecc71; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">📘 Лёгкий текст</button>' +
+        '<button id="simpleText2" style="background:#f39c12; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">📙 Средний текст</button>' +
+        '<label style="background:#3498db; padding:5px 15px; border-radius:20px; cursor:pointer;">📁 Загрузить .txt' +
+        '<input type="file" id="fileInput" accept=".txt" style="display:none;">' +
+        '</label>' +
+        '<input type="text" id="urlInput" placeholder="Или вставьте URL текста..." style="padding:5px 10px; border-radius:20px; border:none; width:250px;">' +
+        '<button id="loadUrlBtn" style="background:#9b59b6; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">🌐 Загрузить</button>' +
+        '<button id="clearDictBtn" style="background:#e67e22; border:none; color:white; padding:5px 10px; border-radius:20px; cursor:pointer; font-size:12px;">🗑️ Сброс словаря</button>' +
+        '</div>' +
+        '<div style="padding:0 15px; display:flex; gap:10px; align-items:center;">' +
+        '<span>🔊 Озвучка:</span>' +
+        '<button id="speakBtn" style="background:#1abc9c; border:none; color:white; padding:3px 12px; border-radius:15px; cursor:pointer;">▶️ Читать вслух</button>' +
+        '<button id="stopSpeakBtn" style="background:#95a5a6; border:none; color:white; padding:3px 12px; border-radius:15px; cursor:pointer;">⏹️ Стоп</button>' +
+        '</div>' +
+        '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:25px; font-size:20px; line-height:1.6; background:#1a1a2e; margin:10px; border-radius:15px;"></div>' +
+        '<div style="padding:10px; text-align:center; background:#2c3e50; font-size:14px;">💡 Кликни по любому слову — перевод через онлайн-словарь (первые разы может быть задержка). Новые слова запоминаются!</div>';
+    document.body.appendChild(modal);
+
+    // Кэш для переводов (чтобы не запрашивать повторно)
+    let translationCache = {};
+
+    // Функция перевода через API (MyMemory - бесплатный)
+    async function translateWord(word, from = 'de', to = 'ru') {
+        // Сначала проверяем локальный словарь
+        const cleanWord = word.toLowerCase();
+        if (localDict[word] || localDict[cleanWord]) {
+            return localDict[word] || localDict[cleanWord];
         }
-        container.innerHTML = html;
+        
+        // Проверяем кэш
+        if (translationCache[word]) {
+            return translationCache[word];
+        }
+        
+        // Запрос к API
+        try {
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${from}|${to}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            let translation = data.responseData.translatedText;
+            
+            // Если перевод такой же как исходное слово - возможно ошибка
+            if (translation && translation.toLowerCase() === word.toLowerCase()) {
+                translation = `[${word}]`;
+            }
+            
+            // Сохраняем в локальный словарь и кэш
+            if (translation && translation !== word) {
+                localDict[word] = translation;
+                translationCache[word] = translation;
+            }
+            return translation || `[${word}]`;
+        } catch (error) {
+            console.warn('Ошибка перевода:', error);
+            return `[${word}?]`;
+        }
     }
 
-    // Обработчики
+    // Функция отображения текста с кликабельными словами (асинхронная)
+    async function displayText(text) {
+        const container = document.getElementById('simpleReaderContent');
+        container.innerHTML = '<div style="text-align:center; padding:50px;">🔍 Загружаем текст, подготавливаем переводы...</div>';
+        
+        const words = text.split(/(\s+)/);
+        let htmlParts = [];
+        
+        for (let i = 0; i < words.length; i++) {
+            const w = words[i];
+            const clean = w.trim().replace(/[.,!?;:()[\]{}"']/g, '');
+            
+            if (clean.length > 0 && /[A-Za-zÄäÖöÜüß]/i.test(clean)) {
+                // Получаем перевод (асинхронно, но последовательно чтобы не перегружать API)
+                const translation = await translateWord(clean);
+                const safeWord = w.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeTrans = translation.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
+                htmlParts.push(`<span style="cursor:pointer; display:inline-block; margin:0 2px; padding:0 6px; border-radius:8px; background:#34495e; transition:all 0.2s;" 
+                               onclick="alert('📖 ${safeWord} → ${safeTrans}')"
+                               ondblclick="window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance('${safeWord.replace(/\\/g, '\\\\')}'));"
+                               onmouseover="this.style.background='#16a085'; this.style.transform='scale(1.02)';"
+                               onmouseout="this.style.background='#34495e'; this.style.transform='scale(1)';">${w}</span>`);
+            } else if (w.trim() === '') {
+                htmlParts.push(' ');
+            } else {
+                htmlParts.push(w);
+            }
+        }
+        
+        container.innerHTML = htmlParts.join('');
+        
+        // Сохраняем текущий текст для озвучки
+        container.setAttribute('data-full-text', text);
+    }
+
+    // Функция загрузки текста из URL
+    async function loadTextFromUrl(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Не удалось загрузить');
+            const text = await response.text();
+            await displayText(text);
+        } catch (error) {
+            document.getElementById('simpleReaderContent').innerHTML = `<div style="color:red; padding:20px;">❌ Ошибка загрузки: ${error.message}</div>`;
+        }
+    }
+
+    // Примеры текстов
+    const lightText = "Hallo! Ich heiße Anna. Ich lerne Deutsch. Das ist meine Familie. Ich liebe meinen Bruder. Wir spielen zusammen Fußball.";
+    
+    const mediumText = `Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Meine Freunde sind sehr nett. 
+Am Abend lese ich ein interessantes Buch. Dann gehe ich ins Bett. Ich mag Deutsch lernen, weil es eine schöne Sprache ist. 
+Morgen werde ich mehr üben. Ich kann schon viele Wörter auf Deutsch sagen. Das macht mich glücklich!`;
+
+    // Обработчики событий
     btn.onclick = () => {
         modal.style.display = 'flex';
         displayText(lightText);
     };
+    
     document.getElementById('closeSimpleReader').onclick = () => modal.style.display = 'none';
     document.getElementById('simpleText1').onclick = () => displayText(lightText);
     document.getElementById('simpleText2').onclick = () => displayText(mediumText);
+    
+    // Загрузка файла
+    document.getElementById('fileInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => displayText(event.target.result);
+            reader.readAsText(file, 'UTF-8');
+        }
+    };
+    
+    // Загрузка по URL
+    document.getElementById('loadUrlBtn').onclick = () => {
+        const url = document.getElementById('urlInput').value.trim();
+        if (url) loadTextFromUrl(url);
+        else alert('https://web.archive.org/web/20250805084008/https://lingua.com/german/reading/');
+    };
+    
+    // Сброс пользовательского словаря
+    document.getElementById('clearDictBtn').onclick = () => {
+        translationCache = {};
+        alert('Кэш переводов очищен. При следующем клике на слово будет сделан новый запрос.');
+    };
+    
+    // Озвучка текста
+    let currentUtterance = null;
+    document.getElementById('speakBtn').onclick = () => {
+        const text = document.getElementById('simpleReaderContent').getAttribute('data-full-text');
+        if (text) {
+            window.speechSynthesis.cancel();
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'de-DE';
+            currentUtterance.rate = 0.9;
+            window.speechSynthesis.speak(currentUtterance);
+        } else {
+            alert('Нет текста для озвучки');
+        }
+    };
+    
+    document.getElementById('stopSpeakBtn').onclick = () => {
+        window.speechSynthesis.cancel();
+    };
+    
+    // Нажатие Enter в поле URL
+    document.getElementById('urlInput').onkeypress = (e) => {
+        if (e.key === 'Enter') document.getElementById('loadUrlBtn').onclick();
+    };
 })();
 </script>
 </body>
