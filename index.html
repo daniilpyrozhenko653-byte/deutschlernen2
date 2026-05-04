@@ -7182,354 +7182,268 @@ window.localDict = localDict;
 })();
 
 
-    // ========== ИГРА "КОТ И МЫШИ: ПРЯТКИ" (УБЕГАЮЩИЕ МЫШИ, ПРИКОСНОВЕНИЯ) ==========
+    // ========== ИГРА "КОТ И МЫШИ" (СТИЛЬ GOOGLE DINO, УПРАВЛЕНИЕ КАСАНИЕМ, ПРОКРУТКА СТРАНИЦЫ) ==========
 (function() {
     if (document.getElementById('dinoCatGame')) return;
 
-    // Найдём или создадим контейнер, куда вставим кнопку (не фиксированную)
-    let gameBtnContainer = document.querySelector('.card, .post, article, main');
-    if (!gameBtnContainer) {
-        gameBtnContainer = document.createElement('div');
-        gameBtnContainer.style.cssText = 'max-width:800px; margin:20px auto; text-align:center;';
-        document.body.appendChild(gameBtnContainer);
+    // Создаём контейнер для кнопки и игры (не фиксированный, в потоке)
+    let gameWrapper = document.createElement('div');
+    gameWrapper.id = 'dinoCatGame';
+    gameWrapper.style.cssText = 'margin:20px auto; max-width:800px; background:#1e1e2e; border-radius:15px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.2);';
+
+    // Кнопка для открытия игры
+    let gameBtn = document.createElement('div');
+    gameBtn.innerHTML = '🐱 Играть (Кот и мыши)';
+    gameBtn.style.cssText = 'background:#e67e22; color:white; padding:8px 16px; text-align:center; cursor:pointer; font-weight:bold; border-radius:15px 15px 0 0; transition:0.2s;';
+    gameBtn.onmouseover = () => gameBtn.style.background = '#d35400';
+    gameBtn.onmouseout = () => gameBtn.style.background = '#e67e22';
+    
+    // Игровой контейнер (скрыт по умолчанию)
+    let gamePanel = document.createElement('div');
+    gamePanel.style.cssText = 'display:none; background:#2c3e50; padding:10px;';
+    gamePanel.innerHTML = `
+        <canvas id="dinoCanvas" width="800" height="300" style="display:block; width:100%; height:auto; background:#87CEEB; border-radius:8px;"></canvas>
+        <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
+            <span>🐭 Мыши: <span id="dinoScore">0</span></span>
+            <span>📖 <span id="dinoWord">—</span></span>
+        </div>
+        <div id="dinoGameOver" style="display:none; text-align:center; margin-top:10px; color:#e74c3c; font-weight:bold;">
+            💀 Game Over 💀 <button id="dinoRestart" style="background:#e67e22; border:none; color:white; margin-left:10px; padding:4px 12px; border-radius:20px;">Снова</button>
+        </div>
+    `;
+    gameWrapper.appendChild(gameBtn);
+    gameWrapper.appendChild(gamePanel);
+    
+    // Размещаем под уровнями текстов (можно указать конкретное место, например, после карточки с текстом)
+    // Ищем контейнер, где уже есть кнопки текстов (levelBtn) и вставляем перед ними или после
+    let target = document.querySelector('.levelBtn')?.parentElement?.parentElement;
+    if (target && target.parentNode) {
+        target.parentNode.insertBefore(gameWrapper, target.nextSibling);
+    } else {
+        // Если не нашли, добавим после модального окна или в конец body
+        document.body.appendChild(gameWrapper);
     }
 
-    // Кнопка игры (будет двигаться при скролле)
-    let gameBtn = document.createElement('button');
-    gameBtn.id = 'dinoCatGame';
-    gameBtn.innerHTML = '🐱 Играть (Кот vs Мыши)';
-    gameBtn.style.cssText = 'background:#e67e22; color:white; border:none; padding:10px 20px; border-radius:50px; cursor:pointer; font-size:14px; font-weight:bold; margin:10px auto; display:inline-block; box-shadow:0 2px 5px rgba(0,0,0,0.2);';
-    gameBtn.title = 'Игра: Кот ловит мышей. Тапай по мышам или управляй котом.';
-    gameBtnContainer.appendChild(gameBtn);
-    gameBtnContainer.style.textAlign = 'center';
-
-    // Стили для игрового окна (модальное)
-    let modalOverlay = document.createElement('div');
-    modalOverlay.id = 'gameModalOverlay';
-    modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000000; display:none; align-items:center; justify-content:center;';
-    document.body.appendChild(modalOverlay);
-
-    let gameFrame = document.createElement('div');
-    gameFrame.style.cssText = 'background:#1a2a32; border-radius:20px; width:95%; max-width:800px; text-align:center; padding:10px;';
-    gameFrame.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="color:white;">🐭 <span id="gameScore">0</span></span>
-            <span style="color:white;">💣 Уровень: <span id="gameLevel">1</span></span>
-            <button id="closeGameModal" style="background:#c0392b; border:none; color:white; padding:5px 12px; border-radius:20px;">Закрыть</button>
-        </div>
-        <canvas id="gameCanvasDino" width="750" height="300" style="background:#87CEEB; width:100%; height:auto; border-radius:10px; cursor:pointer;"></canvas>
-        <div style="margin-top:10px; display:flex; gap:10px; justify-content:center;">
-            <button id="jumpGameBtn" style="background:#f39c12; border:none; padding:8px 20px; border-radius:30px; font-size:16px;">⬆ Прыжок</button>
-            <button id="restartGameBtn" style="background:#e67e22; border:none; padding:8px 20px; border-radius:30px;">🔄 Заново</button>
-        </div>
-        <div style="color:#ddd; margin-top:5px; font-size:12px;">💡 Тапни по мышке (или нажми), чтобы поймать. Мыши убегают от кота.</div>
-    `;
-    modalOverlay.appendChild(gameFrame);
-
-    // Элементы
-    const canvas = document.getElementById('gameCanvasDino');
+    // ---- ИГРОВАЯ МЕХАНИКА ----
+    const canvas = document.getElementById('dinoCanvas');
     const ctx = canvas.getContext('2d');
-    const scoreSpan = document.getElementById('gameScore');
-    const levelSpan = document.getElementById('gameLevel');
-
-    // Размеры canvas (фиксированные для расчётов, но показываем растянутыми)
-    canvas.width = 750;
-    canvas.height = 300;
-    const GROUND_Y = canvas.height - 50;
-
-    // Кот параметры
+    const scoreSpan = document.getElementById('dinoScore');
+    const wordSpan = document.getElementById('dinoWord');
+    const gameOverDiv = document.getElementById('dinoGameOver');
+    
+    // Размеры
+    let cw = 800, ch = 300;
+    canvas.width = cw; canvas.height = ch;
+    
+    // Объекты
     let cat = {
-        x: 80,
-        y: GROUND_Y - 30,
-        width: 35,
-        height: 35,
-        vy: 0,
-        grounded: true
+        x: 80, y: 0, width: 40, height: 40,
+        vy: 0, grounded: true
     };
-    let isJumping = false;
-    let gameRunning = true;
-    let score = 0;
-    let level = 1;
-    let animationId = null;
-
-    // Массивы
     let mice = [];
-    let bombs = [];
-
-    // Игровой цикл (переменные)
-    let frameCounter = 0;
-    let spawnCounter = 0;
-    let baseSpeed = 4; // Скорость движения объектов влево
-
-    // Словарь для слов (используем глобальный)
+    let gameRunning = false;
+    let score = 0;
+    let frame = 0;
+    let wordTimeout = null;
+    let baseGroundY = ch - 50;
+    
+    // Словарь (из глобального)
     let wordList = [];
     if (window.localDict && Object.keys(window.localDict).length) {
-        wordList = Object.entries(window.localDict).filter(([de, ru]) => de.length > 1 && !de.match(/[А-Яа-я]/)).slice(0, 300);
+        wordList = Object.entries(window.localDict).filter(([de, ru]) => 
+            typeof de === 'string' && de.length > 1 && !de.match(/[А-Я]/)
+        ).slice(0, 300);
     } else {
-        wordList = [['Maus','Мышь'],['Katze','Кошка'],['Hund','Собака'],['Haus','Дом']];
+        wordList = [['Haus','Дом'],['Katze','Кошка'],['Maus','Мышь'],['Hallo','Привет'],['Sonne','Солнце']];
     }
-    let currentWord = { word: '', translation: '' };
-    let wordTimer = null;
-    const wordDisplayDiv = document.createElement('div');
-    wordDisplayDiv.style.cssText = 'color:gold; font-weight:bold; margin-top:5px;';
-    gameFrame.insertBefore(wordDisplayDiv, gameFrame.querySelector('#gameScore').parentNode.nextSibling);
-
+    
     function showRandomWord() {
         if (!gameRunning) return;
-        let idx = Math.floor(Math.random() * wordList.length);
-        let [de, ru] = wordList[idx];
-        currentWord = { word: de, translation: ru };
-        wordDisplayDiv.innerHTML = `📖 ${de} – ${ru}`;
-        if (wordTimer) clearTimeout(wordTimer);
-        wordTimer = setTimeout(() => {
-            if (wordDisplayDiv.innerHTML !== '—') wordDisplayDiv.innerHTML = '—';
-        }, 2000);
-    }
-
-    // Поведение мышей – убегают от кота (изменяют скорость)
-    function updateMiceBehavior() {
-        for (let m of mice) {
-            // Если мышь левее кота, убегает влево, иначе вправо
-            let dx = (m.x + m.width/2) - (cat.x + cat.width/2);
-            if (Math.abs(dx) < 30) { // близко – сильное бегство
-                let force = (dx > 0 ? 5 : -5);
-                m.vx = force;
-            } else {
-                // лёгкое случайное блуждание + ускорение от кота
-                let away = (dx > 0 ? 1 : -1) * 1.5;
-                m.vx += away * 0.2;
-                m.vx = Math.min(5, Math.max(-5, m.vx));
-            }
-            // дополнительно ограничим, чтобы не вылетали за границы
-            if (m.x < 20) m.vx = 2;
-            if (m.x > canvas.width - m.width - 20) m.vx = -2;
+        if (wordList.length) {
+            let [de, ru] = wordList[Math.floor(Math.random() * wordList.length)];
+            wordSpan.innerText = `${de} – ${ru}`;
+            if (wordTimeout) clearTimeout(wordTimeout);
+            wordTimeout = setTimeout(() => wordSpan.innerText = '—', 2500);
+        } else {
+            wordSpan.innerText = '—';
         }
     }
-
+    
+    // Сброс игры
+    function resetGame() {
+        score = 0;
+        scoreSpan.innerText = '0';
+        mice = [];
+        cat.y = baseGroundY - cat.height;
+        cat.vy = 0;
+        cat.grounded = true;
+        frame = 0;
+        gameRunning = true;
+        gameOverDiv.style.display = 'none';
+        // добавляем несколько мышей
+        for (let i = 0; i < 3; i++) spawnMouse();
+        // обновляем скорость (начальная)
+    }
+    
+    // Спавн мыши
     function spawnMouse() {
-        let side = Math.random() > 0.5 ? 'left' : 'right';
-        let x = side === 'left' ? -20 : canvas.width + 20;
         mice.push({
-            x: x,
-            y: GROUND_Y - 18,
-            width: 22,
-            height: 18,
-            vx: (side === 'left' ? 2 : -2),
+            x: cw + Math.random() * 200,
+            y: baseGroundY - 20,
+            width: 25, height: 20,
+            vx: -3 - Math.random() * 3 - Math.floor(score / 20) * 0.5,
             vy: 0
         });
     }
-    function spawnBomb() {
-        let x = canvas.width + 30;
-        bombs.push({
-            x: x,
-            y: GROUND_Y - 20,
-            width: 25,
-            height: 20,
-            vx: -baseSpeed - level*0.5,
-            vy: 0
-        });
-    }
-
-    // Обновление объектов
-    function updateObjects() {
-        // Мыши
-        for (let i=0; i<mice.length; i++) {
-            mice[i].x += mice[i].vx;
-            // Удаляем, если за пределами
-            if (mice[i].x + mice[i].width < -50 || mice[i].x > canvas.width + 50) {
+    
+    // Обновление физики
+    function updateGame() {
+        if (!gameRunning) return;
+        // Гравитация и прыжок (управление: касание/клик вызывает прыжок)
+        cat.vy += 0.8;
+        cat.y += cat.vy;
+        if (cat.y >= baseGroundY - cat.height) {
+            cat.y = baseGroundY - cat.height;
+            cat.vy = 0;
+            cat.grounded = true;
+        } else {
+            cat.grounded = false;
+        }
+        
+        // Движение мышей и проверка съедания
+        for (let i = 0; i < mice.length; i++) {
+            let m = mice[i];
+            m.x += m.vx;
+            // Мыши убегают от кота: если кот справа, мышь ускоряется влево; если слева – вправо (но они и так идут к левому краю)
+            if (cat.x + cat.width > m.x && cat.x < m.x + m.width) {
+                // Мышь рядом с котом – убегаем в сторону (вправо)
+                m.vx = Math.abs(m.vx) * 1.2;
+            } else if (m.x < cat.x) {
+                // кот позади? пусть бежит вперёд (влево)
+                m.vx = -Math.abs(m.vx);
+            }
+            // Ограничение скорости
+            if (m.vx > 0) m.vx = Math.min(m.vx, 5 + score/50);
+            if (m.vx < -10) m.vx = -10;
+            
+            // Удаление мышей, вышедших за левый край
+            if (m.x + m.width < 0) {
                 mice.splice(i,1);
                 i--;
                 continue;
             }
-        }
-        // Бомбы
-        for (let i=0; i<bombs.length; i++) {
-            bombs[i].x += bombs[i].vx;
-            if (bombs[i].x + bombs[i].width < -50) {
-                bombs.splice(i,1);
-                i--;
-            }
-        }
-        // Кот прыжок
-        cat.vy += 0.6;
-        cat.y += cat.vy;
-        if (cat.y >= GROUND_Y - cat.height) {
-            cat.y = GROUND_Y - cat.height;
-            cat.vy = 0;
-            cat.grounded = true;
-            isJumping = false;
-        } else {
-            cat.grounded = false;
-        }
-        // Столкновение кота с мышью (традиционное касание)
-        for (let i=0; i<mice.length; i++) {
-            let m = mice[i];
-            if (cat.x < m.x+m.width && cat.x+cat.width > m.x &&
-                cat.y < m.y+m.height && cat.y+cat.height > m.y) {
+            // Проверка столкновения (кота с мышью)
+            if (cat.x < m.x + m.width && cat.x + cat.width > m.x &&
+                cat.y < m.y + m.height && cat.y + cat.height > m.y) {
+                // Съели мышь
                 mice.splice(i,1);
                 score++;
                 scoreSpan.innerText = score;
                 showRandomWord();
-                let newLevel = Math.floor(score / 5) + 1;
-                if (newLevel > level) {
-                    level = newLevel;
-                    levelSpan.innerText = level;
-                }
-                i--;
+                // добавить новую мышь (чтобы не пустело)
+                spawnMouse();
+                // повышаем сложность: чаще спавним новые мыши при большом счёте
+                if (Math.random() < 0.3 + score/100) spawnMouse();
             }
         }
-        // Столкновение с бомбой
-        for (let i=0; i<bombs.length; i++) {
-            let b = bombs[i];
-            if (cat.x < b.x+b.width && cat.x+cat.width > b.x &&
-                cat.y < b.y+b.height && cat.y+cat.height > b.y) {
-                gameRunning = false;
-            }
-        }
-        // Автоспавн
-        if (gameRunning) {
-            if (mice.length < 3 + Math.floor(score/10)) spawnMouse();
-            if (framesSinceLastSpawn > 60 && bombs.length < 2 + Math.floor(level/2)) {
-                spawnBomb();
-                framesSinceLastSpawn = 0;
-            } else framesSinceLastSpawn++;
-        }
+        
+        // Автоматическое появление мышей (чтобы всегда было 3–6 штук)
+        let targetCount = Math.min(3 + Math.floor(score / 15), 8);
+        while (mice.length < targetCount) spawnMouse();
+        
+        // Проверка проигрыша: кот коснулся мыши? уже обработано. Но нужно ещё, если мышь ушла далеко – не проигрыш.
+        // Дополнительно: если мышь врезалась в кота сверху (при прыжке) – тоже ловим.
     }
-
-    let framesSinceLastSpawn = 0;
+    
     function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, cw, ch);
         // Земля
         ctx.fillStyle = '#5d3a1a';
-        ctx.fillRect(0, GROUND_Y+2, canvas.width, canvas.height-GROUND_Y);
-        // Кот
+        ctx.fillRect(0, baseGroundY, cw, ch - baseGroundY);
+        // Кот (оранжевый)
         ctx.fillStyle = '#e67e22';
         ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
         ctx.fillStyle = '#d35400';
         ctx.fillRect(cat.x+5, cat.y-8, 8, 8);
         ctx.fillRect(cat.x+cat.width-13, cat.y-8, 8, 8);
-        // Мыши
+        // Мыши (серые)
         for (let m of mice) {
             ctx.fillStyle = '#7f8c8d';
             ctx.fillRect(m.x, m.y, m.width, m.height);
             ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(m.x+m.width-6, m.y+2, 6, 6);
-            ctx.fillRect(m.x-4, m.y+5, 4, 4);
+            ctx.fillRect(m.x+m.width-8, m.y+4, 6, 6);
+            ctx.fillRect(m.x-6, m.y+8, 6, 6);
         }
-        // Бомбы
-        for (let b of bombs) {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(b.x, b.y, b.width, b.height);
-            ctx.font = 'bold 18px sans-serif';
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillText('💣', b.x+5, b.y+18);
-        }
-        if (!gameRunning) {
-            ctx.font = 'bold 20px sans-serif';
-            ctx.fillStyle = 'red';
-            ctx.fillText('GAME OVER', canvas.width/2-60, canvas.height/2);
-        }
+        // Очки
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText(`Score: ${score}`, cw-80, 30);
     }
-
-    let lastTimestamp = 0;
-    function gameLoop(now) {
-        if (!gameRunning && animationId) {
-            cancelAnimationFrame(animationId);
-            animationId = null;
-            return;
-        }
+    
+    let animationId = null;
+    function gameLoop() {
         if (!gameRunning) return;
-        updateObjects();
-        updateMiceBehavior();
+        updateGame();
         draw();
         animationId = requestAnimationFrame(gameLoop);
     }
-
-    // Управление с клавиатуры
-    function handleJump() {
+    
+    // Запуск игры
+    function startGame() {
+        if (animationId) cancelAnimationFrame(animationId);
+        resetGame();
+        gameLoop();
+    }
+    
+    function stopGame() {
+        gameRunning = false;
+        if (animationId) cancelAnimationFrame(animationId);
+    }
+    
+    // Обработка прыжка (по клику/касанию)
+    function jump() {
         if (!gameRunning) return;
         if (cat.grounded) {
-            cat.vy = -8;
+            cat.vy = -11;
             cat.grounded = false;
         }
     }
-    // Ловля мыши тапом (координаты canvas)
-    function handleTapOnCanvas(e) {
-        if (!gameRunning) return;
-        let rect = canvas.getBoundingClientRect();
-        let scaleX = canvas.width / rect.width;
-        let scaleY = canvas.height / rect.height;
-        let mouseX, mouseY;
-        if (e.touches) {
-            mouseX = (e.touches[0].clientX - rect.left) * scaleX;
-            mouseY = (e.touches[0].clientY - rect.top) * scaleY;
-        } else {
-            mouseX = (e.clientX - rect.left) * scaleX;
-            mouseY = (e.clientY - rect.top) * scaleY;
-        }
-        for (let i=0; i<mice.length; i++) {
-            let m = mice[i];
-            if (mouseX > m.x && mouseX < m.x+m.width && mouseY > m.y && mouseY < m.y+m.height) {
-                mice.splice(i,1);
-                score++;
-                scoreSpan.innerText = score;
-                showRandomWord();
-                let newLevel = Math.floor(score / 5) + 1;
-                if (newLevel > level) {
-                    level = newLevel;
-                    levelSpan.innerText = level;
-                }
-                break;
-            }
-        }
+    
+    // Обработчики событий
+    canvas.addEventListener('click', (e) => {
         e.preventDefault();
-    }
-
-    function startGame() {
-        score = 0; level = 1;
-        scoreSpan.innerText = '0'; levelSpan.innerText = '1';
-        mice = []; bombs = [];
-        cat.x = 80; cat.y = GROUND_Y - cat.height;
-        cat.vy = 0; cat.grounded = true;
-        gameRunning = true;
-        framesSinceLastSpawn = 0;
-        for(let i=0; i<3; i++) spawnMouse();
-        if (animationId) cancelAnimationFrame(animationId);
-        animationId = requestAnimationFrame(gameLoop);
-        showRandomWord();
-    }
-
-    function stopAndHide() {
-        gameRunning = false;
-        if (animationId) cancelAnimationFrame(animationId);
-        animationId = null;
-        modalOverlay.style.display = 'none';
-        if (wordTimer) clearTimeout(wordTimer);
-    }
-
-    // Обработчики
-    gameBtn.onclick = () => {
-        modalOverlay.style.display = 'flex';
-        startGame();
-    };
-    document.getElementById('closeGameModal').onclick = () => stopAndHide();
-    document.getElementById('restartGameBtn').onclick = () => {
-        stopAndHide();
-        setTimeout(() => {
-            modalOverlay.style.display = 'flex';
-            startGame();
-        }, 50);
-    };
-    document.getElementById('jumpGameBtn').onclick = () => handleJump();
-    canvas.addEventListener('click', handleTapOnCanvas);
-    canvas.addEventListener('touchstart', handleTapOnCanvas);
+        jump();
+    });
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        jump();
+    });
+    // Также реагируем на пробел и стрелку вверх (для клавиатуры)
     window.addEventListener('keydown', (e) => {
-        if (modalOverlay.style.display !== 'flex') return;
         if (e.code === 'Space' || e.code === 'ArrowUp') {
             e.preventDefault();
-            handleJump();
+            if (gameRunning) jump();
         }
     });
+    // Кнопка перезапуска
+    document.getElementById('dinoRestart').onclick = () => {
+        stopGame();
+        startGame();
+    };
+    // Открытие игры по кнопке
+    gameBtn.onclick = () => {
+        if (gamePanel.style.display === 'none') {
+            gamePanel.style.display = 'block';
+            startGame();
+        } else {
+            gamePanel.style.display = 'none';
+            stopGame();
+        }
+    };
+    
+    // Инициализация начальных параметров
+    cat.y = baseGroundY - cat.height;
+    // Не запускаем автоматически, только по нажатию на кнопку
 })();
 </script>
 </body>
