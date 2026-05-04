@@ -4137,7 +4137,7 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (тройной клик для озвучки) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (один клик - перевод, три клика - озвучка с подсветкой) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
@@ -4214,8 +4214,8 @@ document.head.appendChild(style);
     let currentText = texts.a1;
     let allWordElements = [];
     let isSpeaking = false;
-    let tripleClickTimer = null;
-    let clickCount = 0;
+    let currentWordIndexInSpeech = 0;
+    let speechUtterance = null;
 
     // Функция перевода
     function getTranslation(word) {
@@ -4243,12 +4243,35 @@ document.head.appendChild(style);
         }, 4000);
     }
 
+    // Сброс подсветки всех слов
+    function resetHighlight() {
+        allWordElements.forEach(el => {
+            if (el.style.background !== '#f39c12') {
+                el.style.background = '#2c3e50';
+            }
+        });
+    }
+
+    // Подсветка конкретного слова и прокрутка к нему
+    function highlightWord(index) {
+        if (index >= 0 && index < allWordElements.length) {
+            resetHighlight();
+            allWordElements[index].style.background = '#ff6b6b';
+            allWordElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
     // Озвучка всего текста с определённого слова
     function speakFromIndex(startIndex) {
         if (isSpeaking) {
             window.speechSynthesis.cancel();
             isSpeaking = false;
             setTimeout(() => speakFromIndex(startIndex), 100);
+            return;
+        }
+        
+        if (startIndex >= allWordElements.length) {
+            resetHighlight();
             return;
         }
         
@@ -4260,62 +4283,46 @@ document.head.appendChild(style);
         
         if (textToSpeak.length > 0) {
             isSpeaking = true;
+            currentWordIndexInSpeech = startIndex;
             
             // Подсвечиваем первое слово
-            allWordElements.forEach(el => el.style.background = '#2c3e50');
-            allWordElements[startIndex].style.background = '#ff6b6b';
-            allWordElements[startIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            highlightWord(startIndex);
             
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'de-DE';
-            utterance.rate = 0.85;
+            speechUtterance = new SpeechSynthesisUtterance(textToSpeak);
+            speechUtterance.lang = 'de-DE';
+            speechUtterance.rate = 0.85;
             
-            // Отслеживаем прогресс озвучки (примерно)
-            let wordIndex = startIndex;
-            const wordsCount = allWordElements.length - startIndex;
-            let currentWord = 0;
+            // Отслеживаем прогресс озвучки для подсветки слов
+            let wordCounter = startIndex;
+            const wordsArray = textToSpeak.trim().split(/\s+/);
             
-            utterance.onboundary = (event) => {
-                // Приблизительное отслеживание: каждые 0.5 секунды меняем подсветку
-                if (event.name === 'word' || event.charIndex % 30 < 5) {
-                    if (wordIndex < allWordElements.length) {
-                        allWordElements.forEach(el => {
-                            if (el.style.background !== '#f39c12') {
-                                el.style.background = '#2c3e50';
-                            }
-                        });
-                        allWordElements[wordIndex].style.background = '#ff6b6b';
-                        allWordElements[wordIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        wordIndex++;
-                    }
+            speechUtterance.onboundary = (event) => {
+                if (event.name === 'word' && wordCounter < allWordElements.length) {
+                    highlightWord(wordCounter);
+                    wordCounter++;
                 }
             };
             
-            utterance.onend = () => {
+            speechUtterance.onend = () => {
                 isSpeaking = false;
-                allWordElements.forEach(el => {
-                    if (el.style.background !== '#f39c12') {
-                        el.style.background = '#2c3e50';
-                    }
-                });
+                resetHighlight();
+                speechUtterance = null;
             };
             
-            utterance.onerror = () => {
+            speechUtterance.onerror = () => {
                 isSpeaking = false;
-                allWordElements.forEach(el => {
-                    if (el.style.background !== '#f39c12') {
-                        el.style.background = '#2c3e50';
-                    }
-                });
+                resetHighlight();
+                speechUtterance = null;
             };
             
-            window.speechSynthesis.speak(utterance);
+            window.speechSynthesis.speak(speechUtterance);
         }
     }
 
-    // Обработчик тройного клика по слову
-    window.onWordTripleClick = function(element, word, index) {
-        // Показываем перевод
+    // Обработчик ОДНОГО клика (только перевод)
+    window.onWordClick = function(element, word, event) {
+        event.stopPropagation();
+        
         let translation = element.getAttribute('data-trans');
         if (!translation) {
             translation = getTranslation(word);
@@ -4323,8 +4330,48 @@ document.head.appendChild(style);
         }
         showTranslation(word, translation);
         
-        // Начинаем озвучку с этого слова
-        speakFromIndex(index);
+        // Визуальный эффект
+        element.style.background = '#f39c12';
+        setTimeout(() => {
+            if (element.style.background === '#f39c12') {
+                element.style.background = '#27ae60';
+            }
+            setTimeout(() => {
+                if (element.style.background === '#27ae60' && !isSpeaking) {
+                    element.style.background = '#2c3e50';
+                }
+            }, 500);
+        }, 200);
+    };
+
+    // Обработчик ТРОЙНОГО клика (озвучка с этого слова)
+    let tripleClickTimer = null;
+    let clickCount = 0;
+    
+    window.onWordTripleClick = function(element, word, index) {
+        clickCount++;
+        
+        if (tripleClickTimer) clearTimeout(tripleClickTimer);
+        
+        if (clickCount >= 3) {
+            // Тройной клик - начинаем озвучку
+            clickCount = 0;
+            
+            // Показываем перевод
+            let translation = element.getAttribute('data-trans');
+            if (!translation) {
+                translation = getTranslation(word);
+                element.setAttribute('data-trans', translation);
+            }
+            showTranslation(word, translation);
+            
+            // Начинаем озвучку с этого слова
+            speakFromIndex(index);
+        } else {
+            tripleClickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 300);
+        }
     };
 
     // Отображение текста
@@ -4346,6 +4393,7 @@ document.head.appendChild(style);
                                data-word="${safeWord}"
                                data-index="${idx}"
                                style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" 
+                               onclick="onWordClick(this, '${wordForOnclick}', event)"
                                ondblclick="onWordTripleClick(this, '${wordForOnclick}', ${idx})"
                                onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';"
                                onmouseout="if(this.style.background!='#f39c12' && this.style.background!='#ff6b6b'){this.style.background='#2c3e50'}; this.style.transform='scale(1)';">${w}</span>`;
@@ -4361,13 +4409,12 @@ document.head.appendChild(style);
 
     // Остановка озвучки
     function stopSpeaking() {
-        isSpeaking = false;
-        window.speechSynthesis.cancel();
-        allWordElements.forEach(el => {
-            if (el.style.background !== '#f39c12') {
-                el.style.background = '#2c3e50';
-            }
-        });
+        if (speechUtterance) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            resetHighlight();
+            speechUtterance = null;
+        }
     }
 
     // ========== СОЗДАЁМ ПАНЕЛИ И КНОПКИ ==========
@@ -4406,7 +4453,7 @@ document.head.appendChild(style);
         '</div>' +
         '</div>' +
         '<div style="padding:8px 25px; background:#0a0a15; font-size:13px; color:#aaa; border-bottom:1px solid #2c3e50;">' +
-        '💡 <strong>Как озвучить с любого слова:</strong> БЫСТРО ТРИ РАЗА НАЖМИТЕ на слово (тройной клик) → начнётся озвучка с этого слова с подсветкой и автопрокруткой' +
+        '💡 <strong>Как пользоваться:</strong> ОДИН клик → перевод | БЫСТРЫЙ ТРОЙНОЙ клик → озвучка с этого слова (с подсветкой и автопрокруткой)' +
         '</div>' +
         '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:18px; line-height:1.8; background:#0f0f1a; margin:15px 20px; border-radius:20px;"></div>' +
         '<div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 ТРОЙНОЙ КЛИК → озвучка ВСЕГО текста с этого слова | Перевод показывается 4 секунды</div>';
