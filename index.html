@@ -4137,100 +4137,87 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ПРОСТАЯ ВКЛАДКА ЧТЕНИЯ ==========
-
-// Создаём кнопку
-let readBtn = document.createElement('button');
-readBtn.innerHTML = '📖 Читать';
-readBtn.style.cssText = 'position:fixed;top:10px;right:250px;background:#2196F3;border:none;color:white;padding:8px 15px;border-radius:20px;cursor:pointer;z-index:9999;font-size:13px;';
-document.body.appendChild(readBtn);
-
-// Создаём окно для чтения
-let readWindow = document.createElement('div');
-readWindow.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#0d1117;z-index:10000;display:none;flex-direction:column;color:white;';
-readWindow.innerHTML = 
-    <div style="padding:20px;background:#161b22;display:flex;justify-content:space-between;">
-        <h2 style="margin:0;">📖 Читаем по-немецки</h2>
-        <button id="closeReadBtn" style="background:#f44336;border:none;color:white;padding:8px 20px;border-radius:20px;cursor:pointer;">Закрыть</button>
-    </div>
-    <div style="padding:10px;background:#0d1117;display:flex;gap:10px;">
-        <button id="simpleTextBtn" style="background:#4CAF50;border:none;color:white;padding:8px 15px;border-radius:15px;cursor:pointer;">📘 Простой</button>
-        <button id="mediumTextBtn" style="background:#FF9800;border:none;color:white;padding:8px 15px;border-radius:15px;cursor:pointer;">📙 Средний</button>
-    </div>
-    <div id="readContent" style="padding:30px;font-size:18px;line-height:1.8;overflow-y:auto;flex:1;"></div>
-    <div style="padding:15px;background:#161b22;font-size:12px;">
-        💡 Совет: Нажми на любое слово - увидишь перевод!
-    </div>
-;
-
-document.body.appendChild(readWindow);
-
-// Тексты
-let simpleText = Hallo! Ich heiße Anna. Ich komme aus Berlin. Ich lerne Deutsch. Das ist meine Familie. Mein Vater heißt Thomas. Meine Mutter heißt Maria. Ich habe einen Bruder. Sein Name ist Paul. Wir wohnen in einem Haus. Ich liebe meine Familie.;
-
-let mediumText = Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Meine Lieblingsfächer sind Deutsch und Musik. Nach der Schule treffe ich meine Freunde. Wir spielen Fußball im Park. Am Abend lese ich ein Buch. Dann gehe ich ins Bett. Das war mein Tag.;
-
-// Словарь для перевода
-let dict = {
-    Hallo: "Привет", heiße: "меня зовут", komme: "прихожу", aus: "из", Berlin: "Берлин",
-    lerne: "учу", Deutsch: "немецкий", Familie: "семья", Vater: "отец", heißt: "зовут",
-    Mutter: "мать", einen: "одного", Bruder: "брат", Name: "имя", wohnen: "живём",
-    Haus: "дом", liebe: "люблю", Guten: "Доброе", Morgen: "утро", Heute: "сегодня",
-    schöner: "красивый", Tag: "день", gehe: "иду", Schule: "школа", Lieblingsfächer: "любимые предметы",
-    Musik: "музыка", Nach: "После", treffe: "встречаю", Freunde: "друзей", spielen: "играем",
-    Fußball: "футбол", Park: "парк", Abend: "вечер", lese: "читаю", Buch: "книгу",
-    Bett: "кровать", war: "был"
-};
-
-// Загрузка текста
-function loadText(text) {
-    let container = document.getElementById('readContent');
-    let words = text.split(/(\s+)/);
-    let html = '<div>';
+// ========== ВКЛАДКА ЧТЕНИЯ (исправленная) ==========
+(function() {
+    // Проверяем, не добавлена ли уже
+    if(document.getElementById('myReadBtn')) return;
     
-    words.forEach(word => {
-        let clean = word.replace(/[.,!?]/g, '');
-        let lower = clean.toLowerCase();
-        let translation = dict[clean] || dict[lower];
-        
-        if(translation && word.trim().length > 0) {
-            html += <span style="cursor:pointer;display:inline-block;margin:2px;padding:2px 4px;border-radius:5px;" 
-                           onclick="showTranslate('${word.replace(/'/g, "\\'")}', '${translation}')"
-                           onmouseover="this.style.background='#333'"
-                           onmouseout="this.style.background='transparent'">${word}</span>;
-        } else {
-            html += <span>${word}</span>;
-        }
-    });
+    // Кнопка
+    let btn = document.createElement('button');
+    btn.id = 'myReadBtn';
+    btn.innerHTML = '📖 Чтение';
+    btn.style.cssText = 'position:fixed;top:70px;right:10px;background:#4CAF50;border:none;color:white;padding:6px 12px;border-radius:15px;cursor:pointer;z-index:9999;font-size:12px;';
+    document.body.appendChild(btn);
     
-    html += '</div>';
-    container.innerHTML = html;
-}// Показ перевода
-window.showTranslate = function(word, translate) {
-    let div = document.createElement('div');
-    div.innerHTML = 📖 ${word} → ${translate};
-    div.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:#FFD700;padding:10px 20px;border-radius:30px;z-index:10001;font-size:16px;';
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 2000);
+    // Окно
+    let win = document.createElement('div');
+    win.id = 'myReadWindow';
+    win.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:100000;display:none;color:white;padding:20px;box-sizing:border-box;overflow-y:auto;';
+    win.innerHTML = 
+        <div style="text-align:right;"><button id="closeWin" style="background:#f44336;border:none;color:white;padding:5px 15px;border-radius:15px;cursor:pointer;">✖️ Закрыть</button></div>
+        <h2 style="text-align:center;">📖 Читай и нажимай на слова</h2>
+        <div style="display:flex;justify-content:center;gap:10px;margin:15px 0;">
+            <button id="simpleText" style="background:#4CAF50;border:none;color:white;padding:5px 15px;border-radius:15px;cursor:pointer;">📘 Простой текст</button>
+            <button id="mediumText" style="background:#FF9800;border:none;color:white;padding:5px 15px;border-radius:15px;cursor:pointer;">📙 Средний текст</button>
+        </div>
+        <div id="textContainer" style="background:#1e1e2e;padding:20px;border-radius:15px;line-height:1.8;font-size:18px;"></div>
+        <div style="margin-top:15px;text-align:center;font-size:14px;">💡 Кликни на любое слово - увидишь перевод и услышишь!</div>
+    ;
+    document.body.appendChild(win);
     
-    // Озвучка
-    try {
-        let sound = new SpeechSynthesisUtterance(word);
-        sound.lang = 'de-DE';
+    // Словарь
+    const dict = {
+        'Hallo': 'Привет', 'heiße': 'зовут', 'Anna': 'Анна', 'komme': 'прихожу', 'aus': 'из',
+        'Berlin': 'Берлин', 'lerne': 'учу', 'Deutsch': 'немецкий', 'Familie': 'семья',
+        'Vater': 'отец', 'Mutter': 'мать', 'Bruder': 'брат', 'Name': 'имя', 'wohnen': 'живем',
+        'Haus': 'дом', 'liebe': 'люблю', 'Guten': 'Добрый', 'Morgen': 'утро', 'heute': 'сегодня',
+        'schöner': 'красивый', 'Tag': 'день', 'gehe': 'иду', 'Schule': 'школу', 'Freunde': 'друзей',
+        'spiele': 'играю', 'Fußball': 'футбол', 'lese': 'читаю', 'Buch': 'книгу', 'Bett': 'кровать'
+    };
+    
+    const simple = "Hallo! Ich heiße Anna. Ich komme aus Berlin. Ich lerne Deutsch. Das ist meine Familie. Ich liebe meine Mutter und meinen Vater.";
+    const medium = "Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Nach der Schule spiele ich Fußball mit meinen Freunden. Am Abend lese ich ein Buch. Dann gehe ich ins Bett.";
+    
+    function showTranslation(word, trans) {
+        let toast = document.createElement('div');
+        toast.textContent = 📖 ${word} → ${trans};
+        toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#FFD700;padding:8px 16px;border-radius:20px;z-index:100001;font-size:14px;';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+        // озвучка
+        let utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'de-DE';
         speechSynthesis.cancel();
-        speechSynthesis.speak(sound);
-    } catch(e) {}
-};
-
-// Открытие/закрытие
-readBtn.onclick = () => {
-    readWindow.style.display = 'flex';
-    loadText(simpleText);
-};
-
-document.getElementById('closeReadBtn').onclick = () => readWindow.style.display = 'none';
-document.getElementById('simpleTextBtn').onclick = () => loadText(simpleText);
-document.getElementById('mediumTextBtn').onclick = () => loadText(mediumText);
+        speechSynthesis.speak(utterance);
+    }
+    
+    function renderText(text) {
+        let container = document.getElementById('textContainer');
+        let words = text.split(/(\s+)/);
+        let html = '';
+        words.forEach(w => {
+            let clean = w.replace(/[.,!?]/g, '');
+            let trans = dict[clean];
+            if(trans && w.trim().length > 0) {
+                html += `<span style="cursor:pointer;display:inline-block;margin:0 2px;padding:0 2px;border-radius:4px;"onclick="(function(){let t=document.createElement('div');t.textContent='📖 ${w} → ${trans}';t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#FFD700;padding:8px 16px;border-radius:20px;z-index:100001;font-size:14px;';document.body.appendChild(t);setTimeout(()=>t.remove(),2000);let u=new SpeechSynthesisUtterance('${w}');u.lang='de-DE';speechSynthesis.cancel();speechSynthesis.speak(u);})()"
+                               onmouseover="this.style.background='#444'"
+                               onmouseout="this.style.background='transparent'">${w}</span>`;
+            } else {
+                html += w;
+            }
+        });
+        container.innerHTML = html;
+    }
+    
+    // События
+    btn.onclick = () => win.style.display = 'block';
+    document.getElementById('closeWin').onclick = () => win.style.display = 'none';
+    document.getElementById('simpleText').onclick = () => renderText(simple);
+    document.getElementById('mediumText').onclick = () => renderText(medium);
+    
+    // Загружаем простой текст по умолчанию
+    renderText(simple);
+})();
 </script>
 </body>
 </html>
