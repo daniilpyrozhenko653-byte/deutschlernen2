@@ -7182,203 +7182,272 @@ window.localDict = localDict;
 })();
 
 
-    // ========== ИГРА "КОТ И МЫШИ" С НЕМЕЦКИМИ СЛОВАМИ ==========
+    // ========== ИГРА "КОТ И МЫШИ" (МОБИЛЬНАЯ + БОМБЫ + ЗВУК) ==========
 (function() {
-    if (document.getElementById('catGameBtn')) return;
+    if (document.getElementById('mobileCatGameBtn')) return;
 
-    // Находим кнопку "Читать" (чтобы расположить нашу кнопку слева от неё)
-    let readBtn = document.getElementById('simpleReaderBtn');
-    if (!readBtn) {
-        console.warn('Кнопка "Читать" не найдена, игра не добавлена');
-        return;
-    }
-
-    // Создаём кнопку игры
+    // Создаём кнопку игры (слева внизу, рядом с чатом)
     let gameBtn = document.createElement('div');
-    gameBtn.id = 'catGameBtn';
+    gameBtn.id = 'mobileCatGameBtn';
     gameBtn.innerHTML = '🐱';
-    gameBtn.style.cssText = 'position:absolute; top:20px; right:' + (parseInt(readBtn.style.right) + 60) + 'px; background:#e67e22; color:white; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:22px; display:flex; align-items:center; justify-content:center; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:0.2s;';
-    gameBtn.title = 'Игра "Кот и мыши"';
+    gameBtn.style.cssText = 'position:fixed; bottom:20px; left:90px; background:#e67e22; color:white; width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:28px; display:flex; align-items:center; justify-content:center; z-index:100000; box-shadow:0 2px 10px black; transition:0.2s;';
+    gameBtn.title = 'Кот и мыши (игра с немецкими словами)';
     gameBtn.onmouseover = () => gameBtn.style.transform = 'scale(1.05)';
     gameBtn.onmouseout = () => gameBtn.style.transform = 'scale(1)';
     document.body.appendChild(gameBtn);
 
-    // ---- ИГРОВОЙ КОНТЕЙНЕР ----
+    // ---- ИГРОВОЙ КОНТЕЙНЕР (АДАПТИВНЫЙ) ----
     let gameContainer = document.createElement('div');
-    gameContainer.id = 'catGameContainer';
-    gameContainer.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:800px; height:500px; background:#2c3e50; border-radius:20px; z-index:100001; display:none; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.7); border:3px solid #f39c12;';
+    gameContainer.id = 'mobileGameContainer';
+    gameContainer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100001; display:none; flex-direction:column; align-items:center; justify-content:center;';
     gameContainer.innerHTML = `
-        <div style="background:#e67e22; padding:8px 12px; border-radius:20px 20px 0 0; display:flex; justify-content:space-between; align-items:center;">
-            <span style="color:white; font-weight:bold;">🐱 Кот и мыши (ешь мышей – учи слова)</span>
-            <button id="closeCatGame" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+        <div style="background:#e67e22; width:100%; padding:8px; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">
+            <span style="color:white; font-weight:bold;">🐱 Кот и мыши (ешь мышей, уклоняйся от 💣)</span>
+            <button id="closeMobileGame" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
         </div>
-        <canvas id="gameCanvas" width="800" height="420" style="background:#87CEEB; display:block; border-bottom:2px solid #5d3a1a;"></canvas>
-        <div style="background:#1e272e; padding:6px 12px; color:white; display:flex; justify-content:space-between;">
-            <span>🐭 Мышей съедено: <span id="scoreCounter">0</span></span>
-            <span>📖 Слово: <span id="wordDisplay" style="color:#f1c40f;">—</span></span>
+        <canvas id="mobileGameCanvas" style="display:block; background:#87CEEB; width:95%; height:auto; border-radius:10px; margin:10px auto;"></canvas>
+        <div style="background:#1e272e; padding:6px; width:95%; display:flex; justify-content:space-between; color:white; border-radius:0 0 10px 10px;">
+            <span>🐭 <span id="mobileScore">0</span></span>
+            <span>💣 <span id="mobileLevel">1</span></span>
+            <span id="mobileWord" style="color:#f1c40f;">—</span>
+        </div>
+        <div id="mobileControls" style="display:flex; gap:20px; margin-top:10px;">
+            <button id="moveLeftBtn" style="background:#e67e22; border:none; color:white; padding:12px 20px; border-radius:30px; font-size:20px;">◀ Влево</button>
+            <button id="moveRightBtn" style="background:#e67e22; border:none; color:white; padding:12px 20px; border-radius:30px; font-size:20px;">Вправо ▶</button>
+            <button id="jumpBtn" style="background:#f39c12; border:none; color:white; padding:12px 25px; border-radius:30px; font-size:20px;">Прыжок ⬆</button>
+        </div>
+        <div id="mobileGameOver" style="display:none; position:absolute; background:#2c3e50; padding:20px; border-radius:15px; text-align:center; color:white;">
+            <h3>💀 Game Over 💀</h3>
+            <p>Твой счёт: <span id="finalScore"></span></p>
+            <button id="restartGameBtn" style="background:#e67e22; border:none; padding:10px 20px; border-radius:20px; margin-top:10px;">🔄 Играть снова</button>
         </div>
     `;
     document.body.appendChild(gameContainer);
 
-    // Получаем ссылки
-    const canvas = document.getElementById('gameCanvas');
+    // Получаем элементы
+    const canvas = document.getElementById('mobileGameCanvas');
     const ctx = canvas.getContext('2d');
-    const scoreSpan = document.getElementById('scoreCounter');
-    const wordDisplaySpan = document.getElementById('wordDisplay');
+    const scoreSpan = document.getElementById('mobileScore');
+    const levelSpan = document.getElementById('mobileLevel');
+    const wordSpan = document.getElementById('mobileWord');
 
-    // ---- НАСТРОЙКИ ИГРЫ ----
-    let score = 0;
+    // ---- НАСТРОЙКИ ----
+    let canvasWidth = 0, canvasHeight = 0;
+    let gameRunning = false;
     let animationId = null;
-    let wordPopupTimeout = null;
+    let score = 0;
+    let level = 1;
+    let wordTimeout = null;
 
-    // Объект кота
+    // Кот
     let cat = {
-        x: 100,
-        y: 350,      // базовая высота (пол)
-        width: 40,
-        height: 30,
-        vx: 0,
-        vy: 0,
-        grounded: true,
-        onGroundY: 350
+        x: 100, y: 0, width: 40, height: 30,
+        vx: 0, vy: 0, grounded: true,
+        groundY: 0
     };
 
-    // Мыши
+    // Списки объектов
     let mice = [];
+    let bombs = [];
 
-    // Границы
-    const groundY = 350;
-    const leftBound = 20;
-    const rightBound = canvas.width - cat.width - 20;
+    // Управление
+    let leftPressed = false, rightPressed = false, jumpRequested = false;
 
-    // Клавиши управления
-    let keys = {
-        ArrowLeft: false,
-        ArrowRight: false,
-        Space: false,
-        ArrowUp: false
-    };
-
-    // Словарь (используем глобальный localDict или запасной)
+    // Словарь (используем глобальный)
     let wordList = [];
     if (window.localDict && Object.keys(window.localDict).length > 0) {
-        // Берём все немецко-русские пары
         wordList = Object.entries(window.localDict).filter(([de, ru]) => 
             typeof de === 'string' && typeof ru === 'string' && de.length > 1 && !de.match(/[А-Яа-я]/)
-        );
+        ).slice(0, 200);
     } else {
-        // Запасной набор слов
-        wordList = [
-            ['Hallo', 'Привет'], ['Katze', 'Кошка'], ['Maus', 'Мышь'], ['Haus', 'Дом'],
-            ['Garten', 'Сад'], ['Sonne', 'Солнце'], ['Wald', 'Лес'], ['Wasser', 'Вода']
-        ];
+        wordList = [['Hallo','Привет'],['Katze','Кошка'],['Maus','Мышь'],['Haus','Дом'],['Sonne','Солнце']];
     }
 
-    // Показ случайного слова
+    // ---- ЗВУКИ (синтезированные) ----
+    function playBeep(freq, duration) {
+        try {
+            let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            let oscillator = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            oscillator.connect(gain);
+            gain.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            gain.gain.value = 0.2;
+            oscillator.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration/1000);
+            oscillator.stop(audioCtx.currentTime + duration/1000);
+            setTimeout(() => audioCtx.close(), duration + 100);
+        } catch(e) { console.warn(e); }
+    }
+
+    function playEatSound() {
+        playBeep(880, 100);
+    }
+    function playBombSound() {
+        playBeep(220, 500);
+    }
+    function playGameOverSound() {
+        playBeep(150, 800);
+        setTimeout(() => playBeep(120, 600), 300);
+    }
+
+    // Фоновая музыка (циклический простой ритм)
+    let bgMusicInterval = null;
+    function startBgMusic() {
+        if (bgMusicInterval) clearInterval(bgMusicInterval);
+        let note = 0;
+        bgMusicInterval = setInterval(() => {
+            if (!gameRunning) return;
+            let notes = [523, 587, 659, 523];
+            playBeep(notes[note % notes.length], 200);
+            note++;
+        }, 800);
+    }
+    function stopBgMusic() {
+        if (bgMusicInterval) clearInterval(bgMusicInterval);
+        bgMusicInterval = null;
+    }
+
+    // ---- ПОКАЗ СЛОВА ----
     function showRandomWord() {
+        if (!gameRunning) return;
         if (wordList.length === 0) return;
-        const randomIndex = Math.floor(Math.random() * wordList.length);
-        const [german, russian] = wordList[randomIndex];
-        wordDisplaySpan.innerHTML = `${german} – ${russian}`;
-        // Автоматически скрыть через 3 секунды
-        if (wordPopupTimeout) clearTimeout(wordPopupTimeout);
-        wordPopupTimeout = setTimeout(() => {
-            if (wordDisplaySpan.innerHTML !== '—') wordDisplaySpan.innerHTML = '—';
-        }, 3000);
+        let [german, russian] = wordList[Math.floor(Math.random() * wordList.length)];
+        wordSpan.innerHTML = `${german} – ${russian}`;
+        if (wordTimeout) clearTimeout(wordTimeout);
+        wordTimeout = setTimeout(() => {
+            if (wordSpan.innerHTML !== '—') wordSpan.innerHTML = '—';
+        }, 2500);
     }
 
-    // Создать новую мышь
+    // ---- СОЗДАНИЕ ОБЪЕКТОВ ----
     function spawnMouse() {
+        if (!gameRunning) return;
         mice.push({
-            x: Math.random() * (canvas.width - 30) + 15,
-            y: groundY - 10,
-            width: 20,
-            height: 15,
-            vx: (Math.random() - 0.5) * 2, // случайное направление
+            x: Math.random() * (canvasWidth - 30) + 15,
+            y: 0, width: 20, height: 15,
+            vx: (Math.random() - 0.5) * (3 + level * 0.3),
+            vy: 0
+        });
+    }
+    function spawnBomb() {
+        if (!gameRunning) return;
+        bombs.push({
+            x: Math.random() * (canvasWidth - 25),
+            y: 0, width: 25, height: 25,
+            vx: (Math.random() - 0.5) * (2 + level * 0.2),
             vy: 0
         });
     }
 
-    // Обновление физики
-    function update() {
-        // Управление котом
-        if (keys.ArrowLeft && cat.x > leftBound) {
-            cat.vx = -5;
-        } else if (keys.ArrowRight && cat.x < rightBound) {
-            cat.vx = 5;
-        } else {
-            cat.vx *= 0.9;
-        }
+    // ---- ФИЗИКА ----
+    function updateGame() {
+        if (!gameRunning) return;
+        // Управление (горизонталь)
+        if (leftPressed && cat.x > 10) cat.vx = -6;
+        else if (rightPressed && cat.x < canvasWidth - cat.width - 10) cat.vx = 6;
+        else cat.vx *= 0.9;
         cat.x += cat.vx;
-        cat.x = Math.min(rightBound, Math.max(leftBound, cat.x));
+        cat.x = Math.max(10, Math.min(canvasWidth - cat.width - 10, cat.x));
 
         // Прыжок
-        if ((keys.Space || keys.ArrowUp) && cat.grounded) {
+        if (jumpRequested && cat.grounded) {
             cat.vy = -9;
             cat.grounded = false;
+            jumpRequested = false;
         }
-        // Гравитация
-        cat.vy += 0.5;
+        cat.vy += 0.6;
         cat.y += cat.vy;
-        if (cat.y >= groundY) {
-            cat.y = groundY;
+        if (cat.y >= cat.groundY) {
+            cat.y = cat.groundY;
             cat.vy = 0;
             cat.grounded = true;
         }
 
-        // Движение мышей
-        for (let i = 0; i < mice.length; i++) {
+        // Мыши
+        for (let i=0; i<mice.length; i++) {
             let m = mice[i];
             m.x += m.vx;
-            if (m.x < 10) m.x = 10;
-            if (m.x > canvas.width - m.width - 10) m.x = canvas.width - m.width - 10;
+            if (m.x < 5) m.x = 5;
+            if (m.x > canvasWidth - m.width - 5) m.x = canvasWidth - m.width - 5;
+            // падение
+            if (m.y < cat.groundY - m.height) m.vy += 0.4;
+            m.y += m.vy;
+            if (m.y >= cat.groundY - m.height) {
+                m.y = cat.groundY - m.height;
+                m.vy = 0;
+            }
         }
-
-        // Коллизия кота с мышами
-        for (let i = mice.length-1; i >= 0; i--) {
-            let m = mice[i];
-            if (cat.x < m.x + m.width && cat.x + cat.width > m.x &&
-                cat.y < m.y + m.height && cat.y + cat.height > m.y) {
-                // Съел мышь
-                mice.splice(i,1);
-                score++;
-                scoreSpan.innerText = score;
-                showRandomWord();
-                // Каждые 5 мышей добавляем новую (чтобы не пустело)
-                if (score % 5 === 0) spawnMouse();
+        // Бомбы
+        for (let i=0; i<bombs.length; i++) {
+            let b = bombs[i];
+            b.x += b.vx;
+            if (b.x < 5) b.x = 5;
+            if (b.x > canvasWidth - b.width - 5) b.x = canvasWidth - b.width - 5;
+            b.vy += 0.4;
+            b.y += b.vy;
+            if (b.y >= cat.groundY - b.height) {
+                b.y = cat.groundY - b.height;
+                b.vy = 0;
             }
         }
 
-        // Поддержание количества мышей (от 1 до 5)
-        if (mice.length < 2) spawnMouse();
-        if (mice.length > 8) mice.pop();
+        // Столкновения кот vs мыши
+        for (let i=mice.length-1; i>=0; i--) {
+            let m = mice[i];
+            if (cat.x < m.x+m.width && cat.x+cat.width > m.x &&
+                cat.y < m.y+m.height && cat.y+cat.height > m.y) {
+                mice.splice(i,1);
+                score++;
+                scoreSpan.innerText = score;
+                playEatSound();
+                showRandomWord();
+                // Увеличение сложности каждые 5 очков
+                let newLevel = Math.floor(score / 5) + 1;
+                if (newLevel > level) {
+                    level = newLevel;
+                    levelSpan.innerText = level;
+                }
+                // Добавляем новых мышей и бомбы
+                if (score % 3 === 0) spawnMouse();
+                if (score % 5 === 0 && bombs.length < 5) spawnBomb();
+            }
+        }
+
+        // Столкновения кот vs бомбы -> Game Over
+        for (let i=0; i<bombs.length; i++) {
+            let b = bombs[i];
+            if (cat.x < b.x+b.width && cat.x+cat.width > b.x &&
+                cat.y < b.y+b.height && cat.y+cat.height > b.y) {
+                gameRunning = false;
+                playGameOverSound();
+                stopBgMusic();
+                document.getElementById('finalScore').innerText = score;
+                document.getElementById('mobileGameOver').style.display = 'block';
+                cancelAnimationFrame(animationId);
+                return;
+            }
+        }
+
+        // Поддержание количества объектов
+        if (mice.length < 2 + Math.floor(score/10)) spawnMouse();
+        if (bombs.length < 1 + Math.floor(score/15) && bombs.length < 6) spawnBomb();
     }
 
     // Отрисовка
     function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!canvasWidth) return;
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         // Земля
         ctx.fillStyle = '#5d3a1a';
-        ctx.fillRect(0, groundY+5, canvas.width, canvas.height-groundY);
-        // Кот (оранжевый)
+        ctx.fillRect(0, cat.groundY+5, canvasWidth, canvasHeight - cat.groundY);
+        // Кот
         ctx.fillStyle = '#e67e22';
         ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
         ctx.fillStyle = '#d35400';
         ctx.fillRect(cat.x+5, cat.y-8, 8, 8);
         ctx.fillRect(cat.x+cat.width-13, cat.y-8, 8, 8);
-        // Усы
-        ctx.beginPath();
-        ctx.moveTo(cat.x+5, cat.y+12);
-        ctx.lineTo(cat.x-8, cat.y+10);
-        ctx.moveTo(cat.x+5, cat.y+18);
-        ctx.lineTo(cat.x-8, cat.y+20);
-        ctx.moveTo(cat.x+cat.width-5, cat.y+12);
-        ctx.lineTo(cat.x+cat.width+8, cat.y+10);
-        ctx.moveTo(cat.x+cat.width-5, cat.y+18);
-        ctx.lineTo(cat.x+cat.width+8, cat.y+20);
-        ctx.stroke();
-
-        // Мыши (серые)
+        // Мыши
         for (let m of mice) {
             ctx.fillStyle = '#7f8c8d';
             ctx.fillRect(m.x, m.y, m.width, m.height);
@@ -7386,77 +7455,115 @@ window.localDict = localDict;
             ctx.fillRect(m.x+m.width-6, m.y+2, 6, 6);
             ctx.fillRect(m.x-4, m.y+5, 4, 4);
         }
+        // Бомбы
+        for (let b of bombs) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+            ctx.fillStyle = '#e74c3c';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText('💣', b.x+5, b.y+18);
+        }
     }
 
-    // Цикл игры
     function gameLoop() {
-        update();
+        if (!gameRunning) return;
+        updateGame();
         draw();
         animationId = requestAnimationFrame(gameLoop);
     }
 
-    // Обработчики клавиш
+    // ---- ИНИЦИАЛИЗАЦИЯ И РАЗМЕРЫ ----
+    function resizeCanvas() {
+        let container = gameContainer;
+        let maxWidth = Math.min(window.innerWidth * 0.95, 900);
+        let aspect = 0.6;
+        canvasWidth = maxWidth;
+        canvasHeight = canvasWidth * aspect;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        canvas.style.width = `${canvasWidth}px`;
+        canvas.style.height = `${canvasHeight}px`;
+        cat.groundY = canvasHeight - 70;
+        cat.y = cat.groundY;
+        cat.width = canvasWidth * 0.08;
+        cat.height = cat.width * 0.75;
+        if (cat.x + cat.width > canvasWidth) cat.x = canvasWidth - cat.width - 10;
+    }
+
+    function startGame() {
+        gameContainer.style.display = 'flex';
+        setTimeout(() => {
+            resizeCanvas();
+            score = 0; level = 1;
+            scoreSpan.innerText = '0';
+            levelSpan.innerText = '1';
+            wordSpan.innerHTML = '—';
+            mice = [];
+            bombs = [];
+            cat.x = canvasWidth/2 - cat.width/2;
+            cat.y = cat.groundY;
+            cat.vx = 0; cat.vy = 0;
+            cat.grounded = true;
+            for (let i=0; i<3; i++) spawnMouse();
+            for (let i=0; i<1; i++) spawnBomb();
+            gameRunning = true;
+            startBgMusic();
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(gameLoop);
+            document.getElementById('mobileGameOver').style.display = 'none';
+        }, 50);
+    }
+
+    function stopGame(reset=true) {
+        gameRunning = false;
+        stopBgMusic();
+        if (animationId) cancelAnimationFrame(animationId);
+        gameContainer.style.display = 'none';
+        // сброс управлений
+        leftPressed = false; rightPressed = false; jumpRequested = false;
+        if (wordTimeout) clearTimeout(wordTimeout);
+    }
+
+    // ---- ОБРАБОТЧИКИ УПРАВЛЕНИЯ (клавиши + тач) ----
     function handleKeyDown(e) {
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        if (e.key === 'ArrowLeft') keys.ArrowLeft = true;
-        if (e.key === 'ArrowRight') keys.ArrowRight = true;
-        if (e.key === 'ArrowUp') keys.ArrowUp = true;
-        if (e.key === ' ') {
-            e.preventDefault();
-            keys.Space = true;
+        if (!gameRunning) return;
+        if (e.key === 'ArrowLeft') { leftPressed = true; e.preventDefault(); }
+        if (e.key === 'ArrowRight') { rightPressed = true; e.preventDefault(); }
+        if (e.key === 'ArrowUp' || e.key === ' ') { 
+            jumpRequested = true; 
+            e.preventDefault(); 
         }
     }
     function handleKeyUp(e) {
-        if (e.key === 'ArrowLeft') keys.ArrowLeft = false;
-        if (e.key === 'ArrowRight') keys.ArrowRight = false;
-        if (e.key === 'ArrowUp') keys.ArrowUp = false;
-        if (e.key === ' ') {
-            e.preventDefault();
-            keys.Space = false;
-        }
+        if (e.key === 'ArrowLeft') leftPressed = false;
+        if (e.key === 'ArrowRight') rightPressed = false;
     }
 
-    // Запуск игры
-    function startGame() {
-        gameContainer.style.display = 'flex';
-        // Сброс состояния
-        score = 0;
-        scoreSpan.innerText = '0';
-        mice = [];
-        cat.x = 100;
-        cat.y = groundY;
-        cat.vx = 0;
-        cat.vy = 0;
-        cat.grounded = true;
-        for (let i = 0; i < 3; i++) spawnMouse();
-        // Добавляем обработчики
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-        if (animationId) cancelAnimationFrame(animationId);
-        animationId = requestAnimationFrame(gameLoop);
-    }
+    // Мобильные кнопки
+    document.getElementById('moveLeftBtn').ontouchstart = (e) => { leftPressed = true; e.preventDefault(); };
+    document.getElementById('moveLeftBtn').ontouchend = (e) => { leftPressed = false; };
+    document.getElementById('moveRightBtn').ontouchstart = (e) => { rightPressed = true; e.preventDefault(); };
+    document.getElementById('moveRightBtn').ontouchend = (e) => { rightPressed = false; };
+    document.getElementById('jumpBtn').ontouchstart = (e) => { jumpRequested = true; e.preventDefault(); };
+    // для мыши тоже
+    document.getElementById('moveLeftBtn').onmousedown = () => leftPressed = true;
+    document.getElementById('moveLeftBtn').onmouseup = () => leftPressed = false;
+    document.getElementById('moveRightBtn').onmousedown = () => rightPressed = true;
+    document.getElementById('moveRightBtn').onmouseup = () => rightPressed = false;
+    document.getElementById('jumpBtn').onmousedown = () => jumpRequested = true;
 
-    function stopGame() {
-        gameContainer.style.display = 'none';
-        if (animationId) cancelAnimationFrame(animationId);
-        window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('keyup', handleKeyUp);
-        // Сброс клавиш
-        for (let k in keys) keys[k] = false;
-        if (wordPopupTimeout) clearTimeout(wordPopupTimeout);
-        wordDisplaySpan.innerHTML = '—';
-    }
+    window.addEventListener('resize', () => { if (gameContainer.style.display === 'flex') resizeCanvas(); });
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
-    // Обработчики кнопок
     gameBtn.onclick = (e) => {
         e.stopPropagation();
         startGame();
     };
-    document.getElementById('closeCatGame').onclick = () => {
+    document.getElementById('closeMobileGame').onclick = () => stopGame();
+    document.getElementById('restartGameBtn').onclick = () => {
         stopGame();
+        startGame();
     };
 })();
 </script>
