@@ -4137,11 +4137,11 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (АВТОПРОКРУТКА БЕЗ ПОДСВЕТКИ, МГНОВЕННАЯ) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (РАБОТАЕТ A1, B1, C1) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
-    // ========== ПОЛНЫЙ СЛОВАРЬ ==========
+    // ========== ПОЛНЫЙ СЛОВАРЬ (ВСЕ слова из текстов) ==========
     const localDict = {
         'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Tom': 'Том', 'komme': 'прихожу', 'aus': 'из', 'Berlin': 'Берлин',
         'bin': 'являюсь', '25': 'двадцать пять', 'Jahre': 'лет', 'alt': 'старый', 'lerne': 'учу', 'Deutsch': 'немецкий',
@@ -4227,6 +4227,7 @@ document.head.appendChild(style);
     let panelTimeout = null;
     function showTranslation(word, translation) {
         const panel = document.getElementById('translationPanel');
+        if (!panel) return;
         document.getElementById('transWord').innerHTML = word;
         document.getElementById('transText').innerHTML = translation;
         panel.style.display = 'block';
@@ -4238,7 +4239,7 @@ document.head.appendChild(style);
         }, 4000);
     }
 
-    // Плавающая кнопка "Озвучить отсюда"
+    // Плавающая кнопка
     function showFloatingButton(index) {
         if (floatingBtn) floatingBtn.remove();
         floatingBtn = document.createElement('div');
@@ -4268,7 +4269,7 @@ document.head.appendChild(style);
         window.speechSynthesis.speak(utt);
     }
 
-    // МГНОВЕННАЯ ПРОКРУТКА (auto) – без задержек
+    // Мгновенная прокрутка
     function autoScrollToWord(index) {
         if (index >= 0 && index < allWordElements.length) {
             allWordElements[index].scrollIntoView({ behavior: 'auto', block: 'center' });
@@ -4277,14 +4278,17 @@ document.head.appendChild(style);
 
     // Озвучка всего текста с указанного индекса
     function speakFromIndex(startIdx) {
-        if (startIdx >= allWordElements.length) return;
+        if (startIdx >= allWordElements.length) {
+            return;
+        }
         if (isSpeaking) {
             window.speechSynthesis.cancel();
             isSpeaking = false;
-            setTimeout(() => speakFromIndex(startIdx), 100);
+            setTimeout(() => speakFromIndex(startIdx), 150);
             return;
         }
 
+        // Собираем текст от startIdx до конца
         let textToSpeak = '';
         for (let i = startIdx; i < allWordElements.length; i++) {
             textToSpeak += allWordElements[i].getAttribute('data-word') + ' ';
@@ -4292,14 +4296,13 @@ document.head.appendChild(style);
         if (!textToSpeak.trim()) return;
 
         isSpeaking = true;
-        // Прокрутка к первому слову
+        // Прокручиваем к первому слову
         autoScrollToWord(startIdx);
 
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
         utterance.lang = 'de-DE';
         utterance.rate = 0.9;
 
-        const wordsArray = textToSpeak.trim().split(/\s+/);
         let wordCounter = 1; // первое слово уже прокручено
         utterance.onboundary = (event) => {
             if (event.name === 'word') {
@@ -4314,7 +4317,8 @@ document.head.appendChild(style);
             isSpeaking = false;
             currentUtterance = null;
         };
-        utterance.onerror = () => {
+        utterance.onerror = (e) => {
+            console.warn("Speech error:", e);
             isSpeaking = false;
             currentUtterance = null;
         };
@@ -4339,7 +4343,7 @@ document.head.appendChild(style);
             element.setAttribute('data-trans', translation);
         }
         showTranslation(word, translation);
-        // Кратковременное изменение цвета (не подсветка, просто визуальный отклик)
+        // Визуальный отклик (кратковременный)
         const original = element.style.background;
         element.style.background = '#f39c12';
         setTimeout(() => { element.style.background = '#27ae60'; setTimeout(() => { if (element.style.background === '#27ae60') element.style.background = '#2c3e50'; }, 500); }, 150);
@@ -4349,6 +4353,7 @@ document.head.appendChild(style);
     // Отрисовка текста
     function displayText(text) {
         const container = document.getElementById('simpleReaderContent');
+        if (!container) return;
         const words = text.split(/(\s+)/);
         let html = '';
         let wordIdx = 0;
@@ -4364,15 +4369,19 @@ document.head.appendChild(style);
         }
         container.innerHTML = html;
         allWordElements = document.querySelectorAll('#simpleReaderContent .clickable-word');
+        // Проверка: если элементов нет, вывести ошибку в консоль
+        if (allWordElements.length === 0) console.warn("No clickable words found!");
     }
 
-    // ========== ИНТЕРФЕЙС ==========
+    // ========== СОЗДАНИЕ ИНТЕРФЕЙСА ==========
+    // Панель перевода
     let transPanel = document.createElement('div');
     transPanel.id = 'translationPanel';
     transPanel.style.cssText = 'position:fixed; bottom:20px; left:20px; right:20px; background:#1a1a2e; color:#2196F3; padding:12px 20px; border-radius:12px; font-size:16px; text-align:center; z-index:100001; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.3); border-left:4px solid #2196F3;';
     transPanel.innerHTML = '🔊 <span id="transWord" style="color:#f39c12; font-weight:bold;"></span> → 📖 <span id="transText" style="color:#2ecc71; font-weight:bold;"></span>';
     document.body.appendChild(transPanel);
 
+    // Кнопка "Читать"
     let readBtn = document.createElement('div');
     readBtn.id = 'simpleReaderBtn';
     readBtn.innerHTML = '📖 Читать';
@@ -4381,6 +4390,7 @@ document.head.appendChild(style);
     readBtn.onmouseout = () => readBtn.style.transform = 'scale(1)';
     document.body.appendChild(readBtn);
 
+    // Модальное окно
     let modal = document.createElement('div');
     modal.id = 'simpleReaderModal';
     modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100000; display:none; flex-direction:column; color:white;';
@@ -4402,10 +4412,11 @@ document.head.appendChild(style);
             💡 <strong>Как пользоваться:</strong> Один клик → озвучка слова + перевод. Появляется кнопка <strong>"🎧 Озвучить отсюда"</strong> → автопрокрутка к каждому слову (мгновенно, без задержек).
         </div>
         <div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:18px; line-height:1.8; background:#0f0f1a; margin:15px 20px; border-radius:20px;"></div>
-        <div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 Мгновенная автопрокрутка к произносимому слову (без подсветки). Скорость речи 0.9.</div>
+        <div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 Мгновенная автопрокрутка к произносимому слову. Скорость речи 0.9.</div>
     `;
     document.body.appendChild(modal);
 
+    // Обработчики событий
     readBtn.onclick = () => {
         modal.style.display = 'flex';
         displayText(texts.a1);
@@ -4418,14 +4429,24 @@ document.head.appendChild(style);
     };
     document.querySelectorAll('.levelBtn').forEach(btn => {
         btn.onclick = () => {
-            displayText(texts[btn.getAttribute('data-level')]);
-            stopSpeaking();
-            if (floatingBtn) floatingBtn.remove();
-            floatingBtn = null;
+            const level = btn.getAttribute('data-level');
+            const text = texts[level];
+            if (text) {
+                displayText(text);
+                stopSpeaking();
+                if (floatingBtn) floatingBtn.remove();
+                floatingBtn = null;
+            } else {
+                console.error("Text not found for level:", level);
+            }
         };
     });
     document.getElementById('speakFullBtn').onclick = () => {
-        if (allWordElements.length > 0) speakFromIndex(0);
+        if (allWordElements.length > 0) {
+            speakFromIndex(0);
+        } else {
+            console.warn("No words to speak");
+        }
     };
     document.getElementById('stopSpeakBtn').onclick = () => stopSpeaking();
     document.addEventListener('keydown', (e) => {
