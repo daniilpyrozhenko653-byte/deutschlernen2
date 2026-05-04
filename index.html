@@ -4137,87 +4137,12 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (исправленная) ==========
-(function() {
-    // Проверяем, не добавлена ли уже
-    if(document.getElementById('myReadBtn')) return;
-    
-    // Кнопка
-    let btn = document.createElement('button');
-    btn.id = 'myReadBtn';
-    btn.innerHTML = '📖 Чтение';
-    btn.style.cssText = 'position:fixed;top:70px;right:10px;background:#4CAF50;border:none;color:white;padding:6px 12px;border-radius:15px;cursor:pointer;z-index:9999;font-size:12px;';
-    document.body.appendChild(btn);
-    
-    // Окно
-    let win = document.createElement('div');
-    win.id = 'myReadWindow';
-    win.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:100000;display:none;color:white;padding:20px;box-sizing:border-box;overflow-y:auto;';
-    win.innerHTML = 
-        <div style="text-align:right;"><button id="closeWin" style="background:#f44336;border:none;color:white;padding:5px 15px;border-radius:15px;cursor:pointer;">✖️ Закрыть</button></div>
-        <h2 style="text-align:center;">📖 Читай и нажимай на слова</h2>
-        <div style="display:flex;justify-content:center;gap:10px;margin:15px 0;">
-            <button id="simpleText" style="background:#4CAF50;border:none;color:white;padding:5px 15px;border-radius:15px;cursor:pointer;">📘 Простой текст</button>
-            <button id="mediumText" style="background:#FF9800;border:none;color:white;padding:5px 15px;border-radius:15px;cursor:pointer;">📙 Средний текст</button>
-        </div>
-        <div id="textContainer" style="background:#1e1e2e;padding:20px;border-radius:15px;line-height:1.8;font-size:18px;"></div>
-        <div style="margin-top:15px;text-align:center;font-size:14px;">💡 Кликни на любое слово - увидишь перевод и услышишь!</div>
-    ;
-    document.body.appendChild(win);
-    
-    // Словарь
-    const dict = {
-        'Hallo': 'Привет', 'heiße': 'зовут', 'Anna': 'Анна', 'komme': 'прихожу', 'aus': 'из',
-        'Berlin': 'Берлин', 'lerne': 'учу', 'Deutsch': 'немецкий', 'Familie': 'семья',
-        'Vater': 'отец', 'Mutter': 'мать', 'Bruder': 'брат', 'Name': 'имя', 'wohnen': 'живем',
-        'Haus': 'дом', 'liebe': 'люблю', 'Guten': 'Добрый', 'Morgen': 'утро', 'heute': 'сегодня',
-        'schöner': 'красивый', 'Tag': 'день', 'gehe': 'иду', 'Schule': 'школу', 'Freunde': 'друзей',
-        'spiele': 'играю', 'Fußball': 'футбол', 'lese': 'читаю', 'Buch': 'книгу', 'Bett': 'кровать'
-    };
-    
-    const simple = "Hallo! Ich heiße Anna. Ich komme aus Berlin. Ich lerne Deutsch. Das ist meine Familie. Ich liebe meine Mutter und meinen Vater.";
-    const medium = "Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Nach der Schule spiele ich Fußball mit meinen Freunden. Am Abend lese ich ein Buch. Dann gehe ich ins Bett.";
-    
-    function showTranslation(word, trans) {
-        let toast = document.createElement('div');
-        toast.textContent = 📖 ${word} → ${trans};
-        toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#FFD700;padding:8px 16px;border-radius:20px;z-index:100001;font-size:14px;';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-        // озвучка
-        let utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = 'de-DE';
-        speechSynthesis.cancel();
-        speechSynthesis.speak(utterance);
-    }
-    
-    function renderText(text) {
-        let container = document.getElementById('textContainer');
-        let words = text.split(/(\s+)/);
-        let html = '';
-        words.forEach(w => {
-            let clean = w.replace(/[.,!?]/g, '');
-            let trans = dict[clean];
-            if(trans && w.trim().length > 0) {
-                html += `<span style="cursor:pointer;display:inline-block;margin:0 2px;padding:0 2px;border-radius:4px;"onclick="(function(){let t=document.createElement('div');t.textContent='📖 ${w} → ${trans}';t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#FFD700;padding:8px 16px;border-radius:20px;z-index:100001;font-size:14px;';document.body.appendChild(t);setTimeout(()=>t.remove(),2000);let u=new SpeechSynthesisUtterance('${w}');u.lang='de-DE';speechSynthesis.cancel();speechSynthesis.speak(u);})()"
-                               onmouseover="this.style.background='#444'"
-                               onmouseout="this.style.background='transparent'">${w}</span>`;
-            } else {
-                html += w;
-            }
-        });
-        container.innerHTML = html;
-    }
-    
-    // События
-    btn.onclick = () => win.style.display = 'block';
-    document.getElementById('closeWin').onclick = () => win.style.display = 'none';
-    document.getElementById('simpleText').onclick = () => renderText(simple);
-    document.getElementById('mediumText').onclick = () => renderText(medium);
-    
-    // Загружаем простой текст по умолчанию
-    renderText(simple);
-})();
+// ========== ТЕСТОВАЯ КНОПКА ==========
+let testBtn = document.createElement('button');
+testBtn.innerHTML = '🔘 ТЕСТ';
+testBtn.style.cssText = 'position:fixed;top:100px;right:10px;background:red;color:white;z-index:99999;padding:10px;';
+document.body.appendChild(testBtn);
+testBtn.onclick = () => alert('Кнопка работает!');
 </script>
 </body>
 </html>
