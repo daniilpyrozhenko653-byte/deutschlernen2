@@ -4137,7 +4137,7 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (один клик - озвучка+перевод, кнопка для озвучки с этого слова) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (ОДИН КЛИК + КНОПКА «ОЗВУЧИТЬ ОТСЮДА», ПОЛНАЯ ПОДСВЕТКА И АВТОПРОКРУТКА) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
@@ -4211,39 +4211,35 @@ document.head.appendChild(style);
         c1: `Der Einfluss der Digitalisierung auf die deutsche Sprache ist ein viel diskutiertes Thema in der zeitgenössischen Linguistik. Unbestreitbar hat das Aufkommen des Internets, sozialer Netzwerke und der künstlichen Intelligenz unseren sprachlichen Alltag fundamental transformiert. Einerseits bereichert die Digitalisierung unseren Wortschatz durch zahlreiche Neologismen, die häufig aus dem angloamerikanischen Raum stammen. Begriffe wie "liken", "posten", "scrollen", "swipen" oder "chatten" haben sich nahtlos in den deutschen Sprachgebrauch integriert. Andererseits beobachten viele Sprachpuristen mit Sorge, dass die Digitalisierung zu einem Verfall der traditionellen schriftlichen Kompetenzen führen könnte`
     };
 
-    let currentText = texts.a1;
     let allWordElements = [];
     let isSpeaking = false;
-    let currentSpeechUtterance = null;
-    let currentHighlightIndex = -1;
-    let selectedWordIndex = null; // для кнопки "озвучить отсюда"
+    let currentUtterance = null;
+    let floatingBtn = null;
+    let btnHideTimeout = null;
 
-    // Функция перевода
+    // Перевод
     function getTranslation(word) {
-        const cleanWord = word.replace(/[.,!?;:()"']/g, '').trim();
-        if (localDict[cleanWord]) return localDict[cleanWord];
-        return `[${cleanWord}]`;
+        const clean = word.replace(/[.,!?;:()"']/g, '').trim();
+        return localDict[clean] || `[${clean}]`;
     }
 
-    // Панель перевода (внизу)
-    let hidePanelTimeout = null;
+    // Панель перевода внизу
+    let panelTimeout = null;
     function showTranslation(word, translation) {
         const panel = document.getElementById('translationPanel');
         document.getElementById('transWord').innerHTML = word;
         document.getElementById('transText').innerHTML = translation;
         panel.style.display = 'block';
         panel.style.opacity = '1';
-        if (hidePanelTimeout) clearTimeout(hidePanelTimeout);
-        hidePanelTimeout = setTimeout(() => {
+        if (panelTimeout) clearTimeout(panelTimeout);
+        panelTimeout = setTimeout(() => {
             panel.style.opacity = '0';
             setTimeout(() => { if (panel.style.opacity === '0') panel.style.display = 'none'; panel.style.opacity = '1'; }, 300);
         }, 4000);
     }
 
-    // Показать плавающую кнопку "Озвучить отсюда"
-    let floatingBtn = null;
-    let btnHideTimeout = null;
-    function showFloatingButton(wordIndex, wordText) {
+    // Плавающая кнопка "Озвучить отсюда"
+    function showFloatingButton(index) {
         if (floatingBtn) floatingBtn.remove();
         floatingBtn = document.createElement('div');
         floatingBtn.innerHTML = '🎧 Озвучить отсюда';
@@ -4251,9 +4247,9 @@ document.head.appendChild(style);
         floatingBtn.onmouseover = () => floatingBtn.style.transform = 'scale(1.02)';
         floatingBtn.onmouseout = () => floatingBtn.style.transform = 'scale(1)';
         floatingBtn.onclick = () => {
-            speakFromIndex(wordIndex);
             if (floatingBtn) floatingBtn.remove();
             floatingBtn = null;
+            speakFromIndex(index);
         };
         document.body.appendChild(floatingBtn);
         if (btnHideTimeout) clearTimeout(btnHideTimeout);
@@ -4265,145 +4261,126 @@ document.head.appendChild(style);
 
     // Озвучка одного слова
     function speakSingleWord(word) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = 'de-DE';
-        utterance.rate = 0.85;
-        window.speechSynthesis.speak(utterance);
+        window.speechSynthesis.cancel(); // останавливаем всё, что могло играть
+        const utt = new SpeechSynthesisUtterance(word);
+        utt.lang = 'de-DE';
+        utt.rate = 0.85;
+        window.speechSynthesis.speak(utt);
     }
 
-    // Сброс подсветки всех слов
-    function resetHighlight() {
-        allWordElements.forEach(el => {
-            if (el.style.background !== '#f39c12') { // не сбрасываем временный жёлтый
+    // Подсветка и прокрутка
+    function highlightWord(index) {
+        if (index < 0 || index >= allWordElements.length) return;
+        // Сначала сбросим все, кроме возможно жёлтых (временных)
+        allWordElements.forEach((el, i) => {
+            if (i !== index && el.style.background !== '#f39c12') {
                 el.style.background = '#2c3e50';
             }
         });
-        currentHighlightIndex = -1;
+        const el = allWordElements[index];
+        el.style.background = '#ff6b6b';
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // Подсветка слова и прокрутка
-    function highlightWord(index) {
-        if (index === currentHighlightIndex) return;
-        if (index >= 0 && index < allWordElements.length) {
-            // Снимаем подсветку с предыдущего
-            if (currentHighlightIndex >= 0 && allWordElements[currentHighlightIndex]) {
-                if (allWordElements[currentHighlightIndex].style.background !== '#f39c12') {
-                    allWordElements[currentHighlightIndex].style.background = '#2c3e50';
-                }
-            }
-            const el = allWordElements[index];
-            el.style.background = '#ff6b6b';
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            currentHighlightIndex = index;
-        }
+    function resetHighlight() {
+        allWordElements.forEach(el => {
+            if (el.style.background !== '#f39c12') el.style.background = '#2c3e50';
+        });
     }
 
     // Озвучка всего текста с указанного индекса (с подсветкой и автопрокруткой)
-    function speakFromIndex(startIndex) {
+    function speakFromIndex(startIdx) {
+        if (startIdx >= allWordElements.length) return;
         if (isSpeaking) {
             window.speechSynthesis.cancel();
             isSpeaking = false;
-            setTimeout(() => speakFromIndex(startIndex), 150);
+            setTimeout(() => speakFromIndex(startIdx), 100);
             return;
         }
-        if (startIndex >= allWordElements.length) {
-            resetHighlight();
-            return;
-        }
-        // Собираем текст с startIndex до конца
+        // Собираем текст от startIdx до конца
         let textToSpeak = '';
-        for (let i = startIndex; i < allWordElements.length; i++) {
+        for (let i = startIdx; i < allWordElements.length; i++) {
             textToSpeak += allWordElements[i].getAttribute('data-word') + ' ';
         }
         if (!textToSpeak.trim()) return;
+
         isSpeaking = true;
-        let wordIdx = startIndex;
-        // Предварительно сбрасываем подсветку
         resetHighlight();
-        highlightWord(wordIdx);
-        currentSpeechUtterance = new SpeechSynthesisUtterance(textToSpeak);
-        currentSpeechUtterance.lang = 'de-DE';
-        currentSpeechUtterance.rate = 0.85;
-        // Используем событие boundary для отслеживания слов
-        // Разобьём текст на массив слов, чтобы знать границы
+        let currentWordPos = startIdx;
+        highlightWord(currentWordPos);
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.85;
+
+        // Разбиваем текст на слова для привязки к индексам
         const wordsArray = textToSpeak.trim().split(/\s+/);
-        let currentWordNumber = 0;
-        currentSpeechUtterance.onboundary = (event) => {
+        let wordCounter = 0;
+        utterance.onboundary = (event) => {
             if (event.name === 'word') {
-                if (currentWordNumber < wordsArray.length) {
-                    const globalIndex = startIndex + currentWordNumber;
-                    if (globalIndex < allWordElements.length) {
-                        highlightWord(globalIndex);
-                    }
-                    currentWordNumber++;
+                const globalIdx = startIdx + wordCounter;
+                if (globalIdx < allWordElements.length) {
+                    highlightWord(globalIdx);
                 }
+                wordCounter++;
             }
         };
-        currentSpeechUtterance.onend = () => {
+        utterance.onend = () => {
             isSpeaking = false;
             resetHighlight();
-            currentSpeechUtterance = null;
+            currentUtterance = null;
         };
-        currentSpeechUtterance.onerror = () => {
+        utterance.onerror = () => {
             isSpeaking = false;
             resetHighlight();
-            currentSpeechUtterance = null;
+            currentUtterance = null;
         };
-        window.speechSynthesis.speak(currentSpeechUtterance);
+        currentUtterance = utterance;
+        window.speechSynthesis.speak(utterance);
     }
 
-    // Обработчик клика по слову: озвучка слова + перевод + показать кнопку
+    function stopSpeaking() {
+        if (currentUtterance) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            resetHighlight();
+            currentUtterance = null;
+        }
+    }
+
+    // Обработчик клика по слову
     window.onWordClick = function(element, word, index) {
-        // Озвучиваем это слово
         speakSingleWord(word);
-        // Показываем перевод
         let translation = element.getAttribute('data-trans');
         if (!translation) {
             translation = getTranslation(word);
             element.setAttribute('data-trans', translation);
         }
         showTranslation(word, translation);
-        // Визуальный эффект (жёлтый)
-        const originalBg = element.style.background;
+        // Жёлтый эффект
+        const original = element.style.background;
         element.style.background = '#f39c12';
         setTimeout(() => {
-            if (element.style.background === '#f39c12') {
-                element.style.background = '#27ae60';
-            }
+            if (element.style.background === '#f39c12') element.style.background = '#27ae60';
             setTimeout(() => {
-                if (element.style.background === '#27ae60' && !isSpeaking) {
-                    element.style.background = '#2c3e50';
-                }
+                if (element.style.background === '#27ae60' && !isSpeaking) element.style.background = '#2c3e50';
             }, 600);
         }, 200);
-        // Запоминаем индекс для кнопки
-        selectedWordIndex = index;
-        // Показываем плавающую кнопку
-        showFloatingButton(index, word);
+        showFloatingButton(index);
     };
 
-    // Отображение текста
+    // Отрисовка текста
     function displayText(text) {
-        currentText = text;
         const container = document.getElementById('simpleReaderContent');
-        let html = '';
         const words = text.split(/(\s+)/);
-        let wordCounter = 0;
+        let html = '';
+        let wordIdx = 0;
         for (let w of words) {
             const clean = w.trim().replace(/[.,!?;:]/g, '');
             if (clean.length > 0 && /[A-Za-zÄäÖöÜüß]/i.test(clean)) {
-                const safeWord = w.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const wordForOnclick = safeWord.replace(/\\/g, '\\\\');
-                const idx = wordCounter;
-                html += `<span class="clickable-word" 
-                               data-word="${safeWord}"
-                               data-index="${idx}"
-                               style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" 
-                               onclick="onWordClick(this, '${wordForOnclick}', ${idx})"
-                               onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';"
-                               onmouseout="if(this.style.background!='#f39c12' && this.style.background!='#ff6b6b'){this.style.background='#2c3e50'}; this.style.transform='scale(1)';">${w}</span>`;
-                wordCounter++;
+                const safe = w.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                html += `<span class="clickable-word" data-word="${safe}" data-index="${wordIdx}" style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" onclick="onWordClick(this, '${safe.replace(/\\/g, '\\\\')}', ${wordIdx})" onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';" onmouseout="if(this.style.background!='#f39c12' && this.style.background!='#ff6b6b'){this.style.background='#2c3e50'}; this.style.transform='scale(1)';">${w}</span>`;
+                wordIdx++;
             } else {
                 html += w;
             }
@@ -4412,29 +4389,19 @@ document.head.appendChild(style);
         allWordElements = document.querySelectorAll('#simpleReaderContent .clickable-word');
     }
 
-    // Остановка озвучки
-    function stopSpeaking() {
-        if (currentSpeechUtterance) {
-            window.speechSynthesis.cancel();
-            isSpeaking = false;
-            resetHighlight();
-            currentSpeechUtterance = null;
-        }
-    }
-
-    // ========== СОЗДАЁМ ЭЛЕМЕНТЫ ==========
+    // ========== СОЗДАНИЕ ИНТЕРФЕЙСА ==========
     // Панель перевода
-    let translationPanel = document.createElement('div');
-    translationPanel.id = 'translationPanel';
-    translationPanel.style.cssText = 'position:fixed; bottom:20px; left:20px; right:20px; background:#1a1a2e; color:#2196F3; padding:12px 20px; border-radius:12px; font-size:16px; text-align:center; z-index:100001; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.3); border-left:4px solid #2196F3; font-family:sans-serif;';
-    translationPanel.innerHTML = '🔊 <span id="transWord" style="color:#f39c12; font-weight:bold;"></span> → 📖 <span id="transText" style="color:#2ecc71; font-weight:bold;"></span>';
-    document.body.appendChild(translationPanel);
+    let transPanel = document.createElement('div');
+    transPanel.id = 'translationPanel';
+    transPanel.style.cssText = 'position:fixed; bottom:20px; left:20px; right:20px; background:#1a1a2e; color:#2196F3; padding:12px 20px; border-radius:12px; font-size:16px; text-align:center; z-index:100001; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.3); border-left:4px solid #2196F3;';
+    transPanel.innerHTML = '🔊 <span id="transWord" style="color:#f39c12; font-weight:bold;"></span> → 📖 <span id="transText" style="color:#2ecc71; font-weight:bold;"></span>';
+    document.body.appendChild(transPanel);
 
-    // Кнопка Читать
+    // Кнопка "Читать"
     let readBtn = document.createElement('div');
     readBtn.id = 'simpleReaderBtn';
     readBtn.innerHTML = '📖 Читать';
-    readBtn.style.cssText = 'position:absolute; top:20px; right:20px; background:#2196F3; color:white; border:none; padding:4px 10px; border-radius:15px; cursor:pointer; font-size:11px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:all 0.3s;';
+    readBtn.style.cssText = 'position:absolute; top:20px; right:20px; background:#2196F3; color:white; border:none; padding:4px 10px; border-radius:15px; cursor:pointer; font-size:11px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);';
     readBtn.onmouseover = () => readBtn.style.transform = 'scale(1.02)';
     readBtn.onmouseout = () => readBtn.style.transform = 'scale(1)';
     document.body.appendChild(readBtn);
@@ -4443,27 +4410,29 @@ document.head.appendChild(style);
     let modal = document.createElement('div');
     modal.id = 'simpleReaderModal';
     modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100000; display:none; flex-direction:column; color:white;';
-    modal.innerHTML = '<div style="background:#1a1a2e; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">' +
-        '<h3 style="margin:0; color:#2196F3;">📖 ЧИТАЙ И НАЖИМАЙ НА СЛОВА</h3>' +
-        '<button id="closeSimpleReader" style="background:#e74c3c; border:none; color:white; padding:8px 20px; border-radius:30px; cursor:pointer; font-size:14px;">✖ Закрыть</button>' +
-        '</div>' +
-        '<div style="background:#16213e; padding:12px 25px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">' +
-        '<button class="levelBtn" data-level="a1" style="background:#2ecc71; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🌟 A1 (Начальный)</button>' +
-        '<button class="levelBtn" data-level="b1" style="background:#f39c12; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">📘 B1 (Средний)</button>' +
-        '<button class="levelBtn" data-level="c1" style="background:#e74c3c; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🎓 C1 (Продвинутый)</button>' +
-        '<div style="margin-left:auto; display:flex; gap:12px;">' +
-        '<button id="speakFullBtn" style="background:#3498db; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🔊 Всё сначала</button>' +
-        '<button id="stopSpeakBtn" style="background:#7f8c8d; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">⏹ Стоп</button>' +
-        '</div>' +
-        '</div>' +
-        '<div style="padding:8px 25px; background:#0a0a15; font-size:13px; color:#aaa; border-bottom:1px solid #2c3e50;">' +
-        '💡 <strong>Как пользоваться:</strong> ОДИН клик по слову → озвучка слова + перевод (4 сек). Появляется кнопка "🎧 Озвучить отсюда" → нажмите, чтобы прочитать весь текст с этого слова (с подсветкой и автопрокруткой).' +
-        '</div>' +
-        '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:18px; line-height:1.8; background:#0f0f1a; margin:15px 20px; border-radius:20px;"></div>' +
-        '<div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 ОДИН КЛИК → озвучка слова + перевод | Кнопка "Озвучить отсюда" → чтение всего текста с этого слова</div>';
+    modal.innerHTML = `
+        <div style="background:#1a1a2e; padding:15px 25px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <h3 style="margin:0; color:#2196F3;">📖 ЧИТАЙ И НАЖИМАЙ НА СЛОВА</h3>
+            <button id="closeSimpleReader" style="background:#e74c3c; border:none; color:white; padding:8px 20px; border-radius:30px; cursor:pointer;">✖ Закрыть</button>
+        </div>
+        <div style="background:#16213e; padding:12px 25px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <button class="levelBtn" data-level="a1" style="background:#2ecc71; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🌟 A1 (Начальный)</button>
+            <button class="levelBtn" data-level="b1" style="background:#f39c12; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">📘 B1 (Средний)</button>
+            <button class="levelBtn" data-level="c1" style="background:#e74c3c; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🎓 C1 (Продвинутый)</button>
+            <div style="margin-left:auto; display:flex; gap:12px;">
+                <button id="speakFullBtn" style="background:#3498db; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🔊 Всё сначала</button>
+                <button id="stopSpeakBtn" style="background:#7f8c8d; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">⏹ Стоп</button>
+            </div>
+        </div>
+        <div style="padding:8px 25px; background:#0a0a15; font-size:13px; color:#aaa; border-bottom:1px solid #2c3e50;">
+            💡 <strong>Как пользоваться:</strong> ОДИН клик → озвучка слова + перевод. Появляется кнопка <strong>"🎧 Озвучить отсюда"</strong> → нажмите, чтобы прочитать весь текст с этого слова (каждое слово подсвечивается, страница сама прокручивается).
+        </div>
+        <div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:18px; line-height:1.8; background:#0f0f1a; margin:15px 20px; border-radius:20px;"></div>
+        <div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 ОДИН КЛИК → озвучка слова + перевод | Кнопка "Озвучить отсюда" → чтение с этого слова (подсветка и автопрокрутка)</div>
+    `;
     document.body.appendChild(modal);
 
-    // ========== ОБРАБОТЧИКИ ==========
+    // Обработчики
     readBtn.onclick = () => {
         modal.style.display = 'flex';
         displayText(texts.a1);
@@ -4476,8 +4445,7 @@ document.head.appendChild(style);
     };
     document.querySelectorAll('.levelBtn').forEach(btn => {
         btn.onclick = () => {
-            const text = texts[btn.getAttribute('data-level')];
-            displayText(text);
+            displayText(texts[btn.getAttribute('data-level')]);
             stopSpeaking();
             if (floatingBtn) floatingBtn.remove();
             floatingBtn = null;
