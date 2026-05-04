@@ -4137,61 +4137,58 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (кнопка закреплена сверху + ВСЕ слова из текстов) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (панель перевода + озвучка с любого места) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
-    // ========== ВСЕ СЛОВА ИЗ ТЕКСТОВ A1, B1, C1 ==========
+    // ========== ПОЛНЫЙ СЛОВАРЬ (ВСЕ слова из текстов A1, B1, C1) ==========
     const localDict = {
-        // ========== ТЕКСТ A1 (ВСЕ СЛОВА) ==========
+        // === ТЕКСТ A1 ===
         'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Tom': 'Том', 'komme': 'прихожу', 'aus': 'из', 'Berlin': 'Берлин',
         'bin': 'являюсь', '25': 'двадцать пять', 'Jahre': 'лет', 'alt': 'старый', 'lerne': 'учу', 'Deutsch': 'немецкий',
         'ist': 'есть', 'eine': 'одна', 'interessante': 'интересная', 'Sprache': 'язык', 'habe': 'имею', 'einen': 'одного',
-        'Bruder': 'брат', 'Er': 'Он', 'Max': 'Макс', '22': 'двадцать два', 'Wir': 'Мы', 'wohnen': 'живем',
-        'zusammen': 'вместе', 'in': 'в', 'einer': 'одной', 'Wohnung': 'квартире', 'Unsere': 'Наша', 'nicht': 'не',
-        'groß': 'большая', 'aber': 'но', 'schön': 'красивая', 'haben': 'имеем', 'zwei': 'две', 'Zimmer': 'комнаты',
-        'Küche': 'кухня', 'und': 'и', 'ein': 'одна', 'Bad': 'ванная', 'Mein': 'Моя', 'klein': 'маленькая',
-        'Bett': 'кровать', 'Tisch': 'стол', 'Stuhl': 'стул', 'Am': 'В', 'Morgen': 'утро', 'stehe': 'встаю', 'um': 'в',
-        '7': 'семь', 'Uhr': 'часов', 'auf': '', 'Dann': 'Затем', 'frühstücke': 'завтракаю', 'esse': 'ем', 'Brot': 'хлеб',
-        'mit': 'с', 'Marmelade': 'вареньем', 'trinke': 'пью', 'Kaffee': 'кофе', '8': 'восемь', 'gehe': 'иду',
-        'zur': 'на', 'Arbeit': 'работу', 'arbeite': 'работаю', 'einem': 'одном', 'Büro': 'офисе', 'Meine': 'Моя',
+        'Bruder': 'брат', 'Er': 'Он', 'Max': 'Макс', '22': 'двадцать два', 'Wir': 'Мы', 'wohnen': 'живем', 'zusammen': 'вместе',
+        'in': 'в', 'einer': 'одной', 'Wohnung': 'квартире', 'Unsere': 'Наша', 'nicht': 'не', 'groß': 'большая', 'aber': 'но',
+        'schön': 'красивая', 'haben': 'имеем', 'zwei': 'две', 'Zimmer': 'комнаты', 'Küche': 'кухня', 'und': 'и', 'ein': 'одна',
+        'Bad': 'ванная', 'Mein': 'Моя', 'klein': 'маленькая', 'Bett': 'кровать', 'Tisch': 'стол', 'Stuhl': 'стул', 'Am': 'В',
+        'Morgen': 'утро', 'stehe': 'встаю', 'um': 'в', '7': 'семь', 'Uhr': 'часов', 'auf': '', 'Dann': 'Затем', 'frühstücke': 'завтракаю',
+        'esse': 'ем', 'Brot': 'хлеб', 'mit': 'с', 'Marmelade': 'вареньем', 'trinke': 'пью', 'Kaffee': 'кофе', '8': 'восемь',
+        'gehe': 'иду', 'zur': 'на', 'Arbeit': 'работу', 'arbeite': 'работаю', 'einem': 'одном', 'Büro': 'офисе', 'Meine': 'Моя',
         'macht': 'делает', 'mir': 'мне', 'Spaß': 'удовольствие', 'Abend': 'вечер', 'nach': 'после', 'Hause': 'домой',
         'koche': 'готовлю', 'Abendessen': 'ужин', 'sehe': 'смотрю', 'fern': 'телевизор', 'oder': 'или', 'lese': 'читаю',
-        'Buch': 'книгу', '22': 'двадцать два', 'ins': 'в', 'Wochenende': 'выходных', 'oft': 'часто', 'Kino': 'кино',
-        'treffe': 'встречаюсь', 'mich': 'я', 'Freunden': 'друзьями', 'gehen': 'ходим', 'gerne': 'любим', 'spazieren': 'гулять',
-        'essen': 'едим', 'Restaurant': 'ресторане', 'jeden': 'каждый', 'Tag': 'день', 'neue': 'новые', 'Wörter': 'слова',
-        'schwer': 'трудный', 'gebe': 'сдаюсь', 'möchte': 'хочу', 'perfekt': 'безупречно', 'sprechen': 'говорить',
-        'Traum': 'мечта', 'es': 'это', 'eines': 'однажды', 'Tages': 'дня', 'der': 'в', 'Schweiz': 'Швейцарии',
-        'zu': 'работать', 'arbeiten': 'работать', 'Die': 'Это', 'schönes': 'красивая', 'Land': 'страна', 'Bergen': 'горами',
-        'Seen': 'озерами', 'liebe': 'люблю', 'die': '', 'Natur': 'природу', 'Im': 'Летом', 'Sommer': 'лето',
-        'schwimme': 'плаваю', 'im': 'в', 'See': 'озере', 'Winter': 'зимой', 'fahre': 'езжу', 'Ski': 'на лыжах',
-        'auch': 'также', 'Katze': 'кошка', 'Sie': 'Она', 'Luna': 'Луна', 'sehr': 'очень', 'süß': 'милая',
-        'verspielt': 'игривая', 'schläft': 'спит', 'Sofa': 'диване', 'Manchmal': 'Иногда', 'spielt': 'играет',
-        'Ball': 'мячом', 'glücklich': 'счастлив', 'meinem': 'моей', 'Leben': 'жизнью', 'etwas': 'чему-то',
-        'Neues': 'новому', 'Das': 'Это', 'wichtig': 'важно', 'für': 'для', 'hoffe': 'надеюсь', 'dass': 'что',
-        'bald': 'скоро', 'fließend': 'бегло', 'kann': 'могу',
+        'Buch': 'книгу', 'ins': 'в', 'Wochenende': 'выходных', 'oft': 'часто', 'Kino': 'кино', 'treffe': 'встречаюсь',
+        'mich': 'я', 'Freunden': 'друзьями', 'gehen': 'ходим', 'gerne': 'любим', 'spazieren': 'гулять', 'essen': 'едим',
+        'Restaurant': 'ресторане', 'jeden': 'каждый', 'Tag': 'день', 'neue': 'новые', 'Wörter': 'слова', 'schwer': 'трудный',
+        'gebe': 'сдаюсь', 'möchte': 'хочу', 'perfekt': 'безупречно', 'sprechen': 'говорить', 'Traum': 'мечта', 'es': 'это',
+        'eines': 'однажды', 'Tages': 'дня', 'der': 'в', 'Schweiz': 'Швейцарии', 'zu': 'работать', 'arbeiten': 'работать',
+        'Die': 'Это', 'schönes': 'красивая', 'Land': 'страна', 'Bergen': 'горами', 'Seen': 'озерами', 'liebe': 'люблю',
+        'die': '', 'Natur': 'природу', 'Im': 'Летом', 'Sommer': 'лето', 'schwimme': 'плаваю', 'im': 'в', 'See': 'озере',
+        'Winter': 'зимой', 'fahre': 'езжу', 'Ski': 'на лыжах', 'auch': 'также', 'Katze': 'кошка', 'Sie': 'Она', 'Luna': 'Луна',
+        'sehr': 'очень', 'süß': 'милая', 'verspielt': 'игривая', 'schläft': 'спит', 'Sofa': 'диване', 'Manchmal': 'Иногда',
+        'spielt': 'играет', 'Ball': 'мячом', 'glücklich': 'счастлив', 'meinem': 'моей', 'Leben': 'жизнью', 'etwas': 'чему-то',
+        'Neues': 'новому', 'Das': 'Это', 'wichtig': 'важно', 'für': 'для', 'hoffe': 'надеюсь', 'dass': 'что', 'bald': 'скоро',
+        'fließend': 'бегло', 'kann': 'могу',
         
-        // ========== ТЕКСТ B1 (ВСЕ СЛОВА) ==========
+        // === ТЕКСТ B1 ===
         'Guten': 'Доброе', 'Heute': 'Сегодня', 'euch': 'вам', 'von': 'о', 'meiner': 'моем', 'Reise': 'путешествии',
         'nach': 'в', 'München': 'Мюнхен', 'erzählen': 'рассказать', 'Hauptstadt': 'столицей', 'Bayerns': 'Баварии',
-        'schönsten': 'самых красивых', 'Städte': 'городов', 'Deutschlands': 'Германии', 'letztes': 'в прошлом',
-        'Jahr': 'году', 'September': 'сентябре', 'dorthin': 'туда', 'gefahren': 'поехал', 'Zug': 'поезде',
-        'hat': 'длилось', 'etwa': 'около', 'vier': 'четырех', 'Stunden': 'часов', 'gedauert': 'длилось',
-        'Als': 'Когда', 'ankam': 'прибыл', 'war': 'был', 'sofort': 'немедленно', 'schönen': 'красивой',
-        'Architektur': 'архитектуры', 'beeindruckt': 'впечатлен', 'Gebäude': 'здания', 'sind': 'являются',
-        'haben': 'имеют', 'besondere': 'особую', 'Geschichte': 'историю', 'zuerst': 'сначала', 'Marienplatz': 'Мариенплац',
-        'angeschaut': 'посмотрел', 'Dort': 'Там', 'steht': 'стоит', 'Neue': 'Новая', 'Rathaus': 'ратуша',
-        'seinem': 'ее', 'berühmten': 'знаменитым', 'Glockenspiel': 'глокеншпилем', 'wirklich': 'действительно',
-        'zauberhaft': 'волшебно', 'traditionelles': 'традиционный', 'bayerisches': 'баварский', 'gegangen': 'пошел',
-        'Brezel': 'крендель', 'Glas': 'стакан', 'Weißbier': 'белого пива', 'bestellt': 'заказал', 'Essen': 'еда',
-        'köstlich': 'восхитительной', 'nächsten': 'следующий', 'zum': 'на', 'Oktoberfest': 'Октоберфест', 'riesig': 'огромным',
-        'Überall': 'Везде', 'waren': 'были', 'bunte': 'цветные', 'Zelte': 'шатры', 'Menschen': 'люди', 'Trachten': 'костюмах',
-        'Männer': 'мужчины', 'trugen': 'носили', 'Lederhosen': 'кожаные штаны', 'Frauen': 'женщины', 'Dirndlkleider': 'платья дирндль',
-        'viele': 'много', 'Leute': 'людей', 'kennengelernt': 'познакомился', 'ihnen': 'ними', 'getanzt': 'танцевал',
-        'Stimmung': 'настроение', 'fantastisch': 'фантастическим', 'gab': 'был', 'Feuerwerk': 'салют', 'Fahrrad': 'велосипеде',
-        'durch': 'через', 'Englischen': 'Английский', 'Garten': 'сад',
+        'schönsten': 'самых красивых', 'Städte': 'городов', 'Deutschlands': 'Германии', 'letztes': 'в прошлом', 'Jahr': 'году',
+        'September': 'сентябре', 'dorthin': 'туда', 'gefahren': 'поехал', 'Zug': 'поезде', 'hat': 'длилось', 'etwa': 'около',
+        'vier': 'четырех', 'Stunden': 'часов', 'gedauert': 'длилось', 'Als': 'Когда', 'ankam': 'прибыл', 'war': 'был',
+        'sofort': 'немедленно', 'schönen': 'красивой', 'Architektur': 'архитектуры', 'beeindruckt': 'впечатлен',
+        'Gebäude': 'здания', 'sind': 'являются', 'haben': 'имеют', 'besondere': 'особую', 'Geschichte': 'историю',
+        'zuerst': 'сначала', 'Marienplatz': 'Мариенплац', 'angeschaut': 'посмотрел', 'Dort': 'Там', 'steht': 'стоит',
+        'Neue': 'Новая', 'Rathaus': 'ратуша', 'seinem': 'ее', 'berühmten': 'знаменитым', 'Glockenspiel': 'глокеншпилем',
+        'wirklich': 'действительно', 'zauberhaft': 'волшебно', 'traditionelles': 'традиционный', 'bayerisches': 'баварский',
+        'gegangen': 'пошел', 'Brezel': 'крендель', 'Glas': 'стакан', 'Weißbier': 'белого пива', 'bestellt': 'заказал',
+        'Essen': 'еда', 'köstlich': 'восхитительной', 'nächsten': 'следующий', 'zum': 'на', 'Oktoberfest': 'Октоберфест',
+        'riesig': 'огромным', 'Überall': 'Везде', 'waren': 'были', 'bunte': 'цветные', 'Zelte': 'шатры', 'Menschen': 'люди',
+        'Trachten': 'костюмах', 'Männer': 'мужчины', 'trugen': 'носили', 'Lederhosen': 'кожаные штаны', 'Frauen': 'женщины',
+        'Dirndlkleider': 'платья дирндль', 'viele': 'много', 'Leute': 'людей', 'kennengelernt': 'познакомился', 'ihnen': 'ними',
+        'getanzt': 'танцевал', 'Stimmung': 'настроение', 'fantastisch': 'фантастическим', 'gab': 'был', 'Feuerwerk': 'салют',
+        'Fahrrad': 'велосипеде', 'durch': 'через', 'Englischen': 'Английский', 'Garten': 'сад',
         
-        // ========== ТЕКСТ C1 (ВСЕ СЛОВА) ==========
+        // === ТЕКСТ C1 ===
         'Einfluss': 'Влияние', 'Digitalisierung': 'цифровизация', 'deutsche': 'немецкий', 'diskutiertes': 'обсуждаемая',
         'Thema': 'тема', 'zeitgenössischen': 'современной', 'Linguistik': 'лингвистике', 'Unbestreitbar': 'Неоспоримо',
         'Aufkommen': 'появление', 'Internets': 'интернета', 'sozialer': 'социальных', 'Netzwerke': 'сетей',
@@ -4209,10 +4206,10 @@ document.head.appendChild(style);
         'Sprachmodellen': 'языковых моделей', 'ChatGPT': 'ЧатДжипити', 'geht': 'теряют', 'allmählich': 'постепенно',
         'Gespür': 'чутье', 'grammatikalische': 'грамматическим', 'Strukturen': 'структурам', 'orthographische': 'орфографическим',
         'Feinheiten': 'тонкостям', 'verloren': 'теряют', 'kürzlich': 'недавно', 'durchgeführte': 'проведенное',
-        'Studie': 'исследование', 'Universität': 'университета', 'Mainz': 'Майнца', 'ergeben': 'показало',
-        'Schüler': 'ученики', 'heutzutage': 'в наши дни', 'Durchschnitt': 'среднем', 'dreißig': 'тридцать',
-        'Prozent': 'процентов', 'mehr': 'больше', 'Rechtschreibfehler': 'орфографических ошибок', 'produzieren': 'производят',
-        'als': 'чем', 'noch': 'еще', 'vor': 'перед', 'Jahrzehnten': 'десятилетиями'
+        'Studie': 'исследование', 'Universität': 'университета', 'Mainz': 'Майнца', 'ergeben': 'показало', 'Schüler': 'ученики',
+        'heutzutage': 'в наши дни', 'Durchschnitt': 'среднем', 'dreißig': 'тридцать', 'Prozent': 'процентов', 'mehr': 'больше',
+        'Rechtschreibfehler': 'орфографических ошибок', 'produzieren': 'производят', 'als': 'чем', 'noch': 'еще', 'vor': 'перед',
+        'Jahrzehnten': 'десятилетиями'
     };
 
     // ========== ТЕКСТЫ ==========
@@ -4225,7 +4222,11 @@ document.head.appendChild(style);
     };
 
     let currentText = texts.a1;
+    let currentUtterance = null;
+    let currentWordIndex = 0;
+    let allWordsArray = [];
 
+    // Функция озвучки слова
     function speakWord(word) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(word);
@@ -4234,12 +4235,27 @@ document.head.appendChild(style);
         window.speechSynthesis.speak(utterance);
     }
 
+    // Функция перевода
     function getTranslation(word) {
         const cleanWord = word.replace(/[.,!?;:()"']/g, '').trim();
         if (localDict[cleanWord]) return localDict[cleanWord];
         return `[${cleanWord}]`;
     }
 
+    // Показ перевода в панели
+    function showTranslation(word, translation) {
+        const panel = document.getElementById('translationPanel');
+        document.getElementById('transWord').innerHTML = word;
+        document.getElementById('transText').innerHTML = translation;
+        panel.style.display = 'block';
+        panel.style.opacity = '1';
+        setTimeout(() => {
+            panel.style.opacity = '0';
+            setTimeout(() => { panel.style.display = 'none'; panel.style.opacity = '1'; }, 300);
+        }, 2500);
+    }
+
+    // Обработчик клика по слову
     window.onWordClick = function(element, word) {
         speakWord(word);
         element.style.background = '#f39c12';
@@ -4249,12 +4265,58 @@ document.head.appendChild(style);
             element.setAttribute('data-trans', translation);
         }
         element.style.background = '#27ae60';
-        alert(`🔊 ${word}\n\n📖 Перевод: ${translation}`);
+        showTranslation(word, translation);
         setTimeout(() => {
             element.style.background = '#2c3e50';
         }, 1000);
     };
 
+    // Озвучка с выбранного места
+    window.speakFromSelected = function() {
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
+        
+        if (selectedText.length > 0) {
+            // Озвучиваем выделенный текст
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(selectedText);
+            utterance.lang = 'de-DE';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            // Если ничего не выделено, начинаем с текущего видимого слова
+            const container = document.getElementById('simpleReaderContent');
+            const words = container.querySelectorAll('.clickable-word');
+            if (words.length > 0) {
+                let startIndex = 0;
+                const containerRect = container.getBoundingClientRect();
+                const viewportMiddle = window.scrollY + window.innerHeight / 2;
+                
+                for (let i = 0; i < words.length; i++) {
+                    const rect = words[i].getBoundingClientRect();
+                    if (rect.top > containerRect.top && rect.top < viewportMiddle) {
+                        startIndex = i;
+                        break;
+                    }
+                }
+                
+                let fullText = '';
+                for (let i = startIndex; i < words.length; i++) {
+                    fullText += words[i].getAttribute('data-word') + ' ';
+                }
+                
+                if (fullText.length > 0) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(fullText);
+                    utterance.lang = 'de-DE';
+                    utterance.rate = 0.85;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        }
+    };
+
+    // Отображение текста
     function displayText(text) {
         currentText = text;
         const container = document.getElementById('simpleReaderContent');
@@ -4281,6 +4343,7 @@ document.head.appendChild(style);
         container.innerHTML = html;
     }
 
+    // Озвучка всего текста
     function speakFullText() {
         if (currentText && currentText.length > 0) {
             window.speechSynthesis.cancel();
@@ -4291,12 +4354,24 @@ document.head.appendChild(style);
         }
     }
 
-    // ========== КНОПКА ЗАКРЕПЛЕНА СВЕРХУ (position: fixed) ==========
+    // Остановка озвучки
+    function stopSpeaking() {
+        window.speechSynthesis.cancel();
+    }
+
+    // ========== СОЗДАЁМ ПАНЕЛЬ ПЕРЕВОДА ВНИЗУ ==========
+    let translationPanel = document.createElement('div');
+    translationPanel.id = 'translationPanel';
+    translationPanel.style.cssText = 'position:fixed; bottom:20px; left:20px; right:20px; background:#1a1a2e; color:#2196F3; padding:12px 20px; border-radius:12px; font-size:16px; text-align:center; z-index:100001; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.3); border-left:4px solid #2196F3; font-family:sans-serif;';
+    translationPanel.innerHTML = '🔊 <span id="transWord" style="color:#f39c12; font-weight:bold;"></span> → 📖 <span id="transText" style="color:#2ecc71; font-weight:bold;"></span>';
+    document.body.appendChild(translationPanel);
+
+    // ========== КНОПКА СВЕРХУ СПРАВА ==========
     let readBtn = document.createElement('div');
     readBtn.id = 'simpleReaderBtn';
     readBtn.innerHTML = '📖 Читать';
     readBtn.style.cssText = 'position:absolute; top:20px; right:20px; background:#2196F3; color:white; border:none; padding:4px 10px; border-radius:15px; cursor:pointer; font-size:11px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:all 0.3s;';
-    readBtn.onmouseover = () => readBtn.style.transform = 'scale(1.03)';
+    readBtn.onmouseover = () => readBtn.style.transform = 'scale(1.02)';
     readBtn.onmouseout = () => readBtn.style.transform = 'scale(1)';
     document.body.appendChild(readBtn);
 
@@ -4313,12 +4388,16 @@ document.head.appendChild(style);
         '<button class="levelBtn" data-level="b1" style="background:#f39c12; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">📘 B1 (Средний)</button>' +
         '<button class="levelBtn" data-level="c1" style="background:#e74c3c; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🎓 C1 (Продвинутый)</button>' +
         '<div style="margin-left:auto; display:flex; gap:12px;">' +
-        '<button id="speakFullBtn" style="background:#1abc9c; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🔊 Озвучить всё</button>' +
+        '<button id="speakFromBtn" style="background:#1abc9c; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🎤 Озвучить с выделенного</button>' +
+        '<button id="speakFullBtn" style="background:#3498db; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">🔊 Всё сначала</button>' +
         '<button id="stopSpeakBtn" style="background:#7f8c8d; border:none; color:white; padding:8px 22px; border-radius:30px; cursor:pointer; font-weight:bold;">⏹ Стоп</button>' +
         '</div>' +
         '</div>' +
+        '<div style="padding:8px 25px; background:#0a0a15; font-size:13px; color:#aaa; border-bottom:1px solid #2c3e50;">' +
+        '💡 <strong>Как озвучить с любого места:</strong> Выделите мышкой текст, с которого хотите начать, и нажмите "🎤 Озвучить с выделенного"' +
+        '</div>' +
         '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:18px; line-height:1.8; background:#0f0f1a; margin:15px 20px; border-radius:20px;"></div>' +
-        '<div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 КЛИКНИ ПО СЛОВУ → ОЗВУЧКА + ПЕРЕВОД | Все слова из словаря (470+ слов)</div>';
+        '<div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 КЛИКНИ ПО СЛОВУ → ОЗВУЧКА + ПЕРЕВОД (в панели внизу) | Все слова из словаря (470+ слов)</div>';
     document.body.appendChild(modal);
 
     // ========== ОБРАБОТЧИКИ ==========
@@ -4340,8 +4419,9 @@ document.head.appendChild(style);
         };
     });
     
+    document.getElementById('speakFromBtn').onclick = () => window.speakFromSelected();
     document.getElementById('speakFullBtn').onclick = () => speakFullText();
-    document.getElementById('stopSpeakBtn').onclick = () => window.speechSynthesis.cancel();
+    document.getElementById('stopSpeakBtn').onclick = () => stopSpeaking();
     
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.style.display === 'flex') {
