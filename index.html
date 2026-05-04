@@ -7182,191 +7182,271 @@ window.localDict = localDict;
 })();
 
 
-    // ========== ИГРА "КОТ И МЫШИ" (СТИЛЬ GOOGLE DINO, УПРАВЛЕНИЕ КАСАНИЕМ, ПРОКРУТКА СТРАНИЦЫ) ==========
+    // ========== ИГРА "КОТ И МЫШИ" (БЕГ, КРОКОДИЛЫ, СТРЕЛЬБА, ПРИГИБАНИЕ, ЗВУК) ==========
 (function() {
-    if (document.getElementById('dinoCatGame')) return;
+    if (document.getElementById('catAdvGame')) return;
 
-    // Создаём контейнер для кнопки и игры (не фиксированный, в потоке)
+    // Контейнер для кнопки и игры (в потоке страницы)
     let gameWrapper = document.createElement('div');
-    gameWrapper.id = 'dinoCatGame';
-    gameWrapper.style.cssText = 'margin:20px auto; max-width:800px; background:#1e1e2e; border-radius:15px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.2);';
-
-    // Кнопка для открытия игры
+    gameWrapper.id = 'catAdvGame';
+    gameWrapper.style.cssText = 'margin:20px auto; max-width:900px; background:#1e1e2e; border-radius:15px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.2);';
+    
     let gameBtn = document.createElement('div');
-    gameBtn.innerHTML = '🐱 Играть (Кот и мыши)';
+    gameBtn.innerHTML = '🐱 Игра (Кот, мыши, крокодилы)';
     gameBtn.style.cssText = 'background:#e67e22; color:white; padding:8px 16px; text-align:center; cursor:pointer; font-weight:bold; border-radius:15px 15px 0 0; transition:0.2s;';
     gameBtn.onmouseover = () => gameBtn.style.background = '#d35400';
     gameBtn.onmouseout = () => gameBtn.style.background = '#e67e22';
     
-    // Игровой контейнер (скрыт по умолчанию)
     let gamePanel = document.createElement('div');
     gamePanel.style.cssText = 'display:none; background:#2c3e50; padding:10px;';
     gamePanel.innerHTML = `
-        <canvas id="dinoCanvas" width="800" height="300" style="display:block; width:100%; height:auto; background:#87CEEB; border-radius:8px;"></canvas>
-        <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
-            <span>🐭 Мыши: <span id="dinoScore">0</span></span>
-            <span>📖 <span id="dinoWord">—</span></span>
+        <canvas id="catCanvas" width="900" height="350" style="display:block; width:100%; height:auto; background:#87CEEB; border-radius:8px;"></canvas>
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:8px;">
+            <div style="color:white;">🐭 Мыши: <span id="catScore">0</span></div>
+            <div style="color:white;">🐊 Сбито: <span id="catKills">0</span></div>
+            <div id="catWordDisplay" style="color:#f1c40f;">—</div>
+            <div style="display:flex; gap:8px;">
+                <button id="catDuckBtn" style="background:#3498db; border:none; color:white; padding:4px 12px; border-radius:20px;">🏃 Пригнуться</button>
+                <button id="catShootBtn" style="background:#e74c3c; border:none; color:white; padding:4px 12px; border-radius:20px;">🔫 Стрелять</button>
+            </div>
         </div>
-        <div id="dinoGameOver" style="display:none; text-align:center; margin-top:10px; color:#e74c3c; font-weight:bold;">
-            💀 Game Over 💀 <button id="dinoRestart" style="background:#e67e22; border:none; color:white; margin-left:10px; padding:4px 12px; border-radius:20px;">Снова</button>
+        <div id="catGameOverMsg" style="display:none; text-align:center; margin-top:10px; color:#e74c3c; font-weight:bold;">
+            💀 Game Over 💀 <button id="catRestartBtn" style="background:#e67e22; border:none; color:white; margin-left:10px; padding:4px 12px; border-radius:20px;">Снова</button>
         </div>
     `;
     gameWrapper.appendChild(gameBtn);
     gameWrapper.appendChild(gamePanel);
     
-    // Размещаем под уровнями текстов (можно указать конкретное место, например, после карточки с текстом)
-    // Ищем контейнер, где уже есть кнопки текстов (levelBtn) и вставляем перед ними или после
+    // Куда добавить? После блока уровней.
     let target = document.querySelector('.levelBtn')?.parentElement?.parentElement;
     if (target && target.parentNode) {
         target.parentNode.insertBefore(gameWrapper, target.nextSibling);
     } else {
-        // Если не нашли, добавим после модального окна или в конец body
         document.body.appendChild(gameWrapper);
     }
-
-    // ---- ИГРОВАЯ МЕХАНИКА ----
-    const canvas = document.getElementById('dinoCanvas');
+    
+    const canvas = document.getElementById('catCanvas');
     const ctx = canvas.getContext('2d');
-    const scoreSpan = document.getElementById('dinoScore');
-    const wordSpan = document.getElementById('dinoWord');
-    const gameOverDiv = document.getElementById('dinoGameOver');
+    const scoreSpan = document.getElementById('catScore');
+    const killsSpan = document.getElementById('catKills');
+    const wordSpan = document.getElementById('catWordDisplay');
     
-    // Размеры
-    let cw = 800, ch = 300;
+    let cw = 900, ch = 350;
     canvas.width = cw; canvas.height = ch;
+    let groundY = ch - 60;
     
-    // Объекты
+    // Звук мяу (синтезированный через Web Audio)
+    function meowSound() {
+        try {
+            let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 440;
+            gain.gain.value = 0.3;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.5);
+            // Мяу-модуляция (чириканье)
+            let osc2 = audioCtx.createOscillator();
+            let gain2 = audioCtx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.frequency.value = 880;
+            gain2.gain.value = 0.15;
+            osc2.start();
+            gain2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+            osc2.stop(audioCtx.currentTime + 0.4);
+            setTimeout(() => audioCtx.close(), 600);
+        } catch(e) { console.warn(e); }
+    }
+    
+    // Звук выстрела
+    function shootSound() {
+        try {
+            let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 600;
+            gain.gain.value = 0.2;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+            osc.stop(audioCtx.currentTime + 0.1);
+            setTimeout(() => audioCtx.close(), 200);
+        } catch(e) {}
+    }
+    
+    // Игровые объекты
     let cat = {
-        x: 80, y: 0, width: 40, height: 40,
-        vy: 0, grounded: true
+        x: 80, y: groundY - 45, width: 35, height: 45,
+        vy: 0, grounded: true, ducking: false
     };
     let mice = [];
+    let crocs = [];
+    let bullets = [];
     let gameRunning = false;
-    let score = 0;
+    let score = 0, kills = 0;
     let frame = 0;
     let wordTimeout = null;
-    let baseGroundY = ch - 50;
+    let animationId = null;
     
     // Словарь (из глобального)
     let wordList = [];
     if (window.localDict && Object.keys(window.localDict).length) {
         wordList = Object.entries(window.localDict).filter(([de, ru]) => 
             typeof de === 'string' && de.length > 1 && !de.match(/[А-Я]/)
-        ).slice(0, 300);
+        ).slice(0, 400);
     } else {
-        wordList = [['Haus','Дом'],['Katze','Кошка'],['Maus','Мышь'],['Hallo','Привет'],['Sonne','Солнце']];
+        wordList = [['Haus','Дом'],['Katze','Кошка'],['Maus','Мышь'],['Hallo','Привет']];
     }
     
     function showRandomWord() {
         if (!gameRunning) return;
-        if (wordList.length) {
-            let [de, ru] = wordList[Math.floor(Math.random() * wordList.length)];
-            wordSpan.innerText = `${de} – ${ru}`;
-            if (wordTimeout) clearTimeout(wordTimeout);
-            wordTimeout = setTimeout(() => wordSpan.innerText = '—', 2500);
-        } else {
-            wordSpan.innerText = '—';
-        }
+        let [de, ru] = wordList[Math.floor(Math.random() * wordList.length)];
+        wordSpan.innerText = `${de} – ${ru}`;
+        if (wordTimeout) clearTimeout(wordTimeout);
+        wordTimeout = setTimeout(() => wordSpan.innerText = '—', 2500);
     }
     
-    // Сброс игры
-    function resetGame() {
-        score = 0;
-        scoreSpan.innerText = '0';
-        mice = [];
-        cat.y = baseGroundY - cat.height;
-        cat.vy = 0;
-        cat.grounded = true;
-        frame = 0;
-        gameRunning = true;
-        gameOverDiv.style.display = 'none';
-        // добавляем несколько мышей
-        for (let i = 0; i < 3; i++) spawnMouse();
-        // обновляем скорость (начальная)
-    }
-    
-    // Спавн мыши
     function spawnMouse() {
+        let speed = -5 - Math.random() * 4 - Math.floor(score / 30);
         mice.push({
-            x: cw + Math.random() * 200,
-            y: baseGroundY - 20,
-            width: 25, height: 20,
-            vx: -3 - Math.random() * 3 - Math.floor(score / 20) * 0.5,
-            vy: 0
+            x: cw + 20,
+            y: groundY - 18,
+            width: 25, height: 18,
+            vx: speed,
+            active: true
         });
     }
     
-    // Обновление физики
+    function spawnCroc() {
+        crocs.push({
+            x: cw + 30,
+            y: groundY - 25,
+            width: 45, height: 25,
+            vx: -6 - Math.random() * 3 - Math.floor(kills / 40),
+            active: true
+        });
+    }
+    
     function updateGame() {
         if (!gameRunning) return;
-        // Гравитация и прыжок (управление: касание/клик вызывает прыжок)
-        cat.vy += 0.8;
-        cat.y += cat.vy;
-        if (cat.y >= baseGroundY - cat.height) {
-            cat.y = baseGroundY - cat.height;
+        
+        // Гравитация и прыжок (пригнуться влияет на высоту)
+        let onGround = cat.y + cat.height >= groundY;
+        if (onGround) {
             cat.vy = 0;
             cat.grounded = true;
+            cat.y = groundY - cat.height;
         } else {
+            cat.vy += 0.6;
+            cat.y += cat.vy;
             cat.grounded = false;
         }
         
-        // Движение мышей и проверка съедания
+        // Пригнуться (уменьшаем высоту)
+        if (cat.ducking) {
+            cat.height = 30;
+            if (cat.grounded) cat.y = groundY - cat.height;
+        } else {
+            cat.height = 45;
+            if (cat.grounded) cat.y = groundY - cat.height;
+        }
+        
+        // Движение мышей
         for (let i = 0; i < mice.length; i++) {
             let m = mice[i];
             m.x += m.vx;
-            // Мыши убегают от кота: если кот справа, мышь ускоряется влево; если слева – вправо (но они и так идут к левому краю)
-            if (cat.x + cat.width > m.x && cat.x < m.x + m.width) {
-                // Мышь рядом с котом – убегаем в сторону (вправо)
-                m.vx = Math.abs(m.vx) * 1.2;
-            } else if (m.x < cat.x) {
-                // кот позади? пусть бежит вперёд (влево)
-                m.vx = -Math.abs(m.vx);
-            }
-            // Ограничение скорости
-            if (m.vx > 0) m.vx = Math.min(m.vx, 5 + score/50);
-            if (m.vx < -10) m.vx = -10;
-            
-            // Удаление мышей, вышедших за левый край
             if (m.x + m.width < 0) {
-                mice.splice(i,1);
-                i--;
-                continue;
+                mice.splice(i,1); i--; continue;
             }
-            // Проверка столкновения (кота с мышью)
+            // Коллизия с котом
             if (cat.x < m.x + m.width && cat.x + cat.width > m.x &&
                 cat.y < m.y + m.height && cat.y + cat.height > m.y) {
-                // Съели мышь
                 mice.splice(i,1);
                 score++;
                 scoreSpan.innerText = score;
                 showRandomWord();
-                // добавить новую мышь (чтобы не пустело)
-                spawnMouse();
-                // повышаем сложность: чаще спавним новые мыши при большом счёте
-                if (Math.random() < 0.3 + score/100) spawnMouse();
+                if (score % 5 === 0) spawnMouse();
+                i--;
+                continue;
             }
         }
         
-        // Автоматическое появление мышей (чтобы всегда было 3–6 штук)
-        let targetCount = Math.min(3 + Math.floor(score / 15), 8);
-        while (mice.length < targetCount) spawnMouse();
+        // Движение крокодилов
+        for (let i = 0; i < crocs.length; i++) {
+            let c = crocs[i];
+            c.x += c.vx;
+            if (c.x + c.width < 0) {
+                crocs.splice(i,1); i--; continue;
+            }
+            // Столкновение с котом -> смерть
+            if (!cat.ducking ? 
+                (cat.x < c.x + c.width && cat.x + cat.width > c.x && cat.y < c.y + c.height && cat.y + cat.height > c.y) :
+                // если пригнулся, проверяем уменьшенную высоту
+                (cat.x < c.x + c.width && cat.x + cat.width > c.x && cat.y+15 < c.y + c.height && cat.y + cat.height-15 > c.y)
+            ) {
+                gameRunning = false;
+                meowSound();
+                document.getElementById('catGameOverMsg').style.display = 'block';
+                cancelAnimationFrame(animationId);
+                return;
+            }
+        }
         
-        // Проверка проигрыша: кот коснулся мыши? уже обработано. Но нужно ещё, если мышь ушла далеко – не проигрыш.
-        // Дополнительно: если мышь врезалась в кота сверху (при прыжке) – тоже ловим.
+        // Пули
+        for (let i=0; i<bullets.length; i++) {
+            let b = bullets[i];
+            b.x += b.vx;
+            if (b.x > cw || b.x + b.width < 0) {
+                bullets.splice(i,1); i--; continue;
+            }
+            let hit = false;
+            for (let j=0; j<crocs.length; j++) {
+                let c = crocs[j];
+                if (b.x < c.x + c.width && b.x + b.width > c.x &&
+                    b.y < c.y + c.height && b.y + b.height > c.y) {
+                    crocs.splice(j,1);
+                    kills++;
+                    killsSpan.innerText = kills;
+                    hit = true;
+                    shootSound();
+                    // сложность растёт
+                    if (kills % 3 === 0) spawnCroc();
+                    break;
+                }
+            }
+            if (hit) { bullets.splice(i,1); i--; }
+        }
+        
+        // Спавн объектов (автоматически)
+        let targetMiceCount = Math.min(3 + Math.floor(score / 20), 8);
+        while (mice.length < targetMiceCount) spawnMouse();
+        let targetCrocsCount = Math.min(1 + Math.floor(kills / 30), 5);
+        while (crocs.length < targetCrocsCount && kills > 5) spawnCroc();
+        // первый крокодил появляется после 5 мышей
+        if (kills === 0 && score > 5 && crocs.length === 0) spawnCroc();
     }
     
     function draw() {
         ctx.clearRect(0, 0, cw, ch);
         // Земля
         ctx.fillStyle = '#5d3a1a';
-        ctx.fillRect(0, baseGroundY, cw, ch - baseGroundY);
-        // Кот (оранжевый)
+        ctx.fillRect(0, groundY, cw, ch - groundY);
+        // Кот
         ctx.fillStyle = '#e67e22';
         ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
         ctx.fillStyle = '#d35400';
         ctx.fillRect(cat.x+5, cat.y-8, 8, 8);
         ctx.fillRect(cat.x+cat.width-13, cat.y-8, 8, 8);
-        // Мыши (серые)
+        // Уши
+        ctx.fillStyle = '#e67e22';
+        ctx.fillRect(cat.x-5, cat.y+5, 8, 15);
+        ctx.fillRect(cat.x+cat.width-3, cat.y+5, 8, 15);
+        // Мыши
         for (let m of mice) {
             ctx.fillStyle = '#7f8c8d';
             ctx.fillRect(m.x, m.y, m.width, m.height);
@@ -7374,13 +7454,29 @@ window.localDict = localDict;
             ctx.fillRect(m.x+m.width-8, m.y+4, 6, 6);
             ctx.fillRect(m.x-6, m.y+8, 6, 6);
         }
-        // Очки
+        // Крокодилы
+        for (let c of crocs) {
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(c.x, c.y, c.width, c.height);
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(c.x+5, c.y-5, 8, 8);
+            ctx.fillRect(c.x+c.width-13, c.y-5, 8, 8);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(c.x+10, c.y+10, 10, 5);
+        }
+        // Пули
+        for (let b of bullets) {
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+        }
+        // Текст счёта
         ctx.fillStyle = 'white';
         ctx.font = 'bold 16px sans-serif';
-        ctx.fillText(`Score: ${score}`, cw-80, 30);
+        ctx.fillText(`Score: ${score}`, cw-100, 30);
+        ctx.fillStyle = '#f39c12';
+        ctx.fillText(`Kills: ${kills}`, cw-100, 60);
     }
     
-    let animationId = null;
     function gameLoop() {
         if (!gameRunning) return;
         updateGame();
@@ -7388,11 +7484,23 @@ window.localDict = localDict;
         animationId = requestAnimationFrame(gameLoop);
     }
     
-    // Запуск игры
     function startGame() {
         if (animationId) cancelAnimationFrame(animationId);
-        resetGame();
+        gameRunning = true;
+        score = 0; kills = 0;
+        scoreSpan.innerText = '0';
+        killsSpan.innerText = '0';
+        wordSpan.innerText = '—';
+        mice = [];
+        crocs = [];
+        bullets = [];
+        cat.y = groundY - cat.height;
+        cat.vy = 0;
+        cat.grounded = true;
+        cat.ducking = false;
+        for (let i=0;i<3;i++) spawnMouse();
         gameLoop();
+        document.getElementById('catGameOverMsg').style.display = 'none';
     }
     
     function stopGame() {
@@ -7400,37 +7508,43 @@ window.localDict = localDict;
         if (animationId) cancelAnimationFrame(animationId);
     }
     
-    // Обработка прыжка (по клику/касанию)
+    // Действия
     function jump() {
         if (!gameRunning) return;
         if (cat.grounded) {
-            cat.vy = -11;
+            cat.vy = -9;
             cat.grounded = false;
         }
     }
+    function duck() {
+        if (!gameRunning) return;
+        cat.ducking = true;
+        setTimeout(() => { if (gameRunning) cat.ducking = false; }, 300);
+    }
+    function shoot() {
+        if (!gameRunning) return;
+        bullets.push({
+            x: cat.x + cat.width,
+            y: cat.y + cat.height/2 - 5,
+            width: 15, height: 5,
+            vx: 12
+        });
+        shootSound();
+    }
     
     // Обработчики событий
-    canvas.addEventListener('click', (e) => {
-        e.preventDefault();
-        jump();
-    });
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        jump();
-    });
-    // Также реагируем на пробел и стрелку вверх (для клавиатуры)
+    canvas.addEventListener('click', (e) => { e.preventDefault(); jump(); });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+    document.getElementById('catDuckBtn').onclick = () => duck();
+    document.getElementById('catShootBtn').onclick = () => shoot();
+    document.getElementById('catRestartBtn').onclick = () => { stopGame(); startGame(); };
     window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' || e.code === 'ArrowUp') {
-            e.preventDefault();
-            if (gameRunning) jump();
-        }
+        if (!gameRunning) return;
+        if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); }
+        if (e.code === 'ArrowDown') { e.preventDefault(); duck(); }
+        if (e.code === 'KeyF') { e.preventDefault(); shoot(); }
     });
-    // Кнопка перезапуска
-    document.getElementById('dinoRestart').onclick = () => {
-        stopGame();
-        startGame();
-    };
-    // Открытие игры по кнопке
+    
     gameBtn.onclick = () => {
         if (gamePanel.style.display === 'none') {
             gamePanel.style.display = 'block';
@@ -7440,10 +7554,6 @@ window.localDict = localDict;
             stopGame();
         }
     };
-    
-    // Инициализация начальных параметров
-    cat.y = baseGroundY - cat.height;
-    // Не запускаем автоматически, только по нажатию на кнопку
 })();
 </script>
 </body>
