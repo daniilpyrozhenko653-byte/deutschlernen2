@@ -4138,24 +4138,35 @@ style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-5
 document.head.appendChild(style);
 
 
-    // ========== СЛУЧАЙНАЯ НЕМЕЦКАЯ ПЕСНЯ ==========
-let songs = [
-    {name: "Rammstein - Deutschland", url: "https://www.youtube.com/watch?v=NeQM1c-XCDc"},
-    {name: "Nena - 99 Luftballons", url: "https://www.youtube.com/watch?v=La4Dcd1aUcE"},
-    {name: "Die Toten Hosen - Tage wie diese", url: "https://www.youtube.com/watch?v=2UyD7v4MS4E"},
-    {name: "Mark Forster - Auf anderen Wegen", url: "https://www.youtube.com/watch?v=G1cM-4APlx8"},
-    {name: "Namika - Lieblingsmensch", url: "https://www.youtube.com/watch?v=D1nNRUpW4vY"},
-    {name: "AnnenMayKantereit - Pocahontas", url: "https://www.youtube.com/watch?v=GHCQ5P1yGjQ"}
+    // ========== СМЕНА ТЕМЫ ==========
+let themes = [
+    {name: "🌙 Тёмная", bg: "#1a1a2e", text: "#eee", card: "#16213e"},
+    {name: "☀️ Светлая", bg: "#f5f5f5", text: "#333", card: "#fff"},
+    {name: "💙 Синяя", bg: "#0d47a1", text: "#fff", card: "#1565c0"},
+    {name: "💚 Зелёная", bg: "#1b5e20", text: "#fff", card: "#2e7d32"},
+    {name: "💜 Фиолетовая", bg: "#4a148c", text: "#fff", card: "#6a1b9a"}
 ];
-let songBtn = document.createElement('button');
-songBtn.innerHTML = '🎵 Случайная песня';
-songBtn.style.cssText = 'position:fixed;bottom:80px;right:130px;background:#E91E63;border:none;color:white;padding:8px 15px;border-radius:20px;cursor:pointer;z-index:9999;font-size:11px;';
-songBtn.onclick = () => {
-    let randomSong = songs[Math.floor(Math.random() * songs.length)];
-    window.open(randomSong.url, '_blank');
+let themeIndex = parseInt(localStorage.getItem('themeIndex') || 0);
+let themeBtn = document.createElement('button');
+themeBtn.innerHTML = themes[themeIndex].name;
+themeBtn.style.cssText = 'position:fixed;top:60px;right:430px;background:#333;color:white;padding:5px 12px;border-radius:20px;cursor:pointer;z-index:9999;font-size:11px;';
+themeBtn.onclick = () => {
+    themeIndex = (themeIndex + 1) % themes.length;
+    localStorage.setItem('themeIndex', themeIndex);
+    let theme = themes[themeIndex];
+    document.body.style.backgroundColor = theme.bg;
+    document.body.style.color = theme.text;
+    let card = document.getElementById('flashcard');
+    if(card) card.style.backgroundColor = theme.card;
+    themeBtn.innerHTML = theme.name;
 };
-document.body.appendChild(songBtn);
-
+document.body.appendChild(themeBtn);
+// Применяем сохранённую тему
+let savedTheme = themes[themeIndex];
+document.body.style.backgroundColor = savedTheme.bg;
+document.body.style.color = savedTheme.text;
+let card = document.getElementById('flashcard');
+if(card) card.style.backgroundColor = savedTheme.card;
     
 </script>
 </body>
