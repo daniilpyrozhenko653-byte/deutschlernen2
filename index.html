@@ -4137,7 +4137,7 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА ЧТЕНИЯ (полная версия) ==========
+// ========== ВКЛАДКА ЧТЕНИЯ (тройной клик для озвучки) ==========
 (function() {
     if (document.getElementById('simpleReaderBtn')) return;
 
@@ -4206,7 +4206,7 @@ document.head.appendChild(style);
     };
 
     const texts = {
-        a1: `Hallo! Ich heiße Tom. Ich komme aus Berlin. Ich bin 25 Jahre alt. Ich lerne Deutsch. Deutsch ist eine interessante Sprache. Ich habe einen Bruder. Er heißt Max. Max ist 22 Jahre alt. Wir wohnen zusammen in einer Wohnung. Unsere Wohnung ist nicht groß, aber schön. Wir haben zwei Zimmer, eine Küche und ein Bad. Mein Zimmer ist klein. Ich habe ein Bett, einen Tisch und einen Stuhl. Am Morgen stehe ich um 7 Uhr auf. Dann frühstücke ich. Ich esse Brot mit Marmelade und trinke Kaffee. Um 8 Uhr gehe ich zur Arbeit. Ich arbeite in einem Büro. Meine Arbeit macht mir Spaß. Am Abend komm ich nach Hause. Ich koche Abendessen. Dann sehe ich fern oder lese ein Buch. Um 22 Uhr gehe ich ins Bett. Am Wochenende gehe ich oft ins Kino oder treffe mich mit Freunden. Wir gehen gerne spazieren oder essen in einem Restaurant. Ich lerne jeden Tag neue deutsche Wörter. Deutsch ist schwer, aber ich gebe nicht auf. Ich möchte perfekt Deutsch sprechen`,
+        a1: `Hallo! Ich heiße Tom. Ich komme aus Berlin. Ich bin 25 Jahre alt. Ich lerne Deutsch. Deutsch ist eine interessante Sprache. Ich habe einen Bruder. Er heißt Max. Max ist 22 Jahre alt. Wir wohnen zusammen in einer Wohnung. Unsere Wohnung ist nicht groß, aber schön. Wir haben zwei Zimmer, eine Küche und ein Bad. Mein Zimmer ist klein. Ich habe ein Bett, einen Tisch und einen Stuhl. Am Morgen stehe ich um 7 Uhr auf. Dann frühstücke ich. Ich esse Brot mit Marmelade und trinke Kaffee. Um 8 Uhr gehe ich zur Arbeit. Ich arbeite in einem Büro. Meine Arbeit macht mir Spaß. Am Abend komme ich nach Hause. Ich koche Abendessen. Dann sehe ich fern oder lese ein Buch. Um 22 Uhr gehe ich ins Bett. Am Wochenende gehe ich oft ins Kino oder treffe mich mit Freunden. Wir gehen gerne spazieren oder essen in einem Restaurant. Ich lerne jeden Tag neue deutsche Wörter. Deutsch ist schwer, aber ich gebe nicht auf. Ich möchte perfekt Deutsch sprechen`,
         b1: `Guten Morgen! Heute möchte ich euch von meiner Reise nach München erzählen. München ist die Hauptstadt Bayerns und eine der schönsten Städte Deutschlands. Ich bin letztes Jahr im September dorthin gefahren. Die Reise mit dem Zug hat etwa vier Stunden gedauert. Als ich in München ankam, war ich sofort von der schönen Architektur beeindruckt. Die Gebäude sind sehr alt und haben eine besondere Geschichte. Ich habe mir zuerst den Marienplatz angeschaut. Dort steht das Neue Rathaus mit seinem berühmten Glockenspiel. Das war wirklich zauberhaft! Dann bin ich in ein traditionelles bayerisches Restaurant gegangen. Ich habe eine Brezel und ein Glas Weißbier bestellt. Das Essen war köstlich. Am nächsten Tag bin ich zum Oktoberfest gegangen. Es war riesig! Überall waren bunte Zelte und Menschen in Trachten. Die Männer trugen Lederhosen und die Frauen Dirndlkleider. Ich habe viele neue Leute kennengelernt und mit ihnen getanzt`,
         c1: `Der Einfluss der Digitalisierung auf die deutsche Sprache ist ein viel diskutiertes Thema in der zeitgenössischen Linguistik. Unbestreitbar hat das Aufkommen des Internets, sozialer Netzwerke und der künstlichen Intelligenz unseren sprachlichen Alltag fundamental transformiert. Einerseits bereichert die Digitalisierung unseren Wortschatz durch zahlreiche Neologismen, die häufig aus dem angloamerikanischen Raum stammen. Begriffe wie "liken", "posten", "scrollen", "swipen" oder "chatten" haben sich nahtlos in den deutschen Sprachgebrauch integriert. Andererseits beobachten viele Sprachpuristen mit Sorge, dass die Digitalisierung zu einem Verfall der traditionellen schriftlichen Kompetenzen führen könnte`
     };
@@ -4214,71 +4214,8 @@ document.head.appendChild(style);
     let currentText = texts.a1;
     let allWordElements = [];
     let isSpeaking = false;
-    let currentSpeakingIndex = 0;
-    let currentUtterance = null;
-
-    // Функция озвучки слова
-    function speakSingleWord(word, element, index) {
-        return new Promise((resolve) => {
-            window.speechSynthesis.cancel();
-            
-            // Убираем подсветку со всех слов
-            allWordElements.forEach(el => {
-                if (el.style.background !== '#f39c12') {
-                    el.style.background = '#2c3e50';
-                }
-            });
-            
-            // Подсвечиваем текущее слово
-            if (element) {
-                element.style.background = '#ff6b6b';
-                // Автоскролл к слову
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'de-DE';
-            utterance.rate = 0.85;
-            utterance.onend = () => {
-                resolve();
-            };
-            utterance.onerror = () => {
-                resolve();
-            };
-            window.speechSynthesis.speak(utterance);
-        });
-    }
-
-    // Озвучка с определённого слова и до конца
-    async function speakFromWord(startIndex) {
-        if (isSpeaking) {
-            window.speechSynthesis.cancel();
-            await new Promise(r => setTimeout(r, 100));
-        }
-        
-        isSpeaking = true;
-        currentSpeakingIndex = startIndex;
-        
-        for (let i = startIndex; i < allWordElements.length; i++) {
-            if (!isSpeaking) break;
-            
-            const element = allWordElements[i];
-            const word = element.getAttribute('data-word');
-            currentSpeakingIndex = i;
-            
-            await speakSingleWord(word, element, i);
-            
-            if (!isSpeaking) break;
-        }
-        
-        isSpeaking = false;
-        // Снимаем подсветку
-        allWordElements.forEach(el => {
-            if (el.style.background !== '#f39c12') {
-                el.style.background = '#2c3e50';
-            }
-        });
-    }
+    let tripleClickTimer = null;
+    let clickCount = 0;
 
     // Функция перевода
     function getTranslation(word) {
@@ -4303,15 +4240,82 @@ document.head.appendChild(style);
                 if (panel.style.opacity === '0') panel.style.display = 'none'; 
                 panel.style.opacity = '1';
             }, 300);
-        }, 4000); // Перевод держится 4 секунды
+        }, 4000);
     }
 
-    // Обработчик клика по слову
-    window.onWordClick = function(element, word, event) {
-        // Озвучиваем слово
-        speakSingleWord(word, element);
+    // Озвучка всего текста с определённого слова
+    function speakFromIndex(startIndex) {
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            setTimeout(() => speakFromIndex(startIndex), 100);
+            return;
+        }
         
-        // Показываем перевод (дольше - 4 секунды)
+        // Собираем текст с указанного слова до конца
+        let textToSpeak = '';
+        for (let i = startIndex; i < allWordElements.length; i++) {
+            textToSpeak += allWordElements[i].getAttribute('data-word') + ' ';
+        }
+        
+        if (textToSpeak.length > 0) {
+            isSpeaking = true;
+            
+            // Подсвечиваем первое слово
+            allWordElements.forEach(el => el.style.background = '#2c3e50');
+            allWordElements[startIndex].style.background = '#ff6b6b';
+            allWordElements[startIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'de-DE';
+            utterance.rate = 0.85;
+            
+            // Отслеживаем прогресс озвучки (примерно)
+            let wordIndex = startIndex;
+            const wordsCount = allWordElements.length - startIndex;
+            let currentWord = 0;
+            
+            utterance.onboundary = (event) => {
+                // Приблизительное отслеживание: каждые 0.5 секунды меняем подсветку
+                if (event.name === 'word' || event.charIndex % 30 < 5) {
+                    if (wordIndex < allWordElements.length) {
+                        allWordElements.forEach(el => {
+                            if (el.style.background !== '#f39c12') {
+                                el.style.background = '#2c3e50';
+                            }
+                        });
+                        allWordElements[wordIndex].style.background = '#ff6b6b';
+                        allWordElements[wordIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        wordIndex++;
+                    }
+                }
+            };
+            
+            utterance.onend = () => {
+                isSpeaking = false;
+                allWordElements.forEach(el => {
+                    if (el.style.background !== '#f39c12') {
+                        el.style.background = '#2c3e50';
+                    }
+                });
+            };
+            
+            utterance.onerror = () => {
+                isSpeaking = false;
+                allWordElements.forEach(el => {
+                    if (el.style.background !== '#f39c12') {
+                        el.style.background = '#2c3e50';
+                    }
+                });
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // Обработчик тройного клика по слову
+    window.onWordTripleClick = function(element, word, index) {
+        // Показываем перевод
         let translation = element.getAttribute('data-trans');
         if (!translation) {
             translation = getTranslation(word);
@@ -4319,26 +4323,8 @@ document.head.appendChild(style);
         }
         showTranslation(word, translation);
         
-        // Меняем цвет временно
-        const originalBg = element.style.background;
-        element.style.background = '#f39c12';
-        setTimeout(() => {
-            if (element.style.background === '#f39c12') {
-                element.style.background = '#27ae60';
-            }
-            setTimeout(() => {
-                if (element.style.background === '#27ae60' && !isSpeaking) {
-                    element.style.background = '#2c3e50';
-                }
-            }, 800);
-        }, 300);
-    };
-
-    // Озвучка с выбранного слова (через контекстное меню)
-    window.speakFromThisWord = function(element, word, index) {
-        if (confirm(`Озвучить весь текст начиная со слова "${word}"?`)) {
-            speakFromWord(index);
-        }
+        // Начинаем озвучку с этого слова
+        speakFromIndex(index);
     };
 
     // Отображение текста
@@ -4360,8 +4346,7 @@ document.head.appendChild(style);
                                data-word="${safeWord}"
                                data-index="${idx}"
                                style="cursor:pointer; display:inline-block; margin:0 2px; padding:2px 6px; border-radius:10px; background:#2c3e50; transition:all 0.2s;" 
-                               onclick="onWordClick(this, '${wordForOnclick}', event)"
-                               oncontextmenu="event.preventDefault(); speakFromThisWord(this, '${wordForOnclick}', ${idx}); return false;"
+                               ondblclick="onWordTripleClick(this, '${wordForOnclick}', ${idx})"
                                onmouseover="this.style.background='#2980b9'; this.style.transform='scale(1.02)';"
                                onmouseout="if(this.style.background!='#f39c12' && this.style.background!='#ff6b6b'){this.style.background='#2c3e50'}; this.style.transform='scale(1)';">${w}</span>`;
                 wordCounter++;
@@ -4421,10 +4406,10 @@ document.head.appendChild(style);
         '</div>' +
         '</div>' +
         '<div style="padding:8px 25px; background:#0a0a15; font-size:13px; color:#aaa; border-bottom:1px solid #2c3e50;">' +
-        '💡 <strong>Как озвучить с любого слова:</strong> Нажмите на слово ПРАВОЙ кнопкой мыши → выберите "Озвучить весь текст с этого слова"' +
+        '💡 <strong>Как озвучить с любого слова:</strong> БЫСТРО ТРИ РАЗА НАЖМИТЕ на слово (тройной клик) → начнётся озвучка с этого слова с подсветкой и автопрокруткой' +
         '</div>' +
         '<div id="simpleReaderContent" style="flex:1; overflow:auto; padding:30px; font-size:18px; line-height:1.8; background:#0f0f1a; margin:15px 20px; border-radius:20px;"></div>' +
-        '<div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 ЛЕВЫЙ клик → озвучка слова + перевод (4 сек) | ПРАВЫЙ клик → озвучка ВСЕГО текста с этого слова с подсветкой и автопрокруткой</div>';
+        '<div style="padding:8px; text-align:center; background:#1a1a2e; font-size:13px;">🔊 ТРОЙНОЙ КЛИК → озвучка ВСЕГО текста с этого слова | Перевод показывается 4 секунды</div>';
     document.body.appendChild(modal);
 
     // ========== ОБРАБОТЧИКИ ==========
@@ -4448,7 +4433,7 @@ document.head.appendChild(style);
     
     document.getElementById('speakFullBtn').onclick = () => {
         if (allWordElements.length > 0) {
-            speakFromWord(0);
+            speakFromIndex(0);
         }
     };
     
