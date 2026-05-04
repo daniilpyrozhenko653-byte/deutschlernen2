@@ -4137,23 +4137,81 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
+// ========== ВКЛАДКА ЧТЕНИЯ (простая и надёжная) ==========
 (function() {
-    // Проверяем, нет ли уже такой кнопки
-    if (document.getElementById('test_read_btn')) return;
-    
-    // Создаём кнопку
+    if (document.getElementById('simpleReaderBtn')) return;
+
+    // Кнопка для открытия
     let btn = document.createElement('button');
-    btn.id = 'test_read_btn';
-    btn.textContent = '📖 Тест чтения';
-    btn.style.cssText = 'position:fixed; bottom:100px; left:20px; background:orange; color:black; border:none; padding:10px; border-radius:10px; z-index:999999; cursor:pointer;';
+    btn.id = 'simpleReaderBtn';
+    btn.textContent = '📖 Читать';
+    btn.style.cssText = 'position:fixed; bottom:150px; left:20px; background:#2196F3; color:white; border:none; padding:8px 16px; border-radius:25px; cursor:pointer; z-index:9999; font-size:14px;';
     document.body.appendChild(btn);
-    
-    // При нажатии показываем alert
-    btn.onclick = function() {
-        alert('Привет! Это тестовое сообщение. Если ты его видишь, то кнопка работает.');
+
+    // Модальное окно
+    let modal = document.createElement('div');
+    modal.id = 'simpleReaderModal';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100000; display:none; flex-direction:column; color:white;';
+    modal.innerHTML = 
+        <div style="background:#2c3e50; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0;">📖 Читай и нажимай на слова</h3>
+            <button id="closeSimpleReader" style="background:#c0392b; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">Закрыть</button>
+        </div>
+        <div style="padding:15px;">
+            <button id="simpleText1" style="background:#2ecc71; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">📘 Лёгкий текст</button>
+            <button id="simpleText2" style="background:#f39c12; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer; margin-left:10px;">📙 Средний текст</button>
+        </div>
+        <div id="simpleReaderContent" style="flex:1; overflow:auto; padding:25px; font-size:20px; line-height:1.6; background:#1a1a2e; margin:10px; border-radius:15px;"></div>
+        <div style="padding:10px; text-align:center; background:#2c3e50; font-size:14px;">💡 Кликни по любому слову — увидишь перевод</div>
+    ;
+    document.body.appendChild(modal);
+
+    // Словарь (немецкое слово -> перевод)
+    const dict = {
+        'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Anna': 'Анна', 'komme': 'прихожу',
+        'aus': 'из', 'Berlin': 'Берлин', 'lerne': 'учу', 'Deutsch': 'немецкий', 'Familie': 'семья',
+        'Vater': 'отец', 'Mutter': 'мать', 'Bruder': 'брат', 'Name': 'имя', 'wohne': 'живу',
+        'Haus': 'дом', 'liebe': 'люблю', 'Guten': 'Добрый', 'Morgen': 'утро', 'heute': 'сегодня',
+        'schön': 'красивый', 'Tag': 'день', 'gehe': 'иду', 'Schule': 'школа', 'Freunde': 'друзья',
+        'spiele': 'играю', 'Fußball': 'футбол', 'lese': 'читаю', 'Buch': 'книгу', 'Bett': 'кровать',
+        'und': 'и', 'am': 'в', 'Abend': 'вечер', 'dann': 'затем', 'ins': 'в', 'meine': 'моя',
+        'meinen': 'моего', 'ist': 'есть', 'ein': 'один', 'Das': 'Это', 'gut': 'хорошо'
     };
-    
-    console.log('Кнопка добавлена');
+
+    const lightText = "Hallo! Ich heiße Anna. Ich lerne Deutsch. Das ist meine Familie. Ich liebe meinen Bruder.";
+    const mediumText = "Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Am Abend lese ich ein Buch. Dann gehe ich ins Bett.";
+
+    // Функция отображения текста с кликабельными словами
+    function displayText(text) {
+        const container = document.getElementById('simpleReaderContent');
+        const words = text.split(/(\s+)/);
+        let html = '';
+        for (let w of words) {
+            const clean = w.replace(/[.,!?;:]/g, '');
+            const translation = dict[clean];
+            if (translation && w.trim().length > 0) {
+                // Экранируем кавычки для alert
+                const safeWord = w.replace(/'/g, "\\'");
+                const safeTrans = translation.replace(/'/g, "\\'");
+                html += `<span style="cursor:pointer; display:inline-block; margin:0 2px; padding:0 6px; border-radius:8px; background:#34495e;" 
+                               onclick="alert('Перевод: ${safeWord} → ${safeTrans}')"
+                               onmouseover="this.style.background='#16a085'"
+                               onmouseout="this.style.background='#34495e'">${w}</span>`;
+            } else {
+                html += w;
+            }
+        }
+        container.innerHTML = html;
+    }
+
+    // Обработчики
+    btn.onclick = () => {
+        modal.style.display = 'flex';
+        displayText(lightText);
+    };
+    document.getElementById('closeSimpleReader').onclick = () => modal.style.display = 'none';
+    document.getElementById('simpleText1').onclick = () => displayText(lightText);
+    document.getElementById('simpleText2').onclick = () => displayText(mediumText);
 })();
 </script>
 </body>
