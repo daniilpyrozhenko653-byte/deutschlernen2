@@ -4137,46 +4137,64 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// Минимальная вкладка "Чтение" - без озвучки, без лишнего
+// ===== ВКЛАДКА "ЧТЕНИЕ" - НЕЗАВИСИМАЯ ВЕРСИЯ =====
 (function() {
-    if (document.getElementById('minReadBtn')) return;
+    // Уникальное имя для избежания конфликтов
+    const NS = 'Reader_' + Date.now();
+    if (window[NS]) return;
+    window[NS] = true;
 
-    // Кнопка
-    let btn = document.createElement('button');
-    btn.id = 'minReadBtn';
-    btn.textContent = '📖 Читать';
-    btn.style.cssText = 'position:fixed;top:90px;right:10px;background:#4CAF50;color:white;border:none;padding:5px 12px;border-radius:15px;cursor:pointer;z-index:9999;';
+    // Создаём кнопку
+    const btn = document.createElement('button');
+    btn.textContent = '📖 Чтение';
+    btn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#673AB7; color:white; border:none; padding:8px 16px; border-radius:25px; cursor:pointer; z-index:999999; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.3);';
     document.body.appendChild(btn);
 
-    // Окно
-    let win = document.createElement('div');
-    win.id = 'minReadWin';
-    win.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:black;z-index:100000;display:none;color:white;padding:20px;overflow:auto;';
-    win.innerHTML = 
-        <div style="text-align:right;"><button id="closeMinWin" style="background:red;border:none;color:white;padding:5px 15px;border-radius:10px;">X</button></div>
-        <h3>📖 Простой текст (нажми на слово)</h3>
-        <div id="minTextArea" style="font-size:20px;line-height:1.6;"></div>
+    // Создаём модальное окно
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1000000; display:none; flex-direction:column; color:white; font-family:sans-serif;';
+    modal.innerHTML = 
+        <div style="background:#2c3e50; padding:15px; display:flex; justify-content:space-between;">
+            <h2 style="margin:0;">📖 Чтение с переводом (нажми на слово)</h2>
+            <button id="${NS}_close" style="background:#c0392b; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">✖️ Закрыть</button>
+        </div>
+        <div style="padding:15px;">
+            <button id="${NS}_light" style="background:#27ae60; border:none; color:white; padding:6px 15px; border-radius:20px; cursor:pointer;">📘 Лёгкий</button>
+            <button id="${NS}_medium" style="background:#f39c12; border:none; color:white; padding:6px 15px; border-radius:20px; cursor:pointer; margin-left:10px;">📙 Средний</button>
+        </div>
+        <div id="${NS}_content" style="flex:1; overflow:auto; padding:20px; font-size:20px; line-height:1.6; background:#1a1a2e; margin:10px; border-radius:15px;"></div>
+        <div style="padding:10px; text-align:center; background:#2c3e50; font-size:14px;">💡 Кликни по любому слову, чтобы увидеть перевод</div>
     ;
-    document.body.appendChild(win);
+    document.body.appendChild(modal);
 
-    // Текст и перевод
-    const text = 'Hallo! Ich heiße Anna. Ich lerne Deutsch. Das ist mein Bruder.';
+    // Словарь
     const dict = {
-        'Hallo': 'Привет', 'Ich': 'Я', 'heiße': 'зовут', 'Anna': 'Анна', 'lerne': 'учу',
-        'Deutsch': 'немецкий', 'Das': 'Это', 'ist': 'есть', 'mein': 'мой', 'Bruder': 'брат'
+        'Hallo':'Привет','Ich':'Я','heiße':'зовут','Anna':'Анна','komme':'прихожу','aus':'из','Berlin':'Берлин',
+        'lerne':'учу','Deutsch':'немецкий','Familie':'семья','Vater':'отец','Mutter':'мать','Bruder':'брат',
+        'Name':'имя','wohne':'живу','Haus':'дом','liebe':'люблю','Guten':'Добрый','Morgen':'утро','heute':'сегодня',
+        'schön':'красивый','Tag':'день','gehe':'иду','Schule':'школа','Freunde':'друзья','spiele':'играю',
+        'Fußball':'футбол','lese':'читаю','Buch':'книгу','Bett':'кровать','und':'и','Abend':'вечер','dann':'затем',
+        'ins':'в','meine':'моя','meinen':'моего','ist':'есть','ein':'один','Das':'Это'
     };
 
-    // Показ текста с кликабельными словами
-    function showText() {
-        let container = document.getElementById('minTextArea');
-        let words = text.split(/(\s+)/);
+    const lightText = "Hallo! Ich heiße Anna. Ich lerne Deutsch. Das ist meine Familie. Ich liebe meinen Bruder.";
+    const mediumText = "Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Am Abend lese ich ein Buch. Dann gehe ich ins Bett.";
+
+    function render(text) {
+        const container = document.getElementById(${NS}_content);
+        const words = text.split(/(\s+)/);
         let html = '';
         for (let w of words) {
-            let clean = w.replace(/[.,!?]/g, '');
-            let trans = dict[clean];
-            if (trans && w.trim()) {
-                html += <span style="cursor:pointer;background:#333;display:inline-block;margin:0 2px;padding:0 4px;border-radius:4px;" 
-                               onclick="alert('Перевод: ${trans}')">${w}</span>;
+            const clean = w.replace(/[.,!?;:]/g, '');
+            const translation = dict[clean];
+            if (translation && w.trim().length > 0) {
+                // Экранируем кавычки для onclick
+                const safeWord = w.replace(/'/g, "\\'");
+                const safeTrans = translation.replace(/'/g, "\\'");
+                html += `<span style="cursor:pointer; display:inline-block; margin:0 2px; padding:0 5px; border-radius:8px; background:#34495e;" 
+                               onclick="alert('${safeWord} → ${safeTrans}'); 
+                                        (new SpeechSynthesisUtterance('${safeWord}')).lang='de-DE'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance('${safeWord}'));"onmouseover="this.style.background='#16a085'"
+                               onmouseout="this.style.background='#34495e'">${w}</span>;
             } else {
                 html += w;
             }
@@ -4184,12 +4202,14 @@ document.head.appendChild(style);
         container.innerHTML = html;
     }
 
-    // Открытие/закрытие
+    // Обработчики
     btn.onclick = () => {
-        win.style.display = 'block';
-        showText();
+        modal.style.display = 'flex';
+        render(lightText);
     };
-    document.getElementById('closeMinWin').onclick = () => win.style.display = 'none';
+    document.getElementById(${NS}_close).onclick = () => modal.style.display = 'none';
+    document.getElementById(${NS}_light).onclick = () => render(lightText);
+    document.getElementById(${NS}_medium`).onclick = () => render(mediumText);
 })();
 </script>
 </body>
