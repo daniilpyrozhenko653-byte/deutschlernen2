@@ -6377,86 +6377,135 @@ document.head.appendChild(style);
 })();
 
 
-               (function() {
-    // Проверяем, нет ли уже кнопки
-    if (document.getElementById('simpleChatBtn')) return;
+               // ========== ЧАТ-БОТ С ПОДДЕРЖКОЙ ВАШЕГО СЛОВАРЯ ==========
+(function() {
+    if (document.getElementById('finalChatBtn')) return;
+
+    // Пытаемся найти словарь (может быть в window или локально)
+    let dictionary = null;
+    if (typeof localDict !== 'undefined') dictionary = localDict;
+    else if (window.localDict) dictionary = window.localDict;
+    else {
+        console.warn('Словарь не найден, бот будет работать без переводов');
+        dictionary = {};
+    }
+
+    // Функция перевода с учётом регистра
+    function translateWord(word) {
+        if (!dictionary) return null;
+        let clean = word.trim().toLowerCase().replace(/[.,!?;:()]/g, '');
+        if (!clean) return null;
+        // Ищем в разных регистрах
+        return dictionary[clean] || 
+               dictionary[clean.charAt(0).toUpperCase() + clean.slice(1)] ||
+               dictionary[clean.toUpperCase()] ||
+               null;
+    }
 
     // Создаём кнопку
     let btn = document.createElement('div');
-    btn.id = 'simpleChatBtn';
+    btn.id = 'finalChatBtn';
     btn.innerHTML = '💬';
-    btn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#9b59b6; color:white; width:55px; height:55px; border-radius:50%; cursor:pointer; font-size:28px; display:flex; align-items:center; justify-content:center; z-index:99999; box-shadow:0 2px 10px black;';
+    btn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#9b59b6; color:white; width:55px; height:55px; border-radius:50%; cursor:pointer; font-size:28px; display:flex; align-items:center; justify-content:center; z-index:100000; box-shadow:0 2px 10px black;';
     document.body.appendChild(btn);
 
-    // Создаём окно чата
+    // Окно чата
     let win = document.createElement('div');
-    win.id = 'simpleChatWin';
-    win.style.cssText = 'position:fixed; bottom:85px; left:20px; width:300px; height:400px; background:#1e1e2e; border-radius:15px; z-index:99999; display:none; flex-direction:column; border:1px solid #9b59b6; overflow:hidden;';
+    win.id = 'finalChatWin';
+    win.style.cssText = 'position:fixed; bottom:85px; left:20px; width:320px; height:450px; background:#1e1e2e; border-radius:15px; z-index:100000; display:none; flex-direction:column; border:1px solid #9b59b6; overflow:hidden;';
     win.innerHTML = `
-        <div style="background:#9b59b6; padding:10px; color:white; font-weight:bold; text-align:center;">🤖 Deutsch-Bot</div>
-        <div id="simpleChatMsgs" style="flex:1; overflow:auto; padding:10px; font-size:13px; display:flex; flex-direction:column; gap:8px;"></div>
-        <div style="display:flex; padding:8px; gap:8px; background:#2a2a3a;">
-            <input id="simpleChatInput" placeholder="Schreib etwas..." style="flex:1; padding:8px; border-radius:20px; border:none; background:#3a3a4a; color:white;">
-            <button id="simpleChatSend" style="background:#9b59b6; border:none; color:white; padding:5px 12px; border-radius:20px;">OK</button>
+        <div style="background:#9b59b6; padding:12px; color:white; font-weight:bold; text-align:center;">🤖 Deutsch-Bot (переводит слова)</div>
+        <div id="finalChatMsgs" style="flex:1; overflow:auto; padding:12px; font-size:13px; display:flex; flex-direction:column; gap:8px;"></div>
+        <div style="display:flex; padding:10px; gap:8px; background:#2a2a3a;">
+            <input id="finalChatInput" placeholder="Напиши слово на немецком..." style="flex:1; padding:10px; border-radius:25px; border:none; background:#3a3a4a; color:white; outline:none;">
+            <button id="finalChatSend" style="background:#9b59b6; border:none; color:white; padding:8px 16px; border-radius:25px; cursor:pointer;">➤</button>
         </div>
     `;
     document.body.appendChild(win);
 
     // Функция добавления сообщения
     function addMsg(text, isUser) {
-        let box = document.getElementById('simpleChatMsgs');
+        let box = document.getElementById('finalChatMsgs');
         let div = document.createElement('div');
         div.style.cssText = isUser 
-            ? 'background:#9b59b6; padding:8px 12px; border-radius:15px; align-self:flex-end; color:white; max-width:80%; word-wrap:break-word;'
-            : 'background:#3a3a4a; padding:8px 12px; border-radius:15px; align-self:flex-start; color:white; max-width:80%; word-wrap:break-word;';
-        div.innerText = (isUser ? '👤 ' : '🤖 ') + text;
+            ? 'background:#9b59b6; padding:8px 12px; border-radius:18px; align-self:flex-end; color:white; max-width:80%; word-wrap:break-word;'
+            : 'background:#3a3a4a; padding:8px 12px; border-radius:18px; align-self:flex-start; color:white; max-width:80%; word-wrap:break-word;';
+        div.innerText = text;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
     }
 
-    // Простые ответы
-    function getReply(msg) {
-        let m = msg.toLowerCase();
-        if (m.match(/hallo|hi|hey/)) return "Hallo! Wie geht's? 😊";
-        if (m.match(/wie geht|how are you/)) return "Mir geht's gut, danke! Und dir?";
-        if (m.match(/danke|thank/)) return "Bitte schön! 😊";
-        if (m.match(/tschüss|bye|auf wiedersehen/)) return "Tschüss! Bis bald! 👋";
-        if (m.match(/was bedeutet (\w+)/) || m.match(/übersetze (\w+)/)) {
-            let word = (m.match(/was bedeutet (\w+)/) || m.match(/übersetze (\w+)/))[1];
-            let trans = window.localDict ? (window.localDict[word] || window.localDict[word.charAt(0).toUpperCase()+word.slice(1)]) : null;
-            if (trans) return `"${word}" bedeutet: ${trans}`;
-            else return `Das Wort "${word}" kenne ich nicht. Klick es im Text an!`;
+    // Ответ бота
+    function botReply(msg) {
+        let lowerMsg = msg.toLowerCase().trim();
+        
+        // Приветствия
+        if (lowerMsg.match(/^(hallo|hi|hey|servus|grüß gott|guten tag|guten morgen|guten abend)$/)) {
+            return "Hallo! Wie kann ich dir helfen? Schreibe ein deutsches Wort, ich übersetze es! 😊";
         }
-        // если просто слово
-        if (m.match(/^[a-zäöüß]+$/i) && m.length>1 && m.length<30) {
-            let trans = window.localDict ? (window.localDict[m] || window.localDict[m.charAt(0).toUpperCase()+m.slice(1)]) : null;
-            if (trans) return `"${m}" → ${trans}`;
-            else return `"${m}" nicht im Wörterbuch.`;
+        // Как дела?
+        if (lowerMsg.match(/wie geht's|wie geht es dir|wie geht|wie läuft/)) {
+            return "Mir geht's super, danke! Ich helfe gerne beim Deutschlernen. Und dir?";
         }
-        return "Interessant! Frag mich nach einem Wort (z.B. 'Haus') oder 'was bedeutet Auto'.";
+        // Danke
+        if (lowerMsg.match(/danke|dankeschön|vielen dank|спасибо/)) {
+            return "Bitte schön! 😊 Gerne geschehen!";
+        }
+        // Tschüss
+        if (lowerMsg.match(/tschüss|auf wiedersehen|bis bald|bye/)) {
+            return "Tschüss! Bis zum nächsten Mal! 👋";
+        }
+        // Помощь
+        if (lowerMsg.match(/help|hilfe|что ты умеешь|команды/)) {
+            return "Ich kann deutsche Wörter übersetzen! Schreibe einfach ein Wort wie 'Haus', 'Liebe', 'Auto' oder frage 'was bedeutet X'.";
+        }
+        
+        // Проверка на фразу "was bedeutet X" или "переведи X"
+        let wordMatch = lowerMsg.match(/was bedeutet (\w+)|übersetze (\w+)|переведи (\w+)|что значит (\w+)/i);
+        let word = null;
+        if (wordMatch) {
+            word = wordMatch[1] || wordMatch[2] || wordMatch[3] || wordMatch[4];
+        }
+        // Если просто одно слово (немецкие буквы, длина больше 1)
+        if (!word && /^[a-zäöüß]+$/i.test(lowerMsg) && lowerMsg.length > 1 && lowerMsg.length < 40) {
+            word = lowerMsg;
+        }
+        
+        if (word) {
+            let translation = translateWord(word);
+            if (translation) {
+                return `"${word}" → ${translation}`;
+            } else {
+                return `Das Wort "${word}" kenne ich noch nicht. Es ist nicht im Wörterbuch. 😔 Klicke es im Text an, um es hinzuzufügen!`;
+            }
+        }
+        
+        // Если ничего не подошло
+        return "Schreib einfach ein Wort auf Deutsch (z.B. 'Haus', 'Mutter', 'Freund') – ich übersetze es für dich! 📖";
     }
 
-    // Отправка
+    // Отправка сообщения
     function send() {
-        let inp = document.getElementById('simpleChatInput');
-        let txt = inp.value.trim();
-        if (!txt) return;
-        addMsg(txt, true);
+        let inp = document.getElementById('finalChatInput');
+        let text = inp.value.trim();
+        if (!text) return;
+        addMsg('👤 ' + text, true);
         inp.value = '';
-        let reply = getReply(txt);
-        setTimeout(() => addMsg(reply, false), 300);
+        let reply = botReply(text);
+        setTimeout(() => addMsg('🤖 ' + reply, false), 200);
     }
 
-    // События
+    // Открыть/закрыть окно
     btn.onclick = () => {
         win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+        if (win.style.display === 'flex' && document.getElementById('finalChatMsgs').children.length === 0) {
+            addMsg('🤖 Hallo! Ich bin dein Übersetzer. Schreibe ein deutsches Wort, z.B. "Haus" oder "Liebe".', false);
+        }
     };
-    document.getElementById('simpleChatSend').onclick = send;
-    document.getElementById('simpleChatInput').onkeypress = (e) => { if (e.key === 'Enter') send(); };
-
-    // Приветствие при первом открытии (добавим пустое сообщение для приветствия)
-    let initMsg = 'Hallo! Ich bin dein Deutsch-Bot. Schreib ein Wort (z.B. "Haus") oder frage "was bedeutet Liebe".';
-    setTimeout(() => { addMsg(initMsg, false); }, 100);
+    document.getElementById('finalChatSend').onclick = send;
+    document.getElementById('finalChatInput').onkeypress = (e) => { if (e.key === 'Enter') send(); };
+    
+    console.log('✅ Чат-бот загружен. Словарь содержит', Object.keys(dictionary).length, 'слов.');
 })();
 </script>
 </body>
