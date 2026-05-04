@@ -4137,155 +4137,100 @@ let style = document.createElement('style');
 style.textContent = '@keyframes fadeOut{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5);}}';
 document.head.appendChild(style);
 
-// ========== ВКЛАДКА "ЧТЕНИЕ" С ПЕРЕВОДОМ ==========
+// ========== ПРОСТАЯ ВКЛАДКА ЧТЕНИЯ ==========
 
-// Создаём кнопку для переключения на вкладку чтения
-let readingTabBtn = document.createElement('button');
-readingTabBtn.innerHTML = '📖 Чтение';
-readingTabBtn.style.cssText = 'position:fixed;top:10px;right:200px;background:#2196F3;border:none;color:white;padding:8px 18px;border-radius:20px;cursor:pointer;z-index:9999;font-size:14px;font-weight:bold;';
-document.body.appendChild(readingTabBtn);
+// Создаём кнопку
+let readBtn = document.createElement('button');
+readBtn.innerHTML = '📖 Читать';
+readBtn.style.cssText = 'position:fixed;top:10px;right:250px;background:#2196F3;border:none;color:white;padding:8px 15px;border-radius:20px;cursor:pointer;z-index:9999;font-size:13px;';
+document.body.appendChild(readBtn);
 
-// Создаём панель чтения (изначально скрыта)
-let readingPanel = document.createElement('div');
-readingPanel.id = 'readingPanel';
-readingPanel.style.cssText = 
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:#1a1a2e;
-    z-index:10000;
-    overflow-y:auto;
-    display:none;
-    padding:20px;
-    color:white;
+// Создаём окно для чтения
+let readWindow = document.createElement('div');
+readWindow.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#0d1117;z-index:10000;display:none;flex-direction:column;color:white;';
+readWindow.innerHTML = 
+    <div style="padding:20px;background:#161b22;display:flex;justify-content:space-between;">
+        <h2 style="margin:0;">📖 Читаем по-немецки</h2>
+        <button id="closeReadBtn" style="background:#f44336;border:none;color:white;padding:8px 20px;border-radius:20px;cursor:pointer;">Закрыть</button>
+    </div>
+    <div style="padding:10px;background:#0d1117;display:flex;gap:10px;">
+        <button id="simpleTextBtn" style="background:#4CAF50;border:none;color:white;padding:8px 15px;border-radius:15px;cursor:pointer;">📘 Простой</button>
+        <button id="mediumTextBtn" style="background:#FF9800;border:none;color:white;padding:8px 15px;border-radius:15px;cursor:pointer;">📙 Средний</button>
+    </div>
+    <div id="readContent" style="padding:30px;font-size:18px;line-height:1.8;overflow-y:auto;flex:1;"></div>
+    <div style="padding:15px;background:#161b22;font-size:12px;">
+        💡 Совет: Нажми на любое слово - увидишь перевод!
+    </div>
 ;
-document.body.appendChild(readingPanel);
 
-// Тексты для чтения
-let readingTexts = {
-    beginner: {
-        title: "🇩🇪 Mein Tag (Мой день)",
-        text: Guten Morgen! Ich heiße Tom. Ich wache um 7 Uhr auf. Dann dusche ich und frühstücke. Ich esse Brot mit Käse und trinke Tee. Um 8 Uhr gehe ich zur Arbeit. Ich arbeite im Büro. Um 12 Uhr habe ich Mittagspause. Ich esse Suppe und Salat. Um 17 Uhr gehe ich nach Hause. Am Abend koche ich Abendessen. Dann lese ich ein Buch oder sehe fern. Um 22 Uhr gehe ich ins Bett. Das ist mein Tag!
-    },
-    intermediate: {
-        title: "🇩🇪 Meine Stadt (Мой город)",
-        text: Ich wohne in Berlin. Berlin ist die Hauptstadt von Deutschland. Die Stadt ist sehr groß und interessant. Es gibt viele Sehenswürdigkeiten: das Brandenburger Tor, den Reichstag und die Berliner Mauer. Ich liebe es, durch die Stadt zu spazieren. Besonders schön ist der Tiergarten. Dort kann man entspannen und die Natur genießen. In Berlin gibt es auch viele Museen und Theater. Am Abend gehe ich oft ins Kino oder in ein Restaurant. Die Menschen sind hier sehr freundlich. Ich fühle mich wohl in meiner Stadt.
-    },
-    advanced: {
-        title: "🇩🇪 Reisen ist wichtig (Путешествия важны)",
-        text: Reisen ist eine der schönsten Aktivitäten der Welt. Wenn man reist, entdeckt man neue Kulturen, lernt fremde Sprachen und trifft interessante Menschen. Jede Reise ist ein Abenteuer. Man kann Berge besteigen, am Strand liegen oder historische Städte besuchen. Besonders beliebt ist Deutschland als Reiseziel. Touristen besuchen gerne München, Hamburg oder Köln. Auch die deutsche Natur ist wunderschön. Der Schwarzwald, die Alpen und die Ostsee sind sehr beliebt. Reisen erweitert den Horizont und macht Spaß. Also, pack deinen Koffer und entdecke die Welt!
-    }
-};
+document.body.appendChild(readWindow);
+
+// Тексты
+let simpleText = Hallo! Ich heiße Anna. Ich komme aus Berlin. Ich lerne Deutsch. Das ist meine Familie. Mein Vater heißt Thomas. Meine Mutter heißt Maria. Ich habe einen Bruder. Sein Name ist Paul. Wir wohnen in einem Haus. Ich liebe meine Familie.;
+
+let mediumText = Guten Morgen! Heute ist ein schöner Tag. Ich gehe in die Schule. Meine Lieblingsfächer sind Deutsch und Musik. Nach der Schule treffe ich meine Freunde. Wir spielen Fußball im Park. Am Abend lese ich ein Buch. Dann gehe ich ins Bett. Das war mein Tag.;
 
 // Словарь для перевода
-let wordDictionary = {
-    wache: "просыпаюсь", aufwache: "просыпаюсь", dusche: "принимаю душ", frühstücke: "завтракаю",
-    esse: "ем", Brot: "хлеб", Käse: "сыр", trinke: "пью", Tee: "чай", gehe: "иду", Arbeit: "работа",
-    arbeite: "работаю", Büro: "офис", Mittagspause: "обеденный перерыв", Suppe: "суп", Salat: "салат",
-    Hause: "домой", koche: "готовлю", Abendessen: "ужин", lese: "читаю", Buch: "книга", sehe: "смотрю",
-    Bett: "кровать", wohne: "живу", Berlin: "Берлин", Hauptstadt: "столица", groß: "большой", interessant: "интересный",
-    Sehenswürdigkeiten: "достопримечательности", Brandenburger Tor: "Бранденбургские ворота", Reichstag: "Рейхстаг",
-    Berliner Mauer: "Берлинская стена", spazieren: "гулять", schön: "красивый", Tiergarten: "Тиргартен",
-    entspannen: "отдыхать", Natur: "природа", genießen: "наслаждаться", Museen: "музеи", Theater: "театры",
-    Kino: "кино", Restaurant: "ресторан", freundlich: "дружелюбные", fühle: "чувствую", wohl: "хорошо",
-    Reisen: "путешествия", Aktivitäten: "активности", entdeckt: "открывает", Kulturen: "культуры",
-    fremde: "иностранные", Sprachen: "языки", trifft: "встречает", Menschen: "людей", Abenteuer: "приключение",Berge: "горы", besteigen: "покорять", Strand: "пляж", historische: "исторические", Städte: "города",
-    beliebt: "популярный", Reiseziel: "направление", Touristen: "туристы", besuchen: "посещают",
-    Natur: "природа", Schwarzwald: "Шварцвальд", Alpen: "Альпы", Ostsee: "Балтийское море", erweitert: "расширяет",
-    Horizont: "горизонт", macht: "делает", Spaß: "веселье", pack: "упаковывай", Koffer: "чемодан", entdecke: "открывай"
+let dict = {
+    Hallo: "Привет", heiße: "меня зовут", komme: "прихожу", aus: "из", Berlin: "Берлин",
+    lerne: "учу", Deutsch: "немецкий", Familie: "семья", Vater: "отец", heißt: "зовут",
+    Mutter: "мать", einen: "одного", Bruder: "брат", Name: "имя", wohnen: "живём",
+    Haus: "дом", liebe: "люблю", Guten: "Доброе", Morgen: "утро", Heute: "сегодня",
+    schöner: "красивый", Tag: "день", gehe: "иду", Schule: "школа", Lieblingsfächer: "любимые предметы",
+    Musik: "музыка", Nach: "После", treffe: "встречаю", Freunde: "друзей", spielen: "играем",
+    Fußball: "футбол", Park: "парк", Abend: "вечер", lese: "читаю", Buch: "книгу",
+    Bett: "кровать", war: "был"
 };
 
-// Создаём интерфейс чтения
-function showReadingTab() {
-    readingPanel.style.display = 'block';
-    readingPanel.innerHTML = 
-        <div style="max-width:800px;margin:0 auto;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h2>📖 Обучение чтению</h2>
-                <button id="closeReadingBtn" style="background:#f44336;border:none;color:white;padding:10px 20px;border-radius:20px;cursor:pointer;">✖️ Закрыть</button>
-            </div>
-            
-            <div style="display:flex;gap:10px;margin-bottom:20px;">
-                <button id="levelBeginner" class="levelReadingBtn" style="background:#4CAF50;border:none;color:white;padding:10px 20px;border-radius:20px;cursor:pointer;">🌱 Лёгкий</button>
-                <button id="levelIntermediate" class="levelReadingBtn" style="background:#FF9800;border:none;color:white;padding:10px 20px;border-radius:20px;cursor:pointer;">📘 Средний</button>
-                <button id="levelAdvanced" class="levelReadingBtn" style="background:#f44336;border:none;color:white;padding:10px 20px;border-radius:20px;cursor:pointer;">🎓 Сложный</button>
-            </div>
-            
-            <div id="textContent" style="background:#0d1117;padding:25px;border-radius:15px;line-height:1.8;font-size:16px;">
-                <!-- Текст будет здесь -->
-            </div>
-            
-            <div style="margin-top:20px;background:#0d1117;padding:15px;border-radius:15px;">
-                <h3>📝 Как пользоваться:</h3>
-                <p>• <strong>Нажми на любое слово</strong> - увидишь перевод!</p>
-                <p>• <strong>Выбери уровень</strong> - текст станет сложнее или проще</p>
-                <p>• <strong>Читай вслух</strong> - тренируй произношение</p>
-            </div>
-        </div>
-    ;
-    
-    // Добавляем обработчики
-    document.getElementById('closeReadingBtn').onclick = () => readingPanel.style.display = 'none';
-    document.getElementById('levelBeginner').onclick = () => loadText('beginner');
-    document.getElementById('levelIntermediate').onclick = () => loadText('intermediate');
-    document.getElementById('levelAdvanced').onclick = () => loadText('advanced');
-    
-    // Загружаем начальный текст
-    loadText('beginner');
-}
-
-// Загрузка текста с подсветкой слов
-function loadText(level) {
-    let data = readingTexts[level];
-    let contentDiv = document.getElementById('textContent');
-    
-    let words = data.text.split(/(\s+)/);
-    let html = <h3 style="text-align:center;margin-bottom:20px;">${data.title}</h3>;
-    html += '<div style="font-size:18px;line-height:1.8;">';
+// Загрузка текста
+function loadText(text) {
+    let container = document.getElementById('readContent');
+    let words = text.split(/(\s+)/);
+    let html = '<div>';
     
     words.forEach(word => {
-        if(word.trim().length > 0 && !/^\s+$/.test(word)) {
-            let cleanWord = word.replace(/[.,!?;:]/g, '').toLowerCase();
-            let translation = wordDictionary[cleanWord];
-            if(translation && word !== ' ') {
-                html += <span style="cursor:pointer;display:inline-block;margin:2px;padding:2px 4px;border-radius:5px;transition:all 0.2s;" 
-                               onclick="showTranslation('${word.replace(/'/g, "\\'")}', '${translation}')"
-                               onmouseover="this.style.background='#333'"
-                               onmouseout="this.style.background='transparent'">${word}</span>;
-            } else {
-                html += <span>${word}</span>;
-            }
+        let clean = word.replace(/[.,!?]/g, '');
+        let lower = clean.toLowerCase();
+        let translation = dict[clean] || dict[lower];
+        
+        if(translation && word.trim().length > 0) {
+            html += <span style="cursor:pointer;display:inline-block;margin:2px;padding:2px 4px;border-radius:5px;" 
+                           onclick="showTranslate('${word.replace(/'/g, "\\'")}', '${translation}')"
+                           onmouseover="this.style.background='#333'"
+                           onmouseout="this.style.background='transparent'">${word}</span>;
         } else {
-            html += word;
+            html += <span>${word}</span>;
         }
     });
     
     html += '</div>';
-    contentDiv.innerHTML = html;
-}// Показ перевода при клике
-window.showTranslation = function(word, translation) {
-    let toast = document.createElement('div');
-    toast.innerHTML = 📖 <b>${word}</b> → ${translation};
-    toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:#FFD700;padding:12px 24px;border-radius:30px;z-index:10001;font-size:16px;animation:fadeOut 2s forwards;box-shadow:0 4px 15px rgba(0,0,0,0.3);';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
+    container.innerHTML = html;
+}// Показ перевода
+window.showTranslate = function(word, translate) {
+    let div = document.createElement('div');
+    div.innerHTML = 📖 ${word} → ${translate};
+    div.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:#FFD700;padding:10px 20px;border-radius:30px;z-index:10001;font-size:16px;';
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2000);
     
-    // Озвучка слова
+    // Озвучка
     try {
-        let utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = 'de-DE';
-        utterance.rate = 0.8;
+        let sound = new SpeechSynthesisUtterance(word);
+        sound.lang = 'de-DE';
         speechSynthesis.cancel();
-        speechSynthesis.speak(utterance);
+        speechSynthesis.speak(sound);
     } catch(e) {}
 };
 
-// Открытие вкладки
-readingTabBtn.onclick = showReadingTab;
-    
-    
+// Открытие/закрытие
+readBtn.onclick = () => {
+    readWindow.style.display = 'flex';
+    loadText(simpleText);
+};
+
+document.getElementById('closeReadBtn').onclick = () => readWindow.style.display = 'none';
+document.getElementById('simpleTextBtn').onclick = () => loadText(simpleText);
+document.getElementById('mediumTextBtn').onclick = () => loadText(mediumText);
 </script>
 </body>
 </html>
