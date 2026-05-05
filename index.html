@@ -7613,7 +7613,7 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – С ПЕРЕМЕШИВАНИЕМ СЛОВ ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ИСПРАВЛЕННЫЙ СЧЁТЧИК ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
 
@@ -7649,7 +7649,7 @@ window.localDict = localDict;
     `;
     document.body.appendChild(modal);
 
-    // ---------- СЛОВАРИ (оригинальные, без перемешивания) ----------
+    // ---------- СЛОВАРИ (исходные) ----------
     const rawLangData = {
         en: {
             name: 'English', flag: '🇬🇧', code: 'en-US',
@@ -7723,14 +7723,12 @@ window.localDict = localDict;
         }
     };
 
-    // Текущее состояние
     let currentLang = 'en';
     let currentLevel = 'A1';
-    let currentShuffledList = [];   // перемешанный список для текущего языка и уровня
+    let currentShuffledList = [];
     let currentIndex = 0;
     let isFlipped = false;
 
-    // Функция перемешивания массива (Fisher-Yates)
     function shuffleArray(arr) {
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
@@ -7740,49 +7738,34 @@ window.localDict = localDict;
         return a;
     }
 
-    // Получить оригинальный список слов для текущего языка и уровня
-    function getOriginalList() {
-        return rawLangData[currentLang]?.words?.[currentLevel] || [];
-    }
-
-    // Обновить перемешанный список (если уровень/язык изменились)
     function refreshShuffledList() {
-        const original = getOriginalList();
-        if (original.length) {
-            currentShuffledList = shuffleArray(original);
-        } else {
-            currentShuffledList = [];
-        }
-        // Сбросить индекс, если текущий вышел за пределы
+        const original = rawLangData[currentLang]?.words?.[currentLevel] || [];
+        currentShuffledList = original.length ? shuffleArray(original) : [];
         if (currentIndex >= currentShuffledList.length) currentIndex = 0;
     }
 
     function getCurrentPair() {
         if (!currentShuffledList.length) return null;
-        const pair = currentShuffledList[currentIndex % currentShuffledList.length].split('-');
+        const pair = currentShuffledList[currentIndex].split('-');
         return { word: pair[0], trans: pair[1] };
     }
 
     function speak(word) {
         if (!word) return;
-        if (!window.speechSynthesis) {
-            alert("Ваш браузер не поддерживает Speech Synthesis");
-            return;
-        }
+        if (!window.speechSynthesis) return;
         const utterance = new SpeechSynthesisUtterance(word);
         utterance.lang = rawLangData[currentLang].code;
         utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
     }
 
-    function updateCard() {
+    function updateCardAndCounter() {
         const pair = getCurrentPair();
         const total = currentShuffledList.length;
         const counterSpan = document.getElementById('cardCounter');
         if (counterSpan) {
             counterSpan.innerText = total ? `${currentIndex+1} / ${total}` : '0 / 0';
         }
-
         const wordDiv = document.getElementById('cardWord');
         const transDiv = document.getElementById('cardTrans');
         if (!pair) {
@@ -7797,9 +7780,7 @@ window.localDict = localDict;
     }
 
     function rebuildUI() {
-        // Обновить перемешанный список при смене языка/уровня
         refreshShuffledList();
-
         const levels = ['A1','A2','B1','B2','C1'];
         const flag = rawLangData[currentLang].flag;
         const total = currentShuffledList.length;
@@ -7858,13 +7839,12 @@ window.localDict = localDict;
             };
         }
 
-        // Навигация
         document.getElementById('prevBtn').onclick = () => {
             if (currentShuffledList.length) {
                 currentIndex = (currentIndex - 1 + currentShuffledList.length) % currentShuffledList.length;
                 isFlipped = false;
                 if (flipElem) flipElem.style.transform = '';
-                updateCard();
+                updateCardAndCounter();
             }
         };
         document.getElementById('nextBtn').onclick = () => {
@@ -7872,7 +7852,7 @@ window.localDict = localDict;
                 currentIndex = (currentIndex + 1) % currentShuffledList.length;
                 isFlipped = false;
                 if (flipElem) flipElem.style.transform = '';
-                updateCard();
+                updateCardAndCounter();
             }
         };
         document.getElementById('randBtn').onclick = () => {
@@ -7880,11 +7860,10 @@ window.localDict = localDict;
                 currentIndex = Math.floor(Math.random() * currentShuffledList.length);
                 isFlipped = false;
                 if (flipElem) flipElem.style.transform = '';
-                updateCard();
+                updateCardAndCounter();
             }
         };
 
-        // Селекты
         const langSelect = document.getElementById('langSelect');
         if (langSelect) {
             langSelect.onchange = (e) => {
@@ -7902,11 +7881,11 @@ window.localDict = localDict;
                 currentLevel = e.target.value;
                 currentIndex = 0;
                 isFlipped = false;
-                rebuildUI(); // полностью перестраиваем, чтобы перемешать список
+                rebuildUI();
             };
         }
 
-        updateCard();
+        updateCardAndCounter();
     }
 
     function loadNotebook() {
