@@ -7390,246 +7390,208 @@ window.localDict = localDict;
 
 
 
-    // ========== ИГРА "СОПОСТАВЬ СЛОВА НА ВРЕМЯ" (УВЕДОМЛЕНИЕ БЕЗ ALERT) ==========
-(function() {
-    // ... (весь предыдущий код создания панели и иконки, он не меняется) ...
-    // Но чтобы не дублировать, предположим, что панель уже есть. 
-    // Просто переопределим функцию launchTimedMatchGame.
+    function launchTimedMatchGame() {
+    if (window.timedGameActive) window.timedGameActive.remove();
 
-    window.launchTimedMatchGame = function() {
-        if (window.timedGameActive) window.timedGameActive.remove();
-
-        window.timedGameActive = document.createElement('div');
-        window.timedGameActive.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
-        window.timedGameActive.innerHTML = `
-            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:auto; padding:12px; position:relative; max-height:90vh;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
-                    <h3 style="margin:0; font-size:18px; color:white;">🧩 Сопоставь пары</h3>
-                    <div style="display:flex; gap:15px;">
-                        <span style="color:white;">⏱️ <span id="timerDisplay">0.0</span> сек</span>
-                        <span style="color:gold;">🏆 Рекорд: <span id="recordDisplay">—</span> сек</span>
-                    </div>
+    window.timedGameActive = document.createElement('div');
+    window.timedGameActive.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
+    
+    // Убираем overflow, делаем ширину 100%, ограничиваем max-width 480px
+    window.timedGameActive.innerHTML = `
+        <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:480px; padding:10px; position:relative; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+                <h3 style="margin:0; font-size:14px; color:white;">🧩 Сопоставь пары</h3>
+                <div style="display:flex; gap:10px;">
+                    <span style="color:white; font-size:11px;">⏱️ <span id="timerDisplay">0.0</span> сек</span>
+                    <span style="color:gold; font-size:11px;">🏆 <span id="recordDisplay">—</span></span>
                 </div>
-                <div id="timedMatchGrid" style="display:grid; grid-template-columns:repeat(6, minmax(65px,1fr)); gap:6px; justify-items:center; margin-bottom:15px; overflow-x:auto;"></div>
-                <div style="display:flex; justify-content:space-between; gap:10px;">
-                    <button id="resetTimedGame" style="background:#e67e22; border:none; padding:8px 12px; border-radius:20px; cursor:pointer; font-size:13px;">🔄 Новая игра</button>
-                    <button id="closeTimedGame" style="background:#c0392b; border:none; padding:8px 12px; border-radius:20px; cursor:pointer; font-size:13px;">✖ Закрыть</button>
-                </div>
-                <div id="customNotification" style="position:absolute; bottom:20px; left:20px; right:20px; background:#f39c12; color:#2c3e50; text-align:center; padding:10px; border-radius:30px; font-weight:bold; opacity:0; transition:opacity 0.3s; pointer-events:none;">🎉 Новый рекорд!</div>
             </div>
-        `;
-        document.body.appendChild(window.timedGameActive);
+            <div id="timedMatchGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px; margin-bottom:10px;"></div>
+            <div style="display:flex; justify-content:space-between; gap:6px;">
+                <button id="resetTimedGame" style="background:#e67e22; border:none; padding:5px 8px; border-radius:20px; cursor:pointer; font-size:11px;">🔄 Новая игра</button>
+                <button id="closeTimedGame" style="background:#c0392b; border:none; padding:5px 8px; border-radius:20px; cursor:pointer; font-size:11px;">✖ Закрыть</button>
+            </div>
+            <div id="customNotification" style="position:absolute; bottom:8px; left:8px; right:8px; background:#f39c12; color:#2c3e50; text-align:center; padding:4px; border-radius:16px; font-weight:bold; opacity:0; transition:opacity 0.3s; pointer-events:none; font-size:10px;">🎉 Новый рекорд!</div>
+        </div>
+    `;
+    document.body.appendChild(window.timedGameActive);
 
-        const grid = document.getElementById('timedMatchGrid');
-        const timerSpan = document.getElementById('timerDisplay');
-        const recordSpan = document.getElementById('recordDisplay');
-        const notification = document.getElementById('customNotification');
+    const grid = document.getElementById('timedMatchGrid');
+    const timerSpan = document.getElementById('timerDisplay');
+    const recordSpan = document.getElementById('recordDisplay');
+    const notification = document.getElementById('customNotification');
 
-        function showMessage(text, isRecord = false) {
-            notification.innerText = text;
-            notification.style.opacity = '1';
-            setTimeout(() => {
-                notification.style.opacity = '0';
-            }, 2000);
+    function showMessage(text) {
+        notification.innerText = text;
+        notification.style.opacity = '1';
+        setTimeout(() => notification.style.opacity = '0', 2000);
+    }
+
+    let bestTime = localStorage.getItem('matchTimeRecord');
+    recordSpan.innerText = bestTime ? parseFloat(bestTime).toFixed(1) : '—';
+
+    // Словарь (как в прошлом коде, без изменений)
+    let wordPairs = [];
+    if (window.localDict && Object.keys(window.localDict).length) {
+        wordPairs = Object.entries(window.localDict)
+            .filter(([de, ru]) => typeof de === 'string' && de.length > 1 && !de.match(/[А-Яа-я]/) && ru)
+            .slice(0, 100);
+    } else {
+        wordPairs = [['Haus','Дом'],['Katze','Кошка'],['Maus','Мышь'],['Sonne','Солнце'],['Wald','Лес'],['Blume','Цветок'],['Vogel','Птица'],['Fisch','Рыба'],['Auto','Машина'],['Buch','Книга'],['Tisch','Стол'],['Stuhl','Стул']];
+    }
+
+    function getRandomPairs() {
+        let shuffled = [...wordPairs];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
+        let selected = shuffled.slice(0, 12);
+        let cards = [];
+        selected.forEach((pair, idx) => {
+            cards.push({ id: Math.random(), text: pair[0], type: 'de', pairId: idx, matched: false });
+            cards.push({ id: Math.random(), text: pair[1], type: 'ru', pairId: idx, matched: false });
+        });
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        return cards;
+    }
 
-        let bestTime = localStorage.getItem('matchTimeRecord');
-        if (bestTime) recordSpan.innerText = parseFloat(bestTime).toFixed(1);
-        else recordSpan.innerText = '—';
+    let cardsData = getRandomPairs();
+    let cardElements = [];
+    let openedIndexes = [];
+    let lockBoard = false;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let gameActive = true;
 
-        let wordPairs = [];
-        if (window.localDict && Object.keys(window.localDict).length) {
-            wordPairs = Object.entries(window.localDict)
-                .filter(([de, ru]) => typeof de === 'string' && de.length > 1 && !de.match(/[А-Яа-я]/) && ru && ru.length > 0)
-                .slice(0, 100);
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerSeconds = 0;
+        timerSpan.innerText = '0.0';
+        timerInterval = setInterval(() => {
+            if (!gameActive) return;
+            timerSeconds += 0.1;
+            timerSpan.innerText = timerSeconds.toFixed(1);
+        }, 100);
+    }
+
+    function stopTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    function finishGame() {
+        if (!gameActive) return;
+        gameActive = false;
+        stopTimer();
+        let current = timerSeconds;
+        let record = localStorage.getItem('matchTimeRecord');
+        if (!record || current < parseFloat(record)) {
+            localStorage.setItem('matchTimeRecord', current.toFixed(1));
+            recordSpan.innerText = current.toFixed(1);
+            showMessage(`🎉 Новый рекорд! ${current.toFixed(1)} сек`);
         } else {
-            wordPairs = [['Haus','Дом'],['Katze','Кошка'],['Maus','Мышь'],['Sonne','Солнце'],['Wald','Лес'],['Blume','Цветок'],['Vogel','Птица'],['Fisch','Рыба'],['Auto','Машина'],['Buch','Книга'],['Tisch','Стол'],['Stuhl','Стул']];
-        }
-
-        function getRandomPairs() {
-            let shuffled = [...wordPairs];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            let selected = shuffled.slice(0, 12);
-            let cards = [];
-            selected.forEach((pair, idx) => {
-                cards.push({ id: Math.random(), text: pair[0], type: 'de', pairId: idx, matched: false });
-                cards.push({ id: Math.random(), text: pair[1], type: 'ru', pairId: idx, matched: false });
-            });
-            for (let i = cards.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [cards[i], cards[j]] = [cards[j], cards[i]];
-            }
-            return cards;
-        }
-
-        let cardsData = getRandomPairs();
-        let cardElements = [];
-        let openedIndexes = [];
-        let lockBoard = false;
-        let timerSeconds = 0;
-        let timerInterval = null;
-        let gameActive = true;
-
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            timerSeconds = 0;
-            timerSpan.innerText = '0.0';
-            timerInterval = setInterval(() => {
-                if (!gameActive) return;
-                timerSeconds += 0.1;
-                timerSpan.innerText = timerSeconds.toFixed(1);
-            }, 100);
-        }
-
-        function stopTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = null;
-        }
-
-        function finishGame() {
-            if (!gameActive) return;
-            gameActive = false;
-            stopTimer();
-            let currentTime = timerSeconds;
-            let record = localStorage.getItem('matchTimeRecord');
-            if (!record || currentTime < parseFloat(record)) {
-                localStorage.setItem('matchTimeRecord', currentTime.toFixed(1));
-                recordSpan.innerText = currentTime.toFixed(1);
-                showMessage(`🎉 Новый рекорд! ${currentTime.toFixed(1)} секунд!`, true);
-            } else {
-                showMessage(`✅ Все пары собраны! Время: ${currentTime.toFixed(1)} сек.`);
-            }
-        }
-
-        function renderGrid() {
-            grid.innerHTML = '';
-            cardElements = [];
-            for (let i = 0; i < cardsData.length; i++) {
-                const card = cardsData[i];
-                const btn = document.createElement('div');
-                btn.style.cssText = 'width:100%; aspect-ratio:1/1; background:#34495e; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; font-weight:bold; text-align:center; padding:4px; color:white; box-sizing:border-box; word-break:break-word; transition:0.1s;';
-                if (card.matched) {
-                    btn.textContent = card.text;
-                    btn.style.background = '#27ae60';
-                    btn.style.cursor = 'default';
-                } else {
-                    btn.textContent = '?';
-                    btn.style.background = '#34495e';
-                }
-                btn.dataset.index = i;
-                btn.addEventListener('click', () => onCardClick(i));
-                grid.appendChild(btn);
-                cardElements.push(btn);
-            }
-        }
-
-        function revealCard(index, permanent = false) {
-            const el = cardElements[index];
-            if (!el) return;
-            el.textContent = cardsData[index].text;
-            el.style.background = '#1abc9c';
-            if (permanent) {
-                el.style.background = '#27ae60';
-                el.style.cursor = 'default';
-            }
-        }
-
-        function hideCard(index) {
-            const el = cardElements[index];
-            if (!el) return;
-            if (cardsData[index].matched) return;
-            el.textContent = '?';
-            el.style.background = '#34495e';
-        }
-
-        function checkAllMatched() {
-            if (cardsData.every(c => c.matched)) {
-                finishGame();
-            }
-        }
-
-        function onCardClick(index) {
-            if (!gameActive) return;
-            if (lockBoard) return;
-            const card = cardsData[index];
-            if (card.matched) return;
-            if (openedIndexes.includes(index)) return;
-
-            revealCard(index, false);
-            openedIndexes.push(index);
-
-            if (openedIndexes.length === 2) {
-                lockBoard = true;
-                const idxA = openedIndexes[0];
-                const idxB = openedIndexes[1];
-                const cardA = cardsData[idxA];
-                const cardB = cardsData[idxB];
-                const isMatch = (cardA.pairId === cardB.pairId && cardA.type !== cardB.type);
-                if (isMatch) {
-                    cardA.matched = true;
-                    cardB.matched = true;
-                    revealCard(idxA, true);
-                    revealCard(idxB, true);
-                    openedIndexes = [];
-                    lockBoard = false;
-                    checkAllMatched();
-                } else {
-                    setTimeout(() => {
-                        if (gameActive) {
-                            if (!cardsData[idxA].matched) hideCard(idxA);
-                            if (!cardsData[idxB].matched) hideCard(idxB);
-                        }
-                        openedIndexes = [];
-                        lockBoard = false;
-                    }, 700);
-                }
-            }
-        }
-
-        function resetGame() {
-            if (timerInterval) clearInterval(timerInterval);
-            gameActive = true;
-            cardsData = getRandomPairs();
-            openedIndexes = [];
-            lockBoard = false;
-            renderGrid();
-            startTimer();
-        }
-
-        document.getElementById('resetTimedGame').onclick = resetGame;
-        document.getElementById('closeTimedGame').onclick = () => {
-            gameActive = false;
-            if (timerInterval) clearInterval(timerInterval);
-            window.timedGameActive.remove();
-            window.timedGameActive = null;
-        };
-
-        renderGrid();
-        startTimer();
-    };
-
-    // Если панель игр ещё не содержит иконку для этой игры – добавим (чтобы можно было вызвать)
-    function ensureIcon() {
-        let gamePanel = document.getElementById('gamePanel');
-        if (!gamePanel) return;
-        if (!document.getElementById('matchTimeIcon')) {
-            let icon = document.createElement('div');
-            icon.id = 'matchTimeIcon';
-            icon.style.cssText = 'background:#1e272e; padding:15px 25px; border-radius:20px; cursor:pointer; text-align:center; width:150px; margin:5px;';
-            icon.innerHTML = `<div style="font-size:48px;">⏱️🧩</div><div style="color:white;">Сопоставь слова (на время)</div>`;
-            let container = document.getElementById('gamesListTime') || gamePanel;
-            container.appendChild(icon);
-            icon.onclick = () => {
-                gamePanel.style.display = 'none';
-                window.launchTimedMatchGame();
-            };
+            showMessage(`✅ Все пары собраны! ${current.toFixed(1)} сек`);
         }
     }
-    setTimeout(ensureIcon, 100);
-})();
+
+    function renderGrid() {
+        grid.innerHTML = '';
+        cardElements = [];
+        for (let i = 0; i < cardsData.length; i++) {
+            const card = cardsData[i];
+            const btn = document.createElement('div');
+            btn.style.cssText = 'width:100%; aspect-ratio:1/1; background:#34495e; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:9px; font-weight:bold; text-align:center; padding:2px; color:white; box-sizing:border-box; word-break:break-word;';
+            if (card.matched) {
+                btn.textContent = card.text;
+                btn.style.background = '#27ae60';
+                btn.style.cursor = 'default';
+            } else {
+                btn.textContent = '?';
+                btn.style.background = '#34495e';
+            }
+            btn.dataset.index = i;
+            btn.addEventListener('click', () => onCardClick(i));
+            grid.appendChild(btn);
+            cardElements.push(btn);
+        }
+    }
+
+    function revealCard(index, permanent = false) {
+        const el = cardElements[index];
+        if (!el) return;
+        el.textContent = cardsData[index].text;
+        el.style.background = '#1abc9c';
+        if (permanent) {
+            el.style.background = '#27ae60';
+            el.style.cursor = 'default';
+        }
+    }
+
+    function hideCard(index) {
+        const el = cardElements[index];
+        if (!el || cardsData[index].matched) return;
+        el.textContent = '?';
+        el.style.background = '#34495e';
+    }
+
+    function onCardClick(index) {
+        if (!gameActive || lockBoard) return;
+        const card = cardsData[index];
+        if (card.matched || openedIndexes.includes(index)) return;
+
+        revealCard(index, false);
+        openedIndexes.push(index);
+
+        if (openedIndexes.length === 2) {
+            lockBoard = true;
+            const [i1, i2] = openedIndexes;
+            const c1 = cardsData[i1], c2 = cardsData[i2];
+            const isMatch = (c1.pairId === c2.pairId && c1.type !== c2.type);
+            if (isMatch) {
+                c1.matched = c2.matched = true;
+                revealCard(i1, true);
+                revealCard(i2, true);
+                openedIndexes = [];
+                lockBoard = false;
+                if (cardsData.every(c => c.matched)) finishGame();
+            } else {
+                setTimeout(() => {
+                    if (gameActive) {
+                        if (!cardsData[i1].matched) hideCard(i1);
+                        if (!cardsData[i2].matched) hideCard(i2);
+                    }
+                    openedIndexes = [];
+                    lockBoard = false;
+                }, 700);
+            }
+        }
+    }
+
+    function resetGame() {
+        if (timerInterval) clearInterval(timerInterval);
+        gameActive = true;
+        cardsData = getRandomPairs();
+        openedIndexes = [];
+        lockBoard = false;
+        renderGrid();
+        startTimer();
+    }
+
+    document.getElementById('resetTimedGame').onclick = resetGame;
+    document.getElementById('closeTimedGame').onclick = () => {
+        gameActive = false;
+        if (timerInterval) clearInterval(timerInterval);
+        window.timedGameActive.remove();
+        window.timedGameActive = null;
+    };
+
+    renderGrid();
+    startTimer();
+}
 </script>
 </body>
 </html>
