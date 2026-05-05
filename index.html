@@ -7390,226 +7390,251 @@ window.localDict = localDict;
 
 
 
-    // ========== НОВАЯ ИГРА: СОПОСТАВЛЕНИЕ СЛОВ (MEMORY) ==========
+    // ========== НОВАЯ ИГРА: СОПОСТАВЬ СЛОВА (MATCH PAIRS) ==========
 (function() {
-    // Функция добавления иконки игры в существующую панель выбора
-    function addGameIcon() {
-        // Ищем контейнер, где лежат иконки игр. По умолчанию это может быть panel или gamesListContainer
-        let panel = document.getElementById('gamePanel');
-        if (!panel) {
-            // если панели нет, создадим минимальную (на случай, если старый код ещё не выполнился)
-            panel = document.createElement('div');
-            panel.id = 'gamePanel';
-            panel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:15px; border-radius:15px; z-index:100001; display:none; flex-direction:column; align-items:center; gap:10px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7);';
-            panel.innerHTML = `
-                <div style="width:100%; display:flex; justify-content:flex-end;">
-                    <button id="closePanelBtn2" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
-                </div>
-                <div id="gamesContainer" style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;"></div>
-            `;
-            document.body.appendChild(panel);
-            document.getElementById('closePanelBtn2').onclick = () => panel.style.display = 'none';
-            // также нужно привязать кнопку вызова панели, если её нет (защита)
-            if (!document.getElementById('cactusGameRoot')) {
-                let readBtn = document.getElementById('simpleReaderBtn');
-                if (readBtn) {
-                    let gamesBtn = document.createElement('div');
-                    gamesBtn.id = 'cactusGameRoot';
-                    gamesBtn.innerHTML = '🎮 Игры';
-                    gamesBtn.style.cssText = 'position:absolute; top:20px; right:' + (parseInt(readBtn.style.right) + 80) + 'px; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000;';
-                    gamesBtn.onclick = () => panel.style.display = 'flex';
-                    document.body.appendChild(gamesBtn);
-                }
-            }
-        }
-        let gamesContainer = panel.querySelector('#gamesContainer');
-        if (!gamesContainer) {
-            // если контейнера нет, создаём
-            let existingIcons = panel.querySelectorAll('.game-icon-wrapper');
-            if (existingIcons.length) {
-                // иконки уже есть, но обёртки нет – создадим
-                let wrapper = document.createElement('div');
-                wrapper.id = 'gamesContainer';
-                wrapper.style.cssText = 'display:flex; gap:20px; flex-wrap:wrap; justify-content:center;';
-                // переносим существующие иконки в wrapper
-                let icons = Array.from(panel.querySelectorAll('.game-icon-wrapper'));
-                icons.forEach(icon => wrapper.appendChild(icon));
-                panel.appendChild(wrapper);
-                gamesContainer = wrapper;
-            } else {
-                let wrapper = document.createElement('div');
-                wrapper.id = 'gamesContainer';
-                wrapper.style.cssText = 'display:flex; gap:20px; flex-wrap:wrap; justify-content:center;';
-                panel.appendChild(wrapper);
-                gamesContainer = wrapper;
-            }
-        }
-        // Проверяем, есть ли уже иконка этой игры, чтобы не дублировать
-        if (document.getElementById('memoryGameIcon')) return;
-        // Создаём иконку для новой игры
-        let gameIcon = document.createElement('div');
-        gameIcon.id = 'memoryGameIcon';
-        gameIcon.className = 'game-icon-wrapper';
-        gameIcon.style.cssText = 'background:#1e272e; padding:15px 25px; border-radius:20px; cursor:pointer; text-align:center; width:150px;';
-        gameIcon.innerHTML = `
-            <div style="font-size:48px;">🃟🧠</div>
-            <div style="color:white; margin-top:5px;">Сопоставь слова</div>
+    // Находим или создаём панель выбора игр
+    let gamePanel = document.getElementById('gamePanel');
+    if (!gamePanel) {
+        // Если панели нет (старая версия), создаём её
+        gamePanel = document.createElement('div');
+        gamePanel.id = 'gamePanel';
+        gamePanel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:15px; border-radius:15px; z-index:100001; display:none; flex-direction:column; align-items:center; gap:10px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7);';
+        gamePanel.innerHTML = `
+            <div style="width:100%; display:flex; justify-content:flex-end;">
+                <button id="closePanelBtnNew" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+            </div>
+            <div id="gamesListContainer" style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;"></div>
         `;
-        gameIcon.onclick = () => {
-            panel.style.display = 'none';
-            launchMemoryGame();
-        };
-        gamesContainer.appendChild(gameIcon);
+        document.body.appendChild(gamePanel);
+        document.getElementById('closePanelBtnNew').onclick = () => gamePanel.style.display = 'none';
+        // Создаём кнопку для открытия панели, если её нет
+        if (!document.getElementById('cactusGameRoot')) {
+            let readBtn = document.getElementById('simpleReaderBtn');
+            if (readBtn) {
+                let gamesBtn = document.createElement('div');
+                gamesBtn.id = 'cactusGameRoot';
+                gamesBtn.innerHTML = '🎮 Игры';
+                gamesBtn.style.cssText = 'position:absolute; top:20px; right:' + (parseInt(readBtn.style.right) + 80) + 'px; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000;';
+                document.body.appendChild(gamesBtn);
+                gamesBtn.onclick = () => gamePanel.style.display = 'flex';
+            }
+        }
     }
 
-    // Логика игры "Memory: немецкий – русский"
-    function launchMemoryGame() {
-        if (document.getElementById('memoryGameContainer')) return;
-        let gameDiv = document.createElement('div');
-        gameDiv.id = 'memoryGameContainer';
-        gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100003; display:flex; align-items:center; justify-content:center;';
-        gameDiv.innerHTML = `
-            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:700px; overflow:hidden; padding:15px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:white;">
-                    <span>🧠 Пар найдено: <span id="memoryScore">0</span></span>
-                    <span>🏆 Рекорд: <span id="memoryHighScore">0</span></span>
-                    <button id="closeMemoryBtn" style="background:#c0392b; border:none; color:white; padding:4px 12px; border-radius:20px;">Закрыть</button>
+    // Добавляем иконку новой игры в панель (если ещё не добавлена)
+    const gamesContainer = gamePanel.querySelector('#gamesListContainer') || gamePanel;
+    if (!document.getElementById('matchGameIcon')) {
+        let matchIcon = document.createElement('div');
+        matchIcon.id = 'matchGameIcon';
+        matchIcon.style.cssText = 'background:#1e272e; padding:15px 25px; border-radius:20px; cursor:pointer; text-align:center; width:150px;';
+        matchIcon.innerHTML = `
+            <div style="font-size:48px;">🔤🧩</div>
+            <div style="color:white; margin-top:5px;">Сопоставь слова</div>
+        `;
+        gamesContainer.appendChild(matchIcon);
+        matchIcon.onclick = () => {
+            gamePanel.style.display = 'none';
+            launchMatchGame();
+        };
+    }
+
+    // ----- ИГРА "СОПОСТАВЬ СЛОВА" -----
+    let matchGameActive = null;
+
+    function launchMatchGame() {
+        if (matchGameActive) matchGameActive.remove();
+
+        matchGameActive = document.createElement('div');
+        matchGameActive.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
+        matchGameActive.innerHTML = `
+            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:700px; overflow:auto; padding:15px; position:relative;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap;">
+                    <h3 style="margin:0; color:white;">🧩 Сопоставь слово с переводом</h3>
+                    <div style="display:flex; gap:20px;">
+                        <span style="color:white;">⭐ Очки: <span id="matchScore">0</span></span>
+                        <span style="color:gold;">🏆 Рекорд: <span id="matchHighScore">0</span></span>
+                    </div>
                 </div>
-                <div id="memoryGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; justify-items:center;"></div>
-                <button id="memoryRestartBtn" style="margin-top:15px; background:#e67e22; border:none; color:white; padding:8px; border-radius:20px; width:100%;">🔄 Начать заново</button>
+                <div id="matchGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; justify-items:center; margin-bottom:20px;"></div>
+                <div style="display:flex; justify-content:space-between;">
+                    <button id="resetMatchGame" style="background:#e67e22; border:none; padding:8px 16px; border-radius:20px; cursor:pointer;">🔄 Новая игра (сброс счёта)</button>
+                    <button id="closeMatchGame" style="background:#c0392b; border:none; padding:8px 16px; border-radius:20px; cursor:pointer;">✖ Закрыть</button>
+                </div>
             </div>
         `;
-        document.body.appendChild(gameDiv);
+        document.body.appendChild(matchGameActive);
 
-        // Словарь: берём слова из глобального localDict, формируем пары (немецкое слово – русский перевод)
-        let words = [];
+        // Получаем словарь из глобального localDict
+        let wordPairs = [];
         if (window.localDict && Object.keys(window.localDict).length) {
-            let entries = Object.entries(window.localDict).filter(([de, ru]) => 
-                typeof de === 'string' && typeof ru === 'string' && de.length > 1 && !de.match(/[А-Я]/) && ru.length > 0
-            ).slice(0, 16); // не больше 16 пар, чтобы сетка была 4x4 (8 пар)
-            words = entries.map(([de, ru]) => ({ de, ru }));
+            wordPairs = Object.entries(window.localDict)
+                .filter(([de, ru]) => typeof de === 'string' && de.length > 1 && !de.match(/[А-Яа-я]/) && ru.length > 0)
+                .slice(0, 100);
         } else {
-            words = [
-                { de: 'Hallo', ru: 'Привет' }, { de: 'Katze', ru: 'Кошка' }, { de: 'Haus', ru: 'Дом' },
-                { de: 'Maus', ru: 'Мышь' }, { de: 'Sonne', ru: 'Солнце' }, { de: 'Wald', ru: 'Лес' },
-                { de: 'Wasser', ru: 'Вода' }, { de: 'Liebe', ru: 'Любовь' }
-            ];
-        }
-        // Берём 8 пар (или меньше)
-        let pairs = words.slice(0, 8);
-        let cards = [];
-        pairs.forEach((pair, idx) => {
-            cards.push({ id: idx * 2, word: pair.de, type: 'de', pairId: idx, matched: false });
-            cards.push({ id: idx * 2 + 1, word: pair.ru, type: 'ru', pairId: idx, matched: false });
-        });
-        // Перемешиваем
-        for (let i = cards.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cards[i], cards[j]] = [cards[j], cards[i]];
+            wordPairs = [['Haus','Дом'],['Katze','Кошка'],['Maus','Мышь'],['Sonne','Солнце'],['Wald','Лес'],['Blume','Цветок'],['Vogel','Птица'],['Fisch','Рыба']];
         }
 
-        let openedCards = [];
+        // Переменные игры
+        let currentCards = [];        // массив объектов { id, text, type, pairId }
+        let openedCards = [];         // индексы открытых карт
         let lockBoard = false;
         let score = 0;
-        let highScore = localStorage.getItem('memoryHighScore') ? parseInt(localStorage.getItem('memoryHighScore')) : 0;
-        document.getElementById('memoryHighScore').innerText = highScore;
-        const scoreSpan = document.getElementById('memoryScore');
-        const grid = document.getElementById('memoryGrid');
+        let highScore = localStorage.getItem('matchHighScore') ? parseInt(localStorage.getItem('matchHighScore')) : 0;
+        const scoreSpan = document.getElementById('matchScore');
+        const highScoreSpan = document.getElementById('matchHighScore');
+        const gridContainer = document.getElementById('matchGrid');
 
-        function updateScore() {
+        highScoreSpan.innerText = highScore;
+
+        function updateScoreUI() {
             scoreSpan.innerText = score;
             if (score > highScore) {
                 highScore = score;
-                document.getElementById('memoryHighScore').innerText = highScore;
-                localStorage.setItem('memoryHighScore', highScore);
+                highScoreSpan.innerText = highScore;
+                localStorage.setItem('matchHighScore', highScore);
             }
         }
 
-        function render() {
-            grid.innerHTML = '';
-            cards.forEach((card, index) => {
-                let cardDiv = document.createElement('div');
-                cardDiv.className = 'memory-card';
-                cardDiv.style.cssText = 'width:80px; height:80px; background:#1e272e; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; font-size:14px; text-align:center; padding:5px; transition:0.2s;';
-                if (card.matched) {
-                    cardDiv.style.background = '#27ae60';
-                    cardDiv.innerHTML = '✅';
-                    cardDiv.style.cursor = 'default';
-                } else if (openedCards.includes(index)) {
-                    cardDiv.style.background = '#f39c12';
-                    cardDiv.innerHTML = card.word;
-                } else {
-                    cardDiv.innerHTML = '?';
-                }
-                cardDiv.onclick = () => {
-                    if (lockBoard) return;
-                    if (card.matched) return;
-                    if (openedCards.includes(index)) return;
-                    if (openedCards.length === 2) return;
-                    openedCards.push(index);
-                    render();
-                    if (openedCards.length === 2) {
-                        lockBoard = true;
-                        let [i1, i2] = openedCards;
-                        let card1 = cards[i1];
-                        let card2 = cards[i2];
-                        if (card1.pairId === card2.pairId && card1.type !== card2.type) {
-                            // совпадение
-                            cards[i1].matched = true;
-                            cards[i2].matched = true;
-                            score++;
-                            updateScore();
-                            openedCards = [];
-                            lockBoard = false;
-                            render();
-                            // звук монетки
-                            let coin = new Audio('https://www.soundjay.com/misc/sounds/coin-drop-2.mp3');
-                            coin.volume = 0.3;
-                            coin.play().catch(e=>{});
-                        } else {
-                            setTimeout(() => {
-                                openedCards = [];
-                                lockBoard = false;
-                                render();
-                            }, 800);
-                        }
-                    }
-                };
-                grid.appendChild(cardDiv);
-            });
-        }
-
-        function restartGame() {
-            // перетасовка
-            let newCards = [];
-            pairs.forEach((pair, idx) => {
-                newCards.push({ id: idx * 2, word: pair.de, type: 'de', pairId: idx, matched: false });
-                newCards.push({ id: idx * 2 + 1, word: pair.ru, type: 'ru', pairId: idx, matched: false });
-            });
-            for (let i = newCards.length - 1; i > 0; i--) {
+        // Генерация новой колоды (8 пар, перемешана)
+        function generateNewSet() {
+            // Берём случайные 8 пар из wordPairs
+            let shuffledPairs = [...wordPairs];
+            for (let i = shuffledPairs.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [newCards[i], newCards[j]] = [newCards[j], newCards[i]];
+                [shuffledPairs[i], shuffledPairs[j]] = [shuffledPairs[j], shuffledPairs[i]];
             }
-            cards = newCards;
+            let selected = shuffledPairs.slice(0, 8);
+            let cards = [];
+            selected.forEach((pair, idx) => {
+                // немецкое слово
+                cards.push({ id: Math.random(), text: pair[0], type: 'de', pairId: idx });
+                // перевод
+                cards.push({ id: Math.random(), text: pair[1], type: 'ru', pairId: idx });
+            });
+            // Перемешиваем карты
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            return cards;
+        }
+
+        let cardsData = generateNewSet();
+        let cardElements = [];
+
+        function renderBoard() {
+            gridContainer.innerHTML = '';
+            cardElements = [];
+            for (let i = 0; i < cardsData.length; i++) {
+                const card = cardsData[i];
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'match-card';
+                cardDiv.style.cssText = 'width:100px; height:100px; background:#34495e; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.2s; font-size:16px; font-weight:bold; text-align:center; padding:5px; color:white; box-shadow:0 2px 5px black;';
+                cardDiv.textContent = '?';
+                cardDiv.dataset.index = i;
+                cardDiv.addEventListener('click', () => onCardClick(i));
+                gridContainer.appendChild(cardDiv);
+                cardElements.push(cardDiv);
+            }
+        }
+
+        function revealCard(index, isTemporary = false) {
+            const div = cardElements[index];
+            div.textContent = cardsData[index].text;
+            div.style.background = '#1abc9c';
+            if (!isTemporary) {
+                // постоянное открытие
+                div.style.background = '#27ae60';
+            }
+        }
+
+        function hideCard(index) {
+            const div = cardElements[index];
+            div.textContent = '?';
+            div.style.background = '#34495e';
+        }
+
+        function resetTempOpen() {
+            for (let idx of openedCards) {
+                if (cardsData[idx] && !cardsData[idx].matched) {
+                    hideCard(idx);
+                }
+            }
+            openedCards = [];
+        }
+
+        function onCardClick(index) {
+            if (lockBoard) return;
+            const card = cardsData[index];
+            if (card.matched) return;
+            if (openedCards.includes(index)) return;
+
+            revealCard(index, true);
+            openedCards.push(index);
+
+            if (openedCards.length === 2) {
+                lockBoard = true;
+                const idx1 = openedCards[0];
+                const idx2 = openedCards[1];
+                const card1 = cardsData[idx1];
+                const card2 = cardsData[idx2];
+                // Проверяем, образуют ли они пару
+                const isMatch = (card1.pairId === card2.pairId && card1.type !== card2.type);
+                if (isMatch) {
+                    // Правильная пара
+                    score++;
+                    updateScoreUI();
+                    card1.matched = true;
+                    card2.matched = true;
+                    // Делаем карты зелёными и неактивными
+                    cardElements[idx1].style.background = '#2ecc71';
+                    cardElements[idx2].style.background = '#2ecc71';
+                    cardElements[idx1].style.cursor = 'default';
+                    cardElements[idx2].style.cursor = 'default';
+                    cardElements[idx1].removeEventListener('click', () => onCardClick(idx1));
+                    cardElements[idx2].removeEventListener('click', () => onCardClick(idx2));
+                    openedCards = [];
+                    lockBoard = false;
+                    // Проверяем, все ли карты собраны
+                    const allMatched = cardsData.every(c => c.matched);
+                    if (allMatched) {
+                        // Генерируем новый набор слов
+                        cardsData = generateNewSet();
+                        renderBoard();
+                        // Сброс открытых карт
+                        openedCards = [];
+                        lockBoard = false;
+                    }
+                } else {
+                    // Неправильная пара
+                    score--;
+                    updateScoreUI();
+                    setTimeout(() => {
+                        hideCard(idx1);
+                        hideCard(idx2);
+                        openedCards = [];
+                        lockBoard = false;
+                    }, 800);
+                }
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            updateScoreUI();
+            cardsData = generateNewSet();
+            renderBoard();
             openedCards = [];
             lockBoard = false;
-            score = 0;
-            updateScore();
-            render();
         }
 
-        document.getElementById('memoryRestartBtn').onclick = restartGame;
-        document.getElementById('closeMemoryBtn').onclick = () => {
-            gameDiv.remove();
+        document.getElementById('resetMatchGame').onclick = resetGame;
+        document.getElementById('closeMatchGame').onclick = () => {
+            matchGameActive.remove();
+            matchGameActive = null;
         };
-        render();
-    }
 
-    // Добавляем игру в панель после загрузки страницы
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addGameIcon);
-    } else {
-        addGameIcon();
+        renderBoard();
     }
 })();
 </script>
