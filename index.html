@@ -7181,52 +7181,7 @@ window.localDict = localDict;
     document.getElementById('deBotInput').onkeypress = (e) => { if (e.key === 'Enter') send(); };
 })();
 
-// ========== ЕДИНАЯ СИСТЕМА ИГР ==========
-(function() {
-    // Если кнопка игр уже есть — не создаём заново
-    if (document.getElementById('unifiedGamesBtn')) return;
 
-    // Находим кнопку "Читать"
-    const readBtn = document.getElementById('simpleReaderBtn');
-    let rightPos = '20px';
-    if (readBtn) {
-        const currentRight = parseInt(readBtn.style.right);
-        if (!isNaN(currentRight)) rightPos = (currentRight + 80) + 'px';
-    }
-
-    // Кнопка для вызова панели игр
-    const gamesBtn = document.createElement('div');
-    gamesBtn.id = 'unifiedGamesBtn';
-    gamesBtn.innerHTML = '🎮 Игры';
-    gamesBtn.style.cssText = `position:absolute; top:20px; right:${rightPos}; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);`;
-    document.body.appendChild(gamesBtn);
-
-    // Панель выбора игр (затемнённый фон)
-    const panel = document.createElement('div');
-    panel.id = 'unifiedGamePanel';
-    panel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100001; display:none; flex-direction:column; gap:15px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7);';
-    panel.innerHTML = `
-        <div style="display:flex; justify-content:flex-end;">
-            <button id="closeUnifiedPanel" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
-        </div>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
-            <div id="gameCatIcon" style="background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;">
-                <div style="font-size:48px;">🐱🌵</div>
-                <div style="color:white;">Кот и кактусы</div>
-            </div>
-            <div id="gameMatchIcon" style="background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;">
-                <div style="font-size:48px;">⏱️🧩</div>
-                <div style="color:white;">Сопоставь слова</div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(panel);
-
-    // Закрытие панели
-    document.getElementById('closeUnifiedPanel').onclick = () => panel.style.display = 'none';
-    gamesBtn.onclick = () => panel.style.display = 'flex';
-
-    
                 
 </script>
 </body>
