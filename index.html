@@ -7613,7 +7613,7 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ЭТАЛОННАЯ РАБОЧАЯ ВЕРСИЯ ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – РАСШИРЕННЫЕ СЛОВАРИ ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
 
@@ -7651,16 +7651,123 @@ window.localDict = localDict;
     `;
     document.body.appendChild(modal);
 
-    // БАЗА ДАННЫХ
+    // ==================== РАСШИРЕННЫЕ СЛОВАРИ ====================
     const langData = {
-        en: { name: 'English', flag: '🇬🇧', code: 'en-US', words: { A1: ['apple-яблоко', 'car-машина'] } },
-        es: { name: 'Español', flag: '🇪🇸', code: 'es-ES', words: { A1: ['hola-привет', 'gracias-спасибо'] } },
-        fr: { name: 'Français', flag: '🇫🇷', code: 'fr-FR', words: { A1: ['bonjour-здравствуйте', 'merci-спасибо'] } },
-        it: { name: 'Italiano', flag: '🇮🇹', code: 'it-IT', words: { A1: ['ciao-привет', 'grazie-спасибо'] } }
+        en: {
+            name: 'English', flag: '🇬🇧', code: 'en-US',
+            words: {
+                A1: [
+                    'apple-яблоко', 'car-машина', 'house-дом', 'cat-кот', 'dog-собака',
+                    'bed-кровать', 'book-книга', 'pen-ручка', 'table-стол', 'chair-стул',
+                    'door-дверь', 'window-окно', 'mother-мать', 'father-отец', 'brother-брат',
+                    'sister-сестра', 'friend-друг', 'happy-счастливый', 'sad-грустный',
+                    'big-большой', 'small-маленький', 'sun-солнце', 'water-вода', 'tree-дерево'
+                ],
+                A2: [
+                    'travel-путешествовать', 'delicious-вкусный', 'interesting-интересный',
+                    'boring-скучный', 'expensive-дорогой', 'cheap-дешёвый', 'beautiful-красивый',
+                    'ugly-уродливый', 'quickly-быстро', 'slowly-медленно'
+                ],
+                B1: [], B2: [], C1: []
+            }
+        },
+        es: {
+            name: 'Español', flag: '🇪🇸', code: 'es-ES',
+            words: {
+                A1: [
+                    'hola-привет', 'gracias-спасибо', 'casa-дом', 'perro-собака', 'gato-кот',
+                    'agua-вода', 'amigo-друг', 'familia-семья', 'madre-мать', 'padre-отец',
+                    'hermano-брат', 'hermana-сестра', 'feliz-счастливый', 'triste-грустный',
+                    'grande-большой', 'pequeño-маленький', 'sol-солнце', 'árbol-дерево'
+                ],
+                A2: [
+                    'comer-есть', 'beber-пить', 'interesante-интересный', 'aburrido-скучный',
+                    'caro-дорогой', 'barato-дешёвый', 'bonito-красивый', 'feo-уродливый'
+                ],
+                B1: [], B2: [], C1: []
+            }
+        },
+        fr: {
+            name: 'Français', flag: '🇫🇷', code: 'fr-FR',
+            words: {
+                A1: [
+                    'bonjour-здравствуйте', 'merci-спасибо', 'chat-кот', 'chien-собака',
+                    'maison-дом', 'eau-вода', 'ami-друг', 'famille-семья', 'mère-мать',
+                    'père-отец', 'frère-брат', 'soeur-сестра', 'heureux-счастливый',
+                    'triste-грустный', 'grand-большой', 'petit-маленький', 'soleil-солнце'
+                ],
+                A2: [
+                    'manger-есть', 'boire-пить', 'intéressant-интересный', 'ennuyeux-скучный',
+                    'cher-дорогой', 'bon marché-дешёвый', 'beau-красивый', 'laid-уродливый'
+                ],
+                B1: [], B2: [], C1: []
+            }
+        },
+        it: {
+            name: 'Italiano', flag: '🇮🇹', code: 'it-IT',
+            words: {
+                A1: [
+                    'ciao-привет', 'grazie-спасибо', 'casa-дом', 'gatto-кот', 'cane-собака',
+                    'acqua-вода', 'amico-друг', 'famiglia-семья', 'madre-мать', 'padre-отец',
+                    'fratello-брат', 'sorella-сестра', 'felice-счастливый', 'triste-грустный',
+                    'grande-большой', 'piccolo-маленький', 'sole-солнце', 'albero-дерево'
+                ],
+                A2: [
+                    'mangiare-есть', 'bere-пить', 'interessante-интересный', 'noioso-скучный',
+                    'caro-дорогой', 'economico-дешёвый', 'bello-красивый', 'brutto-уродливый'
+                ],
+                B1: [], B2: [], C1: []
+            }
+        },
+        pt: {
+            name: 'Português', flag: '🇵🇹', code: 'pt-PT',
+            words: {
+                A1: [
+                    'olá-привет', 'obrigado-спасибо', 'casa-дом', 'cão-собака', 'gato-кот',
+                    'água-вода', 'amigo-друг', 'família-семья', 'mãe-мать', 'pai-отец',
+                    'irmão-брат', 'irmã-сестра', 'feliz-счастливый', 'triste-грустный',
+                    'grande-большой', 'pequeno-маленький', 'sol-солнце', 'árvore-дерево'
+                ],
+                A2: [
+                    'comer-есть', 'beber-пить', 'interessante-интересный', 'chato-скучный',
+                    'caro-дорогой', 'barato-дешёвый', 'bonito-красивый', 'feio-уродливый'
+                ],
+                B1: [], B2: [], C1: []
+            }
+        },
+        zh: {
+            name: '中文', flag: '🇨🇳', code: 'zh-CN',
+            words: {
+                A1: [
+                    '你好-здравствуйте', '谢谢-спасибо', '再见-до свидания', '对不起-извините',
+                    '没关系-ничего страшного', '老师-учитель', '学生-ученик', '中国-Китай',
+                    '美国-США', '水-вода', '家-дом', '猫-кот', '狗-собака', '朋友-друг',
+                    '妈妈-мама', '爸爸-папа', '快乐-счастливый', '悲伤-грустный', '大-большой', '小-маленький'
+                ],
+                A2: [
+                    '有趣-интересный', '无聊-скучный', '贵-дорогой', '便宜-дешёвый', '漂亮-красивый', '丑-уродливый'
+                ],
+                B1: [], B2: [], C1: []
+            }
+        },
+        ja: {
+            name: '日本語', flag: '🇯🇵', code: 'ja-JP',
+            words: {
+                A1: [
+                    'こんにちは-здравствуйте', 'ありがとう-спасибо', 'さようなら-до свидания',
+                    'すみません-извините', 'はい-да', 'いいえ-нет', '先生-учитель', '学生-ученик',
+                    '日本-Япония', '水-вода', '家-дом', '猫-кот', '犬-собака', '友達-друг',
+                    'お母さん-мама', 'お父さん-папа', '幸せ-счастливый', '悲しい-грустный',
+                    '大きい-большой', '小さい-маленький'
+                ],
+                A2: [
+                    '面白い-интересный', 'つまらない-скучный', '高い-дорогой', '安い-дешёвый',
+                    '美しい-красивый', '醜い-уродливый'
+                ],
+                B1: [], B2: [], C1: []
+            }
+        }
     };
-    for (let l of ['pt','zh','ja']) {
-        langData[l] = { name: l, flag: '🌐', code: 'en-US', words: { A1: ['word-слово'] } };
-    }
 
     let currentLang = 'en';
     let currentLevel = 'A1';
@@ -7678,8 +7785,6 @@ window.localDict = localDict;
         return { word: pair[0], trans: pair[1] };
     }
 
-    // Озвучка с принудительной активацией
-    let audioInitialized = false;
     function speak(word) {
         if (!word) return;
         console.log("Озвучка:", word);
@@ -7687,15 +7792,12 @@ window.localDict = localDict;
             alert("Ваш браузер не поддерживает Speech Synthesis");
             return;
         }
-        // Убираем cancel(), чтобы не мешать другим частям
-        // if (!audioInitialized) { // не нужно, просто говорим
         let utterance = new SpeechSynthesisUtterance(word);
         utterance.lang = langData[currentLang].code;
         utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
     }
 
-    // Переворот карточки и обновление UI
     function updateCard() {
         let pair = getPair();
         let counter = document.getElementById('cardCounter');
@@ -7747,7 +7849,6 @@ window.localDict = localDict;
         `;
         document.getElementById('langCardsArea').innerHTML = html;
 
-        // Стили для переворота, если нет
         if (!document.getElementById('flipStyle')) {
             let style = document.createElement('style');
             style.id = 'flipStyle';
@@ -7755,7 +7856,6 @@ window.localDict = localDict;
             document.head.appendChild(style);
         }
 
-        // Обработчик переворота
         let flipElem = document.getElementById('flipInner');
         if (flipElem) {
             flipElem.onclick = (e) => {
@@ -7765,7 +7865,6 @@ window.localDict = localDict;
             };
         }
 
-        // Кнопка озвучки
         let speakBtn = document.getElementById('speakBtn');
         if (speakBtn) {
             speakBtn.onclick = (e) => {
@@ -7775,7 +7874,6 @@ window.localDict = localDict;
             };
         }
 
-        // Навигация
         document.getElementById('prevBtn').onclick = () => {
             let list = getCurrentList();
             if (list.length) {
@@ -7804,7 +7902,6 @@ window.localDict = localDict;
             }
         };
 
-        // Селекты
         document.getElementById('langSelect').onchange = (e) => {
             currentLang = e.target.value;
             currentLevel = 'A1';
@@ -7823,7 +7920,6 @@ window.localDict = localDict;
         updateCard();
     }
 
-    // Тетрадь
     function loadNotebook() {
         let saved = localStorage.getItem(`notebook_${currentLang}`);
         document.getElementById('langNotebook').value = saved || '';
@@ -7837,7 +7933,6 @@ window.localDict = localDict;
         setTimeout(() => msg.remove(), 1500);
     }
 
-    // Вкладки
     document.getElementById('langTabCardsBtn').onclick = () => {
         document.getElementById('langCardsArea').style.display = 'block';
         document.getElementById('langNotebookArea').style.display = 'none';
