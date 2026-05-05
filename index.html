@@ -7613,7 +7613,7 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" (карточки с переворотом, выбор языка, озвучка) ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" (карточки с переворотом, выбор языка, озвучка для всех) ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
 
@@ -7632,7 +7632,7 @@ window.localDict = localDict;
     langBtn.style.cssText = `position:absolute; top:20px; right:${rightPos}; background:#9b59b6; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);`;
     document.body.appendChild(langBtn);
 
-    // Модальное окно (общее для всех языков)
+    // Модальное окно
     const modal = document.createElement('div');
     modal.id = 'languagesModal';
     modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:750px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
@@ -7653,15 +7653,14 @@ window.localDict = localDict;
     `;
     document.body.appendChild(modal);
 
-    // ========== ДАННЫЕ ПО ЯЗЫКАМ И УРОВНЯМ ==========
+    // ========== ДАННЫЕ ПО ЯЗЫКАМ И УРОВНЯМ (без немецкого) ==========
     const languages = {
-        es: { name: 'Español', flag: '🇪🇸', tts: true },   // озвучка есть
-        fr: { name: 'Français', flag: '🇫🇷', tts: false },
-        de: { name: 'Deutsch', flag: '🇩🇪', tts: false },
-        it: { name: 'Italiano', flag: '🇮🇹', tts: false }
+        es: { name: 'Español', flag: '🇪🇸', code: 'es-ES' },
+        fr: { name: 'Français', flag: '🇫🇷', code: 'fr-FR' },
+        it: { name: 'Italiano', flag: '🇮🇹', code: 'it-IT' }
     };
 
-    // Словари (уровни A1-C1)
+    // Расширенные словари для французского и итальянского
     const vocab = {
         es: {
             A1: [
@@ -7674,73 +7673,128 @@ window.localDict = localDict;
                 { word: "agua", translation: "вода", example: "Bebo agua fría." },
                 { word: "casa", translation: "дом", example: "Mi casa es grande." },
                 { word: "perro", translation: "собака", example: "El perro ladra." },
-                { word: "gato", translation: "кот", example: "El gato duerme." }
+                { word: "gato", translation: "кот", example: "El gato duerme." },
+                { word: "rojo", translation: "красный", example: "El coche rojo es rápido." },
+                { word: "azul", translation: "синий", example: "El cielo es azul." }
             ],
             A2: [
                 { word: "comer", translation: "есть", example: "Me gusta comer pizza." },
                 { word: "beber", translation: "пить", example: "Bebo té por la mañana." },
                 { word: "trabajo", translation: "работа", example: "Mi trabajo es interesante." },
                 { word: "escuela", translation: "школа", example: "Voy a la escuela cada día." },
-                { word: "familia", translation: "семья", example: "Mi familia es cariñosa." }
+                { word: "familia", translation: "семья", example: "Mi familia es cariñosa." },
+                { word: "amigo", translation: "друг", example: "Él es mi mejor amigo." },
+                { word: "ciudad", translation: "город", example: "Vivo en una ciudad grande." }
             ],
             B1: [
                 { word: "aprender", translation: "учить", example: "Aprendo español cada semana." },
                 { word: "recordar", translation: "вспоминать", example: "No recuerdo su nombre." },
-                { word: "lograr", translation: "достигать", example: "Logré mi objetivo." }
+                { word: "lograr", translation: "достигать", example: "Logré mi objetivo." },
+                { word: "merecer", translation: "заслуживать", example: "Tú mereces un premio." },
+                { word: "sueño", translation: "мечта", example: "Mi sueño es viajar." }
             ],
             B2: [
                 { word: "desarrollar", translation: "развивать", example: "Hay que desarrollar nuevas habilidades." },
-                { word: "influir", translation: "влиять", example: "Las redes sociales influyen en la opinión." }
+                { word: "influir", translation: "влиять", example: "Las redes sociales influyen." },
+                { word: "comprometer", translation: "обязывать", example: "Me comprometo a terminar." }
             ],
             C1: [
                 { word: "conllevar", translation: "влечь за собой", example: "El cambio conlleva riesgos." },
-                { word: "dilucidar", translation: "выяснять", example: "Hay que dilucidar la verdad." }
+                { word: "dilucidar", translation: "выяснять", example: "Hay que dilucidar la verdad." },
+                { word: "cuestionar", translation: "ставить под сомнение", example: "Cuestionan sus métodos." }
             ]
         },
         fr: {
             A1: [
                 { word: "bonjour", translation: "здравствуйте", example: "Bonjour, comment allez-vous?" },
                 { word: "merci", translation: "спасибо", example: "Merci beaucoup!" },
-                { word: "au revoir", translation: "до свидания", example: "Au revoir, à demain." }
+                { word: "au revoir", translation: "до свидания", example: "Au revoir, à demain." },
+                { word: "s'il vous plaît", translation: "пожалуйста", example: "Donnez-moi du pain, s'il vous plaît." },
+                { word: "oui", translation: "да", example: "Oui, j'aime le français." },
+                { word: "non", translation: "нет", example: "Non, je ne veux pas." },
+                { word: "eau", translation: "вода", example: "Je bois de l'eau." },
+                { word: "maison", translation: "дом", example: "Ma maison est grande." },
+                { word: "chat", translation: "кот", example: "Le chat dort." },
+                { word: "chien", translation: "собака", example: "Le chien aboie." },
+                { word: "rouge", translation: "красный", example: "La voiture rouge est rapide." },
+                { word: "bleu", translation: "синий", example: "Le ciel est bleu." }
             ],
             A2: [
                 { word: "manger", translation: "есть", example: "Je mange une pomme." },
-                { word: "boire", translation: "пить", example: "Je bois de l'eau." }
+                { word: "boire", translation: "пить", example: "Je bois de l'eau." },
+                { word: "travail", translation: "работа", example: "Mon travail est intéressant." },
+                { word: "école", translation: "школа", example: "Je vais à l'école." },
+                { word: "famille", translation: "семья", example: "Ma famille est aimante." },
+                { word: "ami", translation: "друг", example: "C'est mon meilleur ami." },
+                { word: "ville", translation: "город", example: "J'habite dans une grande ville." }
             ],
-            B1: [], B2: [], C1: []
-        },
-        de: {
-            A1: [
-                { word: "Hallo", translation: "привет", example: "Hallo, wie geht's?" },
-                { word: "Danke", translation: "спасибо", example: "Danke schön!" },
-                { word: "Tschüss", translation: "пока", example: "Tschüss, bis morgen." }
+            B1: [
+                { word: "apprendre", translation: "учить", example: "J'apprends le français." },
+                { word: "se souvenir", translation: "вспоминать", example: "Je me souviens de son nom." },
+                { word: "réussir", translation: "достигать успеха", example: "J'ai réussi mon examen." },
+                { word: "mériter", translation: "заслуживать", example: "Tu mérites une récompense." },
+                { word: "rêve", translation: "мечта", example: "Mon rêve est de voyager." }
             ],
-            A2: [
-                { word: "essen", translation: "есть", example: "Ich esse einen Apfel." },
-                { word: "trinken", translation: "пить", example: "Ich trinke Wasser." }
+            B2: [
+                { word: "développer", translation: "развивать", example: "Il faut développer de nouvelles compétences." },
+                { word: "influencer", translation: "влиять", example: "Les médias sociaux influencent l'opinion." },
+                { word: "s'engager", translation: "обязываться", example: "Je m'engage à terminer le projet." }
             ],
-            B1: [], B2: [], C1: []
+            C1: [
+                { word: "impliquer", translation: "влечь за собой", example: "Le changement implique des risques." },
+                { word: "élucider", translation: "выяснять", example: "Il faut élucider la vérité." },
+                { word: "remettre en question", translation: "ставить под сомнение", example: "Ils remettent en question ses méthodes." }
+            ]
         },
         it: {
             A1: [
                 { word: "ciao", translation: "привет/пока", example: "Ciao, come stai?" },
                 { word: "grazie", translation: "спасибо", example: "Grazie mille!" },
-                { word: "arrivederci", translation: "до свидания", example: "Arrivederci, a presto." }
+                { word: "arrivederci", translation: "до свидания", example: "Arrivederci, a presto." },
+                { word: "per favore", translation: "пожалуйста", example: "Passami il sale, per favore." },
+                { word: "sì", translation: "да", example: "Sì, voglio imparare l'italiano." },
+                { word: "no", translation: "нет", example: "No, non mi piace il caffè." },
+                { word: "acqua", translation: "вода", example: "Bevo acqua fresca." },
+                { word: "casa", translation: "дом", example: "La mia casa è grande." },
+                { word: "gatto", translation: "кот", example: "Il gatto dorme." },
+                { word: "cane", translation: "собака", example: "Il cane abbaia." },
+                { word: "rosso", translation: "красный", example: "La macchina rossa è veloce." },
+                { word: "blu", translation: "синий", example: "Il cielo è blu." }
             ],
             A2: [
                 { word: "mangiare", translation: "есть", example: "Mangio una mela." },
-                { word: "bere", translation: "пить", example: "Bevo acqua." }
+                { word: "bere", translation: "пить", example: "Bevo acqua." },
+                { word: "lavoro", translation: "работа", example: "Il mio lavoro è interessante." },
+                { word: "scuola", translation: "школа", example: "Vado a scuola ogni giorno." },
+                { word: "famiglia", translation: "семья", example: "La mia famiglia è affettuosa." },
+                { word: "amico", translation: "друг", example: "Lui è il mio migliore amico." },
+                { word: "città", translation: "город", example: "Vivo in una grande città." }
             ],
-            B1: [], B2: [], C1: []
+            B1: [
+                { word: "imparare", translation: "учить", example: "Imparo l'italiano ogni settimana." },
+                { word: "ricordare", translation: "вспоминать", example: "Non ricordo il suo nome." },
+                { word: "riuscire", translation: "достигать", example: "Ho raggiunto il mio obiettivo." },
+                { word: "meritare", translation: "заслуживать", example: "Tu meriti un premio." },
+                { word: "sogno", translation: "мечта", example: "Il mio sogno è viaggiare." }
+            ],
+            B2: [
+                { word: "sviluppare", translation: "развивать", example: "Bisogna sviluppare nuove abilità." },
+                { word: "influenzare", translation: "влиять", example: "I social media influenzano l'opinione." },
+                { word: "impegnarsi", translation: "обязываться", example: "Mi impegno a finire il progetto." }
+            ],
+            C1: [
+                { word: "comportare", translation: "влечь за собой", example: "Il cambiamento comporta rischi." },
+                { word: "delucidare", translation: "выяснять", example: "Bisogna delucidare la verità." },
+                { word: "mettere in discussione", translation: "ставить под сомнение", example: "Mettono in discussione i suoi metodi." }
+            ]
         }
     };
 
     // Текущее состояние
-    let currentLang = 'es';           // выбранный язык
-    let currentLevel = 'A1';          // уровень
+    let currentLang = 'es';
+    let currentLevel = 'A1';
     let currentCardIndex = 0;
-    let isFlipped = false;             // перевёрнута ли карточка
-    let ttsUtterance = null;           // для озвучки
+    let isFlipped = false;
 
     // Элементы DOM
     const tabCardsDiv = document.getElementById('langTabCardsContainer');
@@ -7751,18 +7805,18 @@ window.localDict = localDict;
     const notebookTextarea = document.getElementById('langNotebook');
     const saveNotebookBtn = document.getElementById('saveLangNotebookBtn');
 
-    // Функция озвучки (только для испанского)
-    function speakSpanish(word) {
-        if (currentLang !== 'es') return;
+    // Озвучка для любого языка
+    function speakWord(word, langCode) {
         if (!window.speechSynthesis) {
             console.warn("SpeechSynthesis не поддерживается");
             return;
         }
-        if (ttsUtterance) window.speechSynthesis.cancel();
-        ttsUtterance = new SpeechSynthesisUtterance(word);
-        ttsUtterance.lang = 'es-ES';
-        ttsUtterance.rate = 0.9;
-        window.speechSynthesis.speak(ttsUtterance);
+        // Останавливаем предыдущую речь, чтобы не накладывалась
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = langCode;
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
     }
 
     // Сохранение/загрузка тетради для текущего языка
@@ -7776,7 +7830,6 @@ window.localDict = localDict;
         notebookTextarea.value = saved || '';
     }
 
-    // Временное уведомление
     function showTempMsg(text, isError = false) {
         const msg = document.createElement('div');
         msg.textContent = text;
@@ -7785,7 +7838,20 @@ window.localDict = localDict;
         setTimeout(() => msg.remove(), 2000);
     }
 
-    // Рендер карточек (переворачивающиеся)
+    // Функция для получения случайной карточки из текущего уровня
+    function randomCard() {
+        const words = vocab[currentLang]?.[currentLevel] || [];
+        if (words.length === 0) {
+            showTempMsg('Нет слов в этом уровне', true);
+            return;
+        }
+        const newIndex = Math.floor(Math.random() * words.length);
+        currentCardIndex = newIndex;
+        isFlipped = false; // сбрасываем переворот при случайном слове
+        renderCards();
+    }
+
+    // Рендер карточек (переворачивающиеся) с использованием делегирования событий
     function renderCards() {
         const levelKeys = ['A1', 'A2', 'B1', 'B2', 'C1'];
         const words = vocab[currentLang]?.[currentLevel] || [];
@@ -7802,48 +7868,53 @@ window.localDict = localDict;
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <span style="color:white;">Уровень:</span>
-                    <div style="display:flex; gap:5px;">${levelKeys.map(lvl => `<button data-level="${lvl}" style="background:${currentLevel===lvl ? '#e67e22' : '#34495e'}; border:none; padding:4px 12px; border-radius:20px; color:white; cursor:pointer;">${lvl}</button>`).join('')}</div>
+                    <div style="display:flex; gap:5px;" id="levelButtonsContainer">
+                        ${levelKeys.map(lvl => `<button data-level="${lvl}" style="background:${currentLevel===lvl ? '#e67e22' : '#34495e'}; border:none; padding:4px 12px; border-radius:20px; color:white; cursor:pointer;">${lvl}</button>`).join('')}
+                    </div>
                 </div>
                 <div><span style="color:white;">${totalCards>0 ? `Карточка ${currentCardIndex+1} / ${totalCards}` : 'Нет слов'}</span></div>
             </div>
         `;
 
         if (totalCards === 0) {
-            html += `<div style="background:#2c3e50; border-radius:20px; padding:40px; text-align:center; color:white;">⚠️ Для этого уровня пока нет слов. Вы можете добавить их вручную в словарь.</div>`;
+            html += `<div style="background:#2c3e50; border-radius:20px; padding:40px; text-align:center; color:white;">⚠️ Для этого уровня пока нет слов. Вы можете добавить их вручную в словарь.</div>
+                     <div style="display:flex; justify-content:center; gap:15px; margin-top:20px;">
+                        <button id="randomCardBtn" style="background:#f39c12; border:none; padding:8px 20px; border-radius:30px; color:white; cursor:pointer;">🎲 Случайное слово</button>
+                     </div>`;
             tabCardsDiv.innerHTML = html;
-            attachCardEvents();
+            attachDelegatedEvents();
             return;
         }
 
         const card = words[currentCardIndex];
-        // Flip-карточка (CSS-переворот)
         html += `
             <div class="flip-card" style="background:transparent; width:100%; height:280px; perspective:1000px; margin-top:5px;">
                 <div class="flip-card-inner" style="position:relative; width:100%; height:100%; text-align:center; transition:transform 0.6s; transform-style:preserve-3d; border-radius:20px; ${isFlipped ? 'transform:rotateY(180deg);' : ''}">
                     <!-- Лицевая сторона (слово) -->
                     <div class="flip-card-front" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#2c3e50; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
                         <div style="font-size:48px; margin-bottom:20px;">${langData.flag}</div>
-                        <div style="font-size:36px; font-weight:bold; color:white; margin-bottom:20px;">${card.word}</div>
-                        <div style="font-size:14px; color:#bdc3c7;">${card.example}</div>
-                        <button id="speakBtn" style="margin-top:25px; background:#3498db; border:none; padding:6px 16px; border-radius:30px; color:white; cursor:pointer;">🔊 Прослушать</button>
+                        <div style="font-size:36px; font-weight:bold; color:white; margin-bottom:20px;">${escapeHtml(card.word)}</div>
+                        <div style="font-size:14px; color:#bdc3c7;">${escapeHtml(card.example)}</div>
+                        <button class="speak-btn" data-word="${escapeHtml(card.word)}" data-lang="${langData.code}" style="margin-top:25px; background:#3498db; border:none; padding:6px 16px; border-radius:30px; color:white; cursor:pointer;">🔊 Прослушать</button>
                     </div>
                     <!-- Задняя сторона (перевод) -->
                     <div class="flip-card-back" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#1e8449; border-radius:20px; transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
                         <div style="font-size:48px;">📖</div>
-                        <div style="font-size:32px; font-weight:bold; color:white;">${card.translation}</div>
+                        <div style="font-size:32px; font-weight:bold; color:white;">${escapeHtml(card.translation)}</div>
                         <div style="font-size:14px; color:#f1c40f; margin-top:15px;">⇦ Нажмите, чтобы вернуться</div>
                     </div>
                 </div>
             </div>
             <div style="display:flex; justify-content:center; gap:15px; margin-top:20px;">
-                <button id="prevCard" style="background:#7f8c8d; border:none; padding:8px 20px; border-radius:30px; color:white; cursor:pointer;">⬅️ Назад</button>
-                <button id="nextCard" style="background:#e67e22; border:none; padding:8px 20px; border-radius:30px; color:white; cursor:pointer;">Следующая ➡️</button>
+                <button id="prevCardBtn" style="background:#7f8c8d; border:none; padding:8px 20px; border-radius:30px; color:white; cursor:pointer;">⬅️ Назад</button>
+                <button id="randomCardBtn" style="background:#f39c12; border:none; padding:8px 20px; border-radius:30px; color:white; cursor:pointer;">🎲 Случайное слово</button>
+                <button id="nextCardBtn" style="background:#e67e22; border:none; padding:8px 20px; border-radius:30px; color:white; cursor:pointer;">Следующая ➡️</button>
             </div>
         `;
 
         tabCardsDiv.innerHTML = html;
 
-        // Добавляем стили для переворота, если их ещё нет
+        // Добавляем стиль для переворота, если ещё нет
         if (!document.getElementById('flipCardStyle')) {
             const style = document.createElement('style');
             style.id = 'flipCardStyle';
@@ -7858,64 +7929,118 @@ window.localDict = localDict;
             document.head.appendChild(style);
         }
 
-        // Обработчики для кнопок внутри карточки
-        const flipInner = document.querySelector('.flip-card-inner');
-        if (flipInner) {
-            flipInner.addEventListener('click', (e) => {
-                // Предотвращаем срабатывание, если клик по кнопке "Прослушать"
-                if (e.target.id === 'speakBtn') return;
-                isFlipped = !isFlipped;
-                renderCards();   // перерисовываем с новым состоянием isFlipped
-            });
-        }
-        const speakBtn = document.getElementById('speakBtn');
-        if (speakBtn) {
-            speakBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (currentLang === 'es') speakSpanish(card.word);
-                else showTempMsg(`🔇 Озвучка пока доступна только для испанского`, false);
-            });
-        }
-        document.getElementById('prevCard')?.addEventListener('click', () => {
-            if (currentCardIndex > 0) {
-                currentCardIndex--;
-                isFlipped = false;
-                renderCards();
-            } else {
-                showTempMsg('Это первая карточка', true);
-            }
-        });
-        document.getElementById('nextCard')?.addEventListener('click', () => {
-            if (currentCardIndex + 1 < totalCards) {
-                currentCardIndex++;
-                isFlipped = false;
-                renderCards();
-            } else {
-                showTempMsg('Вы дошли до конца! Выберите другой уровень.', true);
-            }
-        });
+        attachDelegatedEvents();
     }
 
-    function attachCardEvents() {
-        // Привязываем обработчики для выбора языка и уровня (рендер заново)
+    // Функция для привязки событий через делегирование (чтобы работало после перерисовки)
+    function attachDelegatedEvents() {
+        // Переключение языка
         const langSelect = document.getElementById('langSelect');
         if (langSelect) {
             langSelect.onchange = (e) => {
                 currentLang = e.target.value;
                 currentCardIndex = 0;
                 isFlipped = false;
-                // Загружаем тетрадь для нового языка, если она открыта
                 if (tabNotebookDiv.style.display !== 'none') loadNotebook();
                 renderCards();
             };
         }
-        document.querySelectorAll('[data-level]').forEach(btn => {
-            btn.onclick = (e) => {
-                currentLevel = e.target.getAttribute('data-level');
-                currentCardIndex = 0;
-                isFlipped = false;
-                renderCards();
+
+        // Переключение уровня (используем контейнер с кнопками)
+        const levelContainer = document.getElementById('levelButtonsContainer');
+        if (levelContainer) {
+            levelContainer.querySelectorAll('[data-level]').forEach(btn => {
+                btn.onclick = (e) => {
+                    const newLevel = e.target.getAttribute('data-level');
+                    if (newLevel) {
+                        currentLevel = newLevel;
+                        currentCardIndex = 0;
+                        isFlipped = false;
+                        renderCards();
+                    }
+                };
+            });
+        }
+
+        // Переворот карточки (клик по .flip-card-inner)
+        const flipInner = document.querySelector('.flip-card-inner');
+        if (flipInner) {
+            // Убираем старый обработчик, чтобы не дублировать
+            flipInner.removeEventListener('click', flipHandler);
+            flipInner.addEventListener('click', flipHandler);
+        }
+
+        // Кнопка "Назад"
+        const prevBtn = document.getElementById('prevCardBtn');
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                const words = vocab[currentLang]?.[currentLevel] || [];
+                if (currentCardIndex > 0) {
+                    currentCardIndex--;
+                    isFlipped = false;
+                    renderCards();
+                } else {
+                    showTempMsg('Это первая карточка', true);
+                }
             };
+        }
+
+        // Кнопка "Следующая"
+        const nextBtn = document.getElementById('nextCardBtn');
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                const words = vocab[currentLang]?.[currentLevel] || [];
+                if (currentCardIndex + 1 < words.length) {
+                    currentCardIndex++;
+                    isFlipped = false;
+                    renderCards();
+                } else {
+                    showTempMsg('Вы дошли до конца! Выберите другой уровень.', true);
+                }
+            };
+        }
+
+        // Кнопка "Случайное слово"
+        const randomBtn = document.getElementById('randomCardBtn');
+        if (randomBtn) {
+            randomBtn.onclick = () => randomCard();
+        }
+
+        // Кнопки озвучки (обработчик через делегирование, но они создаются динамически)
+        document.querySelectorAll('.speak-btn').forEach(btn => {
+            btn.removeEventListener('click', speakHandler);
+            btn.addEventListener('click', speakHandler);
+        });
+    }
+
+    // Обработчик переворота карточки
+    function flipHandler(e) {
+        // Не срабатываем, если клик по кнопке озвучки
+        if (e.target.classList && e.target.classList.contains('speak-btn')) return;
+        isFlipped = !isFlipped;
+        renderCards();
+    }
+
+    // Обработчик озвучки
+    function speakHandler(e) {
+        e.stopPropagation();
+        const word = e.currentTarget.getAttribute('data-word');
+        const langCode = e.currentTarget.getAttribute('data-lang');
+        if (word && langCode) {
+            speakWord(word, langCode);
+        }
+    }
+
+    // Простая функция для экранирования HTML, чтобы избежать XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
         });
     }
 
@@ -7925,7 +8050,7 @@ window.localDict = localDict;
         tabNotebookDiv.style.display = 'none';
         tabCardsBtn.style.background = '#2c3e50';
         tabNotebookBtn.style.background = '#1e272e';
-        renderCards(); // обновляем карточки при показе
+        renderCards();
     }
     function showTabNotebook() {
         tabCardsDiv.style.display = 'none';
@@ -7943,9 +8068,6 @@ window.localDict = localDict;
         showTabCards();
     };
     saveNotebookBtn.onclick = saveNotebook;
-
-    // Инициализация: при первом открытии всё готово
-    // Дополнительно: если вкладка карточек уже видна, рендерим
 })();
 </script>
 </body>
