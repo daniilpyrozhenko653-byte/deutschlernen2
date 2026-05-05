@@ -7613,11 +7613,11 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – УЛУЧШЕННОЕ ПЕРЕКЛЮЧЕНИЕ УРОВНЕЙ ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ГАРАНТИРОВАННОЕ ОБНОВЛЕНИЕ ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
 
-    // Кнопка открытия
+    // Кнопка вызова
     const gamesBtn = document.getElementById('unifiedGamesBtn');
     let rightPos = '20px';
     if (gamesBtn) {
@@ -7627,99 +7627,92 @@ window.localDict = localDict;
     const langBtn = document.createElement('div');
     langBtn.id = 'languagesSectionBtn';
     langBtn.innerHTML = '🌍 Другие языки';
-    langBtn.style.cssText = `position:absolute; top:20px; right:${rightPos}; background:#9b59b6; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000;`;
+    langBtn.style.cssText = `position:absolute; top:20px; right:${rightPos}; background:#9b59b6; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; z-index:10000;`;
     document.body.appendChild(langBtn);
 
     // Модальное окно
     const modal = document.createElement('div');
     modal.id = 'languagesModal';
-    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:800px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; background:#0f172a;';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:20px; width:95%; max-width:800px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
     modal.innerHTML = `
         <div style="background:#8e44ad; padding:10px; display:flex; justify-content:space-between;">
             <span style="color:white;">🌍 Другие языки</span>
-            <button id="closeLanguagesModal" style="background:none; border:none; color:white; font-size:24px;">✖</button>
+            <button id="closeLangModal" style="background:none; border:none; color:white; font-size:24px;">✖</button>
         </div>
-        <div style="display:flex; border-bottom:1px solid #7f8c8d;">
-            <button id="langTabCardsBtn" style="flex:1; background:#2c3e50; border:none; color:white; padding:8px;">📇 Карточки</button>
-            <button id="langTabNotebookBtn" style="flex:1; background:#1e272e; border:none; color:white; padding:8px;">📓 Тетрадь</button>
+        <div style="display:flex;">
+            <button id="tabCardsBtn" style="flex:1; background:#2c3e50; border:none; color:white; padding:8px;">📇 Карточки</button>
+            <button id="tabNotebookBtn" style="flex:1; background:#1e272e; border:none; color:white; padding:8px;">📓 Тетрадь</button>
         </div>
-        <div id="langCardsArea" style="flex:1; padding:15px; overflow:auto;"></div>
-        <div id="langNotebookArea" style="flex:1; padding:15px; display:none; flex-direction:column;">
-            <textarea id="langNotebook" style="flex:1; background:#2c3e50; color:white; border:none; border-radius:10px; padding:10px;"></textarea>
-            <button id="saveNotebookBtn" style="margin-top:10px; background:#27ae60; border:none; padding:8px; color:white;">💾 Сохранить</button>
+        <div id="cardsPanel" style="flex:1; padding:15px; overflow:auto;"></div>
+        <div id="notebookPanel" style="flex:1; padding:15px; display:none; flex-direction:column;">
+            <textarea id="notebookText" style="flex:1; background:#2c3e50; color:white; border:none; border-radius:10px; padding:10px;"></textarea>
+            <button id="saveNotebook" style="margin-top:10px; background:#27ae60; border:none; padding:8px; color:white;">💾 Сохранить</button>
         </div>
     `;
     document.body.appendChild(modal);
 
-    // ==================== РАСШИРЕННЫЕ СЛОВАРИ (С УРОВНЯМИ A1-C1) ====================
-    const langData = {
-        en: {
-            name: 'English', flag: '🇬🇧', code: 'en-US',
+    // ========== СЛОВАРИ (A1-C1) для каждого языка ==========
+    const dict = {
+        en: { name: 'English', flag: '🇬🇧', code: 'en-US',
             words: {
-                A1: ['apple-яблоко', 'car-машина', 'house-дом', 'cat-кот', 'dog-собака', 'bed-кровать', 'book-книга', 'pen-ручка', 'table-стол', 'chair-стул', 'door-дверь', 'window-окно', 'mother-мать', 'father-отец', 'brother-брат', 'sister-сестра', 'friend-друг', 'happy-счастливый', 'sad-грустный', 'big-большой', 'small-маленький'],
-                A2: ['travel-путешествовать', 'delicious-вкусный', 'interesting-интересный', 'boring-скучный', 'expensive-дорогой', 'cheap-дешёвый', 'beautiful-красивый', 'ugly-уродливый', 'quickly-быстро', 'slowly-медленно'],
-                B1: ['opportunity-возможность', 'challenge-вызов', 'success-успех', 'failure-неудача', 'responsible-ответственный'],
-                B2: ['sustainability-устойчивость', 'innovation-инновация', 'consequence-последствие'],
+                A1: ['apple-яблоко', 'car-машина', 'house-дом', 'cat-кот', 'dog-собака', 'bed-кровать', 'book-книга', 'pen-ручка', 'table-стол', 'chair-стул'],
+                A2: ['travel-путешествовать', 'delicious-вкусный', 'interesting-интересный', 'boring-скучный', 'expensive-дорогой', 'cheap-дешёвый'],
+                B1: ['opportunity-возможность', 'challenge-вызов', 'success-успех'],
+                B2: ['sustainability-устойчивость', 'innovation-инновация'],
                 C1: ['meticulous-дотошный', 'ambiguous-неоднозначный']
             }
         },
-        es: {
-            name: 'Español', flag: '🇪🇸', code: 'es-ES',
+        es: { name: 'Español', flag: '🇪🇸', code: 'es-ES',
             words: {
-                A1: ['hola-привет', 'gracias-спасибо', 'casa-дом', 'perro-собака', 'gato-кот', 'agua-вода', 'amigo-друг', 'familia-семья', 'madre-мать', 'padre-отец', 'hermano-брат', 'hermana-сестра', 'feliz-счастливый', 'triste-грустный', 'grande-большой', 'pequeño-маленький', 'sol-солнце', 'árbol-дерево'],
-                A2: ['comer-есть', 'beber-пить', 'interesante-интересный', 'aburrido-скучный', 'caro-дорогой', 'barato-дешёвый', 'bonito-красивый', 'feo-уродливый'],
-                B1: ['oportunidad-возможность', 'desafío-вызов', 'éxito-успех', 'fracaso-неудача', 'responsable-ответственный'],
-                B2: ['sostenibilidad-устойчивость', 'innovación-инновация', 'consecuencia-последствие'],
+                A1: ['hola-привет', 'gracias-спасибо', 'casa-дом', 'perro-собака', 'gato-кот', 'agua-вода', 'amigo-друг', 'familia-семья', 'sol-солнце', 'árbol-дерево'],
+                A2: ['comer-есть', 'beber-пить', 'interesante-интересный', 'aburrido-скучный', 'caro-дорогой', 'barato-дешёвый'],
+                B1: ['oportunidad-возможность', 'desafío-вызов', 'éxito-успех'],
+                B2: ['sostenibilidad-устойчивость', 'innovación-инновация'],
                 C1: ['meticuloso-дотошный', 'ambiguo-неоднозначный']
             }
         },
-        fr: {
-            name: 'Français', flag: '🇫🇷', code: 'fr-FR',
+        fr: { name: 'Français', flag: '🇫🇷', code: 'fr-FR',
             words: {
-                A1: ['bonjour-здравствуйте', 'merci-спасибо', 'chat-кот', 'chien-собака', 'maison-дом', 'eau-вода', 'ami-друг', 'famille-семья', 'mère-мать', 'père-отец', 'frère-брат', 'soeur-сестра', 'heureux-счастливый', 'triste-грустный', 'grand-большой', 'petit-маленький', 'soleil-солнце'],
-                A2: ['manger-есть', 'boire-пить', 'intéressant-интересный', 'ennuyeux-скучный', 'cher-дорогой', 'bon marché-дешёвый', 'beau-красивый', 'laid-уродливый'],
-                B1: ['opportunité-возможность', 'défi-вызов', 'succès-успех', 'échec-неудача', 'responsable-ответственный'],
-                B2: ['durabilité-устойчивость', 'innovation-инновация', 'conséquence-последствие'],
+                A1: ['bonjour-здравствуйте', 'merci-спасибо', 'chat-кот', 'chien-собака', 'maison-дом', 'eau-вода', 'ami-друг', 'famille-семья', 'soleil-солнце'],
+                A2: ['manger-есть', 'boire-пить', 'intéressant-интересный', 'ennuyeux-скучный', 'cher-дорогой', 'bon marché-дешёвый'],
+                B1: ['opportunité-возможность', 'défi-вызов', 'succès-успех'],
+                B2: ['durabilité-устойчивость', 'innovation-инновация'],
                 C1: ['méticuleux-дотошный', 'ambigu-неоднозначный']
             }
         },
-        it: {
-            name: 'Italiano', flag: '🇮🇹', code: 'it-IT',
+        it: { name: 'Italiano', flag: '🇮🇹', code: 'it-IT',
             words: {
-                A1: ['ciao-привет', 'grazie-спасибо', 'casa-дом', 'gatto-кот', 'cane-собака', 'acqua-вода', 'amico-друг', 'famiglia-семья', 'madre-мать', 'padre-отец', 'fratello-брат', 'sorella-сестра', 'felice-счастливый', 'triste-грустный', 'grande-большой', 'piccolo-маленький', 'sole-солнце', 'albero-дерево'],
-                A2: ['mangiare-есть', 'bere-пить', 'interessante-интересный', 'noioso-скучный', 'caro-дорогой', 'economico-дешёвый', 'bello-красивый', 'brutto-уродливый'],
-                B1: ['opportunità-возможность', 'sfida-вызов', 'successo-успех', 'fallimento-неудача', 'responsabile-ответственный'],
-                B2: ['sostenibilità-устойчивость', 'innovazione-инновация', 'conseguenza-последствие'],
+                A1: ['ciao-привет', 'grazie-спасибо', 'casa-дом', 'gatto-кот', 'cane-собака', 'acqua-вода', 'amico-друг', 'famiglia-семья', 'sole-солнце', 'albero-дерево'],
+                A2: ['mangiare-есть', 'bere-пить', 'interessante-интересный', 'noioso-скучный', 'caro-дорогой', 'economico-дешёвый'],
+                B1: ['opportunità-возможность', 'sfida-вызов', 'successo-успех'],
+                B2: ['sostenibilità-устойчивость', 'innovazione-инновация'],
                 C1: ['meticoloso-дотошный', 'ambiguo-неоднозначный']
             }
         },
-        pt: {
-            name: 'Português', flag: '🇵🇹', code: 'pt-PT',
+        pt: { name: 'Português', flag: '🇵🇹', code: 'pt-PT',
             words: {
-                A1: ['olá-привет', 'obrigado-спасибо', 'casa-дом', 'cão-собака', 'gato-кот', 'água-вода', 'amigo-друг', 'família-семья', 'mãe-мать', 'pai-отец', 'irmão-брат', 'irmã-сестра', 'feliz-счастливый', 'triste-грустный', 'grande-большой', 'pequeno-маленький', 'sol-солнце', 'árvore-дерево'],
-                A2: ['comer-есть', 'beber-пить', 'interessante-интересный', 'chato-скучный', 'caro-дорогой', 'barato-дешёвый', 'bonito-красивый', 'feio-уродливый'],
-                B1: ['oportunidade-возможность', 'desafio-вызов', 'sucesso-успех', 'fracasso-неудача', 'responsável-ответственный'],
-                B2: ['sustentabilidade-устойчивость', 'inovação-инновация', 'consequência-последствие'],
+                A1: ['olá-привет', 'obrigado-спасибо', 'casa-дом', 'cão-собака', 'gato-кот', 'água-вода', 'amigo-друг', 'família-семья', 'sol-солнце', 'árvore-дерево'],
+                A2: ['comer-есть', 'beber-пить', 'interessante-интересный', 'chato-скучный', 'caro-дорогой', 'barato-дешёвый'],
+                B1: ['oportunidade-возможность', 'desafio-вызов', 'sucesso-успех'],
+                B2: ['sustentabilidade-устойчивость', 'inovação-инновация'],
                 C1: ['meticuloso-дотошный', 'ambíguo-неоднозначный']
             }
         },
-        zh: {
-            name: '中文', flag: '🇨🇳', code: 'zh-CN',
+        zh: { name: '中文', flag: '🇨🇳', code: 'zh-CN',
             words: {
-                A1: ['你好-здравствуйте', '谢谢-спасибо', '再见-до свидания', '对不起-извините', '没关系-ничего страшного', '老师-учитель', '学生-ученик', '中国-Китай', '美国-США', '水-вода', '家-дом', '猫-кот', '狗-собака', '朋友-друг', '妈妈-мама', '爸爸-папа', '快乐-счастливый', '悲伤-грустный', '大-большой', '小-маленький'],
+                A1: ['你好-здравствуйте', '谢谢-спасибо', '再见-до свидания', '对不起-извините', '老师-учитель', '学生-ученик', '中国-Китай', '水-вода', '家-дом', '猫-кот', '狗-собака', '朋友-друг'],
                 A2: ['有趣-интересный', '无聊-скучный', '贵-дорогой', '便宜-дешёвый', '漂亮-красивый', '丑-уродливый'],
-                B1: ['机会-возможность', '挑战-вызов', '成功-успех', '失败-неудача', '负责-ответственный'],
-                B2: ['可持续性-устойчивость', '创新-инновация', '后果-последствие'],
+                B1: ['机会-возможность', '挑战-вызов', '成功-успех'],
+                B2: ['可持续性-устойчивость', '创新-инновация'],
                 C1: ['细致-дотошный', '模棱两可-неоднозначный']
             }
         },
-        ja: {
-            name: '日本語', flag: '🇯🇵', code: 'ja-JP',
+        ja: { name: '日本語', flag: '🇯🇵', code: 'ja-JP',
             words: {
-                A1: ['こんにちは-здравствуйте', 'ありがとう-спасибо', 'さようなら-до свидания', 'すみません-извините', 'はい-да', 'いいえ-нет', '先生-учитель', '学生-ученик', '日本-Япония', '水-вода', '家-дом', '猫-кот', '犬-собака', '友達-друг', 'お母さん-мама', 'お父さん-папа', '幸せ-счастливый', '悲しい-грустный', '大きい-большой', '小さい-маленький'],
+                A1: ['こんにちは-здравствуйте', 'ありがとう-спасибо', 'さようなら-до свидания', 'すみません-извините', 'はい-да', 'いいえ-нет', '先生-учитель', '学生-ученик', '日本-Япония', '水-вода', '家-дом', '猫-кот', '犬-собака', '友達-друг'],
                 A2: ['面白い-интересный', 'つまらない-скучный', '高い-дорогой', '安い-дешёвый', '美しい-красивый', '醜い-уродливый'],
-                B1: ['機会-возможность', '挑戦-вызов', '成功-успех', '失敗-неудача', '責任がある-ответственный'],
-                B2: ['持続可能性-устойчивость', '革新-инновация', '結果-последствие'],
+                B1: ['機会-возможность', '挑戦-вызов', '成功-успех'],
+                B2: ['持続可能性-устойчивость', '革新-инновация'],
                 C1: ['綿密な-дотошный', '曖昧な-неоднозначный']
             }
         }
@@ -7730,178 +7723,163 @@ window.localDict = localDict;
     let currentIndex = 0;
     let isFlipped = false;
 
-    function getCurrentList() {
-        return langData[currentLang]?.words?.[currentLevel] || [];
+    function getWords() {
+        return dict[currentLang]?.words[currentLevel] || [];
     }
 
-    function getPair() {
-        const list = getCurrentList();
-        if (!list.length) return null;
-        const pair = list[currentIndex % list.length].split('-');
-        return { word: pair[0], trans: pair[1] };
+    function getCurrentPair() {
+        const words = getWords();
+        if (!words.length) return null;
+        const parts = words[currentIndex % words.length].split('-');
+        return { word: parts[0], translation: parts[1] };
     }
 
     function speak(word) {
         if (!word) return;
-        if (!window.speechSynthesis) {
-            alert("Ваш браузер не поддерживает Speech Synthesis");
-            return;
-        }
+        if (!window.speechSynthesis) return;
         const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = langData[currentLang].code;
+        utterance.lang = dict[currentLang].code;
         utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
     }
 
-    function updateCard() {
-        const pair = getPair();
-        const list = getCurrentList();
-        const counterSpan = document.getElementById('cardCounter');
-        if (counterSpan) {
-            counterSpan.innerText = list.length ? `${currentIndex+1} / ${list.length}` : '0 / 0';
-        }
-
-        const wordDiv = document.getElementById('cardWord');
-        const transDiv = document.getElementById('cardTrans');
+    function updateUI() {
+        const words = getWords();
+        const pair = getCurrentPair();
+        const total = words.length;
+        document.getElementById('cardCounter').innerText = total ? `${currentIndex+1}/${total}` : '0/0';
         if (!pair) {
-            if (wordDiv) wordDiv.innerText = '—';
-            if (transDiv) transDiv.innerText = 'Нет слов';
+            document.getElementById('cardWord').innerText = '—';
+            document.getElementById('cardTrans').innerText = 'Нет слов';
             return;
         }
-        wordDiv.innerText = pair.word;
-        transDiv.innerText = pair.trans;
-        const flipInner = document.getElementById('flipInner');
-        if (flipInner) flipInner.style.transform = isFlipped ? 'rotateY(180deg)' : '';
+        document.getElementById('cardWord').innerText = pair.word;
+        document.getElementById('cardTrans').innerText = pair.translation;
+        const flipDiv = document.getElementById('flipCardInner');
+        if (flipDiv) flipDiv.style.transform = isFlipped ? 'rotateY(180deg)' : '';
     }
 
-    function rebuildUI() {
+    function renderCardsPanel() {
         const levels = ['A1','A2','B1','B2','C1'];
-        const flag = langData[currentLang].flag;
-        const currentListLength = getCurrentList().length;
+        const selectedLang = dict[currentLang];
         const html = `
             <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-                <select id="langSelect" style="background:#2c3e50; color:white; padding:6px; border-radius:20px;">
-                    ${Object.keys(langData).map(l => `<option value="${l}" ${l===currentLang?'selected':''}>${langData[l].flag} ${langData[l].name}</option>`).join('')}
+                <select id="langSel" style="background:#2c3e50; color:white; padding:6px; border-radius:20px;">
+                    ${Object.keys(dict).map(l => `<option value="${l}" ${l===currentLang?'selected':''}>${dict[l].flag} ${dict[l].name}</option>`).join('')}
                 </select>
-                <select id="levelSelect" style="background:#2c3e50; color:white; padding:6px; border-radius:20px;">
-                    ${levels.map(l => `<option value="${l}" ${l===currentLevel?'selected':''}>${l} (${langData[currentLang]?.words[l]?.length || 0})</option>`).join('')}
+                <select id="levelSel" style="background:#2c3e50; color:white; padding:6px; border-radius:20px;">
+                    ${levels.map(l => `<option value="${l}" ${l===currentLevel?'selected':''}>${l} (${dict[currentLang].words[l].length})</option>`).join('')}
                 </select>
-                <span id="cardCounter" style="color:white;">${currentListLength ? `${currentIndex+1} / ${currentListLength}` : '0 / 0'}</span>
+                <span id="cardCounter" style="color:white;">0/0</span>
             </div>
-            <div class="flip-container" style="width:100%; height:280px; perspective:1000px;">
-                <div id="flipInner" style="width:100%; height:100%; transition:0.6s; transform-style:preserve-3d; cursor:pointer;">
-                    <div class="front" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#2c3e50; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                        <div style="font-size:48px;">${flag}</div>
-                        <div id="cardWord" style="font-size:32px; font-weight:bold; color:white; text-align:center; margin:10px;"></div>
-                        <button id="speakBtn" style="margin-top:20px; background:#3498db; border:none; padding:6px 16px; border-radius:30px; color:white;">🔊 Озвучка</button>
+            <div style="width:100%; height:280px; perspective:1000px;">
+                <div id="flipCardInner" style="width:100%; height:100%; transition:0.6s; transform-style:preserve-3d; cursor:pointer;">
+                    <div style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#2c3e50; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                        <div style="font-size:48px;">${selectedLang.flag}</div>
+                        <div id="cardWord" style="font-size:32px; font-weight:bold; color:white; margin-top:10px;"></div>
+                        <button id="speakWordBtn" style="margin-top:20px; background:#3498db; border:none; padding:6px 16px; border-radius:30px; color:white;">🔊 Озвучка</button>
                     </div>
-                    <div class="back" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#1e8449; border-radius:20px; transform:rotateY(180deg); display:flex; align-items:center; justify-content:center;">
+                    <div style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#1e8449; border-radius:20px; transform:rotateY(180deg); display:flex; align-items:center; justify-content:center;">
                         <div id="cardTrans" style="font-size:32px; font-weight:bold; color:white; text-align:center;"></div>
                     </div>
                 </div>
             </div>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-                <button id="prevBtn" style="background:#7f8c8d; border:none; padding:8px 20px; color:white;">⬅ Назад</button>
-                <button id="randBtn" style="background:#f39c12; border:none; padding:8px 20px; color:white;">🎲 Случайное</button>
-                <button id="nextBtn" style="background:#e67e22; border:none; padding:8px 20px; color:white;">Следующая ➡</button>
+                <button id="prevCardBtn" style="background:#7f8c8d; border:none; padding:8px 20px; color:white;">⬅ Назад</button>
+                <button id="randomCardBtn" style="background:#f39c12; border:none; padding:8px 20px; color:white;">🎲 Случайное</button>
+                <button id="nextCardBtn" style="background:#e67e22; border:none; padding:8px 20px; color:white;">Следующая ➡</button>
             </div>
         `;
-        document.getElementById('langCardsArea').innerHTML = html;
+        document.getElementById('cardsPanel').innerHTML = html;
 
+        // Стили для 3D, если ещё нет
         if (!document.getElementById('flipStyle')) {
             const style = document.createElement('style');
             style.id = 'flipStyle';
-            style.textContent = '.front, .back { backface-visibility: hidden; }';
+            style.textContent = '#flipCardInner, #flipCardInner * { backface-visibility: hidden; }';
             document.head.appendChild(style);
         }
 
-        const flipElem = document.getElementById('flipInner');
-        if (flipElem) {
-            flipElem.onclick = (e) => {
-                if (e.target.id === 'speakBtn') return;
+        // Обработчик переворота
+        const flipDiv = document.getElementById('flipCardInner');
+        if (flipDiv) {
+            flipDiv.onclick = (e) => {
+                if (e.target.id === 'speakWordBtn') return;
                 isFlipped = !isFlipped;
-                flipElem.style.transform = isFlipped ? 'rotateY(180deg)' : '';
+                flipDiv.style.transform = isFlipped ? 'rotateY(180deg)' : '';
             };
         }
-
-        const speakBtn = document.getElementById('speakBtn');
+        // Озвучка
+        const speakBtn = document.getElementById('speakWordBtn');
         if (speakBtn) {
             speakBtn.onclick = (e) => {
                 e.stopPropagation();
-                const pair = getPair();
+                const pair = getCurrentPair();
                 if (pair) speak(pair.word);
             };
         }
-
         // Навигация
-        document.getElementById('prevBtn').onclick = () => {
-            const list = getCurrentList();
-            if (list.length) {
-                currentIndex = (currentIndex - 1 + list.length) % list.length;
+        document.getElementById('prevCardBtn').onclick = () => {
+            const words = getWords();
+            if (words.length) {
+                currentIndex = (currentIndex - 1 + words.length) % words.length;
                 isFlipped = false;
-                if (flipElem) flipElem.style.transform = '';
-                updateCard();
+                if (flipDiv) flipDiv.style.transform = '';
+                updateUI();
             }
         };
-        document.getElementById('nextBtn').onclick = () => {
-            const list = getCurrentList();
-            if (list.length) {
-                currentIndex = (currentIndex + 1) % list.length;
+        document.getElementById('nextCardBtn').onclick = () => {
+            const words = getWords();
+            if (words.length) {
+                currentIndex = (currentIndex + 1) % words.length;
                 isFlipped = false;
-                if (flipElem) flipElem.style.transform = '';
-                updateCard();
+                if (flipDiv) flipDiv.style.transform = '';
+                updateUI();
             }
         };
-        document.getElementById('randBtn').onclick = () => {
-            const list = getCurrentList();
-            if (list.length) {
-                currentIndex = Math.floor(Math.random() * list.length);
+        document.getElementById('randomCardBtn').onclick = () => {
+            const words = getWords();
+            if (words.length) {
+                currentIndex = Math.floor(Math.random() * words.length);
                 isFlipped = false;
-                if (flipElem) flipElem.style.transform = '';
-                updateCard();
+                if (flipDiv) flipDiv.style.transform = '';
+                updateUI();
             }
         };
-
         // Селекты
-        const langSelect = document.getElementById('langSelect');
-        if (langSelect) {
-            langSelect.onchange = (e) => {
-                currentLang = e.target.value;
-                currentLevel = 'A1';
-                currentIndex = 0;
-                isFlipped = false;
-                rebuildUI();
-                if (document.getElementById('langNotebookArea').style.display !== 'none') loadNotebook();
-            };
-        }
-        const levelSelect = document.getElementById('levelSelect');
-        if (levelSelect) {
-            levelSelect.onchange = (e) => {
-                currentLevel = e.target.value;
-                currentIndex = 0;
-                isFlipped = false;
-                // Обновляем счётчик и содержимое карточки
-                updateCard();
-                // Обновляем текст пунктов выпадающего списка (количество слов)
-                const opts = levelSelect.options;
-                for (let i = 0; i < opts.length; i++) {
-                    const lvl = opts[i].value;
-                    const cnt = langData[currentLang]?.words[lvl]?.length || 0;
-                    opts[i].text = `${lvl} (${cnt})`;
-                }
-            };
-        }
-
-        updateCard();
+        const langSel = document.getElementById('langSel');
+        const levelSel = document.getElementById('levelSel');
+        langSel.onchange = (e) => {
+            currentLang = e.target.value;
+            currentLevel = 'A1';
+            currentIndex = 0;
+            isFlipped = false;
+            renderCardsPanel();   // полная перерисовка
+            if (document.getElementById('notebookPanel').style.display !== 'none') loadNotebook();
+        };
+        levelSel.onchange = (e) => {
+            currentLevel = e.target.value;
+            currentIndex = 0;
+            isFlipped = false;
+            updateUI();          // обновляем карточку и счётчик
+            // Обновляем подпись уровня в списке (количество слов)
+            const opts = levelSel.options;
+            for (let i=0; i<opts.length; i++) {
+                const lvl = opts[i].value;
+                const cnt = dict[currentLang].words[lvl].length;
+                opts[i].text = `${lvl} (${cnt})`;
+            }
+        };
+        updateUI();
     }
 
     // Тетрадь
     function loadNotebook() {
         const saved = localStorage.getItem(`notebook_${currentLang}`);
-        document.getElementById('langNotebook').value = saved || '';
+        document.getElementById('notebookText').value = saved || '';
     }
     function saveNotebook() {
-        localStorage.setItem(`notebook_${currentLang}`, document.getElementById('langNotebook').value);
+        localStorage.setItem(`notebook_${currentLang}`, document.getElementById('notebookText').value);
         const msg = document.createElement('div');
         msg.textContent = '📘 Сохранено';
         msg.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#27ae60; color:white; padding:6px 12px; border-radius:20px; z-index:100004;';
@@ -7910,29 +7888,29 @@ window.localDict = localDict;
     }
 
     // Вкладки
-    document.getElementById('langTabCardsBtn').onclick = () => {
-        document.getElementById('langCardsArea').style.display = 'block';
-        document.getElementById('langNotebookArea').style.display = 'none';
-        document.getElementById('langTabCardsBtn').style.background = '#2c3e50';
-        document.getElementById('langTabNotebookBtn').style.background = '#1e272e';
-        rebuildUI();
+    document.getElementById('tabCardsBtn').onclick = () => {
+        document.getElementById('cardsPanel').style.display = 'block';
+        document.getElementById('notebookPanel').style.display = 'none';
+        document.getElementById('tabCardsBtn').style.background = '#2c3e50';
+        document.getElementById('tabNotebookBtn').style.background = '#1e272e';
+        renderCardsPanel();
     };
-    document.getElementById('langTabNotebookBtn').onclick = () => {
-        document.getElementById('langCardsArea').style.display = 'none';
-        document.getElementById('langNotebookArea').style.display = 'flex';
-        document.getElementById('langTabCardsBtn').style.background = '#1e272e';
-        document.getElementById('langTabNotebookBtn').style.background = '#2c3e50';
+    document.getElementById('tabNotebookBtn').onclick = () => {
+        document.getElementById('cardsPanel').style.display = 'none';
+        document.getElementById('notebookPanel').style.display = 'flex';
+        document.getElementById('tabCardsBtn').style.background = '#1e272e';
+        document.getElementById('tabNotebookBtn').style.background = '#2c3e50';
         loadNotebook();
     };
-    document.getElementById('closeLanguagesModal').onclick = () => modal.style.display = 'none';
-    document.getElementById('saveNotebookBtn').onclick = saveNotebook;
+    document.getElementById('closeLangModal').onclick = () => modal.style.display = 'none';
+    document.getElementById('saveNotebook').onclick = saveNotebook;
 
     langBtn.onclick = () => {
         modal.style.display = 'flex';
-        document.getElementById('langTabCardsBtn').click();
+        document.getElementById('tabCardsBtn').click();
     };
 
-    rebuildUI();
+    renderCardsPanel();
 })();
 </script>
 </body>
