@@ -7613,19 +7613,17 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" (РАБОЧАЯ ВЕРСИЯ) ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
 
-    // Позиционирование кнопки рядом с кнопкой "Игры"
+    // Кнопка для открытия раздела (рядом с играми)
     const gamesBtn = document.getElementById('unifiedGamesBtn');
     let rightPos = '20px';
     if (gamesBtn) {
         const gamesRight = parseInt(gamesBtn.style.right);
         if (!isNaN(gamesRight)) rightPos = (gamesRight + 90) + 'px';
     }
-
-    // Кнопка вызова раздела
     const langBtn = document.createElement('div');
     langBtn.id = 'languagesSectionBtn';
     langBtn.innerHTML = '🌍 Другие языки';
@@ -7635,7 +7633,7 @@ window.localDict = localDict;
     // Модальное окно
     const modal = document.createElement('div');
     modal.id = 'languagesModal';
-    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:750px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:800px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
     modal.innerHTML = `
         <div style="background:#8e44ad; padding:10px; display:flex; justify-content:space-between; align-items:center;">
             <span style="color:white; font-weight:bold;">🌍 Изучаем иностранные языки</span>
@@ -7645,16 +7643,15 @@ window.localDict = localDict;
             <button id="langTabCardsBtn" style="flex:1; background:#2c3e50; border:none; color:white; padding:8px; cursor:pointer; font-weight:bold;">📇 Карточки</button>
             <button id="langTabNotebookBtn" style="flex:1; background:#1e272e; border:none; color:white; padding:8px; cursor:pointer; font-weight:bold;">📓 Тетрадь</button>
         </div>
-        <div id="langTabCardsContainer" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;"></div>
+        <div id="langTabCardsContainer" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column;"></div>
         <div id="langTabNotebookContainer" style="flex:1; padding:15px; display:none; flex-direction:column; gap:10px;">
-            <textarea id="langNotebook" placeholder="Ведите свои заметки, записывайте слова, правила..." style="width:100%; height:100%; min-height:350px; background:#2c3e50; color:white; border:none; border-radius:10px; padding:10px; font-size:14px; resize:vertical;"></textarea>
+            <textarea id="langNotebook" placeholder="Ваши заметки, слова, правила..." style="width:100%; height:100%; min-height:350px; background:#2c3e50; color:white; border:none; border-radius:10px; padding:10px; font-size:14px; resize:vertical;"></textarea>
             <button id="saveLangNotebookBtn" style="background:#27ae60; border:none; padding:8px; border-radius:20px; color:white; cursor:pointer;">💾 Сохранить тетрадь</button>
         </div>
     `;
     document.body.appendChild(modal);
 
-    // ========== ДАННЫЕ ПО ЯЗЫКАМ ==========
-    // Список языков (немецкий удалён)
+    // ========== ДАННЫЕ ==========
     const languages = {
         en: { name: 'English', flag: '🇬🇧', code: 'en-US' },
         es: { name: 'Español', flag: '🇪🇸', code: 'es-ES' },
@@ -7665,8 +7662,7 @@ window.localDict = localDict;
         ja: { name: '日本語', flag: '🇯🇵', code: 'ja-JP' }
     };
 
-    // Словарные данные (уровни A1-C1, для каждого языка свой объект)
-    // Для краткости даём хороший набор для A1, остальные уровни можно дополнять
+    // Словари (легко добавить новые слова)
     const vocab = {
         en: {
             A1: [
@@ -7778,7 +7774,7 @@ window.localDict = localDict;
         }
     };
 
-    // Текущее состояние
+    // ---- Глобальные переменные состояния ----
     let currentLang = 'en';
     let currentLevel = 'A1';
     let currentCardIndex = 0;
@@ -7790,11 +7786,11 @@ window.localDict = localDict;
     const tabCardsBtn = document.getElementById('langTabCardsBtn');
     const tabNotebookBtn = document.getElementById('langTabNotebookBtn');
     const closeModalBtn = document.getElementById('closeLanguagesModal');
-    const notebookTextarea = document.getElementById('langNotebook');
+    const notebookArea = document.getElementById('langNotebook');
     const saveNotebookBtn = document.getElementById('saveLangNotebookBtn');
 
-    // Вспомогательные функции
-    function showTempMsg(text, isError = false) {
+    // ---- Вспомогательные функции ----
+    function showMessage(text, isError = false) {
         const msg = document.createElement('div');
         msg.textContent = text;
         msg.style.cssText = `position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:${isError ? '#e74c3c' : '#27ae60'}; color:white; padding:8px 16px; border-radius:20px; z-index:100004; font-size:13px;`;
@@ -7802,10 +7798,9 @@ window.localDict = localDict;
         setTimeout(() => msg.remove(), 2000);
     }
 
-    // Озвучка на любом языке
     function speakWord(word, langCode) {
         if (!window.speechSynthesis) {
-            showTempMsg('Ваш браузер не поддерживает озвучку', true);
+            showMessage("Ваш браузер не поддерживает озвучку", true);
             return;
         }
         const utterance = new SpeechSynthesisUtterance(word);
@@ -7815,40 +7810,39 @@ window.localDict = localDict;
         window.speechSynthesis.speak(utterance);
     }
 
-    // Сохранение тетради для текущего языка
     function saveNotebook() {
-        const content = notebookTextarea.value;
+        const content = notebookArea.value;
         localStorage.setItem(`notebook_${currentLang}`, content);
-        showTempMsg('📘 Тетрадь сохранена!');
-    }
-    function loadNotebook() {
-        const saved = localStorage.getItem(`notebook_${currentLang}`);
-        notebookTextarea.value = saved || '';
+        showMessage("📘 Тетрадь сохранена!");
     }
 
-    // Получить слова текущего уровня
+    function loadNotebook() {
+        const saved = localStorage.getItem(`notebook_${currentLang}`);
+        notebookArea.value = saved || "";
+    }
+
     function getCurrentWords() {
         return vocab[currentLang]?.[currentLevel] || [];
     }
 
-    // Рендер карточек (с переворотом и кнопками)
+    // ---- Главная функция отрисовки карточек (с обработчиками) ----
     function renderCards() {
         const words = getCurrentWords();
         const total = words.length;
         const langData = languages[currentLang];
         const levelKeys = ['A1', 'A2', 'B1', 'B2', 'C1'];
 
-        // Верхняя панель выбора языка и уровня
+        // Создаём HTML
         let html = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <span style="color:white;">Язык:</span>
+                <div>
+                    <label style="color:white;">Язык: </label>
                     <select id="langSelect" style="background:#34495e; color:white; border:none; border-radius:20px; padding:6px 12px;">
                         ${Object.keys(languages).map(l => `<option value="${l}" ${l===currentLang ? 'selected' : ''}>${languages[l].flag} ${languages[l].name}</option>`).join('')}
                     </select>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <span style="color:white;">Уровень:</span>
+                <div>
+                    <label style="color:white;">Уровень: </label>
                     <select id="levelSelect" style="background:#34495e; color:white; border:none; border-radius:20px; padding:6px 12px;">
                         ${levelKeys.map(lvl => `<option value="${lvl}" ${lvl===currentLevel ? 'selected' : ''}>${lvl}</option>`).join('')}
                     </select>
@@ -7860,7 +7854,7 @@ window.localDict = localDict;
         if (total === 0) {
             html += `<div style="background:#2c3e50; border-radius:20px; padding:40px; text-align:center; color:white;">📭 Для этого уровня пока нет слов. Вы можете добавить их в код.<br>Уровни: A1, A2, B1, B2, C1</div>`;
             tabCardsDiv.innerHTML = html;
-            attachGlobalEvents();
+            attachGlobalEvents(); // подключаем события для селектов
             return;
         }
 
@@ -7869,14 +7863,12 @@ window.localDict = localDict;
         html += `
             <div class="flip-card" style="background:transparent; width:100%; height:280px; perspective:1000px; margin-top:5px;">
                 <div class="flip-card-inner" style="position:relative; width:100%; height:100%; text-align:center; transition:transform 0.6s; transform-style:preserve-3d; border-radius:20px; cursor:pointer; ${isFlipped ? 'transform:rotateY(180deg);' : ''}">
-                    <!-- Лицевая сторона -->
                     <div class="flip-card-front" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#2c3e50; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
                         <div style="font-size:48px; margin-bottom:20px;">${langData.flag}</div>
                         <div style="font-size:32px; font-weight:bold; color:white; margin-bottom:20px; word-break:break-word;">${card.word}</div>
                         <div style="font-size:14px; color:#bdc3c7; margin:0 15px;">${card.example}</div>
                         <button id="speakBtn" style="margin-top:25px; background:#3498db; border:none; padding:6px 16px; border-radius:30px; color:white; cursor:pointer;">🔊 Прослушать</button>
                     </div>
-                    <!-- Задняя сторона (перевод) -->
                     <div class="flip-card-back" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#1e8449; border-radius:20px; transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
                         <div style="font-size:48px;">📖</div>
                         <div style="font-size:32px; font-weight:bold; color:white; text-align:center; padding:0 20px;">${card.translation}</div>
@@ -7893,18 +7885,11 @@ window.localDict = localDict;
 
         tabCardsDiv.innerHTML = html;
 
-        // Добавляем CSS для переворота, если нет
+        // Добавляем CSS для 3D переворота (если нет)
         if (!document.getElementById('flipCardStyle')) {
             const style = document.createElement('style');
             style.id = 'flipCardStyle';
-            style.textContent = `
-                .flip-card .flip-card-inner {
-                    cursor: pointer;
-                }
-                .flip-card-front, .flip-card-back {
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-                }
-            `;
+            style.textContent = `.flip-card-inner { cursor: pointer; } .flip-card-front, .flip-card-back { backface-visibility: hidden; }`;
             document.head.appendChild(style);
         }
 
@@ -7914,7 +7899,7 @@ window.localDict = localDict;
             flipInner.addEventListener('click', (e) => {
                 if (e.target.id === 'speakBtn') return;
                 isFlipped = !isFlipped;
-                renderCards(); // перерисовываем с новым состоянием
+                renderCards(); // перерисовка с новым состоянием
             });
         }
 
@@ -7929,36 +7914,39 @@ window.localDict = localDict;
 
         // Кнопки навигации
         document.getElementById('prevCardBtn')?.addEventListener('click', () => {
+            const w = getCurrentWords();
             if (currentCardIndex > 0) {
                 currentCardIndex--;
                 isFlipped = false;
                 renderCards();
             } else {
-                showTempMsg('Это первая карточка', true);
+                showMessage("Это первая карточка", true);
             }
         });
         document.getElementById('nextCardBtn')?.addEventListener('click', () => {
-            const wordsArr = getCurrentWords();
-            if (currentCardIndex + 1 < wordsArr.length) {
+            const w = getCurrentWords();
+            if (currentCardIndex + 1 < w.length) {
                 currentCardIndex++;
                 isFlipped = false;
                 renderCards();
             } else {
-                showTempMsg('Вы дошли до конца! Переключите уровень или язык.', true);
+                showMessage("Вы дошли до конца! Переключите уровень или язык.", true);
             }
         });
         document.getElementById('randomCardBtn')?.addEventListener('click', () => {
-            const wordsArr = getCurrentWords();
-            if (wordsArr.length === 0) return;
-            const newIndex = Math.floor(Math.random() * wordsArr.length);
+            const w = getCurrentWords();
+            if (w.length === 0) return;
+            const newIndex = Math.floor(Math.random() * w.length);
             currentCardIndex = newIndex;
             isFlipped = false;
             renderCards();
-            showTempMsg('🎲 Случайное слово!');
+            showMessage("🎲 Случайное слово!");
         });
+
+        attachGlobalEvents(); // чтобы селекты работали после перерисовки
     }
 
-    // Глобальные обработчики для смены языка/уровня (после рендера)
+    // Обработчики для селектов языка и уровня
     function attachGlobalEvents() {
         const langSelect = document.getElementById('langSelect');
         const levelSelect = document.getElementById('levelSelect');
@@ -7967,7 +7955,6 @@ window.localDict = localDict;
                 currentLang = e.target.value;
                 currentCardIndex = 0;
                 isFlipped = false;
-                // Если открыта тетрадь, перезагружаем её содержимое
                 if (tabNotebookDiv.style.display !== 'none') loadNotebook();
                 renderCards();
             };
@@ -7982,15 +7969,15 @@ window.localDict = localDict;
         }
     }
 
-    // Вкладки
-    function showTabCards() {
+    // Переключение вкладок
+    function showCardsTab() {
         tabCardsDiv.style.display = 'flex';
         tabNotebookDiv.style.display = 'none';
         tabCardsBtn.style.background = '#2c3e50';
         tabNotebookBtn.style.background = '#1e272e';
         renderCards();
     }
-    function showTabNotebook() {
+    function showNotebookTab() {
         tabCardsDiv.style.display = 'none';
         tabNotebookDiv.style.display = 'flex';
         tabCardsBtn.style.background = '#1e272e';
@@ -7998,17 +7985,17 @@ window.localDict = localDict;
         loadNotebook();
     }
 
-    // Назначение обработчиков кнопок модалки
-    tabCardsBtn.onclick = showTabCards;
-    tabNotebookBtn.onclick = showTabNotebook;
+    // Назначение обработчиков модального окна
+    tabCardsBtn.onclick = showCardsTab;
+    tabNotebookBtn.onclick = showNotebookTab;
     closeModalBtn.onclick = () => modal.style.display = 'none';
     langBtn.onclick = () => {
         modal.style.display = 'flex';
-        showTabCards();
+        showCardsTab();
     };
     saveNotebookBtn.onclick = saveNotebook;
 
-    // Инициализация: при первом открытии всё готово
+    // Инициализация: скрываем модалку, всё готово
 })();
 </script>
 </body>
