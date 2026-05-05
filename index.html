@@ -7181,7 +7181,422 @@ window.localDict = localDict;
     document.getElementById('deBotInput').onkeypress = (e) => { if (e.key === 'Enter') send(); };
 })();
 
+// ========== ЕДИНАЯ СИСТЕМА ИГР ==========
+(function() {
+    // Если кнопка игр уже есть — не создаём заново
+    if (document.getElementById('unifiedGamesBtn')) return;
 
+    // Находим кнопку "Читать"
+    const readBtn = document.getElementById('simpleReaderBtn');
+    let rightPos = '20px';
+    if (readBtn) {
+        const currentRight = parseInt(readBtn.style.right);
+        if (!isNaN(currentRight)) rightPos = (currentRight + 80) + 'px';
+    }
+
+    // Кнопка для вызова панели игр
+    const gamesBtn = document.createElement('div');
+    gamesBtn.id = 'unifiedGamesBtn';
+    gamesBtn.innerHTML = '🎮 Игры';
+    gamesBtn.style.cssText = `position:absolute; top:20px; right:${rightPos}; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);`;
+    document.body.appendChild(gamesBtn);
+
+    // Панель выбора игр (затемнённый фон)
+    const panel = document.createElement('div');
+    panel.id = 'unifiedGamePanel';
+    panel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100001; display:none; flex-direction:column; gap:15px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7);';
+    panel.innerHTML = `
+        <div style="display:flex; justify-content:flex-end;">
+            <button id="closeUnifiedPanel" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+        </div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
+            <div id="gameCatIcon" style="background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;">
+                <div style="font-size:48px;">🐱🌵</div>
+                <div style="color:white;">Кот и кактусы</div>
+            </div>
+            <div id="gameMatchIcon" style="background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;">
+                <div style="font-size:48px;">⏱️🧩</div>
+                <div style="color:white;">Сопоставь слова</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(panel);
+
+    // Закрытие панели
+    document.getElementById('closeUnifiedPanel').onclick = () => panel.style.display = 'none';
+    gamesBtn.onclick = () => panel.style.display = 'flex';
+
+    // ---------- ИГРА 1: КОТ И КАКТУСЫ ----------
+    function startCatGame() {
+        // Удаляем предыдущий экземпляр игры, если есть
+        if (window.catGameActive) window.catGameActive.remove();
+
+        const gameDiv = document.createElement('div');
+        gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
+        gameDiv.innerHTML = `
+            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:500px; overflow:hidden;">
+                <div style="background:#e67e22; padding:8px; text-align:center; color:white;">🐱 Кот и кактусы (прыгай — пробел или клик)</div>
+                <canvas id="catCanvas" width="600" height="250" style="width:100%; background:#87CEEB;"></canvas>
+                <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
+                    <span>🌵 Очки: <span id="catScore">0</span></span>
+                    <span>🏆 Рекорд: <span id="catHighScore">0</span></span>
+                </div>
+                <div id="catGameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px; border-radius:20px; text-align:center;">
+                    Game Over <br><button id="catRestartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
+                </div>
+                <button id="catCloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:8px;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(gameDiv);
+        window.catGameActive = gameDiv;
+
+        const canvas = document.getElementById('catCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreSpan = document.getElementById('catScore');
+        const highSpan = document.getElementById('catHighScore');
+        const gameOverDiv = document.getElementById('catGameOverMsg');
+        const restartBtn = document.getElementById('catRestartBtn');
+        const closeBtn = document.getElementById('catCloseBtn');
+
+        let cw = 600, ch = 250;
+        canvas.width = cw; canvas.height = ch;
+        let groundY = ch - 40;
+        let cat = { x: 70, y: groundY - 35, width: 35, height: 35, vy: 0, grounded: true };
+        let cacti = [];
+        let score = 0;
+        let highScore = localStorage.getItem('catHigh') ? parseInt(localStorage.getItem('catHigh')) : 0;
+        highSpan.innerText = highScore;
+        let gameRunning = true;
+        let frame = 0;
+        let currentSpeed = 3;
+        let jumpRequest = false;
+        let animId = null;
+
+        function updateScoreUI() {
+            scoreSpan.innerText = score;
+            if (score > highScore) {
+                highScore = score;
+                highSpan.innerText = highScore;
+                localStorage.setItem('catHigh', highScore);
+            }
+        }
+
+        function spawnCactus() {
+            cacti.push({ x: cw, y: groundY - 35, width: 16, height: 35, vx: -currentSpeed, counted: false });
+        }
+
+        function update() {
+            if (!gameRunning) return;
+            if (jumpRequest && cat.grounded) {
+                cat.vy = -11;
+                cat.grounded = false;
+                jumpRequest = false;
+            }
+            cat.vy += 0.8;
+            cat.y += cat.vy;
+            if (cat.y >= groundY - cat.height) {
+                cat.y = groundY - cat.height;
+                cat.vy = 0;
+                cat.grounded = true;
+            }
+            for (let i = 0; i < cacti.length; i++) {
+                let c = cacti[i];
+                c.x += c.vx;
+                if (c.x + c.width < 0) {
+                    if (!c.counted) {
+                        score++;
+                        updateScoreUI();
+                        currentSpeed = Math.min(3 + Math.floor(score / 15), 7);
+                        c.counted = true;
+                    }
+                    cacti.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                if (cat.x < c.x + c.width && cat.x + cat.width > c.x &&
+                    cat.y < c.y + c.height && cat.y + cat.height > c.y) {
+                    gameRunning = false;
+                    if (animId) cancelAnimationFrame(animId);
+                    gameOverDiv.style.display = 'flex';
+                    return;
+                }
+            }
+            for (let c of cacti) c.vx = -currentSpeed;
+            if (frame % 48 === 0 && cacti.length < 5) spawnCactus();
+            frame++;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, cw, ch);
+            ctx.fillStyle = '#5d3a1a';
+            ctx.fillRect(0, groundY, cw, ch - groundY);
+            ctx.fillStyle = '#e67e22';
+            ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
+            ctx.fillStyle = '#d35400';
+            ctx.fillRect(cat.x + 5, cat.y - 8, 8, 8);
+            ctx.fillRect(cat.x + cat.width - 13, cat.y - 8, 8, 8);
+            for (let c of cacti) {
+                ctx.fillStyle = '#27ae60';
+                ctx.fillRect(c.x, c.y, c.width, c.height);
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(c.x + 4, c.y - 5, 4, 8);
+                ctx.fillRect(c.x + 10, c.y - 8, 4, 12);
+            }
+            ctx.fillStyle = 'white';
+            ctx.fillText(score, cw - 40, 30);
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            update();
+            draw();
+            animId = requestAnimationFrame(gameLoop);
+        }
+
+        function jump() {
+            if (gameRunning) jumpRequest = true;
+        }
+
+        function restart() {
+            gameRunning = true;
+            score = 0;
+            scoreSpan.innerText = '0';
+            cacti = [];
+            currentSpeed = 3;
+            frame = 0;
+            cat.y = groundY - cat.height;
+            cat.vy = 0;
+            cat.grounded = true;
+            jumpRequest = false;
+            gameOverDiv.style.display = 'none';
+            if (animId) cancelAnimationFrame(animId);
+            gameLoop();
+        }
+
+        canvas.addEventListener('click', (e) => { e.preventDefault(); jump(); });
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+        window.addEventListener('keydown', (e) => {
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && window.catGameActive) {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        restartBtn.onclick = () => restart();
+        closeBtn.onclick = () => {
+            gameRunning = false;
+            if (animId) cancelAnimationFrame(animId);
+            window.catGameActive.remove();
+            window.catGameActive = null;
+        };
+        restart();
+    }
+
+    // ---------- ИГРА 2: СОПОСТАВЬ СЛОВА (таймер, рекорд) ----------
+    function startMatchGame() {
+        if (window.matchGameInstance) window.matchGameInstance.remove();
+
+        const gameDiv = document.createElement('div');
+        gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
+        gameDiv.innerHTML = `
+            <div style="background:#2c3e50; border-radius:16px; width:95%; max-width:460px; padding:10px; position:relative;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="color:white; font-size:13px;">🧩 Сопоставь пары</span>
+                    <div><span style="color:white;">⏱️ <span id="mtTimer">0.0</span> сек</span> <span style="color:gold; margin-left:12px;">🏆 <span id="mtRecord">—</span></span></div>
+                </div>
+                <div id="mtGrid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin-bottom:8px;"></div>
+                <div style="display:flex; gap:6px;">
+                    <button id="mtReset" style="background:#e67e22; border:none; padding:5px 0; border-radius:20px; width:50%; cursor:pointer;">🔄 Новая</button>
+                    <button id="mtClose" style="background:#c0392b; border:none; padding:5px 0; border-radius:20px; width:50%; cursor:pointer;">✖ Закрыть</button>
+                </div>
+                <div id="mtNotify" style="position:absolute; bottom:12px; left:12px; right:12px; background:#f39c12; color:#2c3e50; text-align:center; padding:4px; border-radius:20px; opacity:0; transition:0.2s; font-size:11px;">🎉 Рекорд!</div>
+            </div>
+        `;
+        document.body.appendChild(gameDiv);
+        window.matchGameInstance = gameDiv;
+
+        const grid = document.getElementById('mtGrid');
+        const timerSpan = document.getElementById('mtTimer');
+        const recordSpan = document.getElementById('mtRecord');
+        const notify = document.getElementById('mtNotify');
+        const resetBtn = document.getElementById('mtReset');
+        const closeBtnGame = document.getElementById('mtClose');
+
+        function showMsg(txt) {
+            notify.innerText = txt;
+            notify.style.opacity = '1';
+            setTimeout(() => notify.style.opacity = '0', 1800);
+        }
+
+        let best = localStorage.getItem('matchBestSec');
+        recordSpan.innerText = best ? parseFloat(best).toFixed(1) : '—';
+
+        // Словарные пары (немецкий → русский) — если есть внешний словарь, используем его
+        let wordPairs = [];
+        if (window.localDict && Object.keys(window.localDict).length) {
+            wordPairs = Object.entries(window.localDict)
+                .filter(([de, ru]) => de.length > 1 && !de.match(/[А-Я]/) && ru)
+                .slice(0, 100);
+        }
+        if (wordPairs.length < 12) {
+            wordPairs = [
+                ['Haus','Дом'], ['Katze','Кошка'], ['Maus','Мышь'], ['Sonne','Солнце'],
+                ['Wald','Лес'], ['Blume','Цветок'], ['Vogel','Птица'], ['Fisch','Рыба'],
+                ['Auto','Машина'], ['Buch','Книга'], ['Tisch','Стол'], ['Stuhl','Стул']
+            ];
+        }
+
+        function getRandomPairs() {
+            let shuffled = [...wordPairs];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            let selected = shuffled.slice(0, 12);
+            let cards = [];
+            selected.forEach((pair, idx) => {
+                cards.push({ text: pair[0], type: 'de', pid: idx, matched: false });
+                cards.push({ text: pair[1], type: 'ru', pid: idx, matched: false });
+            });
+            for (let i = cards.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            return cards;
+        }
+
+        let cards = getRandomPairs();
+        let elements = [];
+        let opened = [];
+        let locked = false;
+        let timerSec = 0;
+        let timerInt = null;
+        let gameActive = true;
+
+        function stopTimer() {
+            if (timerInt) clearInterval(timerInt);
+            timerInt = null;
+        }
+
+        function startTimer() {
+            stopTimer();
+            timerSec = 0;
+            timerSpan.innerText = '0.0';
+            timerInt = setInterval(() => {
+                if (gameActive) {
+                    timerSec += 0.1;
+                    timerSpan.innerText = timerSec.toFixed(1);
+                }
+            }, 100);
+        }
+
+        function finishGame() {
+            if (!gameActive) return;
+            gameActive = false;
+            stopTimer();
+            let current = timerSec;
+            let record = localStorage.getItem('matchBestSec');
+            if (!record || current < parseFloat(record)) {
+                localStorage.setItem('matchBestSec', current.toFixed(1));
+                recordSpan.innerText = current.toFixed(1);
+                showMsg(`🎉 Новый рекорд! ${current.toFixed(1)} сек`);
+            } else {
+                showMsg(`✅ Все пары собраны! ${current.toFixed(1)} сек`);
+            }
+        }
+
+        function render() {
+            grid.innerHTML = '';
+            elements = [];
+            cards.forEach((c, i) => {
+                let div = document.createElement('div');
+                div.style.cssText = 'aspect-ratio:1/1; background:#34495e; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:9px; padding:2px; color:white; text-align:center; word-break:break-word;';
+                if (c.matched) {
+                    div.textContent = c.text;
+                    div.style.background = '#27ae60';
+                    div.style.cursor = 'default';
+                } else {
+                    div.textContent = '?';
+                }
+                div.addEventListener('click', () => onClick(i));
+                grid.appendChild(div);
+                elements.push(div);
+            });
+        }
+
+        function reveal(idx, permanent = false) {
+            let el = elements[idx];
+            if (!el) return;
+            el.textContent = cards[idx].text;
+            el.style.background = permanent ? '#27ae60' : '#1abc9c';
+        }
+
+        function hide(idx) {
+            if (!cards[idx].matched) {
+                elements[idx].textContent = '?';
+                elements[idx].style.background = '#34495e';
+            }
+        }
+
+        function onClick(idx) {
+            if (!gameActive || locked) return;
+            if (cards[idx].matched || opened.includes(idx)) return;
+            reveal(idx, false);
+            opened.push(idx);
+            if (opened.length === 2) {
+                locked = true;
+                let a = opened[0], b = opened[1];
+                if (cards[a].pid === cards[b].pid && cards[a].type !== cards[b].type) {
+                    cards[a].matched = cards[b].matched = true;
+                    reveal(a, true);
+                    reveal(b, true);
+                    opened = [];
+                    locked = false;
+                    if (cards.every(c => c.matched)) finishGame();
+                } else {
+                    setTimeout(() => {
+                        if (gameActive) {
+                            if (!cards[a].matched) hide(a);
+                            if (!cards[b].matched) hide(b);
+                        }
+                        opened = [];
+                        locked = false;
+                    }, 700);
+                }
+            }
+        }
+
+        function resetGame() {
+            stopTimer();
+            gameActive = true;
+            cards = getRandomPairs();
+            opened = [];
+            locked = false;
+            render();
+            startTimer();
+        }
+
+        resetBtn.onclick = resetGame;
+        closeBtnGame.onclick = () => {
+            gameActive = false;
+            stopTimer();
+            window.matchGameInstance.remove();
+            window.matchGameInstance = null;
+        };
+        render();
+        startTimer();
+    }
+
+    // Вешаем обработчики на иконки в панели
+    document.getElementById('gameCatIcon').onclick = () => {
+        panel.style.display = 'none';
+        startCatGame();
+    };
+    document.getElementById('gameMatchIcon').onclick = () => {
+        panel.style.display = 'none';
+        startMatchGame();
+    };
+})();
                 
 </script>
 </body>
