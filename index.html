@@ -7613,11 +7613,11 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" — НАДЁЖНАЯ ВЕРСИЯ ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
 
-    // Кнопка для открытия раздела (рядом с играми)
+    // Кнопка вызова
     const gamesBtn = document.getElementById('unifiedGamesBtn');
     let rightPos = '20px';
     if (gamesBtn) {
@@ -7662,7 +7662,7 @@ window.localDict = localDict;
         ja: { name: '日本語', flag: '🇯🇵', code: 'ja-JP' }
     };
 
-    // Словари (легко добавить новые слова)
+    // Словари (можно легко расширить)
     const vocab = {
         en: {
             A1: [
@@ -7672,10 +7672,7 @@ window.localDict = localDict;
                 { word: "cat", translation: "кот", example: "The cat sleeps on the sofa." },
                 { word: "dog", translation: "собака", example: "The dog barks loudly." },
                 { word: "sun", translation: "солнце", example: "The sun is shining." },
-                { word: "water", translation: "вода", example: "Drink more water." },
-                { word: "happy", translation: "счастливый", example: "I am happy today." },
-                { word: "big", translation: "большой", example: "This is a big tree." },
-                { word: "small", translation: "маленький", example: "She has a small cat." }
+                { word: "water", translation: "вода", example: "Drink more water." }
             ],
             A2: [
                 { word: "to travel", translation: "путешествовать", example: "I want to travel to Paris." },
@@ -7692,9 +7689,7 @@ window.localDict = localDict;
                 { word: "sí", translation: "да", example: "Sí, quiero ir al cine." },
                 { word: "no", translation: "нет", example: "No, no me gusta el café." },
                 { word: "agua", translation: "вода", example: "Bebo agua fría." },
-                { word: "casa", translation: "дом", example: "Mi casa es grande." },
-                { word: "perro", translation: "собака", example: "El perro ladra." },
-                { word: "gato", translation: "кот", example: "El gato duerme." }
+                { word: "casa", translation: "дом", example: "Mi casa es grande." }
             ],
             A2: [
                 { word: "comer", translation: "есть", example: "Me gusta comer pizza." },
@@ -7710,8 +7705,7 @@ window.localDict = localDict;
                 { word: "s'il vous plaît", translation: "пожалуйста", example: "Donnez-moi le livre, s'il vous plaît." },
                 { word: "oui", translation: "да", example: "Oui, j'aime le français." },
                 { word: "non", translation: "нет", example: "Non, je ne veux pas." },
-                { word: "chat", translation: "кот", example: "Le chat dort." },
-                { word: "chien", translation: "собака", example: "Le chien aboie." }
+                { word: "chat", translation: "кот", example: "Le chat dort." }
             ],
             A2: [
                 { word: "manger", translation: "есть", example: "Je mange une pomme." },
@@ -7755,8 +7749,7 @@ window.localDict = localDict;
                 { word: "再见", translation: "до свидания", example: "再见，明天见。" },
                 { word: "请", translation: "пожалуйста", example: "请帮我一个忙。" },
                 { word: "是", translation: "да", example: "是，我喜欢学习中文。" },
-                { word: "不是", translation: "нет", example: "不是，我不需要。" },
-                { word: "水", translation: "вода", example: "我要喝冷水。" }
+                { word: "不是", translation: "нет", example: "不是，我不需要。" }
             ],
             A2: [], B1: [], B2: [], C1: []
         },
@@ -7767,14 +7760,13 @@ window.localDict = localDict;
                 { word: "さようなら", translation: "до свидания", example: "さようなら、また明日。" },
                 { word: "お願いします", translation: "пожалуйста", example: "手伝ってください、お願いします。" },
                 { word: "はい", translation: "да", example: "はい、そうです。" },
-                { word: "いいえ", translation: "нет", example: "いいえ、違います。" },
-                { word: "水", translation: "вода", example: "冷たい水を飲みます。" }
+                { word: "いいえ", translation: "нет", example: "いいえ、違います。" }
             ],
             A2: [], B1: [], B2: [], C1: []
         }
     };
 
-    // ---- Глобальные переменные состояния ----
+    // ---- Состояние ----
     let currentLang = 'en';
     let currentLevel = 'A1';
     let currentCardIndex = 0;
@@ -7789,7 +7781,7 @@ window.localDict = localDict;
     const notebookArea = document.getElementById('langNotebook');
     const saveNotebookBtn = document.getElementById('saveLangNotebookBtn');
 
-    // ---- Вспомогательные функции ----
+    // Вспомогательные функции
     function showMessage(text, isError = false) {
         const msg = document.createElement('div');
         msg.textContent = text;
@@ -7811,29 +7803,56 @@ window.localDict = localDict;
     }
 
     function saveNotebook() {
-        const content = notebookArea.value;
-        localStorage.setItem(`notebook_${currentLang}`, content);
+        localStorage.setItem(`notebook_${currentLang}`, notebookArea.value);
         showMessage("📘 Тетрадь сохранена!");
     }
 
     function loadNotebook() {
-        const saved = localStorage.getItem(`notebook_${currentLang}`);
-        notebookArea.value = saved || "";
+        notebookArea.value = localStorage.getItem(`notebook_${currentLang}`) || "";
     }
 
     function getCurrentWords() {
         return vocab[currentLang]?.[currentLevel] || [];
     }
 
-    // ---- Главная функция отрисовки карточек (с обработчиками) ----
-    function renderCards() {
+    // Обновление содержимого карточки без пересоздания DOM
+    function updateCardContent() {
         const words = getCurrentWords();
         const total = words.length;
         const langData = languages[currentLang];
-        const levelKeys = ['A1', 'A2', 'B1', 'B2', 'C1'];
+        
+        // Обновляем счётчик
+        const counterSpan = document.getElementById('cardCounter');
+        if (counterSpan) counterSpan.innerText = total > 0 ? `${currentCardIndex+1} / ${total}` : '0 / 0';
+        
+        if (total === 0) {
+            // Показываем заглушку, если нет слов
+            document.getElementById('cardWord').innerText = '—';
+            document.getElementById('cardTranslation').innerText = 'Нет слов для этого уровня';
+            document.getElementById('cardExample').innerText = 'Добавьте слова в словарь';
+            document.getElementById('cardFlag').innerText = langData.flag;
+            return;
+        }
+        
+        const card = words[currentCardIndex];
+        document.getElementById('cardWord').innerText = card.word;
+        document.getElementById('cardTranslation').innerText = card.translation;
+        document.getElementById('cardExample').innerText = card.example;
+        document.getElementById('cardFlag').innerText = langData.flag;
+        
+        // Управление переворотом
+        const inner = document.getElementById('flipCardInner');
+        if (inner) {
+            inner.style.transform = isFlipped ? 'rotateY(180deg)' : '';
+        }
+    }
 
-        // Создаём HTML
-        let html = `
+    // Построение начальной структуры карточек (вызывается один раз)
+    function buildCardsInterface() {
+        const langData = languages[currentLang];
+        const levelKeys = ['A1', 'A2', 'B1', 'B2', 'C1'];
+        
+        const html = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                 <div>
                     <label style="color:white;">Язык: </label>
@@ -7847,31 +7866,19 @@ window.localDict = localDict;
                         ${levelKeys.map(lvl => `<option value="${lvl}" ${lvl===currentLevel ? 'selected' : ''}>${lvl}</option>`).join('')}
                     </select>
                 </div>
-                <div><span style="color:white;">${total>0 ? `Карточка ${currentCardIndex+1} / ${total}` : 'Нет слов'}</span></div>
+                <div><span style="color:white;" id="cardCounter"></span></div>
             </div>
-        `;
-
-        if (total === 0) {
-            html += `<div style="background:#2c3e50; border-radius:20px; padding:40px; text-align:center; color:white;">📭 Для этого уровня пока нет слов. Вы можете добавить их в код.<br>Уровни: A1, A2, B1, B2, C1</div>`;
-            tabCardsDiv.innerHTML = html;
-            attachGlobalEvents(); // подключаем события для селектов
-            return;
-        }
-
-        const card = words[currentCardIndex];
-        // Карточка-перевёртыш
-        html += `
             <div class="flip-card" style="background:transparent; width:100%; height:280px; perspective:1000px; margin-top:5px;">
-                <div class="flip-card-inner" style="position:relative; width:100%; height:100%; text-align:center; transition:transform 0.6s; transform-style:preserve-3d; border-radius:20px; cursor:pointer; ${isFlipped ? 'transform:rotateY(180deg);' : ''}">
-                    <div class="flip-card-front" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#2c3e50; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-                        <div style="font-size:48px; margin-bottom:20px;">${langData.flag}</div>
-                        <div style="font-size:32px; font-weight:bold; color:white; margin-bottom:20px; word-break:break-word;">${card.word}</div>
-                        <div style="font-size:14px; color:#bdc3c7; margin:0 15px;">${card.example}</div>
+                <div id="flipCardInner" class="flip-card-inner" style="position:relative; width:100%; height:100%; text-align:center; transition:transform 0.6s; transform-style:preserve-3d; border-radius:20px; cursor:pointer;">
+                    <div style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#2c3e50; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                        <div id="cardFlag" style="font-size:48px; margin-bottom:20px;">${langData.flag}</div>
+                        <div id="cardWord" style="font-size:32px; font-weight:bold; color:white; margin-bottom:20px; word-break:break-word;"></div>
+                        <div id="cardExample" style="font-size:14px; color:#bdc3c7; margin:0 15px;"></div>
                         <button id="speakBtn" style="margin-top:25px; background:#3498db; border:none; padding:6px 16px; border-radius:30px; color:white; cursor:pointer;">🔊 Прослушать</button>
                     </div>
-                    <div class="flip-card-back" style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#1e8449; border-radius:20px; transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                    <div style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#1e8449; border-radius:20px; transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
                         <div style="font-size:48px;">📖</div>
-                        <div style="font-size:32px; font-weight:bold; color:white; text-align:center; padding:0 20px;">${card.translation}</div>
+                        <div id="cardTranslation" style="font-size:32px; font-weight:bold; color:white; text-align:center; padding:0 20px;"></div>
                         <div style="font-size:14px; color:#f1c40f; margin-top:15px;">⇦ Нажмите, чтобы вернуться</div>
                     </div>
                 </div>
@@ -7882,72 +7889,70 @@ window.localDict = localDict;
                 <button id="nextCardBtn" style="background:#e67e22; border:none; padding:8px 20px; border-radius:30px; color:white; cursor:pointer;">Следующая ➡️</button>
             </div>
         `;
-
         tabCardsDiv.innerHTML = html;
-
-        // Добавляем CSS для 3D переворота (если нет)
+        
+        // Добавляем CSS, если его ещё нет
         if (!document.getElementById('flipCardStyle')) {
             const style = document.createElement('style');
             style.id = 'flipCardStyle';
             style.textContent = `.flip-card-inner { cursor: pointer; } .flip-card-front, .flip-card-back { backface-visibility: hidden; }`;
             document.head.appendChild(style);
         }
-
-        // Обработчик переворота карточки
-        const flipInner = document.querySelector('.flip-card-inner');
+        
+        // Обработчик переворота
+        const flipInner = document.getElementById('flipCardInner');
         if (flipInner) {
             flipInner.addEventListener('click', (e) => {
                 if (e.target.id === 'speakBtn') return;
                 isFlipped = !isFlipped;
-                renderCards(); // перерисовка с новым состоянием
+                updateCardContent();
             });
         }
-
+        
         // Кнопка озвучки
         const speakBtn = document.getElementById('speakBtn');
         if (speakBtn) {
             speakBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                speakWord(card.word, currentLang);
+                const word = document.getElementById('cardWord').innerText;
+                if (word && word !== '—') speakWord(word, currentLang);
             });
         }
-
-        // Кнопки навигации
+        
+        // Кнопки навигации (работают всегда)
         document.getElementById('prevCardBtn')?.addEventListener('click', () => {
-            const w = getCurrentWords();
+            const words = getCurrentWords();
+            if (words.length === 0) return;
             if (currentCardIndex > 0) {
                 currentCardIndex--;
                 isFlipped = false;
-                renderCards();
+                updateCardContent();
             } else {
                 showMessage("Это первая карточка", true);
             }
         });
         document.getElementById('nextCardBtn')?.addEventListener('click', () => {
-            const w = getCurrentWords();
-            if (currentCardIndex + 1 < w.length) {
+            const words = getCurrentWords();
+            if (words.length === 0) return;
+            if (currentCardIndex + 1 < words.length) {
                 currentCardIndex++;
                 isFlipped = false;
-                renderCards();
+                updateCardContent();
             } else {
                 showMessage("Вы дошли до конца! Переключите уровень или язык.", true);
             }
         });
         document.getElementById('randomCardBtn')?.addEventListener('click', () => {
-            const w = getCurrentWords();
-            if (w.length === 0) return;
-            const newIndex = Math.floor(Math.random() * w.length);
+            const words = getCurrentWords();
+            if (words.length === 0) return;
+            const newIndex = Math.floor(Math.random() * words.length);
             currentCardIndex = newIndex;
             isFlipped = false;
-            renderCards();
+            updateCardContent();
             showMessage("🎲 Случайное слово!");
         });
-
-        attachGlobalEvents(); // чтобы селекты работали после перерисовки
-    }
-
-    // Обработчики для селектов языка и уровня
-    function attachGlobalEvents() {
+        
+        // Обработчики выбора языка и уровня
         const langSelect = document.getElementById('langSelect');
         const levelSelect = document.getElementById('levelSelect');
         if (langSelect) {
@@ -7955,8 +7960,8 @@ window.localDict = localDict;
                 currentLang = e.target.value;
                 currentCardIndex = 0;
                 isFlipped = false;
+                updateCardContent();
                 if (tabNotebookDiv.style.display !== 'none') loadNotebook();
-                renderCards();
             };
         }
         if (levelSelect) {
@@ -7964,18 +7969,21 @@ window.localDict = localDict;
                 currentLevel = e.target.value;
                 currentCardIndex = 0;
                 isFlipped = false;
-                renderCards();
+                updateCardContent();
             };
         }
+        
+        updateCardContent(); // заполняем первую карточку
     }
-
+    
     // Переключение вкладок
     function showCardsTab() {
         tabCardsDiv.style.display = 'flex';
         tabNotebookDiv.style.display = 'none';
         tabCardsBtn.style.background = '#2c3e50';
         tabNotebookBtn.style.background = '#1e272e';
-        renderCards();
+        if (tabCardsDiv.innerHTML.trim() === '') buildCardsInterface();
+        else updateCardContent(); // обновить на случай смены языка/уровня
     }
     function showNotebookTab() {
         tabCardsDiv.style.display = 'none';
@@ -7984,7 +7992,7 @@ window.localDict = localDict;
         tabNotebookBtn.style.background = '#2c3e50';
         loadNotebook();
     }
-
+    
     // Назначение обработчиков модального окна
     tabCardsBtn.onclick = showCardsTab;
     tabNotebookBtn.onclick = showNotebookTab;
@@ -7994,8 +8002,8 @@ window.localDict = localDict;
         showCardsTab();
     };
     saveNotebookBtn.onclick = saveNotebook;
-
-    // Инициализация: скрываем модалку, всё готово
+    
+    // Инициализация
 })();
 </script>
 </body>
