@@ -7613,19 +7613,17 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== ИНОСТРАННЫЕ ЯЗЫКИ - ГАРАНТИРОВАННО РАБОТАЕТ ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
 (function() {
-    // Ждём полной загрузки DOM, чтобы все элементы были на месте
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
-    
+
     function init() {
-        // Не создаём повторно
         if (document.getElementById('languagesSectionBtn')) return;
-        
+
         // Кнопка вызова (рядом с играми)
         const gamesBtn = document.getElementById('unifiedGamesBtn');
         let rightPos = '20px';
@@ -7638,7 +7636,7 @@ window.localDict = localDict;
         langBtn.innerHTML = '🌍 Другие языки';
         langBtn.style.cssText = `position:absolute; top:20px; right:${rightPos}; background:#9b59b6; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);`;
         document.body.appendChild(langBtn);
-        
+
         // Модальное окно
         const modal = document.createElement('div');
         modal.id = 'languagesModal';
@@ -7659,89 +7657,114 @@ window.localDict = localDict;
             </div>
         `;
         document.body.appendChild(modal);
-        
-        // Данные языков и словарей
+
+        // Данные языков и словарей (исправлены и расширены)
         const languages = {
             en: '🇬🇧 English', es: '🇪🇸 Español', fr: '🇫🇷 Français', it: '🇮🇹 Italiano',
             pt: '🇵🇹 Português', zh: '🇨🇳 中文', ja: '🇯🇵 日本語'
         };
         const langCode = { en:'en-US', es:'es-ES', fr:'fr-FR', it:'it-IT', pt:'pt-PT', zh:'zh-CN', ja:'ja-JP' };
-        
-        // Слова (минимальный набор, но работает)
+
+        // Слова для каждого языка и уровня (A1, A2, B1, B2, C1) с примерами
         const wordsDB = {
-            en: { A1: ['apple-яблоко', 'car-машина', 'house-дом'], A2: ['travel-путешествовать'], B1:[], B2:[], C1:[] },
-            es: { A1: ['hola-привет', 'gracias-спасибо', 'casa-дом'], A2: ['comer-есть'], B1:[], B2:[], C1:[] },
-            fr: { A1: ['bonjour-здравствуйте', 'merci-спасибо'], A2: ['manger-есть'], B1:[], B2:[], C1:[] },
-            it: { A1: ['ciao-привет', 'grazie-спасибо'], A2: ['mangiare-есть'], B1:[], B2:[], C1:[] },
-            pt: { A1: ['olá-привет', 'obrigado-спасибо'], A2: [], B1:[], B2:[], C1:[] },
-            zh: { A1: ['你好-здравствуйте', '谢谢-спасибо'], A2: [], B1:[], B2:[], C1:[] },
-            ja: { A1: ['こんにちは-здравствуйте', 'ありがとう-спасибо'], A2: [], B1:[], B2:[], C1:[] }
+            en: {
+                A1: [{word:"apple",trans:"яблоко",ex:"I eat an apple."},{word:"car",trans:"машина",ex:"My car is red."},{word:"house",trans:"дом",ex:"Big house."},{word:"cat",trans:"кот",ex:"The cat sleeps."},{word:"dog",trans:"собака",ex:"The dog barks."},{word:"sun",trans:"солнце",ex:"The sun shines."},{word:"water",trans:"вода",ex:"Drink water."}],
+                A2: [{word:"travel",trans:"путешествовать",ex:"I love to travel."},{word:"delicious",trans:"вкусный",ex:"The food is delicious."}],
+                B1: [{word:"opportunity",trans:"возможность",ex:"Great opportunity!"}], B2: [], C1: []
+            },
+            es: {
+                A1: [{word:"hola",trans:"привет",ex:"¡Hola!"},{word:"gracias",trans:"спасибо",ex:"Muchas gracias."},{word:"casa",trans:"дом",ex:"Mi casa."},{word:"perro",trans:"собака",ex:"El perro."},{word:"gato",trans:"кот",ex:"El gato."},{word:"agua",trans:"вода",ex:"Agua fría."}],
+                A2: [{word:"comer",trans:"есть",ex:"Me gusta comer."},{word:"beber",trans:"пить",ex:"Bebo agua."}], B1: [], B2: [], C1: []
+            },
+            fr: {
+                A1: [{word:"bonjour",trans:"здравствуйте",ex:"Bonjour!"},{word:"merci",trans:"спасибо",ex:"Merci beaucoup."},{word:"chat",trans:"кот",ex:"Le chat."},{word:"chien",trans:"собака",ex:"Le chien."}],
+                A2: [{word:"manger",trans:"есть",ex:"Je mange."},{word:"boire",trans:"пить",ex:"Je bois."}], B1: [], B2: [], C1: []
+            },
+            it: {
+                A1: [{word:"ciao",trans:"привет/пока",ex:"Ciao!"},{word:"grazie",trans:"спасибо",ex:"Grazie mille."},{word:"casa",trans:"дом",ex:"La mia casa."}],
+                A2: [{word:"mangiare",trans:"есть",ex:"Mangio."},{word:"bere",trans:"пить",ex:"Bevo."}], B1: [], B2: [], C1: []
+            },
+            pt: {
+                A1: [{word:"olá",trans:"привет",ex:"Olá!"},{word:"obrigado",trans:"спасибо",ex:"Obrigado."},{word:"água",trans:"вода",ex:"Água."}], A2: [], B1: [], B2: [], C1: []
+            },
+            zh: {
+                A1: [{word:"你好",trans:"здравствуйте",ex:"你好!"},{word:"谢谢",trans:"спасибо",ex:"谢谢."},{word:"水",trans:"вода",ex:"水."}], A2: [], B1: [], B2: [], C1: []
+            },
+            ja: {
+                A1: [{word:"こんにちは",trans:"здравствуйте",ex:"こんにちは!"},{word:"ありがとう",trans:"спасибо",ex:"ありがとう。"},{word:"水",trans:"вода",ex:"水。"}], A2: [], B1: [], B2: [], C1: []
+            }
         };
-        
+
         // Состояние
         let currentLang = 'en';
         let currentLevel = 'A1';
         let currentIndex = 0;
         let isFlipped = false;
-        
-        // Функции
-        function speak(text, lang) {
+        let currentCardData = null;
+
+        // Озвучка
+        function speakWord(word, lang) {
             if (!window.speechSynthesis) return;
-            let u = new SpeechSynthesisUtterance(text.split('-')[0]); // произносим только слово
-            u.lang = langCode[lang] || 'en-US';
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = langCode[lang] || 'en-US';
+            utterance.rate = 0.9;
             window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(u);
+            window.speechSynthesis.speak(utterance);
         }
-        
-        function getCurrentWordPair() {
-            const levelWords = wordsDB[currentLang][currentLevel];
-            if (!levelWords || levelWords.length === 0) return null;
-            if (currentIndex >= levelWords.length) currentIndex = 0;
-            const pair = levelWords[currentIndex].split('-');
-            return { word: pair[0], trans: pair[1] };
+
+        function getCurrentWordList() {
+            return wordsDB[currentLang]?.[currentLevel] || [];
         }
-        
-        function updateCardUI() {
-            const pair = getCurrentWordPair();
-            const counter = document.getElementById('cardCounter');
-            const total = wordsDB[currentLang][currentLevel]?.length || 0;
-            if (counter) counter.innerText = total ? `${currentIndex+1}/${total}` : '0/0';
-            if (!pair) {
+
+        function updateCardDisplay() {
+            const words = getCurrentWordList();
+            const total = words.length;
+            const counterSpan = document.getElementById('cardCounter');
+            if (counterSpan) counterSpan.innerText = total ? `${currentIndex+1}/${total}` : '0/0';
+
+            if (total === 0) {
                 document.getElementById('cardWord').innerText = '—';
                 document.getElementById('cardTrans').innerText = 'Нет слов';
-                document.getElementById('cardExample').innerText = 'Добавьте в словарь';
+                document.getElementById('cardExample').innerText = 'Добавьте слова в словарь';
+                currentCardData = null;
                 return;
             }
-            document.getElementById('cardWord').innerText = pair.word;
-            document.getElementById('cardTrans').innerText = pair.trans;
-            document.getElementById('cardExample').innerText = 'Пример: ...';
-            const inner = document.getElementById('flipInner');
-            if (inner) inner.style.transform = isFlipped ? 'rotateY(180deg)' : '';
+            if (currentIndex >= total) currentIndex = 0;
+            const card = words[currentIndex];
+            currentCardData = card;
+            document.getElementById('cardWord').innerText = card.word;
+            document.getElementById('cardTrans').innerText = card.trans;
+            document.getElementById('cardExample').innerText = card.ex || 'Пример';
+            const flipInner = document.getElementById('flipInner');
+            if (flipInner) flipInner.style.transform = isFlipped ? 'rotateY(180deg)' : '';
         }
-        
-        function buildCards() {
-            const levels = ['A1','A2','B1','B2','C1'];
+
+        function rebuildCardsSection() {
+            const levels = ['A1', 'A2', 'B1', 'B2', 'C1'];
+            const flagEmoji = languages[currentLang].split(' ')[0];
+            const currentWordsCount = getCurrentWordList().length;
+
             const html = `
-                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
                     <select id="langSelect" style="background:#34495e; color:white; padding:6px; border-radius:20px;">
                         ${Object.keys(languages).map(l => `<option value="${l}" ${l===currentLang?'selected':''}>${languages[l]}</option>`).join('')}
                     </select>
                     <select id="levelSelect" style="background:#34495e; color:white; padding:6px; border-radius:20px;">
-                        ${levels.map(l => `<option value="${l}" ${l===currentLevel?'selected':''}>${l}</option>`).join('')}
+                        ${levels.map(l => `<option value="${l}" ${l===currentLevel?'selected':''}>${l} (${wordsDB[currentLang]?.[l]?.length || 0})</option>`).join('')}
                     </select>
-                    <span id="cardCounter" style="color:white; line-height:32px;">0/0</span>
+                    <span id="cardCounter" style="color:white; line-height:32px;">${currentWordsCount ? `${currentIndex+1}/${currentWordsCount}` : '0/0'}</span>
                 </div>
                 <div class="flip-card" style="width:100%; height:280px; perspective:1000px;">
                     <div id="flipInner" style="position:relative; width:100%; height:100%; transition:0.6s; transform-style:preserve-3d; border-radius:20px; cursor:pointer;">
                         <div style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#2c3e50; border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                            <div style="font-size:48px;">${languages[currentLang].split(' ')[0]}</div>
+                            <div style="font-size:48px;">${flagEmoji}</div>
                             <div id="cardWord" style="font-size:32px; font-weight:bold; color:white;"></div>
                             <div id="cardExample" style="color:#bdc3c7; margin-top:10px;"></div>
                             <button id="speakCardBtn" style="margin-top:20px; background:#3498db; border:none; padding:6px 16px; border-radius:30px; color:white;">🔊 Озвучка</button>
                         </div>
                         <div style="position:absolute; width:100%; height:100%; backface-visibility:hidden; background:#1e8449; border-radius:20px; transform:rotateY(180deg); display:flex; align-items:center; justify-content:center; flex-direction:column;">
                             <div style="font-size:48px;">📖</div>
-                            <div id="cardTrans" style="font-size:32px; font-weight:bold; color:white;"></div>
+                            <div id="cardTrans" style="font-size:32px; font-weight:bold; color:white; text-align:center;"></div>
                         </div>
                     </div>
                 </div>
@@ -7752,91 +7775,106 @@ window.localDict = localDict;
                 </div>
             `;
             document.getElementById('langCardsArea').innerHTML = html;
-            
-            // Добавляем стиль, если нет
+
             if (!document.getElementById('flipStyle')) {
-                const s = document.createElement('style');
-                s.id = 'flipStyle';
-                s.textContent = '#flipInner { cursor: pointer; } #flipInner, #flipInner * { backface-visibility: hidden; }';
-                document.head.appendChild(s);
+                const style = document.createElement('style');
+                style.id = 'flipStyle';
+                style.textContent = '#flipInner { cursor: pointer; } #flipInner, #flipInner * { backface-visibility: hidden; }';
+                document.head.appendChild(style);
             }
-            
-            // Обработчики (прямые, без потери)
+
+            // Обработчики событий
             document.getElementById('flipInner')?.addEventListener('click', (e) => {
                 if (e.target.id === 'speakCardBtn') return;
                 isFlipped = !isFlipped;
-                updateCardUI();
+                updateCardDisplay();
             });
-            document.getElementById('speakCardBtn')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const pair = getCurrentWordPair();
-                if (pair) speak(pair.word, currentLang);
-            });
+            const speakBtn = document.getElementById('speakCardBtn');
+            if (speakBtn) {
+                speakBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (currentCardData) speakWord(currentCardData.word, currentLang);
+                });
+            }
             document.getElementById('prevBtn')?.addEventListener('click', () => {
-                let arr = wordsDB[currentLang][currentLevel];
-                if (!arr || arr.length === 0) return;
-                currentIndex = (currentIndex - 1 + arr.length) % arr.length;
+                const list = getCurrentWordList();
+                if (list.length === 0) return;
+                currentIndex = (currentIndex - 1 + list.length) % list.length;
                 isFlipped = false;
-                updateCardUI();
+                updateCardDisplay();
             });
             document.getElementById('nextBtn')?.addEventListener('click', () => {
-                let arr = wordsDB[currentLang][currentLevel];
-                if (!arr || arr.length === 0) return;
-                currentIndex = (currentIndex + 1) % arr.length;
+                const list = getCurrentWordList();
+                if (list.length === 0) return;
+                currentIndex = (currentIndex + 1) % list.length;
                 isFlipped = false;
-                updateCardUI();
+                updateCardDisplay();
             });
             document.getElementById('randomBtn')?.addEventListener('click', () => {
-                let arr = wordsDB[currentLang][currentLevel];
-                if (!arr || arr.length === 0) return;
-                currentIndex = Math.floor(Math.random() * arr.length);
+                const list = getCurrentWordList();
+                if (list.length === 0) return;
+                currentIndex = Math.floor(Math.random() * list.length);
                 isFlipped = false;
-                updateCardUI();
+                updateCardDisplay();
             });
-            
-            const langSel = document.getElementById('langSelect');
-            const levelSel = document.getElementById('levelSelect');
-            if (langSel) langSel.onchange = (e) => {
-                currentLang = e.target.value;
-                currentIndex = 0;
-                isFlipped = false;
-                updateCardUI();
-                // Обновить флаг в карточке (не перестраивая всю карточку)
-                const flagDiv = document.querySelector('#langCardsArea .flip-card > div:first-child > div:first-child');
-                if (flagDiv) flagDiv.innerText = languages[currentLang].split(' ')[0];
-                if (document.getElementById('langNotebookArea').style.display !== 'none') loadNotebook();
-            };
-            if (levelSel) levelSel.onchange = (e) => {
-                currentLevel = e.target.value;
-                currentIndex = 0;
-                isFlipped = false;
-                updateCardUI();
-            };
-            updateCardUI();
+
+            const langSelect = document.getElementById('langSelect');
+            const levelSelect = document.getElementById('levelSelect');
+            if (langSelect) {
+                langSelect.onchange = (e) => {
+                    currentLang = e.target.value;
+                    currentLevel = 'A1';
+                    currentIndex = 0;
+                    isFlipped = false;
+                    rebuildCardsSection();
+                    if (document.getElementById('langNotebookArea').style.display !== 'none') loadNotebook();
+                };
+            }
+            if (levelSelect) {
+                levelSelect.onchange = (e) => {
+                    currentLevel = e.target.value;
+                    currentIndex = 0;
+                    isFlipped = false;
+                    updateCardDisplay();
+                    // Обновляем количество слов в селекте уровней
+                    const levelOpts = levelSelect.options;
+                    for (let i = 0; i < levelOpts.length; i++) {
+                        const lvl = levelOpts[i].value;
+                        const cnt = wordsDB[currentLang]?.[lvl]?.length || 0;
+                        levelOpts[i].text = `${lvl} (${cnt})`;
+                    }
+                };
+            }
+            updateCardDisplay();
         }
-        
+
+        // Тетрадь
         function loadNotebook() {
             const saved = localStorage.getItem(`notebook_${currentLang}`);
             document.getElementById('langNotebook').value = saved || '';
         }
         function saveNotebook() {
             localStorage.setItem(`notebook_${currentLang}`, document.getElementById('langNotebook').value);
-            alert('Тетрадь сохранена!');
+            const msg = document.createElement('div');
+            msg.textContent = '📘 Тетрадь сохранена!';
+            msg.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#27ae60; color:white; padding:8px 16px; border-radius:20px; z-index:100004; font-size:13px;';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 1500);
         }
-        
-        // Переключение вкладок
-        const cardsArea = document.getElementById('langCardsArea');
+
+        // Вкладки
+        const cardsAreaDiv = document.getElementById('langCardsArea');
         const notebookAreaDiv = document.getElementById('langNotebookArea');
         document.getElementById('langTabCardsBtn').onclick = () => {
-            cardsArea.style.display = 'block';
+            cardsAreaDiv.style.display = 'block';
             notebookAreaDiv.style.display = 'none';
             document.getElementById('langTabCardsBtn').style.background = '#2c3e50';
             document.getElementById('langTabNotebookBtn').style.background = '#1e272e';
-            if (cardsArea.innerHTML === '') buildCards();
-            else updateCardUI();
+            if (cardsAreaDiv.innerHTML === '') rebuildCardsSection();
+            else updateCardDisplay();
         };
         document.getElementById('langTabNotebookBtn').onclick = () => {
-            cardsArea.style.display = 'none';
+            cardsAreaDiv.style.display = 'none';
             notebookAreaDiv.style.display = 'flex';
             document.getElementById('langTabCardsBtn').style.background = '#1e272e';
             document.getElementById('langTabNotebookBtn').style.background = '#2c3e50';
@@ -7846,11 +7884,10 @@ window.localDict = localDict;
         document.getElementById('saveNotebookBtn').onclick = saveNotebook;
         langBtn.onclick = () => {
             modal.style.display = 'flex';
-            document.getElementById('langTabCardsBtn').click(); // открыть карточки
+            document.getElementById('langTabCardsBtn').click();
         };
-        
-        // Первоначальная сборка карточек
-        buildCards();
+
+        rebuildCardsSection();
     }
 })();
 </script>
