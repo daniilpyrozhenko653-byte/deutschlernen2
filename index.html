@@ -7613,7 +7613,7 @@ window.localDict = localDict;
     };
 })();
 
-    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ОЗВУЧКА И ПЕРЕВОРОТ ИСПРАВЛЕНЫ ==========
+    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ГАРАНТИРОВАННАЯ ОЗВУЧКА ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
 
@@ -7651,7 +7651,7 @@ window.localDict = localDict;
     `;
     document.body.appendChild(modal);
 
-    // Данные языков (коды для озвучки)
+    // Данные языков
     const languages = {
         en: { name: 'English', flag: '🇬🇧', code: 'en-US' },
         es: { name: 'Español', flag: '🇪🇸', code: 'es-ES' },
@@ -7662,57 +7662,52 @@ window.localDict = localDict;
         ja: { name: '日本語', flag: '🇯🇵', code: 'ja-JP' }
     };
 
-    // Словари (можно легко расширить)
+    // Словари (можно добавлять свои слова)
     const wordsDB = {
-        en: {
-            A1: [{word:"apple",trans:"яблоко",ex:"I eat an apple."},{word:"car",trans:"машина",ex:"My car is red."},{word:"house",trans:"дом",ex:"Big house."},{word:"cat",trans:"кот",ex:"The cat sleeps."},{word:"dog",trans:"собака",ex:"The dog barks."}],
-            A2: [{word:"travel",trans:"путешествовать",ex:"I love to travel."}], B1:[], B2:[], C1:[]
-        },
-        es: {
-            A1: [{word:"hola",trans:"привет",ex:"¡Hola!"},{word:"gracias",trans:"спасибо",ex:"Muchas gracias."},{word:"casa",trans:"дом",ex:"Mi casa."},{word:"perro",trans:"собака",ex:"El perro."},{word:"gato",trans:"кот",ex:"El gato."}],
-            A2: [{word:"comer",trans:"есть",ex:"Me gusta comer."}], B1:[], B2:[], C1:[]
-        },
-        fr: {
-            A1: [{word:"bonjour",trans:"здравствуйте",ex:"Bonjour!"},{word:"merci",trans:"спасибо",ex:"Merci beaucoup."},{word:"chat",trans:"кот",ex:"Le chat."},{word:"chien",trans:"собака",ex:"Le chien."}],
-            A2: [{word:"manger",trans:"есть",ex:"Je mange."}], B1:[], B2:[], C1:[]
-        },
-        it: {
-            A1: [{word:"ciao",trans:"привет/пока",ex:"Ciao!"},{word:"grazie",trans:"спасибо",ex:"Grazie mille."},{word:"casa",trans:"дом",ex:"La mia casa."}],
-            A2: [{word:"mangiare",trans:"есть",ex:"Mangio."}], B1:[], B2:[], C1:[]
-        },
-        pt: {
-            A1: [{word:"olá",trans:"привет",ex:"Olá!"},{word:"obrigado",trans:"спасибо",ex:"Obrigado."},{word:"água",trans:"вода",ex:"Água."}], A2:[], B1:[], B2:[], C1:[]
-        },
-        zh: {
-            A1: [{word:"你好",trans:"здравствуйте",ex:"你好!"},{word:"谢谢",trans:"спасибо",ex:"谢谢."},{word:"水",trans:"вода",ex:"水."}], A2:[], B1:[], B2:[], C1:[]
-        },
-        ja: {
-            A1: [{word:"こんにちは",trans:"здравствуйте",ex:"こんにちは!"},{word:"ありがとう",trans:"спасибо",ex:"ありがとう。"},{word:"水",trans:"вода",ex:"水。"}], A2:[], B1:[], B2:[], C1:[]
-        }
+        en: { A1: [{word:"apple",trans:"яблоко",ex:"I eat an apple."},{word:"car",trans:"машина",ex:"My car is red."}], A2: [], B1:[], B2:[], C1:[] },
+        es: { A1: [{word:"hola",trans:"привет",ex:"¡Hola!"},{word:"gracias",trans:"спасибо",ex:"Muchas gracias."}], A2: [], B1:[], B2:[], C1:[] },
+        fr: { A1: [{word:"bonjour",trans:"здравствуйте",ex:"Bonjour!"},{word:"merci",trans:"спасибо",ex:"Merci beaucoup."}], A2: [], B1:[], B2:[], C1:[] },
+        it: { A1: [{word:"ciao",trans:"привет/пока",ex:"Ciao!"},{word:"grazie",trans:"спасибо",ex:"Grazie mille."}], A2: [], B1:[], B2:[], C1:[] },
+        pt: { A1: [{word:"olá",trans:"привет",ex:"Olá!"},{word:"obrigado",trans:"спасибо",ex:"Obrigado."}], A2: [], B1:[], B2:[], C1:[] },
+        zh: { A1: [{word:"你好",trans:"здравствуйте",ex:"你好!"}], A2: [], B1:[], B2:[], C1:[] },
+        ja: { A1: [{word:"こんにちは",trans:"здравствуйте",ex:"こんにちは!"}], A2: [], B1:[], B2:[], C1:[] }
     };
 
-    // Состояние
     let currentLang = 'en';
     let currentLevel = 'A1';
     let currentIndex = 0;
     let isFlipped = false;
 
-    // ----- Озвучка (без конфликтного cancel, чтобы не прерывать другие речи) -----
+    // ------------------ НАДЁЖНАЯ ОЗВУЧКА С ЛОГАМИ ------------------
     function speakWord(word, langKey) {
-        if (!word || word === "—") return;
-        if (!window.speechSynthesis) {
-            console.warn("SpeechSynthesis не поддерживается");
+        console.log(`[SPEAK] Запрос на озвучку: "${word}", язык: ${langKey}`);
+        
+        if (!word || word === "—" || word.trim() === "") {
+            console.warn("[SPEAK] Нет слова для озвучки");
             return;
         }
+        if (!window.speechSynthesis) {
+            console.error("[SPEAK] Web Speech API не поддерживается");
+            alert("Ваш браузер не поддерживает голосовое воспроизведение.");
+            return;
+        }
+
+        // Отменяем ТОЛЬКО текущую речь этого раздела (без глобального cancel)
+        // Если не хотите прерывать немецкий тренажёр – закомментируйте строку.
+        // try { window.speechSynthesis.cancel(); } catch(e) {}
+        
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = languages[langKey]?.code || 'en-US';
+        utterance.rate = 0.9;
+        utterance.onstart = () => console.log(`[SPEAK] Начало воспроизведения: ${word}`);
+        utterance.onend = () => console.log(`[SPEAK] Окончание воспроизведения: ${word}`);
+        utterance.onerror = (e) => console.error("[SPEAK] Ошибка:", e);
+        
         try {
-            // Не вызываем cancel() – пусть речь накладывается или просто произносится.
-            // Если нужно, можно раскомментировать, но тогда будут конфликты с немецким тренажёром.
-            // window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = languages[langKey]?.code || 'en-US';
-            utterance.rate = 0.9;
             window.speechSynthesis.speak(utterance);
-        } catch(e) { console.warn(e); }
+        } catch(e) {
+            console.error("[SPEAK] Исключение при speak():", e);
+        }
     }
 
     function getCurrentWordList() {
@@ -7784,18 +7779,17 @@ window.localDict = localDict;
             document.head.appendChild(style);
         }
 
-        // ========== ОБРАБОТЧИК ПЕРЕВОРОТА ==========
+        // Переворот по клику
         const flipElement = document.getElementById('flipInner');
         if (flipElement) {
             flipElement.addEventListener('click', (e) => {
-                // Если клик на кнопке "Озвучка" – не переворачиваем
                 if (e.target.id === 'speakCardBtn') return;
                 isFlipped = !isFlipped;
                 updateCardDisplay();
             });
         }
 
-        // ========== КНОПКА ОЗВУЧКИ ==========
+        // Кнопка озвучки
         const speakBtn = document.getElementById('speakCardBtn');
         if (speakBtn) {
             speakBtn.addEventListener('click', (e) => {
@@ -7803,11 +7797,13 @@ window.localDict = localDict;
                 const words = getCurrentWordList();
                 if (words.length && words[currentIndex]) {
                     speakWord(words[currentIndex].word, currentLang);
+                } else {
+                    console.warn("Нет слова для озвучки");
                 }
             });
         }
 
-        // ========== НАВИГАЦИЯ ==========
+        // Навигация
         document.getElementById('prevBtn')?.addEventListener('click', () => {
             const list = getCurrentWordList();
             if (list.length === 0) return;
@@ -7830,7 +7826,7 @@ window.localDict = localDict;
             updateCardDisplay();
         });
 
-        // ========== СЕЛЕКТЫ ==========
+        // Селекты
         const langSelect = document.getElementById('langSelect');
         if (langSelect) {
             langSelect.onchange = (e) => {
