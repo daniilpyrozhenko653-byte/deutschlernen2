@@ -7389,53 +7389,85 @@ window.localDict = localDict;
 })();
 
 
-// ========== ИГРА "СОПОСТАВЬ СЛОВА НА ВРЕМЯ" (УВЕДОМЛЕНИЕ БЕЗ ALERT) ==========
+// ========== ИГРА НА ВРЕМЯ (АДАПТИВНАЯ, БЕЗ ПРОКРУТКИ) ==========
 (function() {
-    // ... (весь предыдущий код создания панели и иконки, он не меняется) ...
-    // Но чтобы не дублировать, предположим, что панель уже есть. 
-    // Просто переопределим функцию launchTimedMatchGame.
+    // Находим панель выбора игр (общая логика, как ранее)
+    let gamePanel = document.getElementById('gamePanel');
+    if (!gamePanel) {
+        gamePanel = document.createElement('div');
+        gamePanel.id = 'gamePanel';
+        gamePanel.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:15px; border-radius:15px; z-index:100001; display:none; flex-direction:column; align-items:center; gap:10px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7);';
+        gamePanel.innerHTML = `
+            <div style="width:100%; display:flex; justify-content:flex-end;">
+                <button id="closePanelBtnTime" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+            </div>
+            <div id="gamesListTime" style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;"></div>
+        `;
+        document.body.appendChild(gamePanel);
+        document.getElementById('closePanelBtnTime').onclick = () => gamePanel.style.display = 'none';
+        if (!document.getElementById('callGamesBtn')) {
+            let readBtn = document.getElementById('simpleReaderBtn');
+            if (readBtn) {
+                let gamesBtn = document.createElement('div');
+                gamesBtn.id = 'callGamesBtn';
+                gamesBtn.innerHTML = '🎮 Игры';
+                gamesBtn.style.cssText = 'position:absolute; top:20px; right:' + (parseInt(readBtn.style.right) + 80) + 'px; background:#2ecc71; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000;';
+                document.body.appendChild(gamesBtn);
+                gamesBtn.onclick = () => gamePanel.style.display = 'flex';
+            }
+        }
+    }
 
-    window.launchTimedMatchGame = function() {
+    // Добавляем иконку игры, если ещё нет
+    const gamesContainerTime = document.getElementById('gamesListTime') || gamePanel;
+    if (!document.getElementById('matchTimeIcon')) {
+        let matchTimeIcon = document.createElement('div');
+        matchTimeIcon.id = 'matchTimeIcon';
+        matchTimeIcon.style.cssText = 'background:#1e272e; padding:15px 25px; border-radius:20px; cursor:pointer; text-align:center; width:150px; margin:5px auto;';
+        matchTimeIcon.innerHTML = `
+            <div style="font-size:48px;">⏱️🧩</div>
+            <div style="color:white; margin-top:5px;">Сопоставь слова (на время)</div>
+        `;
+        gamesContainerTime.appendChild(matchTimeIcon);
+        matchTimeIcon.onclick = () => {
+            gamePanel.style.display = 'none';
+            launchTimedMatchGame();
+        };
+    }
+
+    function launchTimedMatchGame() {
         if (window.timedGameActive) window.timedGameActive.remove();
 
-        window.timedGameActive = document.createElement('div');
-        window.timedGameActive.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
-        window.timedGameActive.innerHTML = `
-            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:auto; padding:12px; position:relative; max-height:90vh;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
-                    <h3 style="margin:0; font-size:18px; color:white;">🧩 Сопоставь пары</h3>
-                    <div style="display:flex; gap:15px;">
+        const gameWindow = document.createElement('div');
+        window.timedGameActive = gameWindow;
+        gameWindow.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center;';
+        // Уменьшаем ширину окна: используем max-width: 480px, width: 95%, но внутреннюю сетку подстроим
+        gameWindow.innerHTML = `
+            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:480px; padding:10px; position:relative; box-sizing:border-box;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:5px;">
+                    <h3 style="margin:0; font-size:16px; color:white;">🧩 Сопоставь пары</h3>
+                    <div style="display:flex; gap:10px; font-size:14px;">
                         <span style="color:white;">⏱️ <span id="timerDisplay">0.0</span> сек</span>
-                        <span style="color:gold;">🏆 Рекорд: <span id="recordDisplay">—</span> сек</span>
+                        <span style="color:gold;">🏆 <span id="recordDisplay">—</span> сек</span>
                     </div>
                 </div>
-                <div id="timedMatchGrid" style="display:grid; grid-template-columns:repeat(6, minmax(65px,1fr)); gap:6px; justify-items:center; margin-bottom:15px; overflow-x:auto;"></div>
-                <div style="display:flex; justify-content:space-between; gap:10px;">
-                    <button id="resetTimedGame" style="background:#e67e22; border:none; padding:8px 12px; border-radius:20px; cursor:pointer; font-size:13px;">🔄 Новая игра</button>
-                    <button id="closeTimedGame" style="background:#c0392b; border:none; padding:8px 12px; border-radius:20px; cursor:pointer; font-size:13px;">✖ Закрыть</button>
+                <div id="timedMatchGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:5px; margin-bottom:12px;"></div>
+                <div style="display:flex; justify-content:space-between; gap:8px;">
+                    <button id="resetTimedGame" style="background:#e67e22; border:none; padding:6px 10px; border-radius:20px; cursor:pointer; font-size:12px;">🔄 Новая игра</button>
+                    <button id="closeTimedGame" style="background:#c0392b; border:none; padding:6px 10px; border-radius:20px; cursor:pointer; font-size:12px;">✖ Закрыть</button>
                 </div>
-                <div id="customNotification" style="position:absolute; bottom:20px; left:20px; right:20px; background:#f39c12; color:#2c3e50; text-align:center; padding:10px; border-radius:30px; font-weight:bold; opacity:0; transition:opacity 0.3s; pointer-events:none;">🎉 Новый рекорд!</div>
             </div>
         `;
-        document.body.appendChild(window.timedGameActive);
+        document.body.appendChild(gameWindow);
 
         const grid = document.getElementById('timedMatchGrid');
         const timerSpan = document.getElementById('timerDisplay');
         const recordSpan = document.getElementById('recordDisplay');
-        const notification = document.getElementById('customNotification');
-
-        function showMessage(text, isRecord = false) {
-            notification.innerText = text;
-            notification.style.opacity = '1';
-            setTimeout(() => {
-                notification.style.opacity = '0';
-            }, 2000);
-        }
 
         let bestTime = localStorage.getItem('matchTimeRecord');
-        if (bestTime) recordSpan.innerText = parseFloat(bestTime).toFixed(1);
-        else recordSpan.innerText = '—';
+        recordSpan.innerText = bestTime ? parseFloat(bestTime).toFixed(1) : '—';
 
+        // Подготовка словаря
         let wordPairs = [];
         if (window.localDict && Object.keys(window.localDict).length) {
             wordPairs = Object.entries(window.localDict)
@@ -7497,9 +7529,9 @@ window.localDict = localDict;
             if (!record || currentTime < parseFloat(record)) {
                 localStorage.setItem('matchTimeRecord', currentTime.toFixed(1));
                 recordSpan.innerText = currentTime.toFixed(1);
-                showMessage(`🎉 Новый рекорд! ${currentTime.toFixed(1)} секунд!`, true);
+                setTimeout(() => alert(`🎉 Новый рекорд! ${currentTime.toFixed(1)} сек!`), 100);
             } else {
-                showMessage(`✅ Все пары собраны! Время: ${currentTime.toFixed(1)} сек.`);
+                setTimeout(() => alert(`✅ Все пары собраны! Время: ${currentTime.toFixed(1)} сек.`), 100);
             }
         }
 
@@ -7509,7 +7541,7 @@ window.localDict = localDict;
             for (let i = 0; i < cardsData.length; i++) {
                 const card = cardsData[i];
                 const btn = document.createElement('div');
-                btn.style.cssText = 'width:100%; aspect-ratio:1/1; background:#34495e; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; font-weight:bold; text-align:center; padding:4px; color:white; box-sizing:border-box; word-break:break-word; transition:0.1s;';
+                btn.style.cssText = 'aspect-ratio:1/1; background:#34495e; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; font-weight:bold; text-align:center; padding:3px; color:white; box-sizing:border-box; word-break:break-word;';
                 if (card.matched) {
                     btn.textContent = card.text;
                     btn.style.background = '#27ae60';
@@ -7544,10 +7576,15 @@ window.localDict = localDict;
             el.style.background = '#34495e';
         }
 
-        function checkAllMatched() {
-            if (cardsData.every(c => c.matched)) {
-                finishGame();
+        function resetTempOpen() {
+            for (let idx of openedIndexes) {
+                if (cardsData[idx] && !cardsData[idx].matched) hideCard(idx);
             }
+            openedIndexes = [];
+        }
+
+        function checkAllMatched() {
+            if (cardsData.every(c => c.matched)) finishGame();
         }
 
         function onCardClick(index) {
@@ -7602,32 +7639,13 @@ window.localDict = localDict;
         document.getElementById('closeTimedGame').onclick = () => {
             gameActive = false;
             if (timerInterval) clearInterval(timerInterval);
-            window.timedGameActive.remove();
+            gameWindow.remove();
             window.timedGameActive = null;
         };
 
         renderGrid();
         startTimer();
-    };
-
-    // Если панель игр ещё не содержит иконку для этой игры – добавим (чтобы можно было вызвать)
-    function ensureIcon() {
-        let gamePanel = document.getElementById('gamePanel');
-        if (!gamePanel) return;
-        if (!document.getElementById('matchTimeIcon')) {
-            let icon = document.createElement('div');
-            icon.id = 'matchTimeIcon';
-            icon.style.cssText = 'background:#1e272e; padding:15px 25px; border-radius:20px; cursor:pointer; text-align:center; width:150px; margin:5px;';
-            icon.innerHTML = `<div style="font-size:48px;">⏱️🧩</div><div style="color:white;">Сопоставь слова (на время)</div>`;
-            let container = document.getElementById('gamesListTime') || gamePanel;
-            container.appendChild(icon);
-            icon.onclick = () => {
-                gamePanel.style.display = 'none';
-                window.launchTimedMatchGame();
-            };
-        }
     }
-    setTimeout(ensureIcon, 100);
 })();
 </script>
 </body>
