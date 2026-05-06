@@ -7618,275 +7618,261 @@ window.localDict = localDict;
 
 
 
-    // === ГОНОЧНАЯ ИГРА (RACING) ===
-(function() {
-    // Проверка, не запущена ли уже
-    if (document.getElementById('racingGameContainer')) return;
-
-    // Создаём контейнер
-    const container = document.createElement('div');
-    container.id = 'racingGameContainer';
-    container.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 700px;
-        height: 500px;
-        background: #1e272e;
-        border-radius: 20px;
-        z-index: 100000;
-        box-shadow: 0 0 0 1000px rgba(0,0,0,0.8);
-        display: flex;
-        flex-direction: column;
-        font-family: Arial, sans-serif;
-    `;
-
-    // Шапка
-    const header = document.createElement('div');
-    header.style.cssText = 'background: #d35400; padding: 10px; border-radius: 20px 20px 0 0; color: white; display: flex; justify-content: space-between; align-items: center;';
-    header.innerHTML = '<span style="font-weight:bold;">🏎️ RACING: избегай машин</span> <span>🏆 Рекорд: <span id="racingHighScore">0</span></span>';
-    container.appendChild(header);
-
-    // Canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = 700;
-    canvas.height = 400;
-    canvas.style.cssText = 'display: block; background: #2c3e50; margin: 0 auto; cursor: none;';
-    container.appendChild(canvas);
-
-    // Панель с очками и кнопками
-    const panel = document.createElement('div');
-    panel.style.cssText = 'padding: 8px; background: #34495e; border-radius: 0 0 20px 20px; display: flex; justify-content: space-between; align-items: center;';
-    panel.innerHTML = `
-        <span style="color:white;">⭐ Очки: <span id="racingScore">0</span></span>
-        <button id="racingResetBtn" style="background:#e67e22; border:none; padding:4px 12px; border-radius:20px; cursor:pointer;">🔄 Заново</button>
-        <button id="racingCloseBtn" style="background:#c0392b; border:none; padding:4px 12px; border-radius:20px; cursor:pointer;">✖ Закрыть</button>
-    `;
-    container.appendChild(panel);
-    document.body.appendChild(container);
-
-    // Элементы интерфейса
-    const scoreSpan = document.getElementById('racingScore');
-    const highSpan = document.getElementById('racingHighScore');
-    const resetBtn = document.getElementById('racingResetBtn');
-    const closeBtn = document.getElementById('racingCloseBtn');
-
-    // Рекорд из localStorage
-    let highScore = localStorage.getItem('racingHigh') ? parseInt(localStorage.getItem('racingHigh')) : 0;
-    highSpan.innerText = highScore;
-
-    // Параметры игры
-    const ctx = canvas.getContext('2d');
-    const lanes = 4;
-    const laneWidth = canvas.width / lanes;  // 175px
-    let playerLane = 1;  // 0..3
-    let score = 0;
-    let gameRunning = true;
-    let enemies = [];
-    let frame = 0;
-    let spawnCounter = 0;
-    let baseSpeed = 3;
-    let currentSpeed = baseSpeed;
-
-    // Машина игрока
-    const player = {
-        width: laneWidth * 0.7,
-        height: 40,
-        getX() {
-            return playerLane * laneWidth + (laneWidth - this.width) / 2;
-        },
-        y: canvas.height - 50
-    };
-
-    // Враги
-    class Enemy {
-        constructor(lane) {
-            this.lane = lane;
-            this.width = laneWidth * 0.7;
-            this.height = 40;
-            this.x = lane * laneWidth + (laneWidth - this.width) / 2;
-            this.y = -this.height;
-            this.speed = currentSpeed + Math.random() * 1.5;
-        }
-        update() {
-            this.y += this.speed;
-        }
-        draw() {
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.fillStyle = '#c0392b';
-            ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, 8);
-            ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(this.x + this.width/2 - 5, this.y + 15, 10, 10);
+    // ========== ДОБАВЛЕНИЕ ИГРЫ RACING В СУЩЕСТВУЮЩУЮ СИСТЕМУ ==========
+(function addRacingGame() {
+    // Ждём, пока появится панель игр (если она создаётся другим скриптом)
+    function waitForPanel(callback) {
+        const panel = document.getElementById('unifiedGamePanel');
+        if (panel) {
+            callback(panel);
+        } else {
+            setTimeout(() => waitForPanel(callback), 100);
         }
     }
 
-    // Линии дороги
-    function drawRoad() {
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // Разметка полос
-        ctx.strokeStyle = '#ecf0f1';
-        ctx.lineWidth = 2;
-        for (let i = 1; i < lanes; i++) {
-            ctx.beginPath();
-            ctx.setLineDash([15, 25]);
-            ctx.moveTo(i * laneWidth, 0);
-            ctx.lineTo(i * laneWidth, canvas.height);
-            ctx.stroke();
-        }
-        ctx.setLineDash([]);
-        // Края
-        ctx.strokeStyle = '#f39c12';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(5, 5, canvas.width-10, canvas.height-10);
-    }
+    waitForPanel((panel) => {
+        // Если иконка Racing уже есть — не добавляем повторно
+        if (document.getElementById('gameRacingIcon')) return;
 
-    // Отрисовка игрока
-    function drawPlayer() {
-        const px = player.getX();
-        ctx.fillStyle = '#3498db';
-        ctx.fillRect(px, player.y, player.width, player.height);
-        ctx.fillStyle = '#2980b9';
-        ctx.fillRect(px + 5, player.y - 8, player.width - 10, 10);
-        ctx.fillStyle = '#ecf0f1';
-        ctx.fillRect(px + player.width/2 - 5, player.y + 15, 10, 10);
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillRect(px + 8, player.y + 28, 8, 8);
-        ctx.fillRect(px + player.width - 16, player.y + 28, 8, 8);
-    }
+        // Находим контейнер с играми (первый flex-блок внутри панели)
+        const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
+        if (!gamesContainer) return;
 
-    // Обновление счета
-    function updateScoreUI() {
-        scoreSpan.innerText = score;
-        if (score > highScore) {
-            highScore = score;
+        // Создаём иконку для гонок
+        const racingIcon = document.createElement('div');
+        racingIcon.id = 'gameRacingIcon';
+        racingIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
+        racingIcon.innerHTML = `
+            <div style="font-size:48px;">🏎️🏁</div>
+            <div style="color:white;">Racing</div>
+        `;
+        gamesContainer.appendChild(racingIcon);
+
+        // ----- САМА ИГРА RACING -----
+        function startRacingGame() {
+            // Удаляем предыдущий экземпляр, если есть
+            if (window.racingGameActive) {
+                if (window.racingAnimId) cancelAnimationFrame(window.racingAnimId);
+                window.racingGameActive.remove();
+            }
+
+            const gameDiv = document.createElement('div');
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+            gameDiv.innerHTML = `
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:500px; overflow:hidden; position:relative;">
+                    <div style="background:#e67e22; padding:8px; text-align:center; color:white; font-size:14px;">🏎️ RACING (← → или кнопки)</div>
+                    <canvas id="racingCanvas" width="400" height="500" style="width:100%; height:auto; background:#2c3e50; display:block;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
+                        <span>🏁 Очки: <span id="racingScore">0</span></span>
+                        <span>🏆 Рекорд: <span id="racingHighScore">0</span></span>
+                    </div>
+                    <div style="display:flex; gap:10px; padding:0 8px 8px 8px;">
+                        <button id="racingLeftBtn" style="flex:1; background:#1abc9c; border:none; padding:8px; border-radius:30px; font-size:18px; font-weight:bold;">◀ ЛЕВО</button>
+                        <button id="racingRightBtn" style="flex:1; background:#1abc9c; border:none; padding:8px; border-radius:30px; font-size:18px; font-weight:bold;">ПРАВО ▶</button>
+                    </div>
+                    <div id="racingGameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px; border-radius:20px; text-align:center; z-index:10;">
+                        GAME OVER<br><button id="racingRestartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
+                    </div>
+                    <button id="racingCloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:8px;">Закрыть</button>
+                </div>
+            `;
+            document.body.appendChild(gameDiv);
+            window.racingGameActive = gameDiv;
+
+            // Элементы
+            const canvas = document.getElementById('racingCanvas');
+            const ctx = canvas.getContext('2d');
+            const scoreSpan = document.getElementById('racingScore');
+            const highSpan = document.getElementById('racingHighScore');
+            const gameOverDiv = document.getElementById('racingGameOverMsg');
+            const restartBtn = document.getElementById('racingRestartBtn');
+            const closeBtn = document.getElementById('racingCloseBtn');
+            const leftBtn = document.getElementById('racingLeftBtn');
+            const rightBtn = document.getElementById('racingRightBtn');
+
+            // Размеры
+            let cw = 400, ch = 500;
+            canvas.width = cw; canvas.height = ch;
+
+            // Игровые параметры
+            const laneCount = 4;
+            const laneWidth = cw / laneCount;
+            let playerLane = 1; // 0..3
+            let playerX = playerLane * laneWidth + laneWidth/2 - 15;
+            const playerWidth = 30, playerHeight = 40;
+            let enemies = [];
+            let score = 0;
+            let highScore = localStorage.getItem('racingHigh') ? parseInt(localStorage.getItem('racingHigh')) : 0;
             highSpan.innerText = highScore;
-            localStorage.setItem('racingHigh', highScore);
-        }
-    }
+            let gameRunning = true;
+            let frame = 0;
+            let baseSpeed = 3;
+            let currentSpeed = baseSpeed;
+            let animId = null;
 
-    // Спавн врага
-    function trySpawn() {
-        if (!gameRunning) return;
-        // Увеличиваем частоту спавна с ростом очков
-        let spawnDelay = Math.max(30, 50 - Math.floor(score / 15));
-        if (frame % spawnDelay === 0) {
-            const freeLanes = [0,1,2,3].filter(l => !enemies.some(e => e.lane === l && e.y + e.height > 0));
-            if (freeLanes.length > 0) {
-                const lane = freeLanes[Math.floor(Math.random() * freeLanes.length)];
-                enemies.push(new Enemy(lane));
+            // Виртуальные кнопки (touch)
+            leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveLeft(); });
+            leftBtn.addEventListener('mousedown', (e) => { e.preventDefault(); moveLeft(); });
+            rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveRight(); });
+            rightBtn.addEventListener('mousedown', (e) => { e.preventDefault(); moveRight(); });
+
+            function moveLeft() {
+                if (!gameRunning) return;
+                if (playerLane > 0) playerLane--;
+                updatePlayerX();
             }
-        }
-    }
-
-    // Обновление игры
-    function update() {
-        if (!gameRunning) return;
-
-        // Увеличиваем скорость со временем
-        currentSpeed = baseSpeed + Math.floor(score / 30);
-        
-        // Движение врагов
-        for (let i = 0; i < enemies.length; i++) {
-            enemies[i].update();
-            if (enemies[i].y > canvas.height) {
-                enemies.splice(i,1);
-                i--;
-                // Очко за обгон
-                score++;
-                updateScoreUI();
+            function moveRight() {
+                if (!gameRunning) return;
+                if (playerLane < laneCount-1) playerLane++;
+                updatePlayerX();
             }
-        }
+            function updatePlayerX() {
+                playerX = playerLane * laneWidth + laneWidth/2 - playerWidth/2;
+            }
 
-        // Проверка столкновений
-        const px = player.getX();
-        for (let enemy of enemies) {
-            if (enemy.y + enemy.height > player.y && 
-                enemy.y < player.y + player.height &&
-                enemy.x < px + player.width &&
-                enemy.x + enemy.width > px) {
+            // Управление клавиатурой
+            window.addEventListener('keydown', function onKey(e) {
+                if (!window.racingGameActive) return;
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    moveLeft();
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    moveRight();
+                }
+            });
+
+            function spawnEnemy() {
+                let lane = Math.floor(Math.random() * laneCount);
+                let x = lane * laneWidth + laneWidth/2 - 15;
+                enemies.push({
+                    x: x,
+                    y: -40,
+                    width: 30,
+                    height: 40,
+                    lane: lane
+                });
+            }
+
+            function update() {
+                if (!gameRunning) return;
+
+                // Спавн врагов
+                if (frame % (Math.max(30, 45 - Math.floor(score / 20))) === 0) {
+                    if (enemies.length < 6) spawnEnemy();
+                }
+
+                // Движение врагов
+                for (let i = 0; i < enemies.length; i++) {
+                    enemies[i].y += currentSpeed;
+                    if (enemies[i].y > ch) {
+                        enemies.splice(i,1);
+                        i--;
+                        score++;
+                        scoreSpan.innerText = score;
+                        if (score > highScore) {
+                            highScore = score;
+                            highSpan.innerText = highScore;
+                            localStorage.setItem('racingHigh', highScore);
+                        }
+                        // Увеличение скорости
+                        currentSpeed = baseSpeed + Math.floor(score / 15);
+                        continue;
+                    }
+                }
+
+                // Проверка столкновения (прямоугольники)
+                for (let enemy of enemies) {
+                    if (playerX < enemy.x + enemy.width &&
+                        playerX + playerWidth > enemy.x &&
+                        (canvas.height - 70) < enemy.y + enemy.height &&
+                        (canvas.height - 70) + playerHeight > enemy.y) {
+                        gameRunning = false;
+                        if (animId) cancelAnimationFrame(animId);
+                        gameOverDiv.style.display = 'flex';
+                        return;
+                    }
+                }
+
+                frame++;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, cw, ch);
+                // Дорога
+                ctx.fillStyle = '#34495e';
+                ctx.fillRect(0, 0, cw, ch);
+                // Разметка полос
+                ctx.strokeStyle = '#ecf0f1';
+                ctx.lineWidth = 2;
+                for (let i = 1; i < laneCount; i++) {
+                    ctx.beginPath();
+                    ctx.setLineDash([15, 20]);
+                    ctx.moveTo(i * laneWidth, 0);
+                    ctx.lineTo(i * laneWidth, ch);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+                
+                // Машина игрока
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(playerX, ch - 70, playerWidth, playerHeight);
+                ctx.fillStyle = '#c0392b';
+                ctx.fillRect(playerX+5, ch-80, 20, 10);
+                // Враги
+                ctx.fillStyle = '#f1c40f';
+                for (let enemy of enemies) {
+                    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                    ctx.fillStyle = '#e67e22';
+                    ctx.fillRect(enemy.x+5, enemy.y-8, 20, 8);
+                    ctx.fillStyle = '#f1c40f';
+                }
+                // Очки на канвасе
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 18px sans-serif';
+                ctx.fillText(score, cw-40, 40);
+            }
+
+            function gameLoop() {
+                if (!gameRunning) return;
+                update();
+                draw();
+                animId = requestAnimationFrame(gameLoop);
+            }
+
+            function restart() {
+                gameRunning = true;
+                score = 0;
+                scoreSpan.innerText = '0';
+                enemies = [];
+                playerLane = 1;
+                updatePlayerX();
+                currentSpeed = baseSpeed;
+                frame = 0;
+                gameOverDiv.style.display = 'none';
+                if (animId) cancelAnimationFrame(animId);
+                gameLoop();
+            }
+
+            restartBtn.onclick = () => restart();
+            closeBtn.onclick = () => {
                 gameRunning = false;
-                break;
-            }
+                if (animId) cancelAnimationFrame(animId);
+                window.racingGameActive.remove();
+                window.racingGameActive = null;
+            };
+
+            restart();
+            window.racingAnimId = animId;
         }
 
-        // Спавн
-        trySpawn();
-        frame++;
-    }
-
-    // Отрисовка всего
-    function draw() {
-        drawRoad();
-        for (let enemy of enemies) {
-            enemy.draw();
-        }
-        drawPlayer();
-        
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 20px Arial';
-        ctx.shadowBlur = 0;
-        ctx.fillText('⚡' + currentSpeed.toFixed(0), canvas.width - 70, 40);
-        
-        if (!gameRunning) {
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = 'white';
-            ctx.font = '30px Arial';
-            ctx.fillText('GAME OVER', canvas.width/2-100, canvas.height/2);
-        }
-    }
-
-    // Управление
-    function handleKey(e) {
-        if (!gameRunning) return;
-        if (e.key === 'ArrowLeft' || e.key === 'a') {
-            playerLane = Math.max(0, playerLane - 1);
-            e.preventDefault();
-        } else if (e.key === 'ArrowRight' || e.key === 'd') {
-            playerLane = Math.min(lanes - 1, playerLane + 1);
-            e.preventDefault();
-        }
-    }
-
-    // Сброс игры
-    function restart() {
-        gameRunning = true;
-        score = 0;
-        scoreSpan.innerText = '0';
-        enemies = [];
-        frame = 0;
-        playerLane = 1;
-        currentSpeed = baseSpeed;
-        updateScoreUI();
-    }
-
-    // Анимационный цикл
-    let animId;
-    function gameLoop() {
-        update();
-        draw();
-        animId = requestAnimationFrame(gameLoop);
-    }
-
-    // Закрытие
-    function closeGame() {
-        cancelAnimationFrame(animId);
-        window.removeEventListener('keydown', handleKey);
-        container.remove();
-    }
-
-    // Назначение событий
-    window.addEventListener('keydown', handleKey);
-    resetBtn.onclick = () => restart();
-    closeBtn.onclick = () => closeGame();
-
-    // Запуск
-    gameLoop();
+        // Назначаем обработчик на новую иконку
+        racingIcon.onclick = () => {
+            document.getElementById('unifiedGamePanel').style.display = 'none';
+            startRacingGame();
+        };
+    });
 })();
-
    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ГАРАНТИРОВАННАЯ РАБОТА ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
