@@ -8988,8 +8988,8 @@ if(p) {
 
 
 
-    // ========== MINER INFINITE: ночь, монстры, дом, деревья ==========
-(function addMinerInfiniteFixed() {
+    // ========== MINECRAFT LITE: полная песочница (крафт, животные, монстры, инвентарь) ==========
+(function addFullMinecraft() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -8997,105 +8997,121 @@ if(p) {
     }
 
     waitForPanel((panel) => {
-        if (document.getElementById('gameMinerIcon')) return;
+        if (document.getElementById('gameMinecraftIcon')) return;
 
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
 
-        const minerIcon = document.createElement('div');
-        minerIcon.id = 'gameMinerIcon';
-        minerIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
-        minerIcon.innerHTML = `<div style="font-size:48px;">⛏️🌙</div><div style="color:white;">Miner ∞</div>`;
-        gamesContainer.appendChild(minerIcon);
+        const minecraftIcon = document.createElement('div');
+        minecraftIcon.id = 'gameMinecraftIcon';
+        minecraftIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
+        minecraftIcon.innerHTML = `<div style="font-size:48px;">⛏️🌲</div><div style="color:white;">Minecraft ∞</div>`;
+        gamesContainer.appendChild(minecraftIcon);
 
-        function startMiner() {
-            if (window.minerGameActive) {
-                window.minerGameActive.remove();
-                if (window.minerAnim) cancelAnimationFrame(window.minerAnim);
+        function startMinecraft() {
+            if (window.mcGameActive) {
+                window.mcGameActive.remove();
+                if (window.mcAnim) cancelAnimationFrame(window.mcAnim);
+                if (window.mcCraftWindow) window.mcCraftWindow.remove();
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:620px; overflow:hidden;">
-                    <div style="background:#5d3a1a; padding:8px; text-align:center; color:white; font-weight:bold;">🌍 MINER INFINITE — выживание ночью</div>
-                    <canvas id="minerCanvas" width="500" height="500" style="width:100%; height:auto; display:block;"></canvas>
-                    <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:11px; flex-wrap:wrap;">
-                        <span>🪓 Режим: <span id="minerMode">копать</span></span>
-                        <span>📦 Дерево: <span id="minerWood">0</span></span>
-                        <span>🪨 Камень: <span id="minerStone">0</span></span>
-                        <span>⚙️ Железо: <span id="minerIron">0</span></span>
-                        <span>🌤️ <span id="minerWeather">солнечно</span></span>
-                        <span>🕯️ <span id="minerTime">день</span></span>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:700px; overflow:hidden;">
+                    <div style="background:#5d3a1a; padding:8px; text-align:center; color:white; font-weight:bold;">⛏️ MINECRAFT LITE — бесконечный мир, крафт, животные</div>
+                    <canvas id="mcCanvas" width="600" height="500" style="width:100%; height:auto; display:block;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:10px; flex-wrap:wrap;">
+                        <span>🪓 Режим: <span id="mcMode">копать</span></span>
+                        <span>🎒 Инвентарь: <span id="mcInv"></span></span>
+                        <span>🌤️ <span id="mcWeather">солнечно</span></span>
+                        <span>🕯️ <span id="mcTime">день</span></span>
                     </div>
-                    <div style="display:flex; gap:8px; padding:8px;">
-                        <button id="minerModeBtn" style="flex:1; background:#f39c12; border:none; padding:6px; border-radius:20px;">🔨 Копать/Строить</button>
-                        <button id="minerCycleBlockBtn" style="flex:1; background:#3498db; border:none; padding:6px; border-radius:20px;">🔄 Сменить блок</button>
-                        <button id="minerDoorBtn" style="flex:1; background:#8e44ad; border:none; padding:6px; border-radius:20px;">🚪 Поставить дверь</button>
-                        <button id="minerNewGameBtn" style="flex:1; background:#27ae60; border:none; padding:6px; border-radius:20px;">🔄 Новая</button>
-                        <button id="minerCloseBtn" style="flex:1; background:#c0392b; border:none; padding:6px; border-radius:20px;">✖</button>
+                    <div style="display:flex; flex-wrap:wrap; gap:5px; padding:6px;">
+                        <button id="mcModeBtn" style="background:#f39c12; border:none; padding:4px 8px; border-radius:15px;">🔨 Копать/Строить</button>
+                        <button id="mcCycleBlockBtn" style="background:#3498db; border:none; padding:4px 8px; border-radius:15px;">🔄 Сменить блок</button>
+                        <button id="mcDoorBtn" style="background:#8e44ad; border:none; padding:4px 8px; border-radius:15px;">🚪 Дверь</button>
+                        <button id="mcCraftBtn" style="background:#e67e22; border:none; padding:4px 8px; border-radius:15px;">🛠️ Крафт</button>
+                        <button id="mcNewGameBtn" style="background:#27ae60; border:none; padding:4px 8px; border-radius:15px;">🔄 Новая</button>
+                        <button id="mcCloseBtn" style="background:#c0392b; border:none; padding:4px 8px; border-radius:15px;">✖</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 8px; background:#1e272e; color:white; font-size:10px;">
+                        <span>1:🌲</span><span>2:🪨</span><span>3:🧱</span><span>4:🪟</span><span>5:🚪</span>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; padding:0 8px 8px 8px;">
-                        <button id="minerUp" style="background:#1abc9c; border:none; padding:8px;">▲</button>
-                        <button id="minerLeft" style="background:#1abc9c; border:none; padding:8px;">◀</button>
-                        <button id="minerDown" style="background:#1abc9c; border:none; padding:8px;">▼</button>
-                        <button id="minerRight" style="background:#1abc9c; border:none; padding:8px;">▶</button>
+                        <button id="mcUp" style="background:#1abc9c; border:none; padding:8px;">▲</button>
+                        <button id="mcLeft" style="background:#1abc9c; border:none; padding:8px;">◀</button>
+                        <button id="mcDown" style="background:#1abc9c; border:none; padding:8px;">▼</button>
+                        <button id="mcRight" style="background:#1abc9c; border:none; padding:8px;">▶</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
-            window.minerGameActive = gameDiv;
+            window.mcGameActive = gameDiv;
 
-            const canvas = document.getElementById('minerCanvas');
+            // ----- DOM элементы -----
+            const canvas = document.getElementById('mcCanvas');
             const ctx = canvas.getContext('2d');
-            const modeSpan = document.getElementById('minerMode');
-            const woodSpan = document.getElementById('minerWood');
-            const stoneSpan = document.getElementById('minerStone');
-            const ironSpan = document.getElementById('minerIron');
-            const weatherSpan = document.getElementById('minerWeather');
-            const timeSpan = document.getElementById('minerTime');
-            const modeBtn = document.getElementById('minerModeBtn');
-            const cycleBlockBtn = document.getElementById('minerCycleBlockBtn');
-            const doorBtn = document.getElementById('minerDoorBtn');
-            const newGameBtn = document.getElementById('minerNewGameBtn');
-            const closeBtn = document.getElementById('minerCloseBtn');
-            const upBtn = document.getElementById('minerUp');
-            const downBtn = document.getElementById('minerDown');
-            const leftBtn = document.getElementById('minerLeft');
-            const rightBtn = document.getElementById('minerRight');
+            const modeSpan = document.getElementById('mcMode');
+            const invSpan = document.getElementById('mcInv');
+            const weatherSpan = document.getElementById('mcWeather');
+            const timeSpan = document.getElementById('mcTime');
+            const modeBtn = document.getElementById('mcModeBtn');
+            const cycleBlockBtn = document.getElementById('mcCycleBlockBtn');
+            const doorBtn = document.getElementById('mcDoorBtn');
+            const craftBtn = document.getElementById('mcCraftBtn');
+            const newGameBtn = document.getElementById('mcNewGameBtn');
+            const closeBtn = document.getElementById('mcCloseBtn');
+            const upBtn = document.getElementById('mcUp');
+            const downBtn = document.getElementById('mcDown');
+            const leftBtn = document.getElementById('mcLeft');
+            const rightBtn = document.getElementById('mcRight');
 
-            // Размеры
-            const viewSize = 20;
+            // ----- Константы мира -----
+            const viewSize = 24;
             let cellSize = canvas.width / viewSize;
-
-            // ----- Мир и чанки -----
             const CHUNK_SIZE = 16;
             let chunks = new Map();
-            let player = { x: 0, y: 30 };
-            let inventory = { wood: 0, stone: 0, iron: 0 };
-            let mode = 'dig';
-            let selectedBlock = 'wood';
+            let player = { x: 0, y: 40 };
+            let inventory = {
+                wood: 10,
+                stone: 5,
+                iron: 0,
+                coal: 0,
+                diamond: 0,
+                glass: 0,
+                brick: 0
+            };
+            let quickSlots = [1,2,3,4,5]; // id блоков для быстрой стройки
+            let selectedSlot = 0; // 0..4
+            let mode = 'dig'; // dig / build
             let weather = 'sunny';
             let timeOfDay = 0.25; // 0..1
             let rainParticles = [];
-            let monsters = []; // {x, y, type, hp}
-            let doorPlaced = false; // флаг, что дверь где-то есть (упрощённо)
-            let houseBlocks = new Set(); // координаты блоков, считающихся "домом" (защита)
+            let monsters = []; // {x,y,type,hp}
+            let animals = []; // {x,y,type}
+            let houseBlocks = new Set();
+            let craftWindow = null;
 
-            // Типы блоков
+            // ----- Определение блоков -----
             const blocks = {
-                0: { name: 'воздух', color: 'rgba(0,0,0,0)', diggable: false, solid: false, drops: null },
-                1: { name: 'трава', color: '#5d8c48', diggable: true, solid: true, drops: { wood: 0, stone: 0, iron: 0 } },
-                2: { name: 'камень', color: '#7f8c8d', diggable: true, solid: true, drops: { stone: 1 } },
-                3: { name: 'железо', color: '#b5a47b', diggable: true, solid: true, drops: { iron: 1 } },
-                4: { name: 'дерево (ствол)', color: '#8B5A2B', diggable: true, solid: true, drops: { wood: 2 } },
-                5: { name: 'доски', color: '#c19a6b', diggable: true, solid: true, drops: { wood: 1 } },
-                6: { name: 'каменная стена', color: '#95a5a6', diggable: true, solid: true, drops: { stone: 1 } },
-                7: { name: 'листва', color: '#2ecc71', diggable: true, solid: false, drops: { wood: 0 } },
-                8: { name: 'дверь', color: '#8e44ad', diggable: true, solid: false, drops: { wood: 1 }, isDoor: true }
+                0: { name:'воздух', color:'rgba(0,0,0,0)', diggable:false, solid:false, drops:null, craft:null },
+                1: { name:'трава', color:'#5d8c48', diggable:true, solid:true, drops:{wood:0,stone:0}, craft:null },
+                2: { name:'камень', color:'#7f8c8d', diggable:true, solid:true, drops:{stone:1}, craft:null },
+                3: { name:'железная руда', color:'#b5a47b', diggable:true, solid:true, drops:{iron:1}, craft:null },
+                4: { name:'дерево (ствол)', color:'#8B5A2B', diggable:true, solid:true, drops:{wood:2}, craft:null },
+                5: { name:'доски', color:'#c19a6b', diggable:true, solid:true, drops:{wood:1}, craft:{wood:1} },
+                6: { name:'каменная стена', color:'#95a5a6', diggable:true, solid:true, drops:{stone:1}, craft:{stone:1} },
+                7: { name:'листва', color:'#2ecc71', diggable:true, solid:false, drops:{wood:0}, craft:null },
+                8: { name:'дверь', color:'#8e44ad', diggable:true, solid:false, drops:{wood:2}, craft:{wood:2, iron:1}, isDoor:true },
+                9: { name:'стекло', color:'#b0e0e6', diggable:true, solid:false, drops:{glass:1}, craft:{sand:1, coal:1} },
+                10: { name:'кирпич', color:'#c0392b', diggable:true, solid:true, drops:{brick:1}, craft:{stone:2, coal:1} },
+                11: { name:'угольная руда', color:'#4a4a4a', diggable:true, solid:true, drops:{coal:1}, craft:null },
+                12: { name:'алмазная руда', color:'#7fffd4', diggable:true, solid:true, drops:{diamond:1}, craft:null },
+                13: { name:'верстак', color:'#d35400', diggable:true, solid:true, drops:{wood:2}, craft:{wood:4}, craftTable:true }
             };
 
-            // Процедурный шум
+            // ----- Процедурная генерация -----
             function noise(x, y, seed=12345) {
                 let n = x * 374761393 + y * 668265263 + seed;
                 n = (n ^ (n >> 13)) * 1274126177;
@@ -9103,421 +9119,361 @@ if(p) {
                 return n / 0x7fffffff;
             }
 
-            // Генерация чанка
             function generateChunk(chunkX, chunkY) {
-                const blockArr = Array(CHUNK_SIZE).fill().map(() => Array(CHUNK_SIZE).fill(0));
-                const worldStartX = chunkX * CHUNK_SIZE;
-                const worldStartY = chunkY * CHUNK_SIZE;
-                for (let lx = 0; lx < CHUNK_SIZE; lx++) {
-                    const wx = worldStartX + lx;
-                    for (let ly = 0; ly < CHUNK_SIZE; ly++) {
-                        const wy = worldStartY + ly;
-                        // Ландшафт
-                        let heightNoise = (noise(wx * 0.05, 0) + noise(wx * 0.2, 100)) * 0.5;
-                        let baseHeight = Math.floor(12 + heightNoise * 8);
-                        let mountain = Math.pow(Math.abs(noise(wx * 0.03, 200) - 0.5) * 2, 2) * 6;
+                const arr = Array(CHUNK_SIZE).fill().map(() => Array(CHUNK_SIZE).fill(0));
+                const startX = chunkX * CHUNK_SIZE, startY = chunkY * CHUNK_SIZE;
+                for (let lx=0; lx<CHUNK_SIZE; lx++) {
+                    const wx = startX + lx;
+                    for (let ly=0; ly<CHUNK_SIZE; ly++) {
+                        const wy = startY + ly;
+                        let heightNoise = (noise(wx*0.05,0)+noise(wx*0.2,100))*0.5;
+                        let baseHeight = Math.floor(12 + heightNoise*8);
+                        let mountain = Math.pow(Math.abs(noise(wx*0.03,200)-0.5)*2,2)*6;
                         let surfaceY = baseHeight + Math.floor(mountain);
                         if (wy < surfaceY) {
-                            if (wy >= surfaceY - 3) blockArr[lx][ly] = 1; // трава
-                            else if (wy >= surfaceY - 8) blockArr[lx][ly] = 2; // камень
-                            else blockArr[lx][ly] = 2;
+                            if (wy >= surfaceY-3) arr[lx][ly] = 1;
+                            else if (wy >= surfaceY-8) arr[lx][ly] = 2;
+                            else arr[lx][ly] = 2;
+                            // Уголь
+                            if (wy > surfaceY+2 && wy < surfaceY+6 && noise(wx*0.4,500)>0.9) arr[lx][ly]=11;
+                            // Железо
+                            if (wy > surfaceY+4 && wy< surfaceY+10 && noise(wx*0.5,400)>0.85) arr[lx][ly]=3;
+                            // Алмазы глубоко
+                            if (wy > surfaceY+12 && noise(wx*0.6,600)>0.95) arr[lx][ly]=12;
                             // Деревья
-                            if (wy === surfaceY - 1 && noise(wx * 0.3, 300) > 0.92 && blockArr[lx][ly] === 1) {
-                                for (let h = 1; h <= 4; h++) {
-                                    const ty = wy - h;
-                                    if (ty >= worldStartY && ty < worldStartY + CHUNK_SIZE && ty >= 0) {
-                                        const localY = ty - worldStartY;
-                                        if (h === 1 || h === 2) blockArr[lx][localY] = 4;
-                                        else if (h >= 3) blockArr[lx][localY] = 7;
+                            if (wy === surfaceY-1 && noise(wx*0.3,300)>0.92 && arr[lx][ly]===1) {
+                                for (let h=1;h<=4;h++) {
+                                    const ty = wy-h;
+                                    if (ty>=startY && ty<startY+CHUNK_SIZE && ty>=0) {
+                                        const localY = ty-startY;
+                                        if (h===1||h===2) arr[lx][localY]=4;
+                                        else if (h>=3) arr[lx][localY]=7;
                                     }
                                 }
                             }
-                            // Железо
-                            if (wy > surfaceY + 3 && noise(wx * 0.5, 400) > 0.85) {
-                                blockArr[lx][ly] = 3;
-                            }
                         } else {
-                            blockArr[lx][ly] = 0;
+                            arr[lx][ly] = 0;
                         }
                     }
                 }
-                return blockArr;
+                return arr;
             }
 
             function getBlock(wx, wy) {
-                if (wy < 0) return 2; // каменное дно
-                const cx = Math.floor(wx / CHUNK_SIZE);
-                const cy = Math.floor(wy / CHUNK_SIZE);
+                if (wy<0) return 2;
+                const cx = Math.floor(wx/CHUNK_SIZE), cy = Math.floor(wy/CHUNK_SIZE);
                 const key = `${cx},${cy}`;
-                if (!chunks.has(key)) chunks.set(key, generateChunk(cx, cy));
+                if (!chunks.has(key)) chunks.set(key, generateChunk(cx,cy));
                 const chunk = chunks.get(key);
-                const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-                const ly = ((wy % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                const lx = ((wx%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
+                const ly = ((wy%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
                 return chunk[lx][ly];
             }
 
-            function setBlock(wx, wy, blockId) {
-                if (wy < 0) return;
-                const cx = Math.floor(wx / CHUNK_SIZE);
-                const cy = Math.floor(wy / CHUNK_SIZE);
+            function setBlock(wx, wy, bid) {
+                if (wy<0) return;
+                const cx = Math.floor(wx/CHUNK_SIZE), cy = Math.floor(wy/CHUNK_SIZE);
                 const key = `${cx},${cy}`;
-                if (!chunks.has(key)) chunks.set(key, generateChunk(cx, cy));
+                if (!chunks.has(key)) chunks.set(key, generateChunk(cx,cy));
                 const chunk = chunks.get(key);
-                const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-                const ly = ((wy % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-                chunk[lx][ly] = blockId;
-                // Обновляем защиту дома
-                if (blocks[blockId] && blocks[blockId].solid && (blockId === 5 || blockId === 6 || blockId === 8)) {
-                    houseBlocks.add(`${wx},${wy}`);
-                } else if (blockId === 0) {
-                    houseBlocks.delete(`${wx},${wy}`);
-                }
+                const lx = ((wx%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
+                const ly = ((wy%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
+                chunk[lx][ly] = bid;
+                if (blocks[bid] && blocks[bid].solid && (bid===5||bid===6||bid===8||bid===9||bid===10||bid===13)) houseBlocks.add(`${wx},${wy}`);
+                else if (bid===0) houseBlocks.delete(`${wx},${wy}`);
             }
 
-            // Действия
-            function digBlock(wx, wy) {
-                const b = getBlock(wx, wy);
-                const block = blocks[b];
-                if (!block || !block.diggable) return false;
-                if (block.drops) {
-                    inventory.wood += block.drops.wood || 0;
-                    inventory.stone += block.drops.stone || 0;
-                    inventory.iron += block.drops.iron || 0;
-                    updateUI();
+            // ----- Инвентарь и крафт -----
+            function updateInventoryUI() {
+                invSpan.innerText = `🌲${inventory.wood} 🪨${inventory.stone} ⚙️${inventory.iron} 🔥${inventory.coal||0} 💎${inventory.diamond||0} 🪟${inventory.glass||0} 🧱${inventory.brick||0}`;
+            }
+
+            function addResources(drops) {
+                if (drops.wood) inventory.wood += drops.wood;
+                if (drops.stone) inventory.stone += drops.stone;
+                if (drops.iron) inventory.iron += drops.iron;
+                if (drops.coal) inventory.coal = (inventory.coal||0) + drops.coal;
+                if (drops.diamond) inventory.diamond = (inventory.diamond||0) + drops.diamond;
+                if (drops.glass) inventory.glass = (inventory.glass||0) + drops.glass;
+                if (drops.brick) inventory.brick = (inventory.brick||0) + drops.brick;
+                updateInventoryUI();
+            }
+
+            function craftItem(recipe) {
+                if (recipe.wood && inventory.wood < recipe.wood) return false;
+                if (recipe.stone && inventory.stone < recipe.stone) return false;
+                if (recipe.iron && inventory.iron < recipe.iron) return false;
+                if (recipe.coal && inventory.coal < recipe.coal) return false;
+                if (recipe.diamond && inventory.diamond < recipe.diamond) return false;
+                if (recipe.glass && inventory.glass < recipe.glass) return false;
+                if (recipe.brick && inventory.brick < recipe.brick) return false;
+                if (recipe.wood) inventory.wood -= recipe.wood;
+                if (recipe.stone) inventory.stone -= recipe.stone;
+                if (recipe.iron) inventory.iron -= recipe.iron;
+                if (recipe.coal) inventory.coal -= recipe.coal;
+                if (recipe.diamond) inventory.diamond -= recipe.diamond;
+                if (recipe.glass) inventory.glass -= recipe.glass;
+                if (recipe.brick) inventory.brick -= recipe.brick;
+                if (recipe.result) {
+                    addResources({ [recipe.result]: 1 });
                 }
+                updateInventoryUI();
+                return true;
+            }
+
+            function showCraftingTable() {
+                if (craftWindow) craftWindow.remove();
+                craftWindow = document.createElement('div');
+                craftWindow.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100003; color:white; width:300px; text-align:center;';
+                craftWindow.innerHTML = `
+                    <h3>🛠️ Верстак</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <button id="craftWoodPlanks">Доски (1 дерево → 4)</button>
+                        <button id="craftStoneBrick">Кирпич (2 камня+1 уголь → 1)</button>
+                        <button id="craftGlass">Стекло (1 уголь+1 песок → 1)</button>
+                        <button id="craftDoor">Дверь (2 дерева+1 железо → 1)</button>
+                        <button id="craftChest">Сундук (8 досок → 1) (скоро)</button>
+                        <button id="craftPickaxe">Кирка (3 камня+2 дерева → 1)</button>
+                    </div>
+                    <button id="closeCraft" style="margin-top:15px; background:#c0392b;">Закрыть</button>
+                `;
+                document.body.appendChild(craftWindow);
+                document.getElementById('craftWoodPlanks').onclick = () => { craftItem({ wood:1, result:'wood' }); addResources({ wood:4 }); craftWindow.remove(); craftWindow=null; };
+                document.getElementById('craftStoneBrick').onclick = () => { if(craftItem({ stone:2, coal:1, result:'brick' })) addResources({ brick:1 }); craftWindow.remove(); craftWindow=null; };
+                document.getElementById('craftGlass').onclick = () => { if(craftItem({ coal:1, glass:1 })) addResources({ glass:1 }); craftWindow.remove(); craftWindow=null; };
+                document.getElementById('craftDoor').onclick = () => { if(craftItem({ wood:2, iron:1, result:'door' })) addResources({ wood:2 }); craftWindow.remove(); craftWindow=null; };
+                document.getElementById('craftPickaxe').onclick = () => { alert('Инструменты пока в разработке'); craftWindow.remove(); craftWindow=null; };
+                document.getElementById('closeCraft').onclick = () => { craftWindow.remove(); craftWindow=null; };
+            }
+
+            // ----- Действия игрока -----
+            function digBlock(wx, wy) {
+                const bid = getBlock(wx, wy);
+                const block = blocks[bid];
+                if (!block || !block.diggable) return false;
+                if (block.drops) addResources(block.drops);
                 setBlock(wx, wy, 0);
                 return true;
             }
 
-            function buildBlock(wx, wy, blockId) {
+            function buildBlock(wx, wy, bid) {
                 if (getBlock(wx, wy) !== 0) return false;
                 let cost = null;
-                if (blockId === 5 && inventory.wood >= 1) cost = { wood: 1 };
-                else if (blockId === 6 && inventory.stone >= 1) cost = { stone: 1 };
-                else if (blockId === 8 && inventory.wood >= 2) cost = { wood: 2 };
+                if (bid === 5 && inventory.wood >= 1) cost = { wood: 1 };
+                else if (bid === 6 && inventory.stone >= 1) cost = { stone: 1 };
+                else if (bid === 8 && inventory.wood >= 2) cost = { wood: 2 };
+                else if (bid === 9 && inventory.glass >= 1) cost = { glass: 1 };
+                else if (bid === 10 && inventory.brick >= 1) cost = { brick: 1 };
+                else if (bid === 13 && inventory.wood >= 4) cost = { wood: 4 };
                 if (!cost) return false;
-                inventory.wood -= cost.wood || 0;
-                inventory.stone -= cost.stone || 0;
-                setBlock(wx, wy, blockId);
-                updateUI();
+                if (cost.wood) inventory.wood -= cost.wood;
+                if (cost.stone) inventory.stone -= cost.stone;
+                if (cost.glass) inventory.glass -= cost.glass;
+                if (cost.brick) inventory.brick -= cost.brick;
+                setBlock(wx, wy, bid);
+                updateInventoryUI();
                 return true;
             }
 
             function actionAt(wx, wy) {
                 if (mode === 'dig') digBlock(wx, wy);
                 else {
-                    let blockToBuild = selectedBlock === 'wood' ? 5 : 6;
-                    buildBlock(wx, wy, blockToBuild);
+                    let bid = quickSlots[selectedSlot];
+                    if (bid === 8) buildBlock(wx, wy, 8);
+                    else buildBlock(wx, wy, bid);
                 }
-            }
-
-            function placeDoor() {
-                mode = 'build';
-                selectedBlock = 'door';
-                modeSpan.innerText = 'строить (дверь)';
             }
 
             function movePlayer(dx, dy) {
-                const nx = player.x + dx;
-                const ny = player.y + dy;
-                const blockHere = getBlock(nx, ny);
-                if (blocks[blockHere] && blocks[blockHere].solid && !blocks[blockHere].isDoor) return;
-                player.x = nx;
-                player.y = ny;
-                // Подгружаем чанки вокруг
-                for (let cx = -2; cx <= 2; cx++) {
-                    for (let cy = -2; cy <= 2; cy++) {
-                        const chunkX = Math.floor((player.x + cx * CHUNK_SIZE) / CHUNK_SIZE);
-                        const chunkY = Math.floor((player.y + cy * CHUNK_SIZE) / CHUNK_SIZE);
-                        const key = `${chunkX},${chunkY}`;
-                        if (!chunks.has(key)) chunks.set(key, generateChunk(chunkX, chunkY));
-                    }
+                const nx = player.x + dx, ny = player.y + dy;
+                const bid = getBlock(nx, ny);
+                if (blocks[bid] && blocks[bid].solid && !blocks[bid].isDoor) return;
+                player.x = nx; player.y = ny;
+                // Подгрузка чанков
+                for (let cx=-2; cx<=2; cx++) for (let cy=-2; cy<=2; cy++) {
+                    const key = `${Math.floor((player.x+cx*CHUNK_SIZE)/CHUNK_SIZE)},${Math.floor((player.y+cy*CHUNK_SIZE)/CHUNK_SIZE)}`;
+                    if (!chunks.has(key)) chunks.set(key, generateChunk(...key.split(',').map(Number)));
+                }
+                // Генерация животных
+                if (Math.random()<0.02 && animals.length<15) {
+                    animals.push({ x: player.x+(Math.random()-0.5)*10, y: player.y+(Math.random()-0.5)*10, type: Math.random()<0.5?'chicken':'sheep' });
                 }
             }
 
-            function updateUI() {
-                woodSpan.innerText = inventory.wood;
-                stoneSpan.innerText = inventory.stone;
-                ironSpan.innerText = inventory.iron;
+            // ----- Анимация и мир -----
+            function spawnMonster() {
+                if (monsters.length>8) return;
+                let angle = Math.random()*2*Math.PI;
+                let dist = 7+Math.random()*6;
+                monsters.push({ x: player.x+Math.cos(angle)*dist, y: player.y+Math.sin(angle)*dist, type: 'skeleton', hp: 2 });
             }
 
-            // Монстры
-            function spawnMonsterAroundPlayer() {
-                if (monsters.length > 5) return;
-                let angle = Math.random() * Math.PI * 2;
-                let dist = 6 + Math.random() * 5;
-                let mx = player.x + Math.cos(angle) * dist;
-                let my = player.y + Math.sin(angle) * dist;
-                monsters.push({ x: mx, y: my, type: 'skeleton', hp: 2 });
-            }
-
-            function updateMonsters(deltaSec) {
-                if (timeOfDay < 0.7 || timeOfDay > 0.85) {
-                    // днём монстры исчезают
-                    monsters = [];
-                    return;
-                }
-                // Ночь: монстры двигаются к игроку
-                for (let i = 0; i < monsters.length; i++) {
+            function updateMonsters(delta) {
+                let isNight = (timeOfDay>0.7 && timeOfDay<0.85);
+                if (!isNight) { monsters=[]; return; }
+                for (let i=0;i<monsters.length;i++) {
                     let m = monsters[i];
-                    let dx = player.x - m.x;
-                    let dy = player.y - m.y;
-                    let len = Math.hypot(dx, dy);
-                    if (len > 0.1) {
-                        let step = 1.5 * deltaSec;
-                        m.x += (dx / len) * step;
-                        m.y += (dy / len) * step;
+                    let dx = player.x - m.x, dy = player.y - m.y;
+                    let len = Math.hypot(dx,dy);
+                    if (len>0.3) { let step=1.2*delta; m.x+=dx/len*step; m.y+=dy/len*step; }
+                    if (Math.abs(m.x-player.x)<0.8 && Math.abs(m.y-player.y)<0.8) {
+                        let safe=false;
+                        for (let ox=-1;ox<=1;ox++) for (let oy=-1;oy<=1;oy++) if(houseBlocks.has(`${player.x+ox},${player.y+oy}`)) safe=true;
+                        if(!safe){ alert('Монстр убил вас! Ресурсы потеряны.'); inventory={wood:0,stone:0,iron:0,coal:0,diamond:0,glass:0,brick:0}; updateInventoryUI(); monsters.splice(i,1); i--; }
                     }
-                    // Проверка атаки
-                    if (Math.abs(m.x - player.x) < 0.8 && Math.abs(m.y - player.y) < 0.8) {
-                        // Если игрок в доме (рядом блок дома), то монстр не атакует
-                        let isSafe = false;
-                        for (let ox = -1; ox <= 1; ox++) {
-                            for (let oy = -1; oy <= 1; oy++) {
-                                if (houseBlocks.has(`${player.x+ox},${player.y+oy}`)) isSafe = true;
-                            }
-                        }
-                        if (!isSafe) {
-                            // урон игроку (упрощённо: сброс ресурсов и перезапуск)
-                            alert('Монстр атаковал! Вы потеряли все ресурсы...');
-                            inventory = { wood: 0, stone: 0, iron: 0 };
-                            updateUI();
-                            monsters.splice(i,1);
-                            i--;
-                        }
-                    }
-                    // Если монстр далеко от игрока (>15) удаляем
-                    if (Math.hypot(m.x - player.x, m.y - player.y) > 20) {
-                        monsters.splice(i,1);
-                        i--;
-                    }
+                    if(len>20) { monsters.splice(i,1); i--; }
                 }
-                // Спавн новых монстров ночью
-                if (Math.random() < 0.03 * deltaSec) {
-                    spawnMonsterAroundPlayer();
-                }
+                if (Math.random()<0.05*delta) spawnMonster();
             }
 
-            // Цикл дня/ночи, дождь
-            let lastUpdate = performance.now();
+            function updateAnimals(delta) {
+                for (let a of animals) {
+                    let dx = (Math.random()-0.5)*2*delta, dy = (Math.random()-0.5)*2*delta;
+                    a.x += dx; a.y += dy;
+                    a.x = Math.min(Math.max(a.x, player.x-20), player.x+20);
+                    a.y = Math.min(Math.max(a.y, player.y-20), player.y+20);
+                }
+                if (animals.length>20) animals.splice(0,10);
+            }
+
             function updateGame(now) {
-                let delta = Math.min(0.1, (now - lastUpdate) / 1000);
-                if (delta < 0.01) return;
-                lastUpdate = now;
-                // Время суток (полный цикл 60 секунд)
-                timeOfDay += delta / 60;
-                if (timeOfDay > 1) timeOfDay -= 1;
-                let isNight = (timeOfDay > 0.7 && timeOfDay < 0.85);
+                if (!window.mcGameActive) return;
+                let delta = Math.min(0.1, (now - (window.mcLastTime||now))/1000);
+                if (delta<0.01) { window.mcLastTime=now; requestAnimationFrame(updateGame); return; }
+                window.mcLastTime = now;
+                timeOfDay += delta/60;
+                if (timeOfDay>1) timeOfDay-=1;
+                let isNight = (timeOfDay>0.7 && timeOfDay<0.85);
                 timeSpan.innerText = isNight ? '🌙 ночь' : '☀️ день';
-                // Погода
-                if (Math.random() < 0.002 * delta) {
-                    weather = weather === 'sunny' ? 'rainy' : 'sunny';
-                    weatherSpan.innerText = weather === 'sunny' ? 'солнечно' : '🌧️ дождь';
-                }
-                if (weather === 'rainy') {
-                    for (let i=0;i<5;i++) rainParticles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, life: 1 });
-                }
-                for (let i=0;i<rainParticles.length;i++) {
-                    rainParticles[i].y += 100 * delta;
-                    rainParticles[i].life -= delta;
-                    if (rainParticles[i].y > canvas.height || rainParticles[i].life <= 0) rainParticles.splice(i--,1);
-                }
+                if (Math.random()<0.002*delta) { weather = weather==='sunny'?'rainy':'sunny'; weatherSpan.innerText = weather==='sunny'?'солнечно':'🌧️ дождь'; }
+                if (weather==='rainy') for(let i=0;i<3;i++) rainParticles.push({x:Math.random()*canvas.width, y:0, life:1});
+                for(let i=0;i<rainParticles.length;i++) { rainParticles[i].y+=80*delta; rainParticles[i].life-=delta; if(rainParticles[i].y>canvas.height||rainParticles[i].life<=0) rainParticles.splice(i--,1); }
                 updateMonsters(delta);
+                updateAnimals(delta);
                 drawAll();
+                requestAnimationFrame(updateGame);
             }
 
-            // Отрисовка
-            function drawSkyAndBackground() {
+            // ----- Отрисовка -----
+            function drawSky() {
                 let grad = ctx.createLinearGradient(0,0,0,canvas.height);
                 let r,g,b;
-                if (timeOfDay < 0.25) { let t=timeOfDay/0.25; r=135+165*t; g=206+49*t; b=235; }
-                else if (timeOfDay < 0.5) { r=300; g=255; b=235; }
-                else if (timeOfDay < 0.75) { let t=(timeOfDay-0.5)/0.25; r=300-100*t; g=255-155*t; b=235-155*t; }
+                if (timeOfDay<0.25) { let t=timeOfDay/0.25; r=135+165*t; g=206+49*t; b=235; }
+                else if (timeOfDay<0.5) { r=300; g=255; b=235; }
+                else if (timeOfDay<0.75) { let t=(timeOfDay-0.5)/0.25; r=300-100*t; g=255-155*t; b=235-155*t; }
                 else { let t=(timeOfDay-0.75)/0.25; r=200-135*t; g=100-34*t; b=80-20*t; }
                 grad.addColorStop(0, `rgb(${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)})`);
                 grad.addColorStop(1, `rgb(${Math.min(200,r-40)},${Math.min(100,g-40)},${Math.min(80,b-20)})`);
-                ctx.fillStyle = grad;
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-                // Солнце/луна
-                let angle = timeOfDay * Math.PI * 2;
-                let sx = canvas.width*0.8 + Math.sin(angle)*150;
-                let sy = canvas.height*0.2 + Math.cos(angle)*100;
-                if (timeOfDay>0.7||timeOfDay<0.3) ctx.fillStyle = '#ffeaa7';
-                else ctx.fillStyle = '#dfe6e9';
-                ctx.beginPath(); ctx.arc(sx, sy, 20, 0, 2*Math.PI); ctx.fill();
+                ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width,canvas.height);
+                let angle = timeOfDay*2*Math.PI;
+                let sx=canvas.width*0.8+Math.sin(angle)*150, sy=canvas.height*0.2+Math.cos(angle)*100;
+                ctx.fillStyle = (timeOfDay>0.7||timeOfDay<0.3)?'#ffeaa7':'#dfe6e9';
+                ctx.beginPath(); ctx.arc(sx,sy,20,0,2*Math.PI); ctx.fill();
             }
 
             function drawWorld() {
-                const offsetX = canvas.width/2 - cellSize/2;
-                const offsetY = canvas.height/2 - cellSize/2;
-                const startX = player.x - Math.floor(viewSize/2);
-                const startY = player.y - Math.floor(viewSize/2);
-                for (let i=0;i<viewSize;i++) {
-                    for (let j=0;j<viewSize;j++) {
-                        const wx = startX + i;
-                        const wy = startY + j;
-                        const bid = getBlock(wx, wy);
-                        if (bid === 0) continue;
-                        let color = blocks[bid].color;
-                        let bright = 0.7 + Math.sin(timeOfDay*Math.PI)*0.3;
-                        if (timeOfDay>0.7) bright = 0.4;
-                        ctx.fillStyle = color;
-                        ctx.fillRect(i*cellSize+offsetX, j*cellSize+offsetY, cellSize-0.5, cellSize-0.5);
-                        ctx.fillStyle = `rgba(0,0,0,${0.2*(1-bright)})`;
-                        ctx.fillRect(i*cellSize+offsetX, j*cellSize+offsetY, cellSize-0.5, cellSize-0.5);
+                const offX = canvas.width/2 - cellSize/2, offY = canvas.height/2 - cellSize/2;
+                const startX = player.x - Math.floor(viewSize/2), startY = player.y - Math.floor(viewSize/2);
+                for (let i=0;i<viewSize;i++) for (let j=0;j<viewSize;j++) {
+                    const wx = startX+i, wy = startY+j;
+                    const bid = getBlock(wx,wy);
+                    if (bid===0) continue;
+                    let col = blocks[bid].color;
+                    let bright = 0.6 + Math.sin(timeOfDay*Math.PI)*0.3;
+                    if (timeOfDay>0.7) bright=0.3;
+                    ctx.fillStyle = col;
+                    ctx.fillRect(i*cellSize+offX, j*cellSize+offY, cellSize-0.5, cellSize-0.5);
+                    ctx.fillStyle = `rgba(0,0,0,${0.2*(1-bright)})`;
+                    ctx.fillRect(i*cellSize+offX, j*cellSize+offY, cellSize-0.5, cellSize-0.5);
+                }
+                // Животные
+                for (let a of animals) {
+                    let ix = a.x-startX, iy = a.y-startY;
+                    if (ix>=0 && ix<viewSize && iy>=0 && iy<viewSize) {
+                        ctx.fillStyle = a.type==='chicken'?'#f1c40f':'#fff';
+                        ctx.beginPath(); ctx.arc(ix*cellSize+offX+cellSize/2, iy*cellSize+offY+cellSize/2, cellSize*0.25,0,2*Math.PI); ctx.fill();
+                        ctx.fillStyle = '#000'; ctx.fillText(a.type==='chicken'?'🐔':'🐑', ix*cellSize+offX+cellSize/4, iy*cellSize+offY+cellSize/2);
                     }
                 }
                 // Монстры
                 for (let m of monsters) {
-                    const mx = m.x - startX;
-                    const my = m.y - startY;
-                    if (mx>=0 && mx<viewSize && my>=0 && my<viewSize) {
-                        ctx.fillStyle = '#a55';
-                        ctx.beginPath();
-                        ctx.arc(mx*cellSize+offsetX+cellSize/2, my*cellSize+offsetY+cellSize/2, cellSize*0.3, 0, 2*Math.PI);
-                        ctx.fill();
-                        ctx.fillStyle = '#fff';
-                        ctx.fillText('💀', mx*cellSize+offsetX+cellSize/4, my*cellSize+offsetY+cellSize/2);
+                    let ix = m.x-startX, iy = m.y-startY;
+                    if (ix>=0 && ix<viewSize && iy>=0 && iy<viewSize) {
+                        ctx.fillStyle = '#a55'; ctx.beginPath(); ctx.arc(ix*cellSize+offX+cellSize/2, iy*cellSize+offY+cellSize/2, cellSize*0.3,0,2*Math.PI); ctx.fill();
+                        ctx.fillStyle = '#fff'; ctx.fillText('💀', ix*cellSize+offX+cellSize/4, iy*cellSize+offY+cellSize/2);
                     }
                 }
                 // Игрок
-                const px = (viewSize/2) * cellSize + offsetX;
-                const py = (viewSize/2) * cellSize + offsetY;
-                ctx.fillStyle = '#f1c40f';
-                ctx.beginPath();
-                ctx.arc(px+cellSize/2, py+cellSize/2, cellSize*0.35, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(px+cellSize/2-4, py+cellSize/2-4, 2, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(px+cellSize/2+4, py+cellSize/2-4, 2, 0, 2*Math.PI);
-                ctx.fill();
-                // Рамка режима
-                ctx.strokeStyle = mode === 'dig' ? '#e74c3c' : '#2ecc71';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(px, py, cellSize, cellSize);
+                const px = (viewSize/2)*cellSize+offX, py = (viewSize/2)*cellSize+offY;
+                ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(px+cellSize/2, py+cellSize/2, cellSize*0.35,0,2*Math.PI); ctx.fill();
+                ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(px+cellSize/2-4, py+cellSize/2-4, 2,0,2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(px+cellSize/2+4, py+cellSize/2-4, 2,0,2*Math.PI); ctx.fill();
+                ctx.strokeStyle = mode==='dig'?'#e74c3c':'#2ecc71'; ctx.lineWidth=2; ctx.strokeRect(px,py,cellSize,cellSize);
             }
 
             function drawRain() {
-                if (weather !== 'rainy') return;
-                for (let p of rainParticles) {
-                    ctx.fillStyle = 'rgba(173,216,230,0.5)';
-                    ctx.fillRect(p.x, p.y, 2, 5);
-                }
+                if (weather!=='rainy') return;
+                for (let p of rainParticles) { ctx.fillStyle='rgba(173,216,230,0.5)'; ctx.fillRect(p.x,p.y,2,5); }
             }
 
-            function drawAll() {
-                drawSkyAndBackground();
-                drawWorld();
-                drawRain();
-                requestAnimationFrame(animate);
-            }
+            function drawAll() { drawSky(); drawWorld(); drawRain(); }
 
-            function animate(now) {
-                if (!window.minerGameActive) return;
-                updateGame(now);
-            }
-
-            // Управление
-            function toggleMode() {
-                if (mode === 'dig') {
-                    mode = 'build';
-                    modeSpan.innerText = `строить (${selectedBlock})`;
-                } else {
-                    mode = 'dig';
-                    modeSpan.innerText = 'копать';
-                }
-            }
-            function cycleBlock() {
-                if (selectedBlock === 'wood') selectedBlock = 'stone';
-                else selectedBlock = 'wood';
-                if (mode === 'build') modeSpan.innerText = `строить (${selectedBlock})`;
-            }
+            // ----- Управление -----
+            function toggleMode() { mode = mode==='dig'?'build':'dig'; modeSpan.innerText = mode==='dig'?'копать':`строить (${['🌲','🪨','🧱','🪟','🚪'][selectedSlot]})`; }
+            function cycleBlock() { selectedSlot = (selectedSlot+1)%5; if(mode==='build') modeSpan.innerText = `строить (${['🌲','🪨','🧱','🪟','🚪'][selectedSlot]})`; }
+            function placeDoor() { mode='build'; selectedSlot=4; modeSpan.innerText='строить (🚪 дверь)'; }
             function newGame() {
-                chunks.clear();
-                inventory = { wood: 5, stone: 2, iron: 0 };
-                player = { x: 0, y: 30 };
-                mode = 'dig';
-                selectedBlock = 'wood';
-                weather = 'sunny';
-                timeOfDay = 0.25;
-                rainParticles = [];
-                monsters = [];
-                houseBlocks.clear();
-                updateUI();
-                // Предгенерация чанков
-                for (let cx=-3; cx<=3; cx++)
-                    for (let cy=-3; cy<=3; cy++)
-                        chunks.set(`${cx},${cy}`, generateChunk(cx, cy));
-                modeSpan.innerText = 'копать';
-                timeSpan.innerText = 'день';
-                weatherSpan.innerText = 'солнечно';
+                chunks.clear(); inventory={wood:10,stone:5,iron:0,coal:0,diamond:0,glass:0,brick:0}; player={x:0,y:40}; mode='dig'; weather='sunny'; timeOfDay=0.25; rainParticles=[]; monsters=[]; animals=[]; houseBlocks.clear();
+                for(let cx=-3;cx<=3;cx++) for(let cy=-3;cy<=3;cy++) chunks.set(`${cx},${cy}`, generateChunk(cx,cy));
+                updateInventoryUI(); modeSpan.innerText='копать'; timeSpan.innerText='день'; weatherSpan.innerText='солнечно';
             }
 
-            // События
             function handleKey(e) {
-                if (!window.minerGameActive) return;
+                if (!window.mcGameActive) return;
                 const key = e.key;
                 e.preventDefault();
-                if (key === 'ArrowUp') movePlayer(0, -1);
-                else if (key === 'ArrowDown') movePlayer(0, 1);
-                else if (key === 'ArrowLeft') movePlayer(-1, 0);
-                else if (key === 'ArrowRight') movePlayer(1, 0);
-                else if (key === ' ' || key === 'Space') actionAt(player.x, player.y);
+                if (key === 'ArrowUp') movePlayer(0,-1);
+                else if (key === 'ArrowDown') movePlayer(0,1);
+                else if (key === 'ArrowLeft') movePlayer(-1,0);
+                else if (key === 'ArrowRight') movePlayer(1,0);
+                else if (key === ' ') actionAt(player.x, player.y);
                 else if (key === 'm') toggleMode();
                 else if (key === 'c') cycleBlock();
                 else if (key === 'd') placeDoor();
+                else if (key === 'q') showCraftingTable();
+                else if (key === '1') { selectedSlot=0; if(mode==='build') modeSpan.innerText='строить (🌲)'; }
+                else if (key === '2') { selectedSlot=1; if(mode==='build') modeSpan.innerText='строить (🪨)'; }
+                else if (key === '3') { selectedSlot=2; if(mode==='build') modeSpan.innerText='строить (🧱)'; }
+                else if (key === '4') { selectedSlot=3; if(mode==='build') modeSpan.innerText='строить (🪟)'; }
+                else if (key === '5') { selectedSlot=4; if(mode==='build') modeSpan.innerText='строить (🚪)'; }
             }
             window.addEventListener('keydown', handleKey);
-
-            upBtn.onclick = () => movePlayer(0,-1);
-            downBtn.onclick = () => movePlayer(0,1);
-            leftBtn.onclick = () => movePlayer(-1,0);
-            rightBtn.onclick = () => movePlayer(1,0);
-            modeBtn.onclick = toggleMode;
-            cycleBlockBtn.onclick = cycleBlock;
-            doorBtn.onclick = placeDoor;
-            newGameBtn.onclick = newGame;
-            closeBtn.onclick = () => {
-                window.removeEventListener('keydown', handleKey);
-                cancelAnimationFrame(window.minerAnim);
-                window.minerGameActive.remove();
-                window.minerGameActive = null;
-            };
+            upBtn.onclick = ()=>movePlayer(0,-1); downBtn.onclick = ()=>movePlayer(0,1); leftBtn.onclick = ()=>movePlayer(-1,0); rightBtn.onclick = ()=>movePlayer(1,0);
+            modeBtn.onclick = toggleMode; cycleBlockBtn.onclick = cycleBlock; doorBtn.onclick = placeDoor; craftBtn.onclick = showCraftingTable; newGameBtn.onclick = newGame; closeBtn.onclick = ()=>{ window.removeEventListener('keydown',handleKey); cancelAnimationFrame(window.mcAnim); window.mcGameActive.remove(); window.mcGameActive=null; };
             canvas.addEventListener('click', (e) => {
                 const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                let cx, cy;
-                if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; e.preventDefault(); }
-                else { cx = e.clientX; cy = e.clientY; }
-                const canvasX = (cx - rect.left) * scaleX;
-                const canvasY = (cy - rect.top) * scaleY;
-                const offsetX = canvas.width/2 - cellSize/2;
-                const offsetY = canvas.height/2 - cellSize/2;
-                const gx = Math.floor((canvasX - offsetX) / cellSize);
-                const gy = Math.floor((canvasY - offsetY) / cellSize);
+                const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+                let cx, cy; if(e.touches){ cx=e.touches[0].clientX; cy=e.touches[0].clientY; e.preventDefault(); } else { cx=e.clientX; cy=e.clientY; }
+                const canvasX = (cx-rect.left)*scaleX, canvasY = (cy-rect.top)*scaleY;
+                const offX = canvas.width/2 - cellSize/2, offY = canvas.height/2 - cellSize/2;
+                const gx = Math.floor((canvasX - offX)/cellSize), gy = Math.floor((canvasY - offY)/cellSize);
                 if (gx>=0 && gx<viewSize && gy>=0 && gy<viewSize) {
-                    const wx = player.x + gx - Math.floor(viewSize/2);
-                    const wy = player.y + gy - Math.floor(viewSize/2);
-                    if (mode === 'build' && selectedBlock === 'door') buildBlock(wx, wy, 8);
+                    const wx = player.x + gx - Math.floor(viewSize/2), wy = player.y + gy - Math.floor(viewSize/2);
+                    if (mode==='dig') digBlock(wx, wy);
                     else actionAt(wx, wy);
                 }
             });
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); canvas.click(); });
-
+            canvas.addEventListener('touchstart', (e)=>{ e.preventDefault(); canvas.click(); });
             newGame();
             cellSize = canvas.width / viewSize;
-            lastUpdate = performance.now();
-            window.minerAnim = requestAnimationFrame(animate);
+            window.mcLastTime = performance.now();
+            window.mcAnim = requestAnimationFrame(updateGame);
         }
 
-        minerIcon.onclick = () => {
+        minecraftIcon.onclick = () => {
             const pnl = document.getElementById('unifiedGamePanel');
             if (pnl) pnl.style.display = 'none';
-            startMiner();
+            startMinecraft();
         };
     });
 })();
