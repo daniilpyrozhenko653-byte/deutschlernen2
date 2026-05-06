@@ -8988,8 +8988,8 @@ if(p) {
 
 
 
-    // ========== MINECRAFT LITE: полная песочница (крафт, животные, монстры, инвентарь) ==========
-(function addFullMinecraft() {
+    // ========== MINECRAFT LITE 2D: ГОТОВАЯ КАРТА, МЕЧ, МОНСТРЫ, ДОМА ==========
+(function addMinecraftFixed() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9005,38 +9005,34 @@ if(p) {
         const minecraftIcon = document.createElement('div');
         minecraftIcon.id = 'gameMinecraftIcon';
         minecraftIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
-        minecraftIcon.innerHTML = `<div style="font-size:48px;">⛏️🌲</div><div style="color:white;">Minecraft ∞</div>`;
+        minecraftIcon.innerHTML = `<div style="font-size:48px;">⚔️🏠</div><div style="color:white;">Minecraft 2D</div>`;
         gamesContainer.appendChild(minecraftIcon);
 
-        function startMinecraft() {
+        function startGame() {
             if (window.mcGameActive) {
                 window.mcGameActive.remove();
-                if (window.mcAnim) cancelAnimationFrame(window.mcAnim);
-                if (window.mcCraftWindow) window.mcCraftWindow.remove();
+                if (window.mcAnimFrame) cancelAnimationFrame(window.mcAnimFrame);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:700px; overflow:hidden;">
-                    <div style="background:#5d3a1a; padding:8px; text-align:center; color:white; font-weight:bold;">⛏️ MINECRAFT LITE — бесконечный мир, крафт, животные</div>
-                    <canvas id="mcCanvas" width="600" height="500" style="width:100%; height:auto; display:block;"></canvas>
-                    <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:10px; flex-wrap:wrap;">
-                        <span>🪓 Режим: <span id="mcMode">копать</span></span>
-                        <span>🎒 Инвентарь: <span id="mcInv"></span></span>
-                        <span>🌤️ <span id="mcWeather">солнечно</span></span>
-                        <span>🕯️ <span id="mcTime">день</span></span>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
+                    <div style="background:#5d3a1a; padding:6px; text-align:center; color:white; font-weight:bold;">⚔️ MINECRAFT 2D — готовая карта, меч, монстры</div>
+                    <canvas id="mcCanvas" width="640" height="480" style="width:100%; height:auto; display:block; background:#87CEEB;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:11px; flex-wrap:wrap;">
+                        <span>🪓 Режим: <span id="mcMode">копать/строить</span></span>
+                        <span>⚔️ Оружие: <span id="mcWeapon">меч (убивает)</span></span>
+                        <span>📦 Дерево: <span id="mcWood">0</span> | 🪨 Камень: <span id="mcStone">0</span></span>
+                        <span>🌙 <span id="mcTime">день</span></span>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:5px; padding:6px;">
-                        <button id="mcModeBtn" style="background:#f39c12; border:none; padding:4px 8px; border-radius:15px;">🔨 Копать/Строить</button>
-                        <button id="mcCycleBlockBtn" style="background:#3498db; border:none; padding:4px 8px; border-radius:15px;">🔄 Сменить блок</button>
-                        <button id="mcDoorBtn" style="background:#8e44ad; border:none; padding:4px 8px; border-radius:15px;">🚪 Дверь</button>
-                        <button id="mcCraftBtn" style="background:#e67e22; border:none; padding:4px 8px; border-radius:15px;">🛠️ Крафт</button>
-                        <button id="mcNewGameBtn" style="background:#27ae60; border:none; padding:4px 8px; border-radius:15px;">🔄 Новая</button>
-                        <button id="mcCloseBtn" style="background:#c0392b; border:none; padding:4px 8px; border-radius:15px;">✖</button>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; padding:4px 8px; background:#1e272e; color:white; font-size:10px;">
-                        <span>1:🌲</span><span>2:🪨</span><span>3:🧱</span><span>4:🪟</span><span>5:🚪</span>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; padding:6px;">
+                        <button id="mcModeBtn" style="background:#f39c12; border:none; padding:4px 10px; border-radius:15px;">🔨 Режим</button>
+                        <button id="mcSwordBtn" style="background:#e74c3c; border:none; padding:4px 10px; border-radius:15px;">⚔️ Меч</button>
+                        <button id="mcBlockWoodBtn" style="background:#8B5A2B; border:none; padding:4px 10px; border-radius:15px;">🌲 Дерево</button>
+                        <button id="mcBlockStoneBtn" style="background:#7f8c8d; border:none; padding:4px 10px; border-radius:15px;">🪨 Камень</button>
+                        <button id="mcNewGameBtn" style="background:#27ae60; border:none; padding:4px 10px; border-radius:15px;">🔄 Новая</button>
+                        <button id="mcCloseBtn" style="background:#c0392b; border:none; padding:4px 10px; border-radius:15px;">✖</button>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; padding:0 8px 8px 8px;">
                         <button id="mcUp" style="background:#1abc9c; border:none; padding:8px;">▲</button>
@@ -9049,17 +9045,18 @@ if(p) {
             document.body.appendChild(gameDiv);
             window.mcGameActive = gameDiv;
 
-            // ----- DOM элементы -----
+            // ----- Элементы -----
             const canvas = document.getElementById('mcCanvas');
             const ctx = canvas.getContext('2d');
             const modeSpan = document.getElementById('mcMode');
-            const invSpan = document.getElementById('mcInv');
-            const weatherSpan = document.getElementById('mcWeather');
+            const weaponSpan = document.getElementById('mcWeapon');
+            const woodSpan = document.getElementById('mcWood');
+            const stoneSpan = document.getElementById('mcStone');
             const timeSpan = document.getElementById('mcTime');
             const modeBtn = document.getElementById('mcModeBtn');
-            const cycleBlockBtn = document.getElementById('mcCycleBlockBtn');
-            const doorBtn = document.getElementById('mcDoorBtn');
-            const craftBtn = document.getElementById('mcCraftBtn');
+            const swordBtn = document.getElementById('mcSwordBtn');
+            const woodBlockBtn = document.getElementById('mcBlockWoodBtn');
+            const stoneBlockBtn = document.getElementById('mcBlockStoneBtn');
             const newGameBtn = document.getElementById('mcNewGameBtn');
             const closeBtn = document.getElementById('mcCloseBtn');
             const upBtn = document.getElementById('mcUp');
@@ -9067,295 +9064,228 @@ if(p) {
             const leftBtn = document.getElementById('mcLeft');
             const rightBtn = document.getElementById('mcRight');
 
-            // ----- Константы мира -----
-            const viewSize = 24;
-            let cellSize = canvas.width / viewSize;
-            const CHUNK_SIZE = 16;
-            let chunks = new Map();
-            let player = { x: 0, y: 40 };
-            let inventory = {
-                wood: 10,
-                stone: 5,
-                iron: 0,
-                coal: 0,
-                diamond: 0,
-                glass: 0,
-                brick: 0
-            };
-            let quickSlots = [1,2,3,4,5]; // id блоков для быстрой стройки
-            let selectedSlot = 0; // 0..4
-            let mode = 'dig'; // dig / build
-            let weather = 'sunny';
-            let timeOfDay = 0.25; // 0..1
-            let rainParticles = [];
-            let monsters = []; // {x,y,type,hp}
-            let animals = []; // {x,y,type}
-            let houseBlocks = new Set();
-            let craftWindow = null;
+            // ----- Константы карты -----
+            const MAP_W = 100;    // ширина мира в блоках
+            const MAP_H = 50;     // высота мира
+            const VIEW_W = 24;    // видимых блоков по ширине
+            const VIEW_H = 18;    // видимых блоков по высоте
+            let world = Array(MAP_W).fill().map(() => Array(MAP_H).fill(0));
+            let player = { x: 50, y: 40 };
+            let inventory = { wood: 5, stone: 3 };
+            let monsters = [];
+            let animals = [];
+            let mode = 'build';      // 'build' или 'dig'
+            let weaponMode = 'sword'; // 'sword' или 'hand'
+            let currentBlock = 'wood'; // wood или stone
+            let timeOfDay = 0.25;    // день
+            let lastFrameTime = 0;
+            let animationId = null;
 
-            // ----- Определение блоков -----
+            // ----- Типы блоков (только дерево и камень + фон) -----
             const blocks = {
-                0: { name:'воздух', color:'rgba(0,0,0,0)', diggable:false, solid:false, drops:null, craft:null },
-                1: { name:'трава', color:'#5d8c48', diggable:true, solid:true, drops:{wood:0,stone:0}, craft:null },
-                2: { name:'камень', color:'#7f8c8d', diggable:true, solid:true, drops:{stone:1}, craft:null },
-                3: { name:'железная руда', color:'#b5a47b', diggable:true, solid:true, drops:{iron:1}, craft:null },
-                4: { name:'дерево (ствол)', color:'#8B5A2B', diggable:true, solid:true, drops:{wood:2}, craft:null },
-                5: { name:'доски', color:'#c19a6b', diggable:true, solid:true, drops:{wood:1}, craft:{wood:1} },
-                6: { name:'каменная стена', color:'#95a5a6', diggable:true, solid:true, drops:{stone:1}, craft:{stone:1} },
-                7: { name:'листва', color:'#2ecc71', diggable:true, solid:false, drops:{wood:0}, craft:null },
-                8: { name:'дверь', color:'#8e44ad', diggable:true, solid:false, drops:{wood:2}, craft:{wood:2, iron:1}, isDoor:true },
-                9: { name:'стекло', color:'#b0e0e6', diggable:true, solid:false, drops:{glass:1}, craft:{sand:1, coal:1} },
-                10: { name:'кирпич', color:'#c0392b', diggable:true, solid:true, drops:{brick:1}, craft:{stone:2, coal:1} },
-                11: { name:'угольная руда', color:'#4a4a4a', diggable:true, solid:true, drops:{coal:1}, craft:null },
-                12: { name:'алмазная руда', color:'#7fffd4', diggable:true, solid:true, drops:{diamond:1}, craft:null },
-                13: { name:'верстак', color:'#d35400', diggable:true, solid:true, drops:{wood:2}, craft:{wood:4}, craftTable:true }
+                0: { name:'земля', color:'#5d8c48', solid:true, diggable:true, drops:null },
+                1: { name:'дерево (доски)', color:'#c19a6b', solid:true, diggable:true, drops:{wood:1} },
+                2: { name:'камень', color:'#7f8c8d', solid:true, diggable:true, drops:{stone:1} },
+                3: { name:'дом деревянный', color:'#b8860b', solid:true, diggable:true, drops:{wood:2} },
+                4: { name:'дом каменный', color:'#5d6e7e', solid:true, diggable:true, drops:{stone:2} },
+                5: { name:'вода', color:'#3498db', solid:false, diggable:false, drops:null },
+                6: { name:'трава', color:'#5d8c48', solid:false, diggable:true, drops:null }, // декоративный слой
             };
 
-            // ----- Процедурная генерация -----
-            function noise(x, y, seed=12345) {
-                let n = x * 374761393 + y * 668265263 + seed;
-                n = (n ^ (n >> 13)) * 1274126177;
-                n = (n ^ (n >> 15)) & 0x7fffffff;
-                return n / 0x7fffffff;
-            }
-
-            function generateChunk(chunkX, chunkY) {
-                const arr = Array(CHUNK_SIZE).fill().map(() => Array(CHUNK_SIZE).fill(0));
-                const startX = chunkX * CHUNK_SIZE, startY = chunkY * CHUNK_SIZE;
-                for (let lx=0; lx<CHUNK_SIZE; lx++) {
-                    const wx = startX + lx;
-                    for (let ly=0; ly<CHUNK_SIZE; ly++) {
-                        const wy = startY + ly;
-                        let heightNoise = (noise(wx*0.05,0)+noise(wx*0.2,100))*0.5;
-                        let baseHeight = Math.floor(12 + heightNoise*8);
-                        let mountain = Math.pow(Math.abs(noise(wx*0.03,200)-0.5)*2,2)*6;
-                        let surfaceY = baseHeight + Math.floor(mountain);
-                        if (wy < surfaceY) {
-                            if (wy >= surfaceY-3) arr[lx][ly] = 1;
-                            else if (wy >= surfaceY-8) arr[lx][ly] = 2;
-                            else arr[lx][ly] = 2;
-                            // Уголь
-                            if (wy > surfaceY+2 && wy < surfaceY+6 && noise(wx*0.4,500)>0.9) arr[lx][ly]=11;
-                            // Железо
-                            if (wy > surfaceY+4 && wy< surfaceY+10 && noise(wx*0.5,400)>0.85) arr[lx][ly]=3;
-                            // Алмазы глубоко
-                            if (wy > surfaceY+12 && noise(wx*0.6,600)>0.95) arr[lx][ly]=12;
-                            // Деревья
-                            if (wy === surfaceY-1 && noise(wx*0.3,300)>0.92 && arr[lx][ly]===1) {
-                                for (let h=1;h<=4;h++) {
-                                    const ty = wy-h;
-                                    if (ty>=startY && ty<startY+CHUNK_SIZE && ty>=0) {
-                                        const localY = ty-startY;
-                                        if (h===1||h===2) arr[lx][localY]=4;
-                                        else if (h>=3) arr[lx][localY]=7;
-                                    }
-                                }
-                            }
-                        } else {
-                            arr[lx][ly] = 0;
+            // ----- Генерация готовой карты с домами, деревьями, озёрами -----
+            function generateMap() {
+                // Сначала всё земля (тип 0)
+                for (let x=0; x<MAP_W; x++) {
+                    for (let y=0; y<MAP_H; y++) {
+                        if (y < MAP_H-10) world[x][y] = 6; // трава
+                        else world[x][y] = 0; // земля
+                    }
+                }
+                // Озеро в центре
+                for (let ox=-6; ox<=6; ox++) {
+                    for (let oy=-4; oy<=4; oy++) {
+                        let x = 50+ox, y = 38+oy;
+                        if (x>=0 && x<MAP_W && y>=0 && y<MAP_H && (ox*ox+oy*oy)<25) {
+                            world[x][y] = 5;
                         }
                     }
                 }
-                return arr;
+                // Деревья (купы)
+                for (let t=0; t<40; t++) {
+                    let x = 10 + Math.floor(Math.random() * 80);
+                    let y = MAP_H-11;
+                    if (world[x][y] !== 5) {
+                        world[x][y] = 1;
+                        if (y-1 >=0 && world[x][y-1] !==5) world[x][y-1] = 1;
+                        if (y-2 >=0 && world[x][y-2] !==5) world[x][y-2] = 1;
+                    }
+                }
+                // Дома
+                // Дом 1 (деревянный)
+                for (let dx=0; dx<5; dx++) for (let dy=0; dy<4; dy++) { world[15+dx][MAP_H-13+dy] = 3; }
+                for (let dx=1; dx<4; dx++) world[15+dx][MAP_H-14] = 3; // крыша
+                // Дом 2 (каменный)
+                for (let dx=0; dx<6; dx++) for (let dy=0; dy<4; dy++) { world[70+dx][MAP_H-12+dy] = 4; }
+                for (let dx=1; dx<5; dx++) world[70+dx][MAP_H-13] = 4;
+                // Дом 3 (деревянный) на возвышении
+                for (let dx=0; dx<4; dx++) for (let dy=0; dy<3; dy++) { world[35+dx][MAP_H-10+dy] = 3; }
+                // Дорожки (камень)
+                for (let x=20; x<70; x++) world[x][MAP_H-5] = 2;
+                // Камни разбросанные
+                for (let r=0; r<30; r++) {
+                    let x = 5+Math.floor(Math.random()*90);
+                    let y = MAP_H-7;
+                    if (world[x][y] !==5 && world[x][y]!==3 && world[x][y]!==4) world[x][y]=2;
+                }
+                // Грибы/цветы (декор)
+                for (let r=0; r<80; r++) {
+                    let x = 2+Math.floor(Math.random()*96);
+                    let y = MAP_H-8;
+                    if (world[x][y]===6) world[x][y]=6; // оставляем траву
+                }
             }
 
-            function getBlock(wx, wy) {
-                if (wy<0) return 2;
-                const cx = Math.floor(wx/CHUNK_SIZE), cy = Math.floor(wy/CHUNK_SIZE);
-                const key = `${cx},${cy}`;
-                if (!chunks.has(key)) chunks.set(key, generateChunk(cx,cy));
-                const chunk = chunks.get(key);
-                const lx = ((wx%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
-                const ly = ((wy%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
-                return chunk[lx][ly];
+            // ----- Вспомогательные функции -----
+            function updateUI() {
+                woodSpan.innerText = inventory.wood;
+                stoneSpan.innerText = inventory.stone;
+                modeSpan.innerText = mode === 'build' ? `строить (${currentBlock==='wood'?'🌲':'🪨'})` : 'копать';
+                weaponSpan.innerText = weaponMode === 'sword' ? '⚔️ меч (убивает)' : '✋ рука';
+                timeSpan.innerText = (timeOfDay>0.7 && timeOfDay<0.85) ? '🌙 ночь' : '☀️ день';
             }
 
-            function setBlock(wx, wy, bid) {
-                if (wy<0) return;
-                const cx = Math.floor(wx/CHUNK_SIZE), cy = Math.floor(wy/CHUNK_SIZE);
-                const key = `${cx},${cy}`;
-                if (!chunks.has(key)) chunks.set(key, generateChunk(cx,cy));
-                const chunk = chunks.get(key);
-                const lx = ((wx%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
-                const ly = ((wy%CHUNK_SIZE)+CHUNK_SIZE)%CHUNK_SIZE;
-                chunk[lx][ly] = bid;
-                if (blocks[bid] && blocks[bid].solid && (bid===5||bid===6||bid===8||bid===9||bid===10||bid===13)) houseBlocks.add(`${wx},${wy}`);
-                else if (bid===0) houseBlocks.delete(`${wx},${wy}`);
-            }
-
-            // ----- Инвентарь и крафт -----
-            function updateInventoryUI() {
-                invSpan.innerText = `🌲${inventory.wood} 🪨${inventory.stone} ⚙️${inventory.iron} 🔥${inventory.coal||0} 💎${inventory.diamond||0} 🪟${inventory.glass||0} 🧱${inventory.brick||0}`;
-            }
-
+            // Добавить ресурсы
             function addResources(drops) {
                 if (drops.wood) inventory.wood += drops.wood;
                 if (drops.stone) inventory.stone += drops.stone;
-                if (drops.iron) inventory.iron += drops.iron;
-                if (drops.coal) inventory.coal = (inventory.coal||0) + drops.coal;
-                if (drops.diamond) inventory.diamond = (inventory.diamond||0) + drops.diamond;
-                if (drops.glass) inventory.glass = (inventory.glass||0) + drops.glass;
-                if (drops.brick) inventory.brick = (inventory.brick||0) + drops.brick;
-                updateInventoryUI();
+                updateUI();
             }
 
-            function craftItem(recipe) {
-                if (recipe.wood && inventory.wood < recipe.wood) return false;
-                if (recipe.stone && inventory.stone < recipe.stone) return false;
-                if (recipe.iron && inventory.iron < recipe.iron) return false;
-                if (recipe.coal && inventory.coal < recipe.coal) return false;
-                if (recipe.diamond && inventory.diamond < recipe.diamond) return false;
-                if (recipe.glass && inventory.glass < recipe.glass) return false;
-                if (recipe.brick && inventory.brick < recipe.brick) return false;
-                if (recipe.wood) inventory.wood -= recipe.wood;
-                if (recipe.stone) inventory.stone -= recipe.stone;
-                if (recipe.iron) inventory.iron -= recipe.iron;
-                if (recipe.coal) inventory.coal -= recipe.coal;
-                if (recipe.diamond) inventory.diamond -= recipe.diamond;
-                if (recipe.glass) inventory.glass -= recipe.glass;
-                if (recipe.brick) inventory.brick -= recipe.brick;
-                if (recipe.result) {
-                    addResources({ [recipe.result]: 1 });
-                }
-                updateInventoryUI();
-                return true;
-            }
-
-            function showCraftingTable() {
-                if (craftWindow) craftWindow.remove();
-                craftWindow = document.createElement('div');
-                craftWindow.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100003; color:white; width:300px; text-align:center;';
-                craftWindow.innerHTML = `
-                    <h3>🛠️ Верстак</h3>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <button id="craftWoodPlanks">Доски (1 дерево → 4)</button>
-                        <button id="craftStoneBrick">Кирпич (2 камня+1 уголь → 1)</button>
-                        <button id="craftGlass">Стекло (1 уголь+1 песок → 1)</button>
-                        <button id="craftDoor">Дверь (2 дерева+1 железо → 1)</button>
-                        <button id="craftChest">Сундук (8 досок → 1) (скоро)</button>
-                        <button id="craftPickaxe">Кирка (3 камня+2 дерева → 1)</button>
-                    </div>
-                    <button id="closeCraft" style="margin-top:15px; background:#c0392b;">Закрыть</button>
-                `;
-                document.body.appendChild(craftWindow);
-                document.getElementById('craftWoodPlanks').onclick = () => { craftItem({ wood:1, result:'wood' }); addResources({ wood:4 }); craftWindow.remove(); craftWindow=null; };
-                document.getElementById('craftStoneBrick').onclick = () => { if(craftItem({ stone:2, coal:1, result:'brick' })) addResources({ brick:1 }); craftWindow.remove(); craftWindow=null; };
-                document.getElementById('craftGlass').onclick = () => { if(craftItem({ coal:1, glass:1 })) addResources({ glass:1 }); craftWindow.remove(); craftWindow=null; };
-                document.getElementById('craftDoor').onclick = () => { if(craftItem({ wood:2, iron:1, result:'door' })) addResources({ wood:2 }); craftWindow.remove(); craftWindow=null; };
-                document.getElementById('craftPickaxe').onclick = () => { alert('Инструменты пока в разработке'); craftWindow.remove(); craftWindow=null; };
-                document.getElementById('closeCraft').onclick = () => { craftWindow.remove(); craftWindow=null; };
-            }
-
-            // ----- Действия игрока -----
-            function digBlock(wx, wy) {
-                const bid = getBlock(wx, wy);
-                const block = blocks[bid];
-                if (!block || !block.diggable) return false;
-                if (block.drops) addResources(block.drops);
-                setBlock(wx, wy, 0);
-                return true;
-            }
-
-            function buildBlock(wx, wy, bid) {
-                if (getBlock(wx, wy) !== 0) return false;
-                let cost = null;
-                if (bid === 5 && inventory.wood >= 1) cost = { wood: 1 };
-                else if (bid === 6 && inventory.stone >= 1) cost = { stone: 1 };
-                else if (bid === 8 && inventory.wood >= 2) cost = { wood: 2 };
-                else if (bid === 9 && inventory.glass >= 1) cost = { glass: 1 };
-                else if (bid === 10 && inventory.brick >= 1) cost = { brick: 1 };
-                else if (bid === 13 && inventory.wood >= 4) cost = { wood: 4 };
-                if (!cost) return false;
-                if (cost.wood) inventory.wood -= cost.wood;
-                if (cost.stone) inventory.stone -= cost.stone;
-                if (cost.glass) inventory.glass -= cost.glass;
-                if (cost.brick) inventory.brick -= cost.brick;
-                setBlock(wx, wy, bid);
-                updateInventoryUI();
-                return true;
-            }
-
+            // Действие: копать или строить
             function actionAt(wx, wy) {
-                if (mode === 'dig') digBlock(wx, wy);
-                else {
-                    let bid = quickSlots[selectedSlot];
-                    if (bid === 8) buildBlock(wx, wy, 8);
-                    else buildBlock(wx, wy, bid);
-                }
-            }
-
-            function movePlayer(dx, dy) {
-                const nx = player.x + dx, ny = player.y + dy;
-                const bid = getBlock(nx, ny);
-                if (blocks[bid] && blocks[bid].solid && !blocks[bid].isDoor) return;
-                player.x = nx; player.y = ny;
-                // Подгрузка чанков
-                for (let cx=-2; cx<=2; cx++) for (let cy=-2; cy<=2; cy++) {
-                    const key = `${Math.floor((player.x+cx*CHUNK_SIZE)/CHUNK_SIZE)},${Math.floor((player.y+cy*CHUNK_SIZE)/CHUNK_SIZE)}`;
-                    if (!chunks.has(key)) chunks.set(key, generateChunk(...key.split(',').map(Number)));
-                }
-                // Генерация животных
-                if (Math.random()<0.02 && animals.length<15) {
-                    animals.push({ x: player.x+(Math.random()-0.5)*10, y: player.y+(Math.random()-0.5)*10, type: Math.random()<0.5?'chicken':'sheep' });
-                }
-            }
-
-            // ----- Анимация и мир -----
-            function spawnMonster() {
-                if (monsters.length>8) return;
-                let angle = Math.random()*2*Math.PI;
-                let dist = 7+Math.random()*6;
-                monsters.push({ x: player.x+Math.cos(angle)*dist, y: player.y+Math.sin(angle)*dist, type: 'skeleton', hp: 2 });
-            }
-
-            function updateMonsters(delta) {
-                let isNight = (timeOfDay>0.7 && timeOfDay<0.85);
-                if (!isNight) { monsters=[]; return; }
-                for (let i=0;i<monsters.length;i++) {
-                    let m = monsters[i];
-                    let dx = player.x - m.x, dy = player.y - m.y;
-                    let len = Math.hypot(dx,dy);
-                    if (len>0.3) { let step=1.2*delta; m.x+=dx/len*step; m.y+=dy/len*step; }
-                    if (Math.abs(m.x-player.x)<0.8 && Math.abs(m.y-player.y)<0.8) {
-                        let safe=false;
-                        for (let ox=-1;ox<=1;ox++) for (let oy=-1;oy<=1;oy++) if(houseBlocks.has(`${player.x+ox},${player.y+oy}`)) safe=true;
-                        if(!safe){ alert('Монстр убил вас! Ресурсы потеряны.'); inventory={wood:0,stone:0,iron:0,coal:0,diamond:0,glass:0,brick:0}; updateInventoryUI(); monsters.splice(i,1); i--; }
+                if (wx<0 || wx>=MAP_W || wy<0 || wy>=MAP_H) return;
+                if (mode === 'dig') {
+                    let bid = world[wx][wy];
+                    let block = blocks[bid];
+                    if (block && block.diggable) {
+                        if (block.drops) addResources(block.drops);
+                        world[wx][wy] = 6; // после копки остаётся трава
                     }
-                    if(len>20) { monsters.splice(i,1); i--; }
+                } else { // строить
+                    if (world[wx][wy] !== 0 && world[wx][wy] !== 6) return; // только на землю или траву
+                    let blockId = (currentBlock === 'wood') ? 1 : 2;
+                    let cost = (currentBlock === 'wood') ? { wood:1 } : { stone:1 };
+                    if (cost.wood && inventory.wood >= 1) inventory.wood -= cost.wood;
+                    else if (cost.stone && inventory.stone >= 1) inventory.stone -= cost.stone;
+                    else return;
+                    world[wx][wy] = blockId;
+                    updateUI();
                 }
-                if (Math.random()<0.05*delta) spawnMonster();
             }
 
-            function updateAnimals(delta) {
+            // Атака мечом (убить монстра в радиусе 1.5 блоков)
+            function attackWithSword() {
+                let killedAny = false;
+                for (let i=0; i<monsters.length; i++) {
+                    let m = monsters[i];
+                    let dx = Math.abs(m.x - player.x);
+                    let dy = Math.abs(m.y - player.y);
+                    if (dx < 1.5 && dy < 1.5) {
+                        monsters.splice(i,1);
+                        killedAny = true;
+                        break;
+                    }
+                }
+                if (killedAny) {
+                    // эффект удара
+                }
+            }
+
+            // Движение игрока
+            function movePlayer(dx, dy) {
+                let nx = player.x + dx;
+                let ny = player.y + dy;
+                if (nx<0 || nx>=MAP_W || ny<0 || ny>=MAP_H) return;
+                let block = blocks[world[nx][ny]];
+                if (block && block.solid) return;
+                player.x = nx;
+                player.y = ny;
+            }
+
+            // ----- Генерация монстров и животных -----
+            function spawnMonster() {
+                if (monsters.length > 6) return;
+                let angle = Math.random() * 2 * Math.PI;
+                let dist = 8 + Math.random() * 5;
+                let mx = player.x + Math.cos(angle) * dist;
+                let my = player.y + Math.sin(angle) * dist;
+                mx = Math.min(Math.max(mx, 2), MAP_W-2);
+                my = Math.min(Math.max(my, 2), MAP_H-2);
+                monsters.push({ x: mx, y: my, type: 'skeleton', hp: 2 });
+            }
+
+            function spawnAnimal() {
+                if (animals.length > 12) return;
+                let x = 5 + Math.random() * (MAP_W-10);
+                let y = MAP_H - 9 + Math.random() * 5;
+                animals.push({ x: x, y: y, type: Math.random()<0.5?'chicken':'sheep' });
+            }
+
+            function updateMonsters(deltaSec) {
+                let isNight = (timeOfDay > 0.7 && timeOfDay < 0.85);
+                if (!isNight) {
+                    monsters = [];
+                    return;
+                }
+                // Движение монстров к игроку
+                for (let i=0; i<monsters.length; i++) {
+                    let m = monsters[i];
+                    let dx = player.x - m.x;
+                    let dy = player.y - m.y;
+                    let len = Math.hypot(dx, dy);
+                    if (len > 0.3) {
+                        let step = 1.2 * deltaSec;
+                        m.x += (dx / len) * step;
+                        m.y += (dy / len) * step;
+                    }
+                    if (Math.abs(m.x - player.x) < 0.8 && Math.abs(m.y - player.y) < 0.8) {
+                        // Атака монстра: теряем половину ресурсов
+                        inventory.wood = Math.floor(inventory.wood / 2);
+                        inventory.stone = Math.floor(inventory.stone / 2);
+                        updateUI();
+                        monsters.splice(i,1);
+                        i--;
+                    }
+                }
+                // Спавн новых
+                if (Math.random() < 0.03 * deltaSec) spawnMonster();
+            }
+
+            function updateAnimals(deltaSec) {
                 for (let a of animals) {
-                    let dx = (Math.random()-0.5)*2*delta, dy = (Math.random()-0.5)*2*delta;
-                    a.x += dx; a.y += dy;
-                    a.x = Math.min(Math.max(a.x, player.x-20), player.x+20);
-                    a.y = Math.min(Math.max(a.y, player.y-20), player.y+20);
+                    a.x += (Math.random() - 0.5) * deltaSec * 2;
+                    a.y += (Math.random() - 0.5) * deltaSec * 2;
+                    a.x = Math.min(Math.max(a.x, 1), MAP_W-2);
+                    a.y = Math.min(Math.max(a.y, 1), MAP_H-2);
                 }
-                if (animals.length>20) animals.splice(0,10);
+                if (Math.random() < 0.01 * deltaSec && animals.length < 15) spawnAnimal();
             }
 
-            function updateGame(now) {
-                if (!window.mcGameActive) return;
-                let delta = Math.min(0.1, (now - (window.mcLastTime||now))/1000);
-                if (delta<0.01) { window.mcLastTime=now; requestAnimationFrame(updateGame); return; }
-                window.mcLastTime = now;
-                timeOfDay += delta/60;
-                if (timeOfDay>1) timeOfDay-=1;
-                let isNight = (timeOfDay>0.7 && timeOfDay<0.85);
-                timeSpan.innerText = isNight ? '🌙 ночь' : '☀️ день';
-                if (Math.random()<0.002*delta) { weather = weather==='sunny'?'rainy':'sunny'; weatherSpan.innerText = weather==='sunny'?'солнечно':'🌧️ дождь'; }
-                if (weather==='rainy') for(let i=0;i<3;i++) rainParticles.push({x:Math.random()*canvas.width, y:0, life:1});
-                for(let i=0;i<rainParticles.length;i++) { rainParticles[i].y+=80*delta; rainParticles[i].life-=delta; if(rainParticles[i].y>canvas.height||rainParticles[i].life<=0) rainParticles.splice(i--,1); }
-                updateMonsters(delta);
-                updateAnimals(delta);
-                drawAll();
-                requestAnimationFrame(updateGame);
+            // ----- Цикл дня/ночи -----
+            let lastTimestamp = 0;
+            function updateTime(deltaSec) {
+                timeOfDay += deltaSec / 50; // полный цикл 50 секунд
+                if (timeOfDay > 1) timeOfDay -= 1;
+                updateUI();
             }
 
             // ----- Отрисовка -----
-            function drawSky() {
+            function draw() {
+                const cellW = canvas.width / VIEW_W;
+                const cellH = canvas.height / VIEW_H;
+                const startX = Math.max(0, Math.min(MAP_W - VIEW_W, player.x - Math.floor(VIEW_W/2)));
+                const startY = Math.max(0, Math.min(MAP_H - VIEW_H, player.y - Math.floor(VIEW_H/2)));
+                // Небо (градиент)
                 let grad = ctx.createLinearGradient(0,0,0,canvas.height);
                 let r,g,b;
                 if (timeOfDay<0.25) { let t=timeOfDay/0.25; r=135+165*t; g=206+49*t; b=235; }
@@ -9364,70 +9294,142 @@ if(p) {
                 else { let t=(timeOfDay-0.75)/0.25; r=200-135*t; g=100-34*t; b=80-20*t; }
                 grad.addColorStop(0, `rgb(${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)})`);
                 grad.addColorStop(1, `rgb(${Math.min(200,r-40)},${Math.min(100,g-40)},${Math.min(80,b-20)})`);
-                ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width,canvas.height);
-                let angle = timeOfDay*2*Math.PI;
-                let sx=canvas.width*0.8+Math.sin(angle)*150, sy=canvas.height*0.2+Math.cos(angle)*100;
-                ctx.fillStyle = (timeOfDay>0.7||timeOfDay<0.3)?'#ffeaa7':'#dfe6e9';
+                ctx.fillStyle = grad;
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                // Солнце/луна
+                let angle = timeOfDay * 2 * Math.PI;
+                let sx = canvas.width - 60 + Math.sin(angle)*40;
+                let sy = 40 + Math.cos(angle)*30;
+                ctx.fillStyle = (timeOfDay>0.7||timeOfDay<0.3)?'#ffeaa7':'#f1c40f';
                 ctx.beginPath(); ctx.arc(sx,sy,20,0,2*Math.PI); ctx.fill();
-            }
 
-            function drawWorld() {
-                const offX = canvas.width/2 - cellSize/2, offY = canvas.height/2 - cellSize/2;
-                const startX = player.x - Math.floor(viewSize/2), startY = player.y - Math.floor(viewSize/2);
-                for (let i=0;i<viewSize;i++) for (let j=0;j<viewSize;j++) {
-                    const wx = startX+i, wy = startY+j;
-                    const bid = getBlock(wx,wy);
-                    if (bid===0) continue;
-                    let col = blocks[bid].color;
-                    let bright = 0.6 + Math.sin(timeOfDay*Math.PI)*0.3;
-                    if (timeOfDay>0.7) bright=0.3;
-                    ctx.fillStyle = col;
-                    ctx.fillRect(i*cellSize+offX, j*cellSize+offY, cellSize-0.5, cellSize-0.5);
-                    ctx.fillStyle = `rgba(0,0,0,${0.2*(1-bright)})`;
-                    ctx.fillRect(i*cellSize+offX, j*cellSize+offY, cellSize-0.5, cellSize-0.5);
+                // Рисуем блоки
+                for (let i=0; i<VIEW_W; i++) {
+                    for (let j=0; j<VIEW_H; j++) {
+                        let wx = startX + i;
+                        let wy = startY + j;
+                        if (wx>=0 && wx<MAP_W && wy>=0 && wy<MAP_H) {
+                            let bid = world[wx][wy];
+                            let col = blocks[bid] ? blocks[bid].color : '#5d8c48';
+                            ctx.fillStyle = col;
+                            ctx.fillRect(i*cellW, j*cellH, cellW-0.5, cellH-0.5);
+                            // текстура для дерева/камня
+                            if (bid===1) { ctx.fillStyle='#8B5A2B'; ctx.fillRect(i*cellW+2, j*cellH+2, cellW-4, cellH-4); }
+                            if (bid===2) { ctx.fillStyle='#5d6e7e'; ctx.fillRect(i*cellW+3, j*cellH+3, cellW-6, cellH-6); }
+                            if (bid===3) { ctx.fillStyle='#cd853f'; ctx.fillRect(i*cellW+2, j*cellH+2, cellW-4, cellH-4); }
+                            if (bid===4) { ctx.fillStyle='#4a5b66'; ctx.fillRect(i*cellW+2, j*cellH+2, cellW-4, cellH-4); }
+                        }
+                    }
                 }
                 // Животные
                 for (let a of animals) {
-                    let ix = a.x-startX, iy = a.y-startY;
-                    if (ix>=0 && ix<viewSize && iy>=0 && iy<viewSize) {
-                        ctx.fillStyle = a.type==='chicken'?'#f1c40f':'#fff';
-                        ctx.beginPath(); ctx.arc(ix*cellSize+offX+cellSize/2, iy*cellSize+offY+cellSize/2, cellSize*0.25,0,2*Math.PI); ctx.fill();
-                        ctx.fillStyle = '#000'; ctx.fillText(a.type==='chicken'?'🐔':'🐑', ix*cellSize+offX+cellSize/4, iy*cellSize+offY+cellSize/2);
+                    let ix = a.x - startX;
+                    let iy = a.y - startY;
+                    if (ix>=0 && ix<VIEW_W && iy>=0 && iy<VIEW_H) {
+                        ctx.fillStyle = a.type==='chicken'?'#f1c40f':'#ecf0f1';
+                        ctx.beginPath(); ctx.arc(ix*cellW+cellW/2, iy*cellH+cellH/2, cellW*0.2,0,2*Math.PI); ctx.fill();
+                        ctx.fillStyle='#000'; ctx.font=`${Math.floor(cellW*0.5)}px Arial`;
+                        ctx.fillText(a.type==='chicken'?'🐔':'🐑', ix*cellW+cellW*0.2, iy*cellH+cellH*0.7);
                     }
                 }
                 // Монстры
                 for (let m of monsters) {
-                    let ix = m.x-startX, iy = m.y-startY;
-                    if (ix>=0 && ix<viewSize && iy>=0 && iy<viewSize) {
-                        ctx.fillStyle = '#a55'; ctx.beginPath(); ctx.arc(ix*cellSize+offX+cellSize/2, iy*cellSize+offY+cellSize/2, cellSize*0.3,0,2*Math.PI); ctx.fill();
-                        ctx.fillStyle = '#fff'; ctx.fillText('💀', ix*cellSize+offX+cellSize/4, iy*cellSize+offY+cellSize/2);
+                    let ix = m.x - startX;
+                    let iy = m.y - startY;
+                    if (ix>=0 && ix<VIEW_W && iy>=0 && iy<VIEW_H) {
+                        ctx.fillStyle = '#a55';
+                        ctx.beginPath(); ctx.arc(ix*cellW+cellW/2, iy*cellH+cellH/2, cellW*0.25,0,2*Math.PI); ctx.fill();
+                        ctx.fillStyle='#fff'; ctx.font=`${Math.floor(cellW*0.5)}px Arial`;
+                        ctx.fillText('💀', ix*cellW+cellW*0.3, iy*cellH+cellH*0.7);
                     }
                 }
                 // Игрок
-                const px = (viewSize/2)*cellSize+offX, py = (viewSize/2)*cellSize+offY;
-                ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(px+cellSize/2, py+cellSize/2, cellSize*0.35,0,2*Math.PI); ctx.fill();
-                ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(px+cellSize/2-4, py+cellSize/2-4, 2,0,2*Math.PI); ctx.fill();
-                ctx.beginPath(); ctx.arc(px+cellSize/2+4, py+cellSize/2-4, 2,0,2*Math.PI); ctx.fill();
-                ctx.strokeStyle = mode==='dig'?'#e74c3c':'#2ecc71'; ctx.lineWidth=2; ctx.strokeRect(px,py,cellSize,cellSize);
+                let px = (player.x - startX) * cellW;
+                let py = (player.y - startY) * cellH;
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.ellipse(px+cellW/2, py+cellH/2, cellW*0.3, cellH*0.35, 0, 0, 2*Math.PI);
+                ctx.fill();
+                ctx.fillStyle='#000';
+                ctx.beginPath();
+                ctx.arc(px+cellW*0.35, py+cellH*0.35, cellW*0.07, 0, 2*Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(px+cellW*0.65, py+cellH*0.35, cellW*0.07, 0, 2*Math.PI);
+                ctx.fill();
+                // индикатор режима
+                ctx.strokeStyle = mode==='dig'?'#e74c3c':'#2ecc71';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(px, py, cellW, cellH);
+                if (weaponMode==='sword') {
+                    ctx.fillStyle='rgba(255,0,0,0.3)';
+                    ctx.beginPath(); ctx.moveTo(px+cellW*0.8, py+cellH*0.2); ctx.lineTo(px+cellW*0.9, py+cellH*0.5); ctx.lineTo(px+cellW*0.7, py+cellH*0.5); ctx.fill();
+                }
             }
 
-            function drawRain() {
-                if (weather!=='rainy') return;
-                for (let p of rainParticles) { ctx.fillStyle='rgba(173,216,230,0.5)'; ctx.fillRect(p.x,p.y,2,5); }
+            // ----- Game loop -----
+            let lastUpdate = 0;
+            function gameLoop(now) {
+                if (!window.mcGameActive) return;
+                let delta = Math.min(0.033, (now - lastUpdate) / 1000);
+                if (delta > 0.01) {
+                    updateTime(delta);
+                    updateMonsters(delta);
+                    updateAnimals(delta);
+                    lastUpdate = now;
+                }
+                draw();
+                animationId = requestAnimationFrame(gameLoop);
             }
 
-            function drawAll() { drawSky(); drawWorld(); drawRain(); }
-
-            // ----- Управление -----
-            function toggleMode() { mode = mode==='dig'?'build':'dig'; modeSpan.innerText = mode==='dig'?'копать':`строить (${['🌲','🪨','🧱','🪟','🚪'][selectedSlot]})`; }
-            function cycleBlock() { selectedSlot = (selectedSlot+1)%5; if(mode==='build') modeSpan.innerText = `строить (${['🌲','🪨','🧱','🪟','🚪'][selectedSlot]})`; }
-            function placeDoor() { mode='build'; selectedSlot=4; modeSpan.innerText='строить (🚪 дверь)'; }
+            // ----- Обработчики -----
+            function toggleMode() {
+                mode = (mode === 'build') ? 'dig' : 'build';
+                updateUI();
+            }
+            function setWoodBlock() { currentBlock = 'wood'; if (mode==='build') updateUI(); }
+            function setStoneBlock() { currentBlock = 'stone'; if (mode==='build') updateUI(); }
+            function setSwordMode() { weaponMode = 'sword'; updateUI(); }
             function newGame() {
-                chunks.clear(); inventory={wood:10,stone:5,iron:0,coal:0,diamond:0,glass:0,brick:0}; player={x:0,y:40}; mode='dig'; weather='sunny'; timeOfDay=0.25; rainParticles=[]; monsters=[]; animals=[]; houseBlocks.clear();
-                for(let cx=-3;cx<=3;cx++) for(let cy=-3;cy<=3;cy++) chunks.set(`${cx},${cy}`, generateChunk(cx,cy));
-                updateInventoryUI(); modeSpan.innerText='копать'; timeSpan.innerText='день'; weatherSpan.innerText='солнечно';
+                generateMap();
+                player = { x: 50, y: 40 };
+                inventory = { wood: 5, stone: 3 };
+                monsters = [];
+                animals = [];
+                timeOfDay = 0.25;
+                mode = 'build';
+                weaponMode = 'sword';
+                currentBlock = 'wood';
+                for (let i=0;i<6;i++) spawnAnimal();
+                updateUI();
             }
-
+            // Обработка кликов для ломания/строительства/атаки
+            function handleCanvasClick(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                let cx, cy;
+                if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; e.preventDefault(); }
+                else { cx = e.clientX; cy = e.clientY; }
+                const canvasX = (cx - rect.left) * scaleX;
+                const canvasY = (cy - rect.top) * scaleY;
+                const cellW = canvas.width / VIEW_W;
+                const cellH = canvas.height / VIEW_H;
+                const gridX = Math.floor(canvasX / cellW);
+                const gridY = Math.floor(canvasY / cellH);
+                const startX = Math.max(0, Math.min(MAP_W - VIEW_W, player.x - Math.floor(VIEW_W/2)));
+                const startY = Math.max(0, Math.min(MAP_H - VIEW_H, player.y - Math.floor(VIEW_H/2)));
+                const wx = startX + gridX;
+                const wy = startY + gridY;
+                if (wx>=0 && wx<MAP_W && wy>=0 && wy<MAP_H) {
+                    if (weaponMode === 'sword') {
+                        attackWithSword();
+                    } else {
+                        actionAt(wx, wy);
+                    }
+                }
+            }
+            // Управление с клавиатуры
             function handleKey(e) {
                 if (!window.mcGameActive) return;
                 const key = e.key;
@@ -9438,42 +9440,39 @@ if(p) {
                 else if (key === 'ArrowRight') movePlayer(1,0);
                 else if (key === ' ') actionAt(player.x, player.y);
                 else if (key === 'm') toggleMode();
-                else if (key === 'c') cycleBlock();
-                else if (key === 'd') placeDoor();
-                else if (key === 'q') showCraftingTable();
-                else if (key === '1') { selectedSlot=0; if(mode==='build') modeSpan.innerText='строить (🌲)'; }
-                else if (key === '2') { selectedSlot=1; if(mode==='build') modeSpan.innerText='строить (🪨)'; }
-                else if (key === '3') { selectedSlot=2; if(mode==='build') modeSpan.innerText='строить (🧱)'; }
-                else if (key === '4') { selectedSlot=3; if(mode==='build') modeSpan.innerText='строить (🪟)'; }
-                else if (key === '5') { selectedSlot=4; if(mode==='build') modeSpan.innerText='строить (🚪)'; }
+                else if (key === '1') { setWoodBlock(); }
+                else if (key === '2') { setStoneBlock(); }
+                else if (key === '3') { setSwordMode(); }
+                else if (key === 'a') attackWithSword();
             }
             window.addEventListener('keydown', handleKey);
-            upBtn.onclick = ()=>movePlayer(0,-1); downBtn.onclick = ()=>movePlayer(0,1); leftBtn.onclick = ()=>movePlayer(-1,0); rightBtn.onclick = ()=>movePlayer(1,0);
-            modeBtn.onclick = toggleMode; cycleBlockBtn.onclick = cycleBlock; doorBtn.onclick = placeDoor; craftBtn.onclick = showCraftingTable; newGameBtn.onclick = newGame; closeBtn.onclick = ()=>{ window.removeEventListener('keydown',handleKey); cancelAnimationFrame(window.mcAnim); window.mcGameActive.remove(); window.mcGameActive=null; };
-            canvas.addEventListener('click', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
-                let cx, cy; if(e.touches){ cx=e.touches[0].clientX; cy=e.touches[0].clientY; e.preventDefault(); } else { cx=e.clientX; cy=e.clientY; }
-                const canvasX = (cx-rect.left)*scaleX, canvasY = (cy-rect.top)*scaleY;
-                const offX = canvas.width/2 - cellSize/2, offY = canvas.height/2 - cellSize/2;
-                const gx = Math.floor((canvasX - offX)/cellSize), gy = Math.floor((canvasY - offY)/cellSize);
-                if (gx>=0 && gx<viewSize && gy>=0 && gy<viewSize) {
-                    const wx = player.x + gx - Math.floor(viewSize/2), wy = player.y + gy - Math.floor(viewSize/2);
-                    if (mode==='dig') digBlock(wx, wy);
-                    else actionAt(wx, wy);
-                }
-            });
-            canvas.addEventListener('touchstart', (e)=>{ e.preventDefault(); canvas.click(); });
+            upBtn.onclick = ()=>movePlayer(0,-1);
+            downBtn.onclick = ()=>movePlayer(0,1);
+            leftBtn.onclick = ()=>movePlayer(-1,0);
+            rightBtn.onclick = ()=>movePlayer(1,0);
+            modeBtn.onclick = toggleMode;
+            woodBlockBtn.onclick = setWoodBlock;
+            stoneBlockBtn.onclick = setStoneBlock;
+            swordBtn.onclick = setSwordMode;
+            newGameBtn.onclick = newGame;
+            closeBtn.onclick = () => {
+                window.removeEventListener('keydown', handleKey);
+                cancelAnimationFrame(animationId);
+                window.mcGameActive.remove();
+                window.mcGameActive = null;
+            };
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('touchstart', (e)=>{ e.preventDefault(); handleCanvasClick(e); });
+
             newGame();
-            cellSize = canvas.width / viewSize;
-            window.mcLastTime = performance.now();
-            window.mcAnim = requestAnimationFrame(updateGame);
+            lastUpdate = performance.now();
+            animationId = requestAnimationFrame(gameLoop);
         }
 
         minecraftIcon.onclick = () => {
             const pnl = document.getElementById('unifiedGamePanel');
             if (pnl) pnl.style.display = 'none';
-            startMinecraft();
+            startGame();
         };
     });
 })();
