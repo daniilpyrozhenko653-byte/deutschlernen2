@@ -8985,6 +8985,343 @@ if(p) {
         };
     });
 })();
+
+
+
+    // ========== MINER: 2D-песочница (а-ля Minecraft) ==========
+(function addMinerGame() {
+    function waitForPanel(callback) {
+        const panel = document.getElementById('unifiedGamePanel');
+        if (panel) callback(panel);
+        else setTimeout(() => waitForPanel(callback), 100);
+    }
+
+    waitForPanel((panel) => {
+        if (document.getElementById('gameMinerIcon')) return;
+
+        const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
+        if (!gamesContainer) return;
+
+        const minerIcon = document.createElement('div');
+        minerIcon.id = 'gameMinerIcon';
+        minerIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
+        minerIcon.innerHTML = `<div style="font-size:48px;">⛏️🧱</div><div style="color:white;">Miner</div>`;
+        gamesContainer.appendChild(minerIcon);
+
+        function startMiner() {
+            if (window.minerGameActive) {
+                window.minerGameActive.remove();
+                if (window.minerInterval) clearInterval(window.minerInterval);
+            }
+
+            const gameDiv = document.createElement('div');
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+            gameDiv.innerHTML = `
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:hidden;">
+                    <div style="background:#5d3a1a; padding:8px; text-align:center; color:white; font-weight:bold;">⛏️ MINER — копай и строй</div>
+                    <canvas id="minerCanvas" width="400" height="400" style="width:100%; height:auto; background:#1e2a2e; display:block;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:12px;">
+                        <span>🪓 Режим: <span id="minerMode">копать</span></span>
+                        <span>📦 Дерево: <span id="minerWood">0</span></span>
+                        <span>🪨 Камень: <span id="minerStone">0</span></span>
+                        <span>⚙️ Железо: <span id="minerIron">0</span></span>
+                    </div>
+                    <div style="display:flex; gap:8px; padding:8px;">
+                        <button id="minerModeBtn" style="flex:1; background:#f39c12; border:none; padding:6px; border-radius:20px;">🔨 Копать / Строить</button>
+                        <button id="minerNewGameBtn" style="flex:1; background:#27ae60; border:none; padding:6px; border-radius:20px;">🔄 Новая карта</button>
+                        <button id="minerCloseBtn" style="flex:1; background:#c0392b; border:none; padding:6px; border-radius:20px;">✖ Закрыть</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; padding:0 8px 8px 8px;">
+                        <button id="minerUp" style="background:#1abc9c; border:none; padding:8px;">▲</button>
+                        <button id="minerLeft" style="background:#1abc9c; border:none; padding:8px;">◀</button>
+                        <button id="minerDown" style="background:#1abc9c; border:none; padding:8px;">▼</button>
+                        <button id="minerRight" style="background:#1abc9c; border:none; padding:8px;">▶</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(gameDiv);
+            window.minerGameActive = gameDiv;
+
+            const canvas = document.getElementById('minerCanvas');
+            const ctx = canvas.getContext('2d');
+            const modeSpan = document.getElementById('minerMode');
+            const woodSpan = document.getElementById('minerWood');
+            const stoneSpan = document.getElementById('minerStone');
+            const ironSpan = document.getElementById('minerIron');
+            const modeBtn = document.getElementById('minerModeBtn');
+            const newGameBtn = document.getElementById('minerNewGameBtn');
+            const closeBtn = document.getElementById('minerCloseBtn');
+            const upBtn = document.getElementById('minerUp');
+            const downBtn = document.getElementById('minerDown');
+            const leftBtn = document.getElementById('minerLeft');
+            const rightBtn = document.getElementById('minerRight');
+
+            // Параметры мира
+            const worldSize = 20;
+            const cellSize = 400 / worldSize;
+            let world = [];
+            let player = { x: 10, y: 10 };
+            let inventory = { wood: 0, stone: 0, iron: 0 };
+            let mode = 'dig'; // 'dig' или 'build'
+            let selectedBlock = 'wood'; // блок для постройки
+
+            // Типы блоков
+            const blocks = {
+                0: { name: 'пустота', color: '#1e2a2e', diggable: false, drops: null },
+                1: { name: 'трава', color: '#5d8c48', diggable: true, drops: { wood: 1 }, hardness: 1 },
+                2: { name: 'камень', color: '#7f8c8d', diggable: true, drops: { stone: 1 }, hardness: 2 },
+                3: { name: 'железная руда', color: '#b5a47b', diggable: true, drops: { iron: 1 }, hardness: 3 },
+                4: { name: 'дерево', color: '#8B5A2B', diggable: true, drops: { wood: 2 }, hardness: 1 },
+                5: { name: 'доски (строй)', color: '#c19a6b', diggable: true, drops: { wood: 1 }, hardness: 1 },
+                6: { name: 'каменная стена', color: '#95a5a6', diggable: true, drops: { stone: 1 }, hardness: 2 }
+            };
+
+            // Генерация мира
+            function generateWorld() {
+                world = Array(worldSize).fill().map(() => Array(worldSize).fill(0));
+                // Земля
+                for (let i = 0; i < worldSize; i++) {
+                    for (let j = 0; j < worldSize; j++) {
+                        if (j > 12) world[i][j] = 1; // трава сверху
+                        else if (j > 15) world[i][j] = 2; // камень глубже
+                        else world[i][j] = 0;
+                    }
+                }
+                // Несколько деревьев
+                for (let t = 0; t < 8; t++) {
+                    let x = 3 + Math.floor(Math.random() * 14);
+                    let y = 11;
+                    if (world[x][y] === 1) {
+                        world[x][y] = 4; // дерево
+                        if (y-1 >= 0 && world[x][y-1] === 0) world[x][y-1] = 4;
+                    }
+                }
+                // Железо
+                for (let i = 0; i < 12; i++) {
+                    let x = Math.floor(Math.random() * worldSize);
+                    let y = 16 + Math.floor(Math.random() * 3);
+                    if (world[x][y] === 2) world[x][y] = 3;
+                }
+                // Камни
+                for (let i = 0; i < 20; i++) {
+                    let x = Math.floor(Math.random() * worldSize);
+                    let y = 13 + Math.floor(Math.random() * 5);
+                    if (world[x][y] === 1) world[x][y] = 2;
+                }
+            }
+
+            // Обновить UI инвентаря
+            function updateInventoryUI() {
+                woodSpan.innerText = inventory.wood;
+                stoneSpan.innerText = inventory.stone;
+                ironSpan.innerText = inventory.iron;
+            }
+
+            // Копать блок
+            function digBlock(x, y) {
+                const blockId = world[x][y];
+                const block = blocks[blockId];
+                if (!block || !block.diggable) return false;
+                // Добавляем ресурсы
+                if (block.drops) {
+                    if (block.drops.wood) inventory.wood += block.drops.wood;
+                    if (block.drops.stone) inventory.stone += block.drops.stone;
+                    if (block.drops.iron) inventory.iron += block.drops.iron;
+                    updateInventoryUI();
+                }
+                world[x][y] = 0;
+                return true;
+            }
+
+            // Построить блок
+            function buildBlock(x, y) {
+                if (world[x][y] !== 0) return false;
+                let blockToPlace = null;
+                if (selectedBlock === 'wood' && inventory.wood >= 1) {
+                    blockToPlace = 5;
+                    inventory.wood -= 1;
+                } else if (selectedBlock === 'stone' && inventory.stone >= 1) {
+                    blockToPlace = 6;
+                    inventory.stone -= 1;
+                } else {
+                    return false;
+                }
+                world[x][y] = blockToPlace;
+                updateInventoryUI();
+                return true;
+            }
+
+            // Попытка действия (копать или строить)
+            function actionAt(x, y) {
+                if (mode === 'dig') {
+                    digBlock(x, y);
+                } else {
+                    buildBlock(x, y);
+                }
+                drawWorld();
+            }
+
+            // Движение игрока
+            function movePlayer(dx, dy) {
+                const newX = player.x + dx;
+                const newY = player.y + dy;
+                if (newX < 0 || newX >= worldSize || newY < 0 || newY >= worldSize) return;
+                // Нельзя ходить сквозь блоки? В майнкрафт-песочнице обычно можно ходить по блокам, но не входить в твёрдые?
+                // Сделаем проще: можно ходить по любым клеткам (в том числе по блокам) — игрок стоит на них.
+                player.x = newX;
+                player.y = newY;
+                drawWorld();
+            }
+
+            // Отрисовка мира и игрока
+            function drawWorld() {
+                ctx.clearRect(0, 0, 400, 400);
+                for (let i = 0; i < worldSize; i++) {
+                    for (let j = 0; j < worldSize; j++) {
+                        const blockId = world[i][j];
+                        const block = blocks[blockId] || blocks[0];
+                        ctx.fillStyle = block.color;
+                        ctx.fillRect(i * cellSize, j * cellSize, cellSize - 0.5, cellSize - 0.5);
+                        // Текстура для железа
+                        if (blockId === 3) {
+                            ctx.fillStyle = '#4a3b22';
+                            ctx.fillRect(i * cellSize + 4, j * cellSize + 4, 4, 4);
+                        }
+                    }
+                }
+                // Игрок (стилизованный)
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.arc(player.x * cellSize + cellSize/2, player.y * cellSize + cellSize/2, cellSize * 0.35, 0, 2*Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(player.x * cellSize + cellSize/2 - 3, player.y * cellSize + cellSize/2 - 3, 2, 0, 2*Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(player.x * cellSize + cellSize/2 + 3, player.y * cellSize + cellSize/2 - 3, 2, 0, 2*Math.PI);
+                ctx.fill();
+                // Рамка выбранного режима
+                ctx.strokeStyle = mode === 'dig' ? '#e74c3c' : '#2ecc71';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(player.x * cellSize, player.y * cellSize, cellSize, cellSize);
+            }
+
+            // Смена режима
+            function toggleMode() {
+                if (mode === 'dig') {
+                    mode = 'build';
+                    modeSpan.innerText = 'строить (дерево)';
+                } else {
+                    mode = 'dig';
+                    modeSpan.innerText = 'копать';
+                }
+                drawWorld();
+            }
+
+            // Смена выбранного блока для постройки (по нажатию на кнопку можно добавить, но пока просто по циклу)
+            function cycleBuildBlock() {
+                if (selectedBlock === 'wood') {
+                    selectedBlock = 'stone';
+                    modeSpan.innerText = 'строить (камень)';
+                } else {
+                    selectedBlock = 'wood';
+                    modeSpan.innerText = 'строить (дерево)';
+                }
+            }
+
+            // Новая игра
+            function newGame() {
+                generateWorld();
+                player = { x: 10, y: 10 };
+                inventory = { wood: 0, stone: 0, iron: 0 };
+                mode = 'dig';
+                selectedBlock = 'wood';
+                modeSpan.innerText = 'копать';
+                updateInventoryUI();
+                drawWorld();
+            }
+
+            // Управление с клавиатуры
+            function handleKey(e) {
+                if (!window.minerGameActive) return;
+                const key = e.key;
+                e.preventDefault();
+                switch(key) {
+                    case 'ArrowUp': movePlayer(0, -1); break;
+                    case 'ArrowDown': movePlayer(0, 1); break;
+                    case 'ArrowLeft': movePlayer(-1, 0); break;
+                    case 'ArrowRight': movePlayer(1, 0); break;
+                    case ' ': case 'Space': 
+                        actionAt(player.x, player.y);
+                        break;
+                    case 'm': toggleMode(); break;
+                    case 'c': cycleBuildBlock(); break;
+                }
+            }
+            window.addEventListener('keydown', handleKey);
+
+            // Сенсорные кнопки
+            upBtn.onclick = () => movePlayer(0, -1);
+            downBtn.onclick = () => movePlayer(0, 1);
+            leftBtn.onclick = () => movePlayer(-1, 0);
+            rightBtn.onclick = () => movePlayer(1, 0);
+            modeBtn.onclick = () => toggleMode();
+            // Долгое нажатие на кнопку режима для смены блока
+            modeBtn.oncontextmenu = (e) => { e.preventDefault(); cycleBuildBlock(); };
+            newGameBtn.onclick = () => newGame();
+            closeBtn.onclick = () => {
+                window.removeEventListener('keydown', handleKey);
+                window.minerGameActive.remove();
+                window.minerGameActive = null;
+            };
+
+            // Обработка кликов по canvas для копания/строительства
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                let cx, cy;
+                if (e.touches) {
+                    cx = e.touches[0].clientX;
+                    cy = e.touches[0].clientY;
+                    e.preventDefault();
+                } else {
+                    cx = e.clientX;
+                    cy = e.clientY;
+                }
+                const canvasX = (cx - rect.left) * scaleX;
+                const canvasY = (cy - rect.top) * scaleY;
+                const x = Math.floor(canvasX / cellSize);
+                const y = Math.floor(canvasY / cellSize);
+                if (x >= 0 && x < worldSize && y >= 0 && y < worldSize) {
+                    actionAt(x, y);
+                }
+            });
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const touch = e.touches[0];
+                const canvasX = (touch.clientX - rect.left) * scaleX;
+                const canvasY = (touch.clientY - rect.top) * scaleY;
+                const x = Math.floor(canvasX / cellSize);
+                const y = Math.floor(canvasY / cellSize);
+                if (x >= 0 && x < worldSize && y >= 0 && y < worldSize) {
+                    actionAt(x, y);
+                }
+            });
+
+            newGame();
+        }
+
+        minerIcon.onclick = () => {
+            document.getElementById('unifiedGamePanel').style.display = 'none';
+            startMiner();
+        };
+    });
+})();
     
 
 
