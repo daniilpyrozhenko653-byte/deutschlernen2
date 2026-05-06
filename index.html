@@ -8992,358 +8992,167 @@ if(p) {
 
 
 
-
-    // ========== ЗОМБИ ШУТЕР (Top-down) ==========
-(function addZombieShooter() {
-    function waitForPanel(callback) {
-        const panel = document.getElementById('unifiedGamePanel');
-        if (panel) callback(panel);
-        else setTimeout(() => waitForPanel(callback), 100);
-    }
-
+// ========== "ГЛУБИННЫЕ ЗЕМЛИ" (DEEPLANDS) - Полноценная Terraria-подобная песочница ==========
+(function addDeeplands() {
+    // ... (вспомогательная загрузка) ...
     waitForPanel((panel) => {
-        if (document.getElementById('gameShooterIcon')) return;
-
+        if (document.getElementById('gameDeeplandsIcon')) return;
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
+        const deepIcon = document.createElement('div');
+        deepIcon.id = 'gameDeeplandsIcon';
+        deepIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
+        deepIcon.innerHTML = `<div style="font-size:48px;">⛏️🌎</div><div style="color:white;">Deeplands</div>`;
+        gamesContainer.appendChild(deepIcon);
+        deepIcon.onclick = () => { document.getElementById('unifiedGamePanel').style.display = 'none'; startDeeplands(); };
+    });
 
-        const shooterIcon = document.createElement('div');
-        shooterIcon.id = 'gameShooterIcon';
-        shooterIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
-        shooterIcon.innerHTML = `<div style="font-size:48px;">🔫🧟</div><div style="color:white;">Зомби шутер</div>`;
-        gamesContainer.appendChild(shooterIcon);
-
-        function startShooter() {
-            if (window.shooterActive) {
-                window.shooterActive.remove();
-                if (window.shooterAnim) cancelAnimationFrame(window.shooterAnim);
-            }
-
-            const gameDiv = document.createElement('div');
-            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
-            gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
-                    <div style="background:#1e2a2e; padding:8px; text-align:center; color:white;">🔫 ЗОМБИ ШУТЕР</div>
-                    <canvas id="shooterCanvas" width="700" height="500" style="width:100%; height:auto; display:block; background:#1a1a2e; cursor:crosshair;"></canvas>
-                    <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:6px 10px;">
-                        <span>❤️ Здоровье: <span id="shooterHp">100</span></span>
-                        <span>🔫 Очки: <span id="shooterScore">0</span></span>
-                        <span>💀 Убито: <span id="shooterKills">0</span></span>
-                    </div>
-                    <div style="display:flex; gap:8px; background:#34495e; padding:8px; justify-content:center;">
-                        <button id="shooterRestart" style="background:#27ae60; border:none; padding:5px 12px; border-radius:20px;">🔄 Новая игра</button>
-                        <button id="shooterClose" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px;">✖ Закрыть</button>
-                    </div>
-                    <div id="shooterToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
+    function startDeeplands() {
+        if (window.deepActive) { window.deepActive.remove(); cancelAnimationFrame(window.deepAnim); clearInterval(window.deepInterval); }
+        const gameDiv = document.createElement('div');
+        gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0f0f; z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+        gameDiv.innerHTML = `
+            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:800px; overflow:hidden; position:relative;">
+                <div style="background:#1e2a2e; padding:8px; text-align:center; color:#ffd966; font-weight:bold;">ГЛУБИННЫЕ ЗЕМЛИ ⛏️</div>
+                <canvas id="deepCanvas" width="800" height="600" style="width:100%; height:auto; background:#2c1e16; display:block; cursor:crosshair;"></canvas>
+                <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:6px 10px; font-size:13px; flex-wrap:wrap;">
+                    <span>❤️ <span id="deepHp">100</span></span>
+                    <span>🪙 <span id="deepGold">0</span></span>
+                    <div><span>🗡️ <span id="deepAtk">10</span></span> <span>🛡️ <span id="deepDef">5</span></span></div>
+                    <span>⌛ <span id="deepTime">День</span></span>
                 </div>
-            `;
-            document.body.appendChild(gameDiv);
-            window.shooterActive = gameDiv;
+                <div style="display:flex; gap:5px; background:#34495e; padding:6px; justify-content:center; flex-wrap:wrap;">
+                    <button id="btnCrafting" style="background:#f39c12; padding:4px 12px; border-radius:15px;">🏭 Крафт</button>
+                    <button id="btnInventory" style="background:#3498db; padding:4px 12px; border-radius:15px;">🎒 Инвентарь</button>
+                    <button id="btnBuild" style="background:#27ae60; padding:4px 12px; border-radius:15px;">🧱 Строить</button>
+                    <button id="btnClose" style="background:#e74c3c; padding:4px 12px; border-radius:15px;">✖ Закрыть</button>
+                </div>
+                <div id="deepToast" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:4px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
+            </div>
+        `;
+        document.body.appendChild(gameDiv);
+        window.deepActive = gameDiv;
 
-            const canvas = document.getElementById('shooterCanvas');
-            const ctx = canvas.getContext('2d');
-            const hpSpan = document.getElementById('shooterHp');
-            const scoreSpan = document.getElementById('shooterScore');
-            const killsSpan = document.getElementById('shooterKills');
-            const toastDiv = document.getElementById('shooterToast');
+        const canvas = document.getElementById('deepCanvas'); canvas.width = 800; canvas.height = 600;
+        const ctx = canvas.getContext('2d');
+        const hpSpan = document.getElementById('deepHp'); const goldSpan = document.getElementById('deepGold');
+        const atkSpan = document.getElementById('deepAtk'); const defSpan = document.getElementById('deepDef');
+        const timeSpan = document.getElementById('deepTime'); const toastDiv = document.getElementById('deepToast');
 
-            let cw = 700, ch = 500;
-            canvas.width = cw; canvas.height = ch;
+        let gameRunning = true; let buildMode = false; let inventoryOpen = false; let craftOpen = false;
+        const CHUNK_SIZE = 32; const TILE_SIZE = 32;
+        let world = { map: new Map() };
+        let player = { x: 400, y: 300, hp: 100, maxHp: 100, atk: 10, def: 5, gold: 0, inv: { wood: 10, stone: 10, coal: 5, iron: 0, goldOre: 0, sword: null, pickaxe: { level: 1 }, armor: null } };
+        let enemies = []; let dayTime = 0.25; let dayDuration = 60;
+        let mouseWorld = { x: 0, y: 0 };
+        let placedBlocks = new Map();
+        let viewOffset = { x: 0, y: 0 };
 
-            // Игрок
-            let player = { x: cw/2, y: ch/2, radius: 15, hp: 100, maxHp: 100 };
-            let score = 0;
-            let kills = 0;
-            let gameRunning = true;
-
-            // Враги (зомби)
-            let enemies = [];
-            // Пули
-            let bullets = [];
-
-            // Управление движением (клавиши/сенсорные кнопки)
-            let keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, s: false, a: false, d: false };
-            let mouseX = player.x, mouseY = player.y; // направление прицела
-            let shootCooldown = 0;
-            let shootDelay = 10; // кадров между выстрелами
-            let enemySpawnCooldown = 0;
-            let enemySpawnDelay = 40;
-
-            // Сенсорные кнопки для движения (можно добавить позже, пока клавиатура)
-            function addMoveButtons() {
-                const btnDiv = document.createElement('div');
-                btnDiv.style.cssText = 'position:absolute; bottom:10px; left:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px; background:rgba(0,0,0,0.5); padding:5px; border-radius:15px; z-index:100004;';
-                btnDiv.innerHTML = `
-                    <div></div><button id="moveUp" style="background:#1abc9c; padding:8px 12px;">▲</button><div></div>
-                    <button id="moveLeft" style="background:#1abc9c; padding:8px 12px;">◀</button>
-                    <button id="moveDown" style="background:#1abc9c; padding:8px 12px;">▼</button>
-                    <button id="moveRight" style="background:#1abc9c; padding:8px 12px;">▶</button>
-                `;
-                gameDiv.appendChild(btnDiv);
-                document.getElementById('moveUp').onclick = () => { player.y = Math.max(player.radius, player.y - 20); };
-                document.getElementById('moveDown').onclick = () => { player.y = Math.min(ch - player.radius, player.y + 20); };
-                document.getElementById('moveLeft').onclick = () => { player.x = Math.max(player.radius, player.x - 20); };
-                document.getElementById('moveRight').onclick = () => { player.x = Math.min(cw - player.radius, player.x + 20); };
-            }
-            addMoveButtons();
-
-            // Обработка клавиатуры
-            window.addEventListener('keydown', (e) => {
-                if (!window.shooterActive) return;
-                if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
-                e.preventDefault();
-            });
-            window.addEventListener('keyup', (e) => {
-                if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
-                e.preventDefault();
-            });
-
-            // Прицел и стрельба мышкой/тачем
-            canvas.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                mouseX = (e.clientX - rect.left) * scaleX;
-                mouseY = (e.clientY - rect.top) * scaleY;
-            });
-            canvas.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                mouseX = (e.touches[0].clientX - rect.left) * scaleX;
-                mouseY = (e.touches[0].clientY - rect.top) * scaleY;
-            });
-            canvas.addEventListener('mousedown', (e) => {
-                if (!gameRunning) return;
-                e.preventDefault();
-                shoot();
-            });
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                shoot();
-            });
-
-            function shoot() {
-                if (shootCooldown > 0) return;
-                let dx = mouseX - player.x;
-                let dy = mouseY - player.y;
-                let len = Math.hypot(dx, dy);
-                if (len < 0.01) return;
-                let vx = dx / len * 8;
-                let vy = dy / len * 8;
-                bullets.push({ x: player.x, y: player.y, radius: 4, vx: vx, vy: vy, life: 1 });
-                shootCooldown = shootDelay;
-            }
-
-            // Спавн зомби
-            function spawnEnemy() {
-                let side = Math.floor(Math.random() * 4);
-                let x, y;
-                if (side === 0) { x = Math.random() * cw; y = -20; }
-                else if (side === 1) { x = cw + 20; y = Math.random() * ch; }
-                else if (side === 2) { x = Math.random() * cw; y = ch + 20; }
-                else { x = -20; y = Math.random() * ch; }
-                let speed = 1 + Math.random() * 2;
-                let hp = Math.floor(2 + Math.random() * 3);
-                enemies.push({ x, y, radius: 12, hp, maxHp: hp, speed, scoreValue: 10 });
-            }
-
-            // Обновление
-            function update() {
-                if (!gameRunning) return;
-
-                // Движение игрока
-                let moveX = 0, moveY = 0;
-                if (keys.ArrowUp || keys.w) moveY -= 1;
-                if (keys.ArrowDown || keys.s) moveY += 1;
-                if (keys.ArrowLeft || keys.a) moveX -= 1;
-                if (keys.ArrowRight || keys.d) moveX += 1;
-                if (moveX !== 0 || moveY !== 0) {
-                    let len = Math.hypot(moveX, moveY);
-                    moveX /= len; moveY /= len;
-                    player.x += moveX * 5;
-                    player.y += moveY * 5;
+        // --- Procedural World Generation ---
+        function noise(n) { n = (n >> 1) ^ n; n = (n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff; return n / 0x7fffffff; }
+        function getBlock(wx, wy) {
+            if (wy > 20) { let base = (Math.sin(wx*0.1) + Math.sin(wy*0.1))*0.5 + 0.5; return (base > 0.7) ? (noise(wx+wy*1000) > 0.6 ? 3 : 2) : (wy > 30 ? (noise(wx*0.2) > 0.8 ? 4 : 2) : 1); }
+            let val = Math.sin(wx*0.1)*0.5 + 0.5; return (wy < val*20+8) ? 1 : (wy < 22 ? 2 : 0);
+        }
+        function updateChunk(cx, cy) {
+            for (let x = cx*CHUNK_SIZE; x < (cx+1)*CHUNK_SIZE; x++)
+                for (let y = cy*CHUNK_SIZE; y < (cy+1)*CHUNK_SIZE; y++) {
+                    let id = placedBlocks.get(`${x},${y}`);
+                    if (id === undefined) id = getBlock(x, y);
+                    world.map.set(`${x},${y}`, id);
                 }
-                player.x = Math.min(Math.max(player.x, player.radius), cw - player.radius);
-                player.y = Math.min(Math.max(player.y, player.radius), ch - player.radius);
+        }
+        function getBlockId(wx, wy) { return world.map.get(`${wx},${wy}`) ?? 0; }
+        function setBlock(wx, wy, id) { world.map.set(`${wx},${wy}`, id); if (id === 0) placedBlocks.delete(`${wx},${wy}`); else placedBlocks.set(`${wx},${wy}`, id); }
 
-                // Перезарядка
-                if (shootCooldown > 0) shootCooldown--;
+        // --- Player & Movement ---
+        const keys = { w: false, s: false, a: false, d: false };
+        function movePlayer() {
+            let mx = 0, my = 0;
+            if (keys.w) my -= 1; if (keys.s) my += 1; if (keys.a) mx -= 1; if (keys.d) mx += 1;
+            if (mx !== 0 || my !== 0) { let len = Math.hypot(mx, my); mx /= len; my /= len; }
+            let speed = 4;
+            let nx = player.x + mx*speed; let ny = player.y + my*speed;
+            let cx = Math.floor(nx / TILE_SIZE), cy = Math.floor(ny / TILE_SIZE);
+            if (getBlockId(cx, cy) === 0) { player.x = nx; player.y = ny; updateView(); }
+        }
+        function updateView() { viewOffset.x = player.x - canvas.width/2; viewOffset.y = player.y - canvas.height/2; }
 
-                // Пули
-                for (let i=0; i<bullets.length; i++) {
-                    bullets[i].x += bullets[i].vx;
-                    bullets[i].y += bullets[i].vy;
-                    if (bullets[i].x < -50 || bullets[i].x > cw+50 || bullets[i].y < -50 || bullets[i].y > ch+50) {
-                        bullets.splice(i,1);
-                        i--;
-                        continue;
-                    }
-                    // Столкновение с врагами
-                    let hit = false;
-                    for (let j=0; j<enemies.length; j++) {
-                        let e = enemies[j];
-                        let dx = bullets[i].x - e.x;
-                        let dy = bullets[i].y - e.y;
-                        if (Math.hypot(dx,dy) < e.radius + bullets[i].radius) {
-                            e.hp -= 1;
-                            bullets.splice(i,1);
-                            if (e.hp <= 0) {
-                                score += e.scoreValue;
-                                kills++;
-                                enemies.splice(j,1);
-                                updateUI();
-                            }
-                            hit = true;
-                            break;
-                        }
-                    }
-                    if (hit) { i--; continue; }
-                }
-
-                // Враги
-                for (let i=0; i<enemies.length; i++) {
-                    let e = enemies[i];
-                    let dx = player.x - e.x;
-                    let dy = player.y - e.y;
-                    let len = Math.hypot(dx,dy);
-                    if (len > 0.01) {
-                        let move = e.speed;
-                        e.x += dx / len * move;
-                        e.y += dy / len * move;
-                    }
-                    // Столкновение с игроком
-                    if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius) {
-                        player.hp -= 10;
-                        enemies.splice(i,1);
-                        i--;
-                        updateUI();
-                        if (player.hp <= 0) {
-                            gameRunning = false;
-                            showToast("Game Over! Нажмите Новая игра", true);
-                        }
-                        continue;
-                    }
-                }
-
-                // Спавн врагов
-                if (enemySpawnCooldown <= 0 && enemies.length < 15) {
-                    spawnEnemy();
-                    enemySpawnCooldown = enemySpawnDelay;
-                } else {
-                    enemySpawnCooldown--;
-                }
-                updateUI();
+        // --- Combat & Enemies ---
+        class Enemy { constructor(x, y, type) { this.x = x; this.y = y; this.type = type; this.hp = type === 'slime' ? 20 : 35; this.atk = type === 'slime' ? 8 : 15; this.radius = 20; } }
+        function spawnEnemy() { if (enemies.length < 8) enemies.push(new Enemy(player.x + (Math.random()-0.5)*300, player.y + (Math.random()-0.5)*300, Math.random() > 0.6 ? 'goblin' : 'slime')); }
+        function updateEnemies() {
+            for (let i = 0; i < enemies.length; i++) {
+                let e = enemies[i]; let dx = player.x - e.x, dy = player.y - e.y; let dist = Math.hypot(dx, dy);
+                if (dist > 0.1) { let step = 1.5; e.x += dx/dist * step; e.y += dy/dist * step; }
+                if (dist < 25) { player.hp -= Math.max(1, e.atk - player.def/2); updateUI(); if (player.hp <= 0) gameRunning = false; enemies.splice(i,1); }
             }
-
-            function updateUI() {
-                hpSpan.innerText = Math.max(0, player.hp);
-                scoreSpan.innerText = score;
-                killsSpan.innerText = kills;
-            }
-
-            function showToast(msg, isErr=false) {
-                toastDiv.innerText = msg;
-                toastDiv.style.backgroundColor = isErr ? '#e74c3c' : '#2ecc71';
-                toastDiv.style.opacity = '1';
-                setTimeout(() => toastDiv.style.opacity = '0', 2000);
-            }
-
-            // Отрисовка
-            function draw() {
-                ctx.clearRect(0, 0, cw, ch);
-                // Трава/пол
-                ctx.fillStyle = '#2d2d2d';
-                ctx.fillRect(0, 0, cw, ch);
-                // Игрок
-                ctx.fillStyle = '#3498db';
-                ctx.beginPath();
-                ctx.arc(player.x, player.y, player.radius, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.fillStyle = '#fff';
-                ctx.font = "20px Arial";
-                ctx.fillText("😎", player.x-12, player.y+8);
-                // Направление прицела (линия)
-                ctx.strokeStyle = '#f1c40f';
-                ctx.beginPath();
-                ctx.moveTo(player.x, player.y);
-                ctx.lineTo(mouseX, mouseY);
-                ctx.stroke();
-                // Враги
-                for (let e of enemies) {
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.beginPath();
-                    ctx.arc(e.x, e.y, e.radius, 0, 2*Math.PI);
-                    ctx.fill();
-                    ctx.fillStyle = '#fff';
-                    ctx.font = "16px Arial";
-                    ctx.fillText("🧟", e.x-10, e.y+6);
-                    // полоска здоровья
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.fillRect(e.x-12, e.y-15, 24, 4);
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.fillRect(e.x-12, e.y-15, 24 * (e.hp/e.maxHp), 4);
-                }
-                // Пули
-                for (let b of bullets) {
-                    ctx.fillStyle = '#f1c40f';
-                    ctx.beginPath();
-                    ctx.arc(b.x, b.y, b.radius, 0, 2*Math.PI);
-                    ctx.fill();
-                }
-                // Полоска здоровья игрока
-                ctx.fillStyle = '#e74c3c';
-                ctx.fillRect(20, 20, 200, 15);
-                ctx.fillStyle = '#2ecc71';
-                ctx.fillRect(20, 20, 200 * (player.hp/player.maxHp), 15);
-                // Если игра окончена
-                if (!gameRunning) {
-                    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                    ctx.fillRect(0, 0, cw, ch);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = "30px Arial";
-                    ctx.fillText("GAME OVER", cw/2-100, ch/2);
-                }
-            }
-
-            function gameLoop() {
-                if (!window.shooterActive) return;
-                update();
-                draw();
-                requestAnimationFrame(gameLoop);
-            }
-
-            // Рестарт
-            function restart() {
-                player = { x: cw/2, y: ch/2, radius: 15, hp: 100, maxHp: 100 };
-                enemies = [];
-                bullets = [];
-                score = 0;
-                kills = 0;
-                gameRunning = true;
-                shootCooldown = 0;
-                enemySpawnCooldown = 0;
-                updateUI();
-                showToast("Новая игра!");
-            }
-
-            document.getElementById('shooterRestart').onclick = () => restart();
-            document.getElementById('shooterClose').onclick = () => {
-                if (window.shooterAnim) cancelAnimationFrame(window.shooterAnim);
-                gameDiv.remove();
-                window.shooterActive = null;
-            };
-
-            restart();
-            gameLoop();
+            if (enemies.length === 0 && dayTime > 0.8) { for(let i=0; i<3; i++) spawnEnemy(); }
         }
 
-        shooterIcon.onclick = () => {
-            document.getElementById('unifiedGamePanel').style.display = 'none';
-            startShooter();
-        };
-    });
+        // --- Inventory & Crafting ---
+        function updateUI() { hpSpan.innerText = player.hp; goldSpan.innerText = player.gold; atkSpan.innerText = player.atk; defSpan.innerText = player.def; timeSpan.innerText = dayTime > 0.7 ? "🌙 Ночь" : "☀️ День"; }
+        function craft(type) {
+            let recipes = { sword: { wood: 5, stone: 0, iron: 3, gold: 1, cost: 0, effect: () => { player.atk = 20; if(player.sword) player.gold += 5; player.sword = 'iron'; } } };
+            if (recipes[type] && player.inv.wood >= recipes[type].wood && player.inv.stone >= recipes[type].stone && player.inv.iron >= recipes[type].iron && player.gold >= recipes[type].cost) {
+                player.inv.wood -= recipes[type].wood; player.inv.stone -= recipes[type].stone; player.inv.iron -= recipes[type].iron; player.gold -= recipes[type].cost;
+                recipes[type].effect(); updateUI(); showToast(`Создан ${type}!`);
+            } else showToast(`Не хватает ресурсов для ${type}!`, true);
+        }
+        function showToast(msg, err=false) { toastDiv.innerText = msg; toastDiv.style.backgroundColor = err ? '#e74c3c' : '#2ecc71'; toastDiv.style.opacity = '1'; setTimeout(() => toastDiv.style.opacity = '0', 2000); }
+
+        // --- Actions (Mine/Build) ---
+        function actionAt(wx, wy, isBuild) {
+            let block = getBlockId(wx, wy);
+            if (!isBuild && block !== 0) {
+                let reqPick = (block === 3 || block === 4) ? 2 : 1;
+                if (player.inv.pickaxe.level >= reqPick) {
+                    setBlock(wx, wy, 0);
+                    if (block === 1) { player.inv.wood++; showToast("+ Древесина"); }
+                    if (block === 2) { player.inv.stone++; showToast("+ Камень"); }
+                    if (block === 3) { player.inv.iron++; showToast("+ Железная руда"); }
+                    if (block === 4) { player.gold++; showToast("+ Золото"); }
+                    updateUI();
+                } else showToast("Ваша кирка слишком слаба!", true);
+            } else if (isBuild && player.inv.wood > 0 && block === 0) { setBlock(wx, wy, 1); player.inv.wood--; updateUI(); }
+        }
+
+        // --- Game Loop & Drawing ---
+        function draw() {
+            if (!gameRunning) { ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle='white'; ctx.font='20px Arial'; ctx.fillText("GAME OVER", canvas.width/2-70, canvas.height/2); return; }
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            for (let x = -2; x <= canvas.width/TILE_SIZE+2; x++) for (let y = -2; y <= canvas.height/TILE_SIZE+2; y++) {
+                let wx = Math.floor((x*TILE_SIZE + viewOffset.x)/TILE_SIZE), wy = Math.floor((y*TILE_SIZE + viewOffset.y)/TILE_SIZE);
+                let block = getBlockId(wx, wy); let colors = {0:'#1e1a1a',1:'#5d3a1a',2:'#7f8c8d',3:'#bdc3c7',4:'#f1c40f'};
+                ctx.fillStyle = colors[block] || '#2c3e50'; ctx.fillRect(x*TILE_SIZE - viewOffset.x%TILE_SIZE, y*TILE_SIZE - viewOffset.y%TILE_SIZE, TILE_SIZE-1, TILE_SIZE-1);
+            }
+            for(let e of enemies){ ctx.fillStyle = e.type === 'slime' ? '#2ecc71' : '#e67e22'; ctx.beginPath(); ctx.arc(e.x - viewOffset.x, e.y - viewOffset.y, e.radius, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#000'; ctx.fillRect(e.x-12 - viewOffset.x, e.y-15 - viewOffset.y, 24, 5); ctx.fillStyle = '#e74c3c'; ctx.fillRect(e.x-12 - viewOffset.x, e.y-15 - viewOffset.y, 24*(e.hp/(e.type==='slime'?20:35)), 5); }
+            ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.arc(player.x - viewOffset.x, player.y - viewOffset.y, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText("🗡️", player.x-12 - viewOffset.x, player.y+8 - viewOffset.y);
+            if(buildMode){ ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 2; ctx.strokeRect(Math.floor(mouseWorld.x/TILE_SIZE)*TILE_SIZE - viewOffset.x, Math.floor(mouseWorld.y/TILE_SIZE)*TILE_SIZE - viewOffset.y, TILE_SIZE, TILE_SIZE); }
+            if(inventoryOpen){ ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(100,100,400,300); ctx.fillStyle='white'; ctx.font='16px Arial'; ctx.fillText(`Дерево: ${player.inv.wood}`, 120,140); ctx.fillText(`Камень: ${player.inv.stone}`, 120,180); ctx.fillText(`Железо: ${player.inv.iron}`, 120,220); ctx.fillText(`Золото: ${player.gold}`, 120,260); }
+        }
+
+        function updateGame() { movePlayer(); updateEnemies(); dayTime += 0.001; if (dayTime >= 1) dayTime = 0; updateUI(); }
+
+        function gameLoop() { if (!gameRunning && !window.deepActive) return; updateGame(); draw(); requestAnimationFrame(gameLoop); }
+
+        // --- Event Handlers ---
+        function handleMouse(e, isTap=false) {
+            let rect = canvas.getBoundingClientRect(); let scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+            let cx = (e.clientX - rect.left)*scaleX + viewOffset.x, cy = (e.clientY - rect.top)*scaleY + viewOffset.y;
+            mouseWorld.x = cx; mouseWorld.y = cy;
+            if (e.type === 'click') { let wx = Math.floor(cx/TILE_SIZE), wy = Math.floor(cy/TILE_SIZE); actionAt(wx, wy, buildMode); }
+        }
+        canvas.addEventListener('click', handleMouse); canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleMouse(e.touches[0], true); });
+        window.addEventListener('keydown', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; if (e.key === 'b') { buildMode = !buildMode; showToast(buildMode ? "Режим стройки" : "Режим добычи"); } e.preventDefault(); });
+        window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+        document.getElementById('btnCrafting').onclick = () => { let w = prompt("Крафт: sword - меч (+атака)", "sword"); if(w) craft(w); };
+        document.getElementById('btnInventory').onclick = () => { inventoryOpen = !inventoryOpen; draw(); };
+        document.getElementById('btnBuild').onclick = () => { buildMode = !buildMode; showToast(buildMode ? "Стройка" : "Добыча"); };
+        document.getElementById('btnClose').onclick = () => { gameRunning = false; cancelAnimationFrame(window.deepAnim); clearInterval(window.deepInterval); gameDiv.remove(); window.deepActive = null; };
+        for(let cx = -5; cx <= 5; cx++) for(let cy = -5; cy <= 5; cy++) updateChunk(cx, cy);
+        gameLoop();
+    }
 })();
 
 
