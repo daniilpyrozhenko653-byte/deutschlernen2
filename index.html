@@ -7875,8 +7875,8 @@ window.localDict = localDict;
 })();
 
 
-    // ========== ДОБАВЛЕНИЕ ИГРЫ "ЗМЕЙКА ПРОТИВ ЗМЕЕК" ==========
-(function addSnakeBattleGame() {
+    // ========== ЗМЕЙКА (ПЕЧЕНЬЕ + ФРУКТЫ) - БЕЗ ДРУГИХ ЗМЕЕК ==========
+(function addSnakeGame() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -7892,7 +7892,7 @@ window.localDict = localDict;
         const snakeIcon = document.createElement('div');
         snakeIcon.id = 'gameSnakeIcon';
         snakeIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
-        snakeIcon.innerHTML = `<div style="font-size:48px;">🐍🍪</div><div style="color:white;">Змейка+змейки</div>`;
+        snakeIcon.innerHTML = `<div style="font-size:48px;">🐍🍪</div><div style="color:white;">Змейка</div>`;
         gamesContainer.appendChild(snakeIcon);
 
         // ---------- ИГРА ----------
@@ -7919,7 +7919,7 @@ window.localDict = localDict;
                         <button id="snakeRight" style="background:#1abc9c; border:none; padding:8px;">ПРАВО ▶</button>
                     </div>
                     <div id="snakeGameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px; border-radius:20px; text-align:center;">
-                        💀 Столкновение! 💀<br><button id="snakeRestartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
+                        💀 Игра окончена! 💀<br><button id="snakeRestartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
                     </div>
                     <button id="snakeCloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:8px;">Закрыть</button>
                 </div>
@@ -7927,7 +7927,6 @@ window.localDict = localDict;
             document.body.appendChild(gameDiv);
             window.snakeGameActive = gameDiv;
 
-            // ----- НАСТРОЙКИ -----
             const canvas = document.getElementById('snakeCanvas');
             const ctx = canvas.getContext('2d');
             const scoreSpan = document.getElementById('snakeScore');
@@ -7936,64 +7935,31 @@ window.localDict = localDict;
             const restartBtn = document.getElementById('snakeRestartBtn');
             const closeBtn = document.getElementById('snakeCloseBtn');
 
-            // Кнопки управления
             const upBtn = document.getElementById('snakeUp');
             const downBtn = document.getElementById('snakeDown');
             const leftBtn = document.getElementById('snakeLeft');
             const rightBtn = document.getElementById('snakeRight');
 
-            // Размеры: сетка 20x20, клетка 20px
             const gridSize = 20;
-            const cellSize = 20; // 400/20
+            const cellSize = 20;
             let gameRunning = true;
             let score = 0;
             let highScore = localStorage.getItem('snakeHigh') ? parseInt(localStorage.getItem('snakeHigh')) : 0;
             highSpan.innerText = highScore;
 
-            // ----- Змейка игрока -----
             let snake = [
                 {x: 10, y: 10},
                 {x: 9, y: 10},
                 {x: 8, y: 10},
                 {x: 7, y: 10}
             ];
-            let direction = 'RIGHT';   // текущее
+            let direction = 'RIGHT';
             let nextDirection = 'RIGHT';
             let food = {x: 15, y: 10};
-            let foodType = 'cookie'; // 'cookie' или 'fruit'
+            let foodType = 'cookie';
 
-            // ----- Другие змейки (AI) -----
-            // три змейки, каждая: массив сегментов, направление, задержка смены направления
-            const enemySnakes = [
-                { 
-                    body: [{x:5,y:5},{x:4,y:5},{x:3,y:5}], 
-                    dir: 'RIGHT', 
-                    changeCooldown: 0,
-                    color: '#e67e22'
-                },
-                { 
-                    body: [{x:15,y:15},{x:14,y:15},{x:13,y:15}], 
-                    dir: 'LEFT', 
-                    changeCooldown: 0,
-                    color: '#f1c40f'
-                },
-                { 
-                    body: [{x:5,y:15},{x:5,y:14},{x:5,y:13}], 
-                    dir: 'UP', 
-                    changeCooldown: 0,
-                    color: '#3498db'
-                }
-            ];
-
-            // Вспомогательная функция: случайная свободная клетка для еды
             function isFreeForFood(x, y) {
-                // Не на игроке
-                if (snake.some(seg => seg.x === x && seg.y === y)) return false;
-                // Не на других змейках
-                for (let es of enemySnakes) {
-                    if (es.body.some(seg => seg.x === x && seg.y === y)) return false;
-                }
-                return true;
+                return !snake.some(seg => seg.x === x && seg.y === y);
             }
 
             function spawnRandomFood() {
@@ -8003,86 +7969,30 @@ window.localDict = localDict;
                         if (isFreeForFood(i, j)) freeCells.push({x:i, y:j});
                     }
                 }
-                if (freeCells.length === 0) return; // победа, но игра бесконечная – просто не спавним
+                if (freeCells.length === 0) return;
                 const rand = freeCells[Math.floor(Math.random() * freeCells.length)];
                 food = rand;
-                foodType = Math.random() < 0.6 ? 'cookie' : 'fruit'; // 60% печенье
+                foodType = Math.random() < 0.6 ? 'cookie' : 'fruit';
             }
 
-            // Инициализация еды
             spawnRandomFood();
 
-            // ----- Движение врагов (простой AI) -----
-            function oppositeDir(dir) {
-                if (dir === 'UP') return 'DOWN';
-                if (dir === 'DOWN') return 'UP';
-                if (dir === 'LEFT') return 'RIGHT';
-                return 'LEFT';
-            }
-
-            function moveEnemySnake(enemy) {
-                let newHead = {...enemy.body[0]};
-                switch(enemy.dir) {
-                    case 'RIGHT': newHead.x++; break;
-                    case 'LEFT':  newHead.x--; break;
-                    case 'UP':    newHead.y--; break;
-                    case 'DOWN':  newHead.y++; break;
-                }
-                // Границы: если выходит за поле, разворачиваемся
-                if (newHead.x < 0 || newHead.x >= gridSize || newHead.y < 0 || newHead.y >= gridSize) {
-                    enemy.dir = oppositeDir(enemy.dir);
-                    return; // на этом ходу не двигаем, направление сменили
-                }
-                // Проверка столкновения с другими врагами? Пропустим – пусть проходят сквозь друг друга, иначе слишком сложно.
-                // Но для простоты не проверяем – они могут пересекаться.
-                // Добавляем новую голову, удаляем хвост
-                enemy.body.unshift(newHead);
-                enemy.body.pop();
-            }
-
-            function updateEnemies() {
-                for (let enemy of enemySnakes) {
-                    // Иногда меняем направление случайно (каждые ~10 ходов)
-                    if (enemy.changeCooldown <= 0) {
-                        let possible = ['UP','DOWN','LEFT','RIGHT'];
-                        let newDir = possible[Math.floor(Math.random()*4)];
-                        // не разворачиваемся на 180 градусов
-                        if (oppositeDir(newDir) !== enemy.dir) {
-                            enemy.dir = newDir;
-                        }
-                        enemy.changeCooldown = 8 + Math.floor(Math.random() * 10);
-                    } else {
-                        enemy.changeCooldown--;
-                    }
-                    moveEnemySnake(enemy);
-                }
-            }
-
-            // ----- Проверка столкновений (игрок) -----
             function checkCollisions(head) {
-                // Стены
                 if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) return true;
-                // Сама с собой (кроме головы, её пока нет в теле)
                 if (snake.some((seg, idx) => seg.x === head.x && seg.y === head.y)) return true;
-                // Другие змейки
-                for (let enemy of enemySnakes) {
-                    if (enemy.body.some(seg => seg.x === head.x && seg.y === head.y)) return true;
-                }
                 return false;
             }
 
-            // ----- Движение игрока -----
             function movePlayer() {
                 direction = nextDirection;
                 let newHead = {...snake[0]};
                 switch(direction) {
                     case 'RIGHT': newHead.x++; break;
-                    case 'LEFT':  newHead.x--; break;
-                    case 'UP':    newHead.y--; break;
-                    case 'DOWN':  newHead.y++; break;
+                    case 'LEFT': newHead.x--; break;
+                    case 'UP': newHead.y--; break;
+                    case 'DOWN': newHead.y++; break;
                 }
 
-                // Проверка столкновения
                 if (checkCollisions(newHead)) {
                     gameRunning = false;
                     if (window.snakeInterval) clearInterval(window.snakeInterval);
@@ -8090,7 +8000,6 @@ window.localDict = localDict;
                     return false;
                 }
 
-                // Еда?
                 const willEat = (newHead.x === food.x && newHead.y === food.y);
                 snake.unshift(newHead);
                 if (!willEat) {
@@ -8108,10 +8017,9 @@ window.localDict = localDict;
                 return true;
             }
 
-            // ----- Отрисовка -----
             function draw() {
                 ctx.clearRect(0, 0, 400, 400);
-                // Сетка
+                // сетка
                 ctx.strokeStyle = '#2c3e50';
                 for (let i = 0; i <= gridSize; i++) {
                     ctx.beginPath();
@@ -8122,7 +8030,7 @@ window.localDict = localDict;
                     ctx.lineTo(400, i*cellSize);
                     ctx.stroke();
                 }
-                // Еда
+                // еда
                 if (foodType === 'cookie') {
                     ctx.fillStyle = '#f39c12';
                     ctx.fillRect(food.x*cellSize, food.y*cellSize, cellSize, cellSize);
@@ -8134,37 +8042,23 @@ window.localDict = localDict;
                     ctx.fillStyle = '#2ecc71';
                     ctx.fillRect(food.x*cellSize+2, food.y*cellSize+2, cellSize-4, cellSize-4);
                 }
-                // Змейка игрока
+                // змейка
                 for (let seg of snake) {
                     ctx.fillStyle = '#2ecc71';
                     ctx.fillRect(seg.x*cellSize, seg.y*cellSize, cellSize-1, cellSize-1);
                     ctx.fillStyle = '#27ae60';
                     ctx.fillRect(seg.x*cellSize+2, seg.y*cellSize+2, cellSize-5, cellSize-5);
                 }
-                // Голова игрока (глаза)
-                ctx.fillStyle = 'white';
+                // глаза
                 let head = snake[0];
+                ctx.fillStyle = 'white';
                 ctx.fillRect(head.x*cellSize+4, head.y*cellSize+4, 4, 4);
                 ctx.fillRect(head.x*cellSize+12, head.y*cellSize+4, 4, 4);
-
-                // Вражеские змейки
-                for (let enemy of enemySnakes) {
-                    for (let seg of enemy.body) {
-                        ctx.fillStyle = enemy.color;
-                        ctx.fillRect(seg.x*cellSize, seg.y*cellSize, cellSize-1, cellSize-1);
-                        ctx.fillStyle = '#2c3e50';
-                        ctx.fillRect(seg.x*cellSize+3, seg.y*cellSize+3, cellSize-7, cellSize-7);
-                    }
-                }
             }
 
-            // ----- Игровой цикл -----
             let interval = null;
             function gameLoop() {
                 if (!gameRunning) return;
-                // Двигаем врагов
-                updateEnemies();
-                // Двигаем игрока (если игра не закончилась)
                 const alive = movePlayer();
                 if (!alive) return;
                 draw();
@@ -8174,11 +8068,10 @@ window.localDict = localDict;
                 if (interval) clearInterval(interval);
                 interval = setInterval(() => {
                     if (gameRunning) gameLoop();
-                }, 130); // ~7-8 ходов в секунду
+                }, 200); // скорость снижена (200 мс)
                 window.snakeInterval = interval;
             }
 
-            // ----- Управление -----
             function changeDirection(newDir) {
                 if (!gameRunning) return;
                 const opposite = { 'UP':'DOWN', 'DOWN':'UP', 'LEFT':'RIGHT', 'RIGHT':'LEFT' };
@@ -8198,19 +8091,16 @@ window.localDict = localDict;
             };
             window.addEventListener('keydown', keyHandler);
 
-            // Кнопки
             upBtn.onclick = () => changeDirection('UP');
             downBtn.onclick = () => changeDirection('DOWN');
             leftBtn.onclick = () => changeDirection('LEFT');
             rightBtn.onclick = () => changeDirection('RIGHT');
 
-            // Рестарт
             function restart() {
                 if (interval) clearInterval(interval);
                 gameRunning = true;
                 score = 0;
                 scoreSpan.innerText = '0';
-                // Сброс змейки
                 snake = [
                     {x: 10, y: 10},
                     {x: 9, y: 10},
@@ -8219,10 +8109,6 @@ window.localDict = localDict;
                 ];
                 direction = 'RIGHT';
                 nextDirection = 'RIGHT';
-                // Сброс врагов
-                enemySnakes[0] = { body: [{x:5,y:5},{x:4,y:5},{x:3,y:5}], dir: 'RIGHT', changeCooldown: 0, color: '#e67e22' };
-                enemySnakes[1] = { body: [{x:15,y:15},{x:14,y:15},{x:13,y:15}], dir: 'LEFT', changeCooldown: 0, color: '#f1c40f' };
-                enemySnakes[2] = { body: [{x:5,y:15},{x:5,y:14},{x:5,y:13}], dir: 'UP', changeCooldown: 0, color: '#3498db' };
                 spawnRandomFood();
                 gameOverDiv.style.display = 'none';
                 draw();
@@ -8243,7 +8129,8 @@ window.localDict = localDict;
         }
 
         snakeIcon.onclick = () => {
-            document.getElementById('unifiedGamePanel').style.display = 'none';
+            const panel = document.getElementById('unifiedGamePanel');
+            if (panel) panel.style.display = 'none';
             startSnakeGame();
         };
     });
