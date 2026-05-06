@@ -8993,8 +8993,8 @@ if(p) {
 
 
 
-    // ========== ГОРОДСКОЙ СИМУЛЯТОР (City Builder) ==========
-(function addCityBuilder() {
+    // ========== ПИКСЕЛЬНАЯ СТУДИЯ (рисование + раскраски + обучение) ==========
+(function addPixelStudio() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9002,203 +9002,100 @@ if(p) {
     }
 
     waitForPanel((panel) => {
-        if (document.getElementById('gameCityIcon')) return;
+        if (document.getElementById('gameDrawIcon')) return;
 
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
 
-        const cityIcon = document.createElement('div');
-        cityIcon.id = 'gameCityIcon';
-        cityIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
-        cityIcon.innerHTML = `<div style="font-size:48px;">🏙️🏗️</div><div style="color:white;">City Builder</div>`;
-        gamesContainer.appendChild(cityIcon);
+        const drawIcon = document.createElement('div');
+        drawIcon.id = 'gameDrawIcon';
+        drawIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
+        drawIcon.innerHTML = `<div style="font-size:48px;">🎨🖌️</div><div style="color:white;">Pixel Studio</div>`;
+        gamesContainer.appendChild(drawIcon);
 
-        function startCityBuilder() {
-            if (window.cityGameActive) {
-                window.cityGameActive.remove();
-                if (window.cityInterval) clearInterval(window.cityInterval);
+        function startPixelStudio() {
+            if (window.pixelActive) {
+                window.pixelActive.remove();
+                if (window.pixelInterval) clearInterval(window.pixelInterval);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
                 <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
-                    <div style="background:#34495e; padding:8px; text-align:center; color:white; font-size:16px;">🏙️ СТРОИМ ГОРОД</div>
-                    <canvas id="cityCanvas" width="700" height="500" style="width:100%; height:auto; display:block; background:#2d2d2d; cursor:pointer;"></canvas>
-                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; background:#1e2a2e; color:white; padding:6px 10px; gap:5px;">
-                        <span>🪵 <span id="cityWood">50</span></span>
-                        <span>🪨 <span id="cityStone">30</span></span>
-                        <span>🪙 <span id="cityGold">20</span></span>
-                        <span>🏠 <span id="cityHouses">0</span></span>
-                        <span>👥 <span id="cityCitizens">0</span></span>
+                    <div style="background:#34495e; padding:8px; text-align:center; color:white; font-size:16px;">🎨 ПИКСЕЛЬНАЯ СТУДИЯ</div>
+                    <canvas id="pixelCanvas" width="400" height="400" style="width:100%; height:auto; display:block; background:#ecf0f1; cursor:pointer;"></canvas>
+                    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; background:#1e2a2e; padding:8px;">
+                        <button id="pixelBrush" style="background:#27ae60; border:none; padding:5px 12px; border-radius:20px;">🖌️ Кисть</button>
+                        <button id="pixelEraser" style="background:#e67e22; border:none; padding:5px 12px; border-radius:20px;">🧽 Ластик</button>
+                        <button id="pixelFill" style="background:#3498db; border:none; padding:5px 12px; border-radius:20px;">🪣 Заливка</button>
+                        <button id="pixelClear" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px;">🗑️ Очистить</button>
+                        <button id="pixelLoadColoring" style="background:#9b59b6; border:none; padding:5px 12px; border-radius:20px;">🖍️ Раскраска</button>
+                        <button id="pixelRules" style="background:#f1c40f; border:none; padding:5px 12px; border-radius:20px;">📖 Правила</button>
+                        <button id="pixelClose" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">✖</button>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:6px; background:#2c3e50; padding:8px; justify-content:center;">
-                        <button class="cityBuildBtn" data-type="house" style="background:#27ae60; border:none; padding:5px 12px; border-radius:20px;">🏠 Дом ($20,🪵5,🪨3)</button>
-                        <button class="cityBuildBtn" data-type="lumber" style="background:#f39c12; border:none; padding:5px 12px; border-radius:20px;">🪵 Лесопилка ($30,🪵10,🪨5)</button>
-                        <button class="cityBuildBtn" data-type="mine" style="background:#95a5a6; border:none; padding:5px 12px; border-radius:20px;">⛏️ Шахта ($50,🪵15,🪨15)</button>
-                        <button class="cityBuildBtn" data-type="market" style="background:#e67e22; border:none; padding:5px 12px; border-radius:20px;">🏛️ Рынок ($80,🪵20,🪨20,🪙20)</button>
-                        <button id="citySellBtn" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px;">💰 Продать город</button>
-                        <button id="cityCloseBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">✖</button>
+                    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; background:#2c3e50; padding:8px;">
+                        <div style="text-align:center;">
+                            <div>🎨 Цвета</div>
+                            <div style="display:flex; gap:5px;">
+                                <div id="colorRed" class="colorPicker" style="width:30px; height:30px; background:#e74c3c; border-radius:5px; cursor:pointer;"></div>
+                                <div id="colorGreen" class="colorPicker" style="width:30px; height:30px; background:#2ecc71; border-radius:5px; cursor:pointer;"></div>
+                                <div id="colorBlue" class="colorPicker" style="width:30px; height:30px; background:#3498db; border-radius:5px; cursor:pointer;"></div>
+                                <div id="colorYellow" class="colorPicker" style="width:30px; height:30px; background:#f1c40f; border-radius:5px; cursor:pointer;"></div>
+                                <div id="colorBlack" class="colorPicker" style="width:30px; height:30px; background:#2c3e50; border-radius:5px; cursor:pointer;"></div>
+                                <div id="colorWhite" class="colorPicker" style="width:30px; height:30px; background:#ecf0f1; border:1px solid #fff; border-radius:5px; cursor:pointer;"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="cityToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
+                    <div id="pixelToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
-            window.cityGameActive = gameDiv;
+            window.pixelActive = gameDiv;
 
-            const canvas = document.getElementById('cityCanvas');
+            const canvas = document.getElementById('pixelCanvas');
             const ctx = canvas.getContext('2d');
-            const woodSpan = document.getElementById('cityWood');
-            const stoneSpan = document.getElementById('cityStone');
-            const goldSpan = document.getElementById('cityGold');
-            const housesSpan = document.getElementById('cityHouses');
-            const citizensSpan = document.getElementById('cityCitizens');
-            const toastDiv = document.getElementById('cityToast');
-            const sellBtn = document.getElementById('citySellBtn');
-            const closeBtn = document.getElementById('cityCloseBtn');
+            const toastDiv = document.getElementById('pixelToast');
 
-            let wood = 50, stone = 30, gold = 20;
-            let houses = 0, citizens = 0;
-            let map = Array(10).fill().map(() => Array(10).fill(null)); // null или тип здания
-            let selectedBuilding = null;
-            let inventoryTimer = null;
+            let gridSize = 20; // 20x20 пикселей
+            let cellSize = canvas.width / gridSize;
+            let pixels = Array(gridSize).fill().map(() => Array(gridSize).fill('#ffffff'));
+            let currentColor = '#e74c3c';
+            let tool = 'brush'; // brush, eraser, fill
 
             function showToast(msg, isErr = false) {
                 toastDiv.innerText = msg;
                 toastDiv.style.backgroundColor = isErr ? '#e74c3c' : '#2ecc71';
                 toastDiv.style.opacity = '1';
-                setTimeout(() => toastDiv.style.opacity = '0', 1800);
+                setTimeout(() => toastDiv.style.opacity = '0', 2000);
             }
 
-            function updateUI() {
-                woodSpan.innerText = wood;
-                stoneSpan.innerText = stone;
-                goldSpan.innerText = gold;
-                housesSpan.innerText = houses;
-                citizensSpan.innerText = citizens;
-            }
-
-            // Стоимость и доходы зданий
-            const buildings = {
-                house: { name: '🏠 Дом', cost: { wood: 5, stone: 3, gold: 20 }, income: { gold: 2, citizens: 2 }, icon: '🏠' },
-                lumber: { name: '🪵 Лесопилка', cost: { wood: 10, stone: 5, gold: 30 }, income: { wood: 4 }, icon: '🪵' },
-                mine: { name: '⛏️ Шахта', cost: { wood: 15, stone: 15, gold: 50 }, income: { stone: 3, gold: 1 }, icon: '⛏️' },
-                market: { name: '🏛️ Рынок', cost: { wood: 20, stone: 20, gold: 80 }, income: { gold: 8 }, icon: '🏛️' }
-            };
-
-            // Проверка возможности постройки
-            function canBuild(type, row, col) {
-                if (map[row][col] !== null) return false;
-                const cost = buildings[type].cost;
-                if (wood < cost.wood) return false;
-                if (stone < cost.stone) return false;
-                if (gold < cost.gold) return false;
-                return true;
-            }
-
-            // Построить здание
-            function build(type, row, col) {
-                if (!canBuild(type, row, col)) {
-                    showToast("Не хватает ресурсов или клетка занята", true);
-                    return false;
-                }
-                const cost = buildings[type].cost;
-                wood -= cost.wood;
-                stone -= cost.stone;
-                gold -= cost.gold;
-                map[row][col] = type;
-                if (type === 'house') houses++;
-                updateUI();
-                drawCity();
-                showToast(`Построен ${buildings[type].name}`);
-                return true;
-            }
-
-            // Доход каждые 10 секунд
-            function collectIncome() {
-                let woodInc = 0, stoneInc = 0, goldInc = 0, citizenInc = 0;
-                for (let i = 0; i < 10; i++) {
-                    for (let j = 0; j < 10; j++) {
-                        const type = map[i][j];
-                        if (type) {
-                            const inc = buildings[type].income;
-                            woodInc += inc.wood || 0;
-                            stoneInc += inc.stone || 0;
-                            goldInc += inc.gold || 0;
-                            if (type === 'house') citizenInc += 2;
-                        }
+            // Отрисовка сетки
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        ctx.fillStyle = pixels[i][j];
+                        ctx.fillRect(j * cellSize, i * cellSize, cellSize - 0.5, cellSize - 0.5);
+                        ctx.strokeStyle = '#bdc3c7';
+                        ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
                     }
                 }
-                wood += woodInc;
-                stone += stoneInc;
-                gold += goldInc;
-                citizens += citizenInc;
-                updateUI();
-                drawCity();
-                if (woodInc + stoneInc + goldInc > 0) {
-                    showToast(`Доход: +${woodInc}🪵 +${stoneInc}🪨 +${goldInc}🪙 +${citizenInc}👥`);
-                }
             }
 
-            // Продажа города (оценка)
-            function sellCity() {
-                let totalValue = 0;
-                for (let i = 0; i < 10; i++) {
-                    for (let j = 0; j < 10; j++) {
-                        const type = map[i][j];
-                        if (type) {
-                            const cost = buildings[type].cost;
-                            totalValue += (cost.wood + cost.stone * 2 + cost.gold * 3) / 2;
-                        }
-                    }
-                }
-                totalValue += citizens * 5;
-                if (totalValue === 0) {
-                    showToast("Нет зданий для продажи", true);
-                    return;
-                }
-                gold += Math.floor(totalValue);
-                wood += Math.floor(totalValue / 3);
-                stone += Math.floor(totalValue / 4);
-                // Очищаем карту
-                map = Array(10).fill().map(() => Array(10).fill(null));
-                houses = 0;
-                citizens = 0;
-                updateUI();
-                drawCity();
-                showToast(`Город продан! Выручка ~${Math.floor(totalValue)} ресурсов.`);
+            // Заливка (простой алгоритм заливки)
+            function floodFill(x, y, targetColor, replaceColor) {
+                if (targetColor === replaceColor) return;
+                if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+                if (pixels[x][y] !== targetColor) return;
+                pixels[x][y] = replaceColor;
+                floodFill(x + 1, y, targetColor, replaceColor);
+                floodFill(x - 1, y, targetColor, replaceColor);
+                floodFill(x, y + 1, targetColor, replaceColor);
+                floodFill(x, y - 1, targetColor, replaceColor);
             }
 
-            // Отрисовка города
-            function drawCity() {
-                canvas.width = 700; canvas.height = 500;
-                const cellW = canvas.width / 10;
-                const cellH = canvas.height / 10;
-                for (let i = 0; i < 10; i++) {
-                    for (let j = 0; j < 10; j++) {
-                        const x = j * cellW;
-                        const y = i * cellH;
-                        // фон клетки
-                        ctx.fillStyle = (i + j) % 2 === 0 ? '#4a6741' : '#3c5a2f';
-                        ctx.fillRect(x, y, cellW, cellH);
-                        ctx.strokeStyle = '#2c3e50';
-                        ctx.strokeRect(x, y, cellW, cellH);
-                        const type = map[i][j];
-                        if (type) {
-                            ctx.font = `${cellW * 0.6}px Arial`;
-                            ctx.fillStyle = '#fff';
-                            ctx.fillText(buildings[type].icon, x + cellW/3, y + cellH/1.7);
-                        }
-                    }
-                }
-                // Подсветка выбранного здания
-                if (selectedBuilding) {
-                    ctx.fillStyle = 'rgba(255,255,0,0.3)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                }
-            }
-
-            // Обработка клика по клетке
+            // Обработка клика по холсту
             function handleCanvasClick(e) {
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
@@ -9208,54 +9105,105 @@ if(p) {
                 else { cx = e.clientX; cy = e.clientY; }
                 const canvasX = (cx - rect.left) * scaleX;
                 const canvasY = (cy - rect.top) * scaleY;
-                const col = Math.floor(canvasX / (canvas.width / 10));
-                const row = Math.floor(canvasY / (canvas.height / 10));
-                if (row >= 0 && row < 10 && col >= 0 && col < 10) {
-                    if (selectedBuilding) {
-                        build(selectedBuilding, row, col);
-                        selectedBuilding = null;
-                    } else {
-                        // Показать информацию о здании
-                        const type = map[row][col];
-                        if (type) {
-                            const inc = buildings[type].income;
-                            showToast(`${buildings[type].name} | Доход: +${inc.wood||0}🪵 +${inc.stone||0}🪨 +${inc.gold||0}🪙`);
-                        } else {
-                            showToast("Пустая клетка. Выберите здание для постройки.");
-                        }
+                const col = Math.floor(canvasX / cellSize);
+                const row = Math.floor(canvasY / cellSize);
+                if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+                    if (tool === 'brush') {
+                        pixels[row][col] = currentColor;
+                    } else if (tool === 'eraser') {
+                        pixels[row][col] = '#ffffff';
+                    } else if (tool === 'fill') {
+                        const targetColor = pixels[row][col];
+                        floodFill(row, col, targetColor, currentColor);
                     }
+                    draw();
                 }
             }
 
             canvas.addEventListener('click', handleCanvasClick);
             canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasClick(e); });
 
-            // Кнопки выбора зданий
-            document.querySelectorAll('.cityBuildBtn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const type = btn.dataset.type;
-                    selectedBuilding = type;
-                    showToast(`Строим: ${buildings[type].name} (нажмите на клетку)`);
-                    drawCity();
+            // Инструменты
+            document.getElementById('pixelBrush').onclick = () => { tool = 'brush'; showToast("Кисть: рисуйте выбранным цветом"); };
+            document.getElementById('pixelEraser').onclick = () => { tool = 'eraser'; showToast("Ластик: стирает в белый цвет"); };
+            document.getElementById('pixelFill').onclick = () => { tool = 'fill'; showToast("Заливка: заполняет область цветом"); };
+            document.getElementById('pixelClear').onclick = () => {
+                pixels = Array(gridSize).fill().map(() => Array(gridSize).fill('#ffffff'));
+                draw();
+                showToast("Холст очищен");
+            };
+            document.getElementById('pixelLoadColoring').onclick = () => {
+                // Загружаем раскраску (контур домика)
+                const coloring = [
+                    ['#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000'],
+                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#000','#e74c3c','#e74c3c','#e74c3c','#000','#fff','#fff','#fff','#fff','#000','#fff','#fff','#fff','#000','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#000','#e74c3c','#e74c3c','#e74c3c','#000','#fff','#fff','#fff','#fff','#000','#fff','#fff','#fff','#000','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#000','#e74c3c','#e74c3c','#e74c3c','#000','#fff','#fff','#fff','#fff','#000','#fff','#fff','#fff','#000','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
+                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
+                    ['#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000']
+                ];
+                for (let i=0; i<Math.min(gridSize, coloring.length); i++) {
+                    for (let j=0; j<Math.min(gridSize, coloring[i].length); j++) {
+                        pixels[i][j] = coloring[i][j];
+                    }
+                }
+                draw();
+                showToast("Загружена раскраска «Домик». Раскрасьте его!");
+            };
+            document.getElementById('pixelRules').onclick = () => {
+                const rulesDiv = document.createElement('div');
+                rulesDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100005; color:white; width:300px; text-align:center;';
+                rulesDiv.innerHTML = `
+                    <h3>📖 Правила рисования</h3>
+                    <p>1. Выберите цвет (красный, зелёный, синий, жёлтый, чёрный, белый).</p>
+                    <p>2. Инструменты: кисть (рисует), ластик (стирает), заливка (заполняет область).</p>
+                    <p>3. Нажмите «Раскраска», чтобы загрузить готовый контур домика.</p>
+                    <p>4. Очистить холст — начать заново.</p>
+                    <p>5. Используйте холст 20x20. Можно рисовать пиксель-арт!</p>
+                    <button id="closeRulesBtn" style="background:#e74c3c; border:none; padding:5px 15px; border-radius:15px;">Закрыть</button>
+                `;
+                gameDiv.appendChild(rulesDiv);
+                document.getElementById('closeRulesBtn').onclick = () => rulesDiv.remove();
+            };
+            document.getElementById('pixelClose').onclick = () => { gameDiv.remove(); window.pixelActive = null; };
+
+            // Выбор цвета
+            document.querySelectorAll('.colorPicker').forEach(el => {
+                el.addEventListener('click', () => {
+                    currentColor = el.style.backgroundColor;
+                    // преобразуем rgb к hex для простоты
+                    const rgb = currentColor.match(/\d+/g);
+                    if (rgb) {
+                        currentColor = `#${((1 << 24) + (parseInt(rgb[0]) << 16) + (parseInt(rgb[1]) << 8) + parseInt(rgb[2])).toString(16).slice(1)}`;
+                    } else if (el.id === 'colorWhite') currentColor = '#ffffff';
+                    else if (el.id === 'colorBlack') currentColor = '#2c3e50';
+                    else if (el.id === 'colorRed') currentColor = '#e74c3c';
+                    else if (el.id === 'colorGreen') currentColor = '#2ecc71';
+                    else if (el.id === 'colorBlue') currentColor = '#3498db';
+                    else if (el.id === 'colorYellow') currentColor = '#f1c40f';
+                    showToast(`Цвет: ${currentColor}`);
                 });
             });
 
-            sellBtn.onclick = () => sellCity();
-            closeBtn.onclick = () => {
-                if (window.cityInterval) clearInterval(window.cityInterval);
-                window.cityGameActive.remove();
-                window.cityGameActive = null;
-            };
-
-            // Таймер дохода
-            window.cityInterval = setInterval(() => collectIncome(), 10000);
-            drawCity();
-            updateUI();
+            // Инициализация белым холстом
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    pixels[i][j] = '#ffffff';
+                }
+            }
+            draw();
         }
 
-        cityIcon.onclick = () => {
+        drawIcon.onclick = () => {
             document.getElementById('unifiedGamePanel').style.display = 'none';
-            startCityBuilder();
+            startPixelStudio();
         };
     });
 })();
