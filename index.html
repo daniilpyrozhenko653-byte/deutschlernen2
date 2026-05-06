@@ -8404,8 +8404,8 @@ if(p) {
 
 
 
-// ========== ДОБАВЛЕНИЕ ИГРЫ 2048 ==========
-(function add2048Game() {
+// ========== ШАХМАТЫ (ПОЛНАЯ ЛОГИКА) ==========
+(function addChessGame() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -8413,252 +8413,400 @@ if(p) {
     }
 
     waitForPanel((panel) => {
-        if (document.getElementById('game2048Icon')) return;
+        if (document.getElementById('gameChessIcon')) return;
 
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
 
-        const icon2048 = document.createElement('div');
-        icon2048.id = 'game2048Icon';
-        icon2048.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
-        icon2048.innerHTML = `<div style="font-size:48px;">🧩2048</div><div style="color:white; font-size:12px;">2048 Puzzle</div>`;
-        gamesContainer.appendChild(icon2048);
+        const chessIcon = document.createElement('div');
+        chessIcon.id = 'gameChessIcon';
+        chessIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
+        chessIcon.innerHTML = `<div style="font-size:48px;">♟️♜</div><div style="color:white;">Шахматы</div>`;
+        gamesContainer.appendChild(chessIcon);
 
-        // ---------- САМА ИГРА 2048 ----------
-        function start2048() {
-            if (window.game2048Active) {
-                if (window.game2048Active.parentNode) window.game2048Active.remove();
+        // ---------- ИГРА ----------
+        function startChess() {
+            if (window.chessGameActive) {
+                window.chessGameActive.remove();
+                if (window.chessInterval) clearInterval(window.chessInterval);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:450px; overflow:hidden;">
-                    <div style="background:#e67e22; padding:8px; text-align:center; color:white;">🧩 2048 (стрелки / кнопки)</div>
-                    <canvas id="g2048Canvas" width="400" height="400" style="width:100%; height:auto; background:#bbada0; display:block;"></canvas>
-                    <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
-                        <span>🏆 Счёт: <span id="g2048Score">0</span></span>
-                        <span>🎯 Рекорд: <span id="g2048High">0</span></span>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:480px; overflow:hidden;">
+                    <div style="background:#b58863; padding:8px; text-align:center; color:white; font-weight:bold;">♜ Шахматы ♞</div>
+                    <canvas id="chessCanvas" width="400" height="400" style="width:100%; height:auto; display:block;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:8px; background:#2c3e50; color:white;">
+                        <span>Ход: <span id="chessTurn">белые</span></span>
+                        <span id="chessStatus"></span>
                     </div>
-                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px; padding:0 8px 8px 8px;">
-                        <div></div><button id="g2048Up" style="background:#1abc9c; border:none; padding:8px; border-radius:30px;">▲ ВВЕРХ</button><div></div>
-                        <button id="g2048Left" style="background:#1abc9c; border:none; padding:8px;">◀ ЛЕВО</button>
-                        <button id="g2048Down" style="background:#1abc9c; border:none; padding:8px;">▼ ВНИЗ</button>
-                        <button id="g2048Right" style="background:#1abc9c; border:none; padding:8px;">ПРАВО ▶</button>
+                    <div style="display:flex; gap:8px; padding:0 8px 8px 8px;">
+                        <button id="chessNewGame" style="flex:1; background:#27ae60; border:none; padding:8px; border-radius:20px;">🔄 Новая игра</button>
+                        <button id="chessClose" style="flex:1; background:#c0392b; border:none; padding:8px; border-radius:20px;">✖ Закрыть</button>
                     </div>
-                    <div id="g2048GameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px; border-radius:20px; text-align:center;">
-                        💀 Игра окончена! 💀<br><button id="g2048RestartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
-                    </div>
-                    <button id="g2048CloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:8px;">Закрыть</button>
                 </div>
             `;
             document.body.appendChild(gameDiv);
-            window.game2048Active = gameDiv;
+            window.chessGameActive = gameDiv;
 
-            const canvas = document.getElementById('g2048Canvas');
+            const canvas = document.getElementById('chessCanvas');
             const ctx = canvas.getContext('2d');
-            const scoreSpan = document.getElementById('g2048Score');
-            const highSpan = document.getElementById('g2048High');
-            const gameOverDiv = document.getElementById('g2048GameOverMsg');
-            const restartBtn = document.getElementById('g2048RestartBtn');
-            const closeBtn = document.getElementById('g2048CloseBtn');
+            const turnSpan = document.getElementById('chessTurn');
+            const statusSpan = document.getElementById('chessStatus');
 
-            const upBtn = document.getElementById('g2048Up');
-            const downBtn = document.getElementById('g2048Down');
-            const leftBtn = document.getElementById('g2048Left');
-            const rightBtn = document.getElementById('g2048Right');
+            // Параметры
+            const size = 8;
+            const cellSize = 400 / size;
+            let board = [];
+            let currentPlayer = 'white'; // white всегда ходит первым
+            let selectedRow = null, selectedCol = null;
+            let gameOver = false;
+            let winner = null;
+            let possibleMoves = [];
 
-            let board = Array(4).fill().map(() => Array(4).fill(0));
-            let score = 0;
-            let highScore = localStorage.getItem('game2048High') ? parseInt(localStorage.getItem('game2048High')) : 0;
-            highSpan.innerText = highScore;
-            let gameActive = true;
-
-            function addRandomTile() {
-                let empty = [];
-                for (let i=0; i<4; i++) {
-                    for (let j=0; j<4; j++) {
-                        if (board[i][j] === 0) empty.push([i,j]);
-                    }
+            // Инициализация фигур
+            function initBoard() {
+                board = Array(size).fill().map(() => Array(size).fill(null));
+                // Пешки
+                for (let i = 0; i < size; i++) {
+                    board[1][i] = { type: 'pawn', color: 'black' };
+                    board[6][i] = { type: 'pawn', color: 'white' };
                 }
-                if (empty.length === 0) return false;
-                let [r,c] = empty[Math.floor(Math.random() * empty.length)];
-                board[r][c] = Math.random() < 0.9 ? 2 : 4;
-                return true;
-            }
-
-            function updateScoreUI() {
-                scoreSpan.innerText = score;
-                if (score > highScore) {
-                    highScore = score;
-                    highSpan.innerText = highScore;
-                    localStorage.setItem('game2048High', highScore);
+                // Фигуры
+                const pieces = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
+                for (let i = 0; i < size; i++) {
+                    board[0][i] = { type: pieces[i], color: 'black' };
+                    board[7][i] = { type: pieces[i], color: 'white' };
                 }
             }
 
-            // Сдвиг и слияние в одном направлении
-            function move(direction) {
-                let oldBoard = JSON.parse(JSON.stringify(board));
-                let addedScore = 0;
-
-                if (direction === 'left') {
-                    for (let i=0; i<4; i++) {
-                        let row = board[i].filter(v => v !== 0);
-                        for (let j=0; j<row.length-1; j++) {
-                            if (row[j] === row[j+1]) {
-                                row[j] *= 2;
-                                addedScore += row[j];
-                                row.splice(j+1,1);
-                            }
-                        }
-                        while (row.length < 4) row.push(0);
-                        board[i] = row;
-                    }
-                }
-                else if (direction === 'right') {
-                    for (let i=0; i<4; i++) {
-                        let row = board[i].filter(v => v !== 0);
-                        for (let j=row.length-1; j>0; j--) {
-                            if (row[j] === row[j-1]) {
-                                row[j] *= 2;
-                                addedScore += row[j];
-                                row.splice(j-1,1);
-                                j--;
-                            }
-                        }
-                        while (row.length < 4) row.unshift(0);
-                        board[i] = row;
-                    }
-                }
-                else if (direction === 'up') {
-                    for (let j=0; j<4; j++) {
-                        let col = [board[0][j], board[1][j], board[2][j], board[3][j]].filter(v => v !== 0);
-                        for (let i=0; i<col.length-1; i++) {
-                            if (col[i] === col[i+1]) {
-                                col[i] *= 2;
-                                addedScore += col[i];
-                                col.splice(i+1,1);
-                            }
-                        }
-                        while (col.length < 4) col.push(0);
-                        for (let i=0; i<4; i++) board[i][j] = col[i];
-                    }
-                }
-                else if (direction === 'down') {
-                    for (let j=0; j<4; j++) {
-                        let col = [board[0][j], board[1][j], board[2][j], board[3][j]].filter(v => v !== 0);
-                        for (let i=col.length-1; i>0; i--) {
-                            if (col[i] === col[i-1]) {
-                                col[i] *= 2;
-                                addedScore += col[i];
-                                col.splice(i-1,1);
-                                i--;
-                            }
-                        }
-                        while (col.length < 4) col.unshift(0);
-                        for (let i=0; i<4; i++) board[i][j] = col[i];
-                    }
-                }
-
-                if (JSON.stringify(oldBoard) !== JSON.stringify(board)) {
-                    score += addedScore;
-                    updateScoreUI();
-                    addRandomTile();
-                    draw();
-                    if (!canMove()) {
-                        gameActive = false;
-                        gameOverDiv.style.display = 'flex';
-                    }
-                } else {
-                    if (!canMove()) {
-                        gameActive = false;
-                        gameOverDiv.style.display = 'flex';
-                    }
-                }
+            // Символы фигур (Юникод)
+            function getPieceSymbol(piece) {
+                if (!piece) return '';
+                const symbols = {
+                    king: { white: '♔', black: '♚' },
+                    queen: { white: '♕', black: '♛' },
+                    rook: { white: '♖', black: '♜' },
+                    bishop: { white: '♗', black: '♝' },
+                    knight: { white: '♘', black: '♞' },
+                    pawn: { white: '♙', black: '♟' }
+                };
+                return symbols[piece.type][piece.color];
             }
 
-            function canMove() {
-                for (let i=0; i<4; i++) {
-                    for (let j=0; j<4; j++) {
-                        if (board[i][j] === 0) return true;
-                        if (j<3 && board[i][j] === board[i][j+1]) return true;
-                        if (i<3 && board[i][j] === board[i+1][j]) return true;
+            // Проверка, находится ли клетка под атакой врага
+            function isSquareAttacked(row, col, color) {
+                // color - цвет атакующего (тот, кто может ударить)
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const piece = board[r][c];
+                        if (piece && piece.color === color) {
+                            if (isValidMoveWithoutSelfCheck(r, c, row, col, piece)) {
+                                return true;
+                            }
+                        }
                     }
                 }
                 return false;
             }
 
-            function draw() {
-                ctx.clearRect(0, 0, 400, 400);
-                const colors = {
-                    0: '#cdc1b4',
-                    2: '#eee4da', 4: '#ede0c8', 8: '#f2b179', 16: '#f59563',
-                    32: '#f67c5f', 64: '#f65e3b', 128: '#edcf72', 256: '#edcc61',
-                    512: '#edc850', 1024: '#edc53f', 2048: '#edc22e'
+            // Проверка на шах королю данного цвета
+            function isKingInCheck(color) {
+                let kingPos = null;
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        const p = board[i][j];
+                        if (p && p.type === 'king' && p.color === color) {
+                            kingPos = [i, j];
+                            break;
+                        }
+                    }
+                }
+                if (!kingPos) return false;
+                return isSquareAttacked(kingPos[0], kingPos[1], color === 'white' ? 'black' : 'white');
+            }
+
+            // Проверка, что ход не ставит своего короля под шах
+            function isValidMoveWithoutSelfCheck(fromRow, fromCol, toRow, toCol, piece) {
+                // Сохраняем состояние
+                const targetPiece = board[toRow][toCol];
+                board[toRow][toCol] = piece;
+                board[fromRow][fromCol] = null;
+
+                const inCheck = isKingInCheck(piece.color);
+
+                // Откат
+                board[fromRow][fromCol] = piece;
+                board[toRow][toCol] = targetPiece;
+                return !inCheck;
+            }
+
+            // Генерация возможных ходов для фигуры (без учёта шаха)
+            function getPieceMoves(row, col, piece) {
+                const moves = [];
+                const color = piece.color;
+                const type = piece.type;
+
+                const directions = {
+                    rook: [[1,0],[-1,0],[0,1],[0,-1]],
+                    bishop: [[1,1],[1,-1],[-1,1],[-1,-1]],
+                    queen: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+                    king: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+                    knight: [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]
                 };
-                const fontSize = 24;
-                for (let i=0; i<4; i++) {
-                    for (let j=0; j<4; j++) {
-                        let val = board[i][j];
-                        let color = colors[val] || '#3c3a32';
-                        ctx.fillStyle = color;
-                        ctx.fillRect(j*100, i*100, 100, 100);
-                        ctx.fillStyle = val > 4 ? 'white' : '#776e65';
-                        ctx.font = `bold ${fontSize}px Arial`;
-                        if (val !== 0) {
-                            ctx.fillText(val, j*100+50 - ctx.measureText(val).width/2, i*100+60);
+
+                if (type === 'pawn') {
+                    const dir = color === 'white' ? -1 : 1;
+                    const startRow = color === 'white' ? 6 : 1;
+                    // Вперёд на 1
+                    if (row+dir >= 0 && row+dir < size && !board[row+dir][col]) {
+                        moves.push([row+dir, col]);
+                        // На 2 с начальной позиции
+                        if (row === startRow && !board[row+2*dir][col]) {
+                            moves.push([row+2*dir, col]);
+                        }
+                    }
+                    // Взятие по диагонали
+                    for (const dc of [-1, 1]) {
+                        const newRow = row+dir, newCol = col+dc;
+                        if (newRow>=0 && newRow<size && newCol>=0 && newCol<size) {
+                            const target = board[newRow][newCol];
+                            if (target && target.color !== color) moves.push([newRow, newCol]);
+                        }
+                    }
+                } else {
+                    const dirs = directions[type];
+                    if (!dirs) return moves;
+                    for (const [dr, dc] of dirs) {
+                        let r = row+dr, c = col+dc;
+                        if (type === 'knight') {
+                            if (r>=0 && r<size && c>=0 && c<size) {
+                                const target = board[r][c];
+                                if (!target || target.color !== color) moves.push([r,c]);
+                            }
+                        } else {
+                            while (r>=0 && r<size && c>=0 && c<size) {
+                                const target = board[r][c];
+                                if (!target) {
+                                    moves.push([r,c]);
+                                } else {
+                                    if (target.color !== color) moves.push([r,c]);
+                                    break;
+                                }
+                                r += dr; c += dc;
+                            }
+                        }
+                    }
+                }
+
+                // Рокировка (упрощённо: только если король и ладья не двигались, между ними пусто)
+                if (type === 'king') {
+                    const rowKing = row;
+                    const colKing = col;
+                    // Короткая рокировка
+                    if (!gameOver && piece.color === currentPlayer && !isKingInCheck(piece.color)) {
+                        // Ладья на h (7) или a (0)
+                        const rookShort = board[rowKing][7];
+                        if (rookShort && rookShort.type === 'rook' && rookShort.color === piece.color) {
+                            if (!board[rowKing][6] && !board[rowKing][5] && !isSquareAttacked(rowKing,5, piece.color==='white'?'black':'white') && !isSquareAttacked(rowKing,6, piece.color==='white'?'black':'white')) {
+                                moves.push([rowKing, 6]);
+                            }
+                        }
+                        // Длинная
+                        const rookLong = board[rowKing][0];
+                        if (rookLong && rookLong.type === 'rook' && rookLong.color === piece.color) {
+                            if (!board[rowKing][1] && !board[rowKing][2] && !board[rowKing][3] && !isSquareAttacked(rowKing,2, piece.color==='white'?'black':'white') && !isSquareAttacked(rowKing,3, piece.color==='white'?'black':'white')) {
+                                moves.push([rowKing, 2]);
+                            }
+                        }
+                    }
+                }
+                return moves;
+            }
+
+            // Валидный ход с учётом шаха
+            function isValidMove(fromRow, fromCol, toRow, toCol, piece) {
+                const moves = getPieceMoves(fromRow, fromCol, piece);
+                const isValid = moves.some(([r,c]) => r === toRow && c === toCol);
+                if (!isValid) return false;
+                return isValidMoveWithoutSelfCheck(fromRow, fromCol, toRow, toCol, piece);
+            }
+
+            // Выполнить ход
+            function makeMove(fromRow, fromCol, toRow, toCol) {
+                const piece = board[fromRow][fromCol];
+                if (!piece || piece.color !== currentPlayer) return false;
+                if (!isValidMove(fromRow, fromCol, toRow, toCol, piece)) return false;
+
+                // Спец. рокировка: перемещение ладьи
+                if (piece.type === 'king' && Math.abs(toCol - fromCol) === 2) {
+                    const rookCol = toCol > fromCol ? 7 : 0;
+                    const newRookCol = toCol > fromCol ? 5 : 3;
+                    const rook = board[fromRow][rookCol];
+                    if (rook && rook.type === 'rook') {
+                        board[fromRow][newRookCol] = rook;
+                        board[fromRow][rookCol] = null;
+                    }
+                }
+
+                // Выполняем ход
+                board[toRow][toCol] = piece;
+                board[fromRow][fromCol] = null;
+
+                // Превращение пешки (в ферзя)
+                if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
+                    board[toRow][toCol] = { type: 'queen', color: piece.color };
+                }
+
+                // Смена игрока
+                currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+                turnSpan.innerText = currentPlayer === 'white' ? 'белые' : 'чёрные';
+
+                // Проверка мата/пата
+                let nextPlayerMoves = false;
+                for (let i=0; i<size; i++) {
+                    for (let j=0; j<size; j++) {
+                        const p = board[i][j];
+                        if (p && p.color === currentPlayer) {
+                            const moves = getPieceMoves(i,j,p);
+                            for (let [r,c] of moves) {
+                                if (isValidMoveWithoutSelfCheck(i,j,r,c,p)) {
+                                    nextPlayerMoves = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!nextPlayerMoves) {
+                    if (isKingInCheck(currentPlayer)) {
+                        gameOver = true;
+                        winner = currentPlayer === 'white' ? 'чёрные' : 'белые';
+                        statusSpan.innerText = `${winner} победили! (мат)`;
+                    } else {
+                        gameOver = true;
+                        statusSpan.innerText = 'Пат! Ничья.';
+                    }
+                } else if (isKingInCheck(currentPlayer)) {
+                    statusSpan.innerText = `${currentPlayer === 'white' ? 'белые' : 'чёрные'} под шахом!`;
+                } else {
+                    statusSpan.innerText = '';
+                }
+                return true;
+            }
+
+            // Отрисовка доски и фигур
+            function drawBoard() {
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        const isDark = (i + j) % 2 === 1;
+                        ctx.fillStyle = isDark ? '#b58863' : '#f0d9b5';
+                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+
+                        // Подсветка выделенной клетки
+                        if (selectedRow === i && selectedCol === j) {
+                            ctx.fillStyle = 'rgba(0,255,0,0.4)';
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+                        // Подсветка возможных ходов
+                        for (let [r,c] of possibleMoves) {
+                            if (r === i && c === j) {
+                                ctx.fillStyle = 'rgba(0,200,0,0.3)';
+                                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                            }
+                        }
+
+                        const piece = board[i][j];
+                        if (piece) {
+                            const symbol = getPieceSymbol(piece);
+                            ctx.font = `${cellSize * 0.7}px Arial`;
+                            ctx.fillStyle = piece.color === 'white' ? '#fff' : '#222';
+                            ctx.shadowBlur = 0;
+                            ctx.fillText(symbol, j * cellSize + cellSize*0.2, i * cellSize + cellSize*0.8);
                         }
                     }
                 }
             }
 
-            function restart() {
-                board = Array(4).fill().map(() => Array(4).fill(0));
-                score = 0;
-                scoreSpan.innerText = '0';
-                gameActive = true;
-                addRandomTile();
-                addRandomTile();
-                gameOverDiv.style.display = 'none';
-                draw();
+            // Обработка кликов/тапов
+            function handleCanvasClick(e) {
+                if (gameOver) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                    e.preventDefault();
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                const canvasX = (clientX - rect.left) * scaleX;
+                const canvasY = (clientY - rect.top) * scaleY;
+                const col = Math.floor(canvasX / cellSize);
+                const row = Math.floor(canvasY / cellSize);
+                if (row < 0 || row >= size || col < 0 || col >= size) return;
+
+                if (selectedRow === null) {
+                    // Выбор фигуры
+                    const piece = board[row][col];
+                    if (piece && piece.color === currentPlayer) {
+                        selectedRow = row;
+                        selectedCol = col;
+                        // Генерация возможных ходов с учётом шаха
+                        const moves = getPieceMoves(row, col, piece);
+                        possibleMoves = moves.filter(([r,c]) => isValidMoveWithoutSelfCheck(row, col, r, c, piece));
+                        drawBoard();
+                    }
+                } else {
+                    // Попытка сходить
+                    const success = makeMove(selectedRow, selectedCol, row, col);
+                    selectedRow = null;
+                    selectedCol = null;
+                    possibleMoves = [];
+                    drawBoard();
+                    if (!success && !gameOver) {
+                        // Неверный ход: очищаем выделение
+                        drawBoard();
+                    }
+                }
             }
 
-            // Управление
-            function handleMove(dir) {
-                if (!gameActive) return;
-                move(dir);
-            }
-
-            const keyHandler = (e) => {
-                if (!window.game2048Active) return;
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                if (e.key === 'ArrowUp') handleMove('up');
-                else if (e.key === 'ArrowDown') handleMove('down');
-                else if (e.key === 'ArrowLeft') handleMove('left');
-                else if (e.key === 'ArrowRight') handleMove('right');
+                handleCanvasClick(e);
+            });
+
+            // Новая игра
+            function newGame() {
+                initBoard();
+                currentPlayer = 'white';
+                selectedRow = null;
+                selectedCol = null;
+                possibleMoves = [];
+                gameOver = false;
+                winner = null;
+                turnSpan.innerText = 'белые';
+                statusSpan.innerText = '';
+                drawBoard();
+            }
+
+            document.getElementById('chessNewGame').onclick = () => newGame();
+            document.getElementById('chessClose').onclick = () => {
+                window.chessGameActive.remove();
+                window.chessGameActive = null;
             };
-            window.addEventListener('keydown', keyHandler);
 
-            upBtn.onclick = () => handleMove('up');
-            downBtn.onclick = () => handleMove('down');
-            leftBtn.onclick = () => handleMove('left');
-            rightBtn.onclick = () => handleMove('right');
-
-            restartBtn.onclick = () => restart();
-            closeBtn.onclick = () => {
-                window.removeEventListener('keydown', keyHandler);
-                window.game2048Active.remove();
-                window.game2048Active = null;
-            };
-
-            // Инициализация
-            restart();
+            newGame();
         }
 
-        icon2048.onclick = () => {
-            const panel = document.getElementById('unifiedGamePanel');
-            if (panel) panel.style.display = 'none';
-            start2048();
+        chessIcon.onclick = () => {
+            document.getElementById('unifiedGamePanel').style.display = 'none';
+            startChess();
         };
     });
 })();
