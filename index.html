@@ -8404,8 +8404,8 @@ if(p) {
 
 
 
-// ========== ШАХМАТЫ (2 ИГРОКА ИЛИ БОТ, 3 УРОВНЯ СЛОЖНОСТИ) ==========
-(function addChessGame() {
+// ========== ШАХМАТЫ 2P и БОТ (3 уровня сложности) ==========
+(function addChessWithBot() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -8424,7 +8424,7 @@ if(p) {
         chessIcon.innerHTML = `<div style="font-size:48px;">♟️🤖</div><div style="color:white;">Шахматы</div>`;
         gamesContainer.appendChild(chessIcon);
 
-        // ---------- ШАХМАТЫ С ВЫБОРОМ РЕЖИМА ----------
+        // ---------- ИГРА ----------
         function startChess() {
             if (window.chessGameActive) {
                 window.chessGameActive.remove();
@@ -8434,25 +8434,25 @@ if(p) {
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:480px; overflow:hidden;">
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:500px; overflow:hidden;">
                     <div style="background:#b58863; padding:8px; text-align:center; color:white; font-weight:bold;">♜ Шахматы ♞</div>
                     <canvas id="chessCanvas" width="400" height="400" style="width:100%; height:auto; display:block;"></canvas>
-                    <div style="background:#2c3e50; padding:6px;">
-                        <div style="display:flex; justify-content:space-between; color:white; margin-bottom:5px;">
-                            <span>Ход: <span id="chessTurn">белые</span></span>
-                            <span id="chessStatus"></span>
-                        </div>
-                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:5px;">
-                            <button id="chessMode2p" style="flex:1; background:#3498db; border:none; padding:5px; border-radius:15px;">👥 2 игрока</button>
-                            <button id="chessModeBot" style="flex:1; background:#e67e22; border:none; padding:5px; border-radius:15px;">🤖 vs Бот</button>
-                            <select id="chessDifficulty" style="background:#1abc9c; border:none; padding:5px; border-radius:15px; color:white;">
-                                <option value="easy">Легкий</option>
-                                <option value="medium">Средний</option>
-                                <option value="hard">Сложный</option>
-                            </select>
-                        </div>
-                        <button id="chessNewGame" style="width:100%; background:#27ae60; border:none; padding:5px; border-radius:15px; margin-bottom:5px;">🔄 Новая игра (сброс)</button>
-                        <button id="chessClose" style="width:100%; background:#c0392b; border:none; padding:5px; border-radius:15px;">✖ Закрыть</button>
+                    <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:12px;">
+                        <span>Ход: <span id="chessTurn">белые</span></span>
+                        <span id="chessStatus"></span>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; padding:8px;">
+                        <select id="gameModeSelect" style="flex:2; background:#34495e; color:white; border:none; border-radius:20px; padding:6px;">
+                            <option value="2p">👥 На двоих</option>
+                            <option value="bot">🤖 Против бота</option>
+                        </select>
+                        <select id="difficultySelect" style="flex:1; background:#34495e; color:white; border:none; border-radius:20px; padding:6px;">
+                            <option value="easy">Легко</option>
+                            <option value="medium">Средне</option>
+                            <option value="hard">Сложно</option>
+                        </select>
+                        <button id="chessNewGame" style="flex:1; background:#27ae60; border:none; padding:6px; border-radius:20px;">🔄 Новая</button>
+                        <button id="chessClose" style="flex:1; background:#c0392b; border:none; padding:6px; border-radius:20px;">✖ Закрыть</button>
                     </div>
                 </div>
             `;
@@ -8463,33 +8463,37 @@ if(p) {
             const ctx = canvas.getContext('2d');
             const turnSpan = document.getElementById('chessTurn');
             const statusSpan = document.getElementById('chessStatus');
-            const mode2pBtn = document.getElementById('chessMode2p');
-            const modeBotBtn = document.getElementById('chessModeBot');
-            const difficultySelect = document.getElementById('chessDifficulty');
+            const modeSelect = document.getElementById('gameModeSelect');
+            const difficultySelect = document.getElementById('difficultySelect');
             const newGameBtn = document.getElementById('chessNewGame');
             const closeBtn = document.getElementById('chessClose');
 
-            // Параметры
             const size = 8;
             const cellSize = 400 / size;
             let board = [];
             let currentPlayer = 'white'; // white всегда ходит первым
-            let gameMode = '2p'; // '2p' или 'bot'
-            let difficulty = 'medium'; // 'easy', 'medium', 'hard'
             let selectedRow = null, selectedCol = null;
             let gameOver = false;
-            let winner = null;
             let possibleMoves = [];
+            let waitingForBot = false;
+
+            // Ценность фигур для бота
+            const pieceValue = {
+                pawn: 1,
+                knight: 3,
+                bishop: 3,
+                rook: 5,
+                queen: 9,
+                king: 100
+            };
 
             // Инициализация доски
             function initBoard() {
                 board = Array(size).fill().map(() => Array(size).fill(null));
-                // Пешки
                 for (let i = 0; i < size; i++) {
                     board[1][i] = { type: 'pawn', color: 'black' };
                     board[6][i] = { type: 'pawn', color: 'white' };
                 }
-                // Фигуры
                 const pieces = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
                 for (let i = 0; i < size; i++) {
                     board[0][i] = { type: pieces[i], color: 'black' };
@@ -8510,15 +8514,13 @@ if(p) {
                 return symbols[piece.type][piece.color];
             }
 
-            // Проверка атаки на клетку
+            // ---- Шахматная логика (исправленная, король ходит на 1) ----
             function isSquareAttacked(row, col, attackerColor) {
                 for (let r = 0; r < size; r++) {
                     for (let c = 0; c < size; c++) {
-                        const piece = board[r][c];
-                        if (piece && piece.color === attackerColor) {
-                            if (isValidMoveWithoutSelfCheck(r, c, row, col, piece)) {
-                                return true;
-                            }
+                        const p = board[r][c];
+                        if (p && p.color === attackerColor) {
+                            if (isValidMoveWithoutSelfCheck(r, c, row, col, p)) return true;
                         }
                     }
                 }
@@ -8530,10 +8532,7 @@ if(p) {
                 for (let i = 0; i < size; i++) {
                     for (let j = 0; j < size; j++) {
                         const p = board[i][j];
-                        if (p && p.type === 'king' && p.color === color) {
-                            kingPos = [i, j];
-                            break;
-                        }
+                        if (p && p.type === 'king' && p.color === color) kingPos = [i, j];
                     }
                 }
                 if (!kingPos) return false;
@@ -8554,66 +8553,82 @@ if(p) {
                 const moves = [];
                 const color = piece.color;
                 const type = piece.type;
+
+                // Король (только 1 клетка)
+                if (type === 'king') {
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            const r = row + dr, c = col + dc;
+                            if (r>=0 && r<size && c>=0 && c<size) {
+                                const target = board[r][c];
+                                if (!target || target.color !== color) moves.push([r,c]);
+                            }
+                        }
+                    }
+                    // Рокировка (король и ладья не двигались, между ними пусто, король не под шахом)
+                    if (!gameOver && !isKingInCheck(color)) {
+                        // Короткая
+                        const rookShort = board[row][7];
+                        if (rookShort && rookShort.type === 'rook' && rookShort.color === color) {
+                            if (!board[row][6] && !board[row][5] && !isSquareAttacked(row,5, color==='white'?'black':'white') && !isSquareAttacked(row,6, color==='white'?'black':'white')) {
+                                moves.push([row, 6]);
+                            }
+                        }
+                        // Длинная
+                        const rookLong = board[row][0];
+                        if (rookLong && rookLong.type === 'rook' && rookLong.color === color) {
+                            if (!board[row][1] && !board[row][2] && !board[row][3] && !isSquareAttacked(row,2, color==='white'?'black':'white') && !isSquareAttacked(row,3, color==='white'?'black':'white')) {
+                                moves.push([row, 2]);
+                            }
+                        }
+                    }
+                    return moves;
+                }
+
+                // Остальные фигуры (конь, ладья, слон, ферзь, пешка)
                 const directions = {
                     rook: [[1,0],[-1,0],[0,1],[0,-1]],
                     bishop: [[1,1],[1,-1],[-1,1],[-1,-1]],
                     queen: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
-                    king: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
                     knight: [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]
                 };
                 if (type === 'pawn') {
                     const dir = color === 'white' ? -1 : 1;
                     const startRow = color === 'white' ? 6 : 1;
-                    if (row+dir >= 0 && row+dir < size && !board[row+dir][col]) {
+                    if (row+dir >=0 && row+dir<size && !board[row+dir][col]) {
                         moves.push([row+dir, col]);
                         if (row === startRow && !board[row+2*dir][col]) moves.push([row+2*dir, col]);
                     }
-                    for (const dc of [-1, 1]) {
-                        const newRow = row+dir, newCol = col+dc;
-                        if (newRow>=0 && newRow<size && newCol>=0 && newCol<size) {
-                            const target = board[newRow][newCol];
-                            if (target && target.color !== color) moves.push([newRow, newCol]);
+                    for (const dc of [-1,1]) {
+                        const r = row+dir, c = col+dc;
+                        if (r>=0 && r<size && c>=0 && c<size) {
+                            const target = board[r][c];
+                            if (target && target.color !== color) moves.push([r,c]);
                         }
                     }
-                } else {
-                    const dirs = directions[type];
-                    if (!dirs) return moves;
-                    for (const [dr, dc] of dirs) {
-                        let r = row+dr, c = col+dc;
-                        if (type === 'knight') {
-                            if (r>=0 && r<size && c>=0 && c<size) {
-                                const target = board[r][c];
-                                if (!target || target.color !== color) moves.push([r,c]);
-                            }
-                        } else {
-                            while (r>=0 && r<size && c>=0 && c<size) {
-                                const target = board[r][c];
-                                if (!target) {
-                                    moves.push([r,c]);
-                                } else {
-                                    if (target.color !== color) moves.push([r,c]);
-                                    break;
-                                }
-                                r += dr; c += dc;
-                            }
-                        }
-                    }
+                    return moves;
                 }
-                // Рокировка (простая)
-                if (type === 'king' && !gameOver) {
-                    const rowKing = row;
-                    // Короткая
-                    const rookShort = board[rowKing][7];
-                    if (rookShort && rookShort.type === 'rook' && rookShort.color === color) {
-                        if (!board[rowKing][6] && !board[rowKing][5] && !isSquareAttacked(rowKing,5, color==='white'?'black':'white') && !isSquareAttacked(rowKing,6, color==='white'?'black':'white')) {
-                            moves.push([rowKing, 6]);
+
+                const dirs = directions[type];
+                if (!dirs) return moves;
+                for (const [dr, dc] of dirs) {
+                    let r = row+dr, c = col+dc;
+                    if (type === 'knight') {
+                        if (r>=0 && r<size && c>=0 && c<size) {
+                            const target = board[r][c];
+                            if (!target || target.color !== color) moves.push([r,c]);
                         }
-                    }
-                    // Длинная
-                    const rookLong = board[rowKing][0];
-                    if (rookLong && rookLong.type === 'rook' && rookLong.color === color) {
-                        if (!board[rowKing][1] && !board[rowKing][2] && !board[rowKing][3] && !isSquareAttacked(rowKing,2, color==='white'?'black':'white') && !isSquareAttacked(rowKing,3, color==='white'?'black':'white')) {
-                            moves.push([rowKing, 2]);
+                    } else {
+                        while (r>=0 && r<size && c>=0 && c<size) {
+                            const target = board[r][c];
+                            if (!target) {
+                                moves.push([r,c]);
+                            } else {
+                                if (target.color !== color) moves.push([r,c]);
+                                break;
+                            }
+                            r += dr; c += dc;
                         }
                     }
                 }
@@ -8622,17 +8637,18 @@ if(p) {
 
             function isValidMove(fromRow, fromCol, toRow, toCol, piece) {
                 const moves = getPieceMoves(fromRow, fromCol, piece);
-                const isValid = moves.some(([r,c]) => r === toRow && c === toCol);
-                if (!isValid) return false;
+                const ok = moves.some(([r,c]) => r === toRow && c === toCol);
+                if (!ok) return false;
                 return isValidMoveWithoutSelfCheck(fromRow, fromCol, toRow, toCol, piece);
             }
 
+            // Выполнить ход (возвращает true, если успешно)
             function makeMove(fromRow, fromCol, toRow, toCol) {
                 const piece = board[fromRow][fromCol];
                 if (!piece || piece.color !== currentPlayer) return false;
                 if (!isValidMove(fromRow, fromCol, toRow, toCol, piece)) return false;
 
-                // Рокировка - перемещение ладьи
+                // Рокировка: перемещение ладьи
                 if (piece.type === 'king' && Math.abs(toCol - fromCol) === 2) {
                     const rookCol = toCol > fromCol ? 7 : 0;
                     const newRookCol = toCol > fromCol ? 5 : 3;
@@ -8646,36 +8662,42 @@ if(p) {
                 board[toRow][toCol] = piece;
                 board[fromRow][fromCol] = null;
 
+                // Превращение пешки (в ферзя)
                 if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
                     board[toRow][toCol] = { type: 'queen', color: piece.color };
                 }
 
+                // Смена игрока
                 currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
                 turnSpan.innerText = currentPlayer === 'white' ? 'белые' : 'чёрные';
 
-                // Проверка окончания игры
-                let nextPlayerMoves = false;
-                for (let i=0; i<size; i++) {
-                    for (let j=0; j<size; j++) {
+                // Проверка окончания
+                checkGameOver();
+                return true;
+            }
+
+            function checkGameOver() {
+                let hasMoves = false;
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
                         const p = board[i][j];
                         if (p && p.color === currentPlayer) {
-                            const moves = getPieceMoves(i,j,p);
+                            const moves = getPieceMoves(i, j, p);
                             for (let [r,c] of moves) {
-                                if (isValidMoveWithoutSelfCheck(i,j,r,c,p)) {
-                                    nextPlayerMoves = true;
+                                if (isValidMoveWithoutSelfCheck(i, j, r, c, p)) {
+                                    hasMoves = true;
                                     break;
                                 }
                             }
                         }
                     }
                 }
-                if (!nextPlayerMoves) {
+                if (!hasMoves) {
+                    gameOver = true;
                     if (isKingInCheck(currentPlayer)) {
-                        gameOver = true;
-                        winner = currentPlayer === 'white' ? 'чёрные' : 'белые';
-                        statusSpan.innerText = `${winner} победили! (мат)`;
+                        const winner = currentPlayer === 'white' ? 'чёрные' : 'белые';
+                        statusSpan.innerText = `${winner} победили (мат)!`;
                     } else {
-                        gameOver = true;
                         statusSpan.innerText = 'Пат! Ничья.';
                     }
                 } else if (isKingInCheck(currentPlayer)) {
@@ -8683,88 +8705,108 @@ if(p) {
                 } else {
                     statusSpan.innerText = '';
                 }
-                return true;
             }
 
-            // Ход бота
-            function botMove() {
-                if (gameOver) return;
-                if (gameMode !== 'bot') return;
-                if (currentPlayer !== 'black') return; // бот играет чёрными
-
-                // Собрать все возможные ходы чёрных
-                let allMoves = [];
-                for (let i=0; i<size; i++) {
-                    for (let j=0; j<size; j++) {
-                        const piece = board[i][j];
-                        if (piece && piece.color === 'black') {
-                            const moves = getPieceMoves(i,j,piece);
-                            for (let [r,c] of moves) {
-                                if (isValidMoveWithoutSelfCheck(i,j,r,c,piece)) {
-                                    allMoves.push({ fromRow: i, fromCol: j, toRow: r, toCol: c, piece });
+            // ---- AI (бот) ----
+            function getAllMoves(color) {
+                const moves = [];
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        const p = board[i][j];
+                        if (p && p.color === color) {
+                            const pieceMoves = getPieceMoves(i, j, p);
+                            for (let [r,c] of pieceMoves) {
+                                if (isValidMoveWithoutSelfCheck(i, j, r, c, p)) {
+                                    moves.push({ from: [i,j], to: [r,c], piece: p });
                                 }
                             }
                         }
                     }
                 }
-                if (allMoves.length === 0) return;
+                return moves;
+            }
 
-                let chosen = null;
-                if (difficulty === 'easy') {
-                    // случайный ход
-                    chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
-                } else if (difficulty === 'medium') {
-                    // 50% случайно, 50% предпочитаем взятие
-                    const captures = allMoves.filter(m => board[m.toRow][m.toCol] !== null);
-                    if (captures.length > 0 && Math.random() < 0.7) {
-                        chosen = captures[Math.floor(Math.random() * captures.length)];
-                    } else {
-                        chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
-                    }
-                } else { // hard
-                    // приоритет: взятие фигуры > шах > случайный
-                    const captures = allMoves.filter(m => board[m.toRow][m.toCol] !== null);
-                    if (captures.length > 0) {
-                        // выбираем взятие с максимальной ценностью фигуры (упрощённо)
-                        const pieceValues = { pawn:1, knight:3, bishop:3, rook:5, queen:9, king:100 };
-                        captures.sort((a,b) => (pieceValues[board[b.toRow][b.toCol]?.type]||0) - (pieceValues[board[a.toRow][a.toCol]?.type]||0));
-                        chosen = captures[0];
-                    } else {
-                        // ищем ход, создающий шах
-                        let checkingMoves = [];
-                        for (let m of allMoves) {
-                            // пробуем сделать ход и проверить, будет ли шах белому королю
-                            const fromPiece = board[m.fromRow][m.fromCol];
-                            const targetPiece = board[m.toRow][m.toCol];
-                            board[m.toRow][m.toCol] = fromPiece;
-                            board[m.fromRow][m.fromCol] = null;
-                            const givesCheck = isKingInCheck('white');
-                            board[m.fromRow][m.fromCol] = fromPiece;
-                            board[m.toRow][m.toCol] = targetPiece;
-                            if (givesCheck) checkingMoves.push(m);
-                        }
-                        if (checkingMoves.length > 0) {
-                            chosen = checkingMoves[Math.floor(Math.random() * checkingMoves.length)];
-                        } else {
-                            chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+            function evaluateBoard() {
+                let score = 0;
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        const p = board[i][j];
+                        if (p) {
+                            let val = pieceValue[p.type];
+                            if (p.color === 'white') score += val;
+                            else score -= val;
                         }
                     }
                 }
+                return score;
+            }
 
-                if (chosen) {
-                    setTimeout(() => {
-                        if (!gameOver && currentPlayer === 'black') {
-                            makeMove(chosen.fromRow, chosen.fromCol, chosen.toRow, chosen.toCol);
-                            drawBoard();
-                            // Если игра не закончена и режим бота, и ход снова бота? Нет, после хода бота ход переходит к белым
-                            // Бот больше не ходит до следующего хода игрока.
+            function getBotMove(difficulty) {
+                const moves = getAllMoves('black');
+                if (moves.length === 0) return null;
+                if (difficulty === 'easy') {
+                    return moves[Math.floor(Math.random() * moves.length)];
+                } else if (difficulty === 'medium') {
+                    // Оцениваем каждый ход: если бьёт фигуру, отдаём приоритет
+                    let bestScore = -Infinity;
+                    let bestMoves = [];
+                    for (let move of moves) {
+                        let scoreChange = 0;
+                        const target = board[move.to[0]][move.to[1]];
+                        if (target) scoreChange += pieceValue[target.type];
+                        if (scoreChange > bestScore) {
+                            bestScore = scoreChange;
+                            bestMoves = [move];
+                        } else if (scoreChange === bestScore) {
+                            bestMoves.push(move);
                         }
-                    }, 50);
+                    }
+                    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+                } else { // hard - минимакс на 1 ход вперёд с учётом ценности
+                    let bestScore = -Infinity;
+                    let bestMove = moves[0];
+                    for (let move of moves) {
+                        // Сделать ход
+                        const target = board[move.to[0]][move.to[1]];
+                        board[move.to[0]][move.to[1]] = move.piece;
+                        board[move.from[0]][move.from[1]] = null;
+                        // Оценка позиции после хода (для белых, но нам нужно максимизировать чёрных, т.е. минимизировать score белых)
+                        let scoreAfter = evaluateBoard();
+                        // Возврат
+                        board[move.from[0]][move.from[1]] = move.piece;
+                        board[move.to[0]][move.to[1]] = target;
+                        if (scoreAfter < bestScore) {
+                            bestScore = scoreAfter;
+                            bestMove = move;
+                        }
+                    }
+                    return bestMove;
                 }
             }
 
-            // Отрисовка
+            async function botMoveIfNeeded() {
+                if (gameOver) return;
+                if (modeSelect.value !== 'bot') return;
+                if (currentPlayer !== 'black') return;
+                if (waitingForBot) return;
+                waitingForBot = true;
+                // Небольшая задержка для естественности
+                await new Promise(r => setTimeout(r, 100));
+                const difficulty = difficultySelect.value;
+                const move = getBotMove(difficulty);
+                if (move) {
+                    makeMove(move.from[0], move.from[1], move.to[0], move.to[1]);
+                    drawBoard();
+                }
+                waitingForBot = false;
+                if (!gameOver && modeSelect.value === 'bot' && currentPlayer === 'black') {
+                    botMoveIfNeeded(); // если бот ещё может ходить (на всякий случай)
+                }
+            }
+
+            // ---- Отрисовка и обработка кликов ----
             function drawBoard() {
+                ctx.clearRect(0, 0, 400, 400);
                 for (let i = 0; i < size; i++) {
                     for (let j = 0; j < size; j++) {
                         const isDark = (i + j) % 2 === 1;
@@ -8782,9 +8824,9 @@ if(p) {
                         }
                         const piece = board[i][j];
                         if (piece) {
-                            ctx.font = `${cellSize * 0.7}px Arial`;
+                            ctx.font = `${cellSize * 0.65}px Arial`;
                             ctx.fillStyle = piece.color === 'white' ? '#fff' : '#222';
-                            ctx.fillText(getPieceSymbol(piece), j * cellSize + cellSize*0.2, i * cellSize + cellSize*0.8);
+                            ctx.fillText(getPieceSymbol(piece), j * cellSize + cellSize*0.2, i * cellSize + cellSize*0.75);
                         }
                     }
                 }
@@ -8792,6 +8834,7 @@ if(p) {
 
             function handleCanvasClick(e) {
                 if (gameOver) return;
+                if (modeSelect.value === 'bot' && currentPlayer !== 'white') return; // бот ходит сам
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
@@ -8825,10 +8868,28 @@ if(p) {
                     selectedCol = null;
                     possibleMoves = [];
                     drawBoard();
-                    if (success && !gameOver && gameMode === 'bot' && currentPlayer === 'black') {
-                        botMove();
-                        drawBoard();
+                    if (success && !gameOver && modeSelect.value === 'bot' && currentPlayer === 'black') {
+                        botMoveIfNeeded();
+                    } else if (!success) {
+                        drawBoard(); // просто перерисовываем
                     }
+                }
+            }
+
+            // Новая игра
+            function newGame() {
+                initBoard();
+                currentPlayer = 'white';
+                selectedRow = null;
+                selectedCol = null;
+                possibleMoves = [];
+                gameOver = false;
+                turnSpan.innerText = 'белые';
+                statusSpan.innerText = '';
+                waitingForBot = false;
+                drawBoard();
+                if (modeSelect.value === 'bot' && currentPlayer === 'black') {
+                    botMoveIfNeeded();
                 }
             }
 
@@ -8838,38 +8899,15 @@ if(p) {
                 handleCanvasClick(e);
             });
 
-            function resetGame() {
-                initBoard();
-                currentPlayer = 'white';
-                selectedRow = null;
-                selectedCol = null;
-                possibleMoves = [];
-                gameOver = false;
-                winner = null;
-                turnSpan.innerText = 'белые';
-                statusSpan.innerText = '';
-                drawBoard();
-                if (gameMode === 'bot' && currentPlayer === 'black') {
-                    botMove(); // если вдруг бот начинает? нет, всегда белые начинают
-                }
-            }
-
-            function setMode(mode) {
-                gameMode = mode;
-                resetGame();
-            }
-
-            mode2pBtn.onclick = () => setMode('2p');
-            modeBotBtn.onclick = () => setMode('bot');
-            newGameBtn.onclick = () => resetGame();
+            newGameBtn.onclick = () => newGame();
             closeBtn.onclick = () => {
                 window.chessGameActive.remove();
                 window.chessGameActive = null;
             };
-            difficultySelect.onchange = (e) => { difficulty = e.target.value; };
+            modeSelect.onchange = () => newGame();
+            difficultySelect.onchange = () => { if (modeSelect.value === 'bot') newGame(); };
 
-            initBoard();
-            drawBoard();
+            newGame();
         }
 
         chessIcon.onclick = () => {
@@ -8878,7 +8916,6 @@ if(p) {
         };
     });
 })();
-
 
     
 
