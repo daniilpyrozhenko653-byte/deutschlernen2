@@ -8988,8 +8988,8 @@ if(p) {
 
 
 
-    // ========== MINER: 2D-песочница (а-ля Minecraft) ==========
-(function addMinerGame() {
+    // ========== MINER INFINITE: бесконечный мир, день/ночь, дождь, горы ==========
+(function addMinerInfinite() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9005,29 +9005,32 @@ if(p) {
         const minerIcon = document.createElement('div');
         minerIcon.id = 'gameMinerIcon';
         minerIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
-        minerIcon.innerHTML = `<div style="font-size:48px;">⛏️🧱</div><div style="color:white;">Miner</div>`;
+        minerIcon.innerHTML = `<div style="font-size:48px;">⛏️🌍</div><div style="color:white;">Miner ∞</div>`;
         gamesContainer.appendChild(minerIcon);
 
         function startMiner() {
             if (window.minerGameActive) {
                 window.minerGameActive.remove();
-                if (window.minerInterval) clearInterval(window.minerInterval);
+                if (window.minerInterval) cancelAnimationFrame(window.minerFrame);
+                if (window.minerRainInterval) clearInterval(window.minerRainInterval);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:550px; overflow:hidden;">
-                    <div style="background:#5d3a1a; padding:8px; text-align:center; color:white; font-weight:bold;">⛏️ MINER — копай и строй</div>
-                    <canvas id="minerCanvas" width="400" height="400" style="width:100%; height:auto; background:#1e2a2e; display:block;"></canvas>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:620px; overflow:hidden;">
+                    <div style="background:#5d3a1a; padding:8px; text-align:center; color:white; font-weight:bold;">🌍 MINER INFINITE — бесконечный мир</div>
+                    <canvas id="minerCanvas" width="500" height="500" style="width:100%; height:auto; display:block;"></canvas>
                     <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:12px;">
                         <span>🪓 Режим: <span id="minerMode">копать</span></span>
                         <span>📦 Дерево: <span id="minerWood">0</span></span>
                         <span>🪨 Камень: <span id="minerStone">0</span></span>
                         <span>⚙️ Железо: <span id="minerIron">0</span></span>
+                        <span>🌤️ <span id="minerWeather">солнечно</span></span>
                     </div>
                     <div style="display:flex; gap:8px; padding:8px;">
                         <button id="minerModeBtn" style="flex:1; background:#f39c12; border:none; padding:6px; border-radius:20px;">🔨 Копать / Строить</button>
+                        <button id="minerCycleBlockBtn" style="flex:1; background:#3498db; border:none; padding:6px; border-radius:20px;">🔄 Сменить блок</button>
                         <button id="minerNewGameBtn" style="flex:1; background:#27ae60; border:none; padding:6px; border-radius:20px;">🔄 Новая карта</button>
                         <button id="minerCloseBtn" style="flex:1; background:#c0392b; border:none; padding:6px; border-radius:20px;">✖ Закрыть</button>
                     </div>
@@ -9042,13 +9045,16 @@ if(p) {
             document.body.appendChild(gameDiv);
             window.minerGameActive = gameDiv;
 
+            // ----- ИНИЦИАЛИЗАЦИЯ -----
             const canvas = document.getElementById('minerCanvas');
             const ctx = canvas.getContext('2d');
             const modeSpan = document.getElementById('minerMode');
             const woodSpan = document.getElementById('minerWood');
             const stoneSpan = document.getElementById('minerStone');
             const ironSpan = document.getElementById('minerIron');
+            const weatherSpan = document.getElementById('minerWeather');
             const modeBtn = document.getElementById('minerModeBtn');
+            const cycleBlockBtn = document.getElementById('minerCycleBlockBtn');
             const newGameBtn = document.getElementById('minerNewGameBtn');
             const closeBtn = document.getElementById('minerCloseBtn');
             const upBtn = document.getElementById('minerUp');
@@ -9056,193 +9062,362 @@ if(p) {
             const leftBtn = document.getElementById('minerLeft');
             const rightBtn = document.getElementById('minerRight');
 
-            // Параметры мира
-            const worldSize = 20;
-            const cellSize = 400 / worldSize;
-            let world = [];
-            let player = { x: 10, y: 10 };
+            // Размеры
+            const viewSize = 20;      // 20x20 видимых блоков
+            let cellSize = canvas.width / viewSize;
+            // Обновление cellSize при ресайзе (будет позже)
+
+            // ----- Бесконечный мир (чанки) -----
+            // Храним только чанки вокруг игрока. Чанк = 16x16 блоков.
+            const CHUNK_SIZE = 16;
+            let chunks = new Map(); // key "x,y" -> 2D массив блоков
+            let player = { x: 0, y: 0 }; // мировые координаты в блоках
             let inventory = { wood: 0, stone: 0, iron: 0 };
-            let mode = 'dig'; // 'dig' или 'build'
-            let selectedBlock = 'wood'; // блок для постройки
+
+            let mode = 'dig';
+            let selectedBlock = 'wood'; // wood / stone
+            let weather = 'sunny'; // sunny, rainy
+            let timeOfDay = 0; // 0..1 (0=утро, 0.25=день, 0.5=вечер, 0.75=ночь)
+            let rainParticles = [];
+            let lastTimestamp = 0;
+            let animationId = null;
 
             // Типы блоков
             const blocks = {
-                0: { name: 'пустота', color: '#1e2a2e', diggable: false, drops: null },
-                1: { name: 'трава', color: '#5d8c48', diggable: true, drops: { wood: 1 }, hardness: 1 },
-                2: { name: 'камень', color: '#7f8c8d', diggable: true, drops: { stone: 1 }, hardness: 2 },
-                3: { name: 'железная руда', color: '#b5a47b', diggable: true, drops: { iron: 1 }, hardness: 3 },
-                4: { name: 'дерево', color: '#8B5A2B', diggable: true, drops: { wood: 2 }, hardness: 1 },
-                5: { name: 'доски (строй)', color: '#c19a6b', diggable: true, drops: { wood: 1 }, hardness: 1 },
-                6: { name: 'каменная стена', color: '#95a5a6', diggable: true, drops: { stone: 1 }, hardness: 2 }
+                0: { name: 'воздух', color: (x,y)=>'rgba(0,0,0,0)', diggable: false, drops: null, solid: false },
+                1: { name: 'трава', color: () => '#5d8c48', diggable: true, drops: { wood: 0, stone: 0, iron: 0 }, solid: true },
+                2: { name: 'камень', color: () => '#7f8c8d', diggable: true, drops: { stone: 1 }, solid: true },
+                3: { name: 'железная руда', color: () => '#b5a47b', diggable: true, drops: { iron: 1 }, solid: true },
+                4: { name: 'дерево', color: () => '#8B5A2B', diggable: true, drops: { wood: 2 }, solid: true },
+                5: { name: 'доски', color: () => '#c19a6b', diggable: true, drops: { wood: 1 }, solid: true },
+                6: { name: 'каменная стена', color: () => '#95a5a6', diggable: true, drops: { stone: 1 }, solid: true },
+                7: { name: 'листва', color: () => '#2ecc71', diggable: true, drops: { wood: 0 }, solid: false }
             };
 
-            // Генерация мира
-            function generateWorld() {
-                world = Array(worldSize).fill().map(() => Array(worldSize).fill(0));
-                // Земля
-                for (let i = 0; i < worldSize; i++) {
-                    for (let j = 0; j < worldSize; j++) {
-                        if (j > 12) world[i][j] = 1; // трава сверху
-                        else if (j > 15) world[i][j] = 2; // камень глубже
-                        else world[i][j] = 0;
-                    }
-                }
-                // Несколько деревьев
-                for (let t = 0; t < 8; t++) {
-                    let x = 3 + Math.floor(Math.random() * 14);
-                    let y = 11;
-                    if (world[x][y] === 1) {
-                        world[x][y] = 4; // дерево
-                        if (y-1 >= 0 && world[x][y-1] === 0) world[x][y-1] = 4;
-                    }
-                }
-                // Железо
-                for (let i = 0; i < 12; i++) {
-                    let x = Math.floor(Math.random() * worldSize);
-                    let y = 16 + Math.floor(Math.random() * 3);
-                    if (world[x][y] === 2) world[x][y] = 3;
-                }
-                // Камни
-                for (let i = 0; i < 20; i++) {
-                    let x = Math.floor(Math.random() * worldSize);
-                    let y = 13 + Math.floor(Math.random() * 5);
-                    if (world[x][y] === 1) world[x][y] = 2;
-                }
+            // ----- Простая псевдослучайная функция (шум) -----
+            function simpleNoise(x, y, seed=12345) {
+                let n = x * 374761393 + y * 668265263 + seed;
+                n = (n ^ (n >> 13)) * 1274126177;
+                n = (n ^ (n >> 15)) & 0x7fffffff;
+                return n / 0x7fffffff;
             }
 
-            // Обновить UI инвентаря
-            function updateInventoryUI() {
-                woodSpan.innerText = inventory.wood;
-                stoneSpan.innerText = inventory.stone;
-                ironSpan.innerText = inventory.iron;
+            // Генерация чанка (мировые координаты левого верхнего угла чанка в блоках)
+            function generateChunk(chunkX, chunkY) {
+                const blocksArr = Array(CHUNK_SIZE).fill().map(() => Array(CHUNK_SIZE).fill(0));
+                const worldStartX = chunkX * CHUNK_SIZE;
+                const worldStartY = chunkY * CHUNK_SIZE;
+                for (let localX = 0; localX < CHUNK_SIZE; localX++) {
+                    const worldX = worldStartX + localX;
+                    for (let localY = 0; localY < CHUNK_SIZE; localY++) {
+                        const worldY = worldStartY + localY;
+                        // Высота поверхности (шум)
+                        let heightNoise = (simpleNoise(worldX * 0.05, 0) + simpleNoise(worldX * 0.2, 100)) * 0.5;
+                        let baseHeight = Math.floor(12 + heightNoise * 8);
+                        // Горы
+                        let mountain = Math.pow(Math.abs(simpleNoise(worldX * 0.03, 200) - 0.5) * 2, 2) * 6;
+                        let surfaceY = baseHeight + Math.floor(mountain);
+                        if (worldY < surfaceY) {
+                            if (worldY >= surfaceY - 3) {
+                                blocksArr[localX][localY] = 1; // трава
+                            } else if (worldY >= surfaceY - 8) {
+                                blocksArr[localX][localY] = 2; // камень
+                            } else {
+                                blocksArr[localX][localY] = 2; // глубже камень
+                            }
+                            // Деревья
+                            if (worldY === surfaceY - 1 && simpleNoise(worldX * 0.3, 300) > 0.92 && blocksArr[localX][localY] === 1) {
+                                for (let h = 1; h <= 3; h++) {
+                                    if (worldY - h >= 0) {
+                                        const treeLocalY = localY - h;
+                                        if (treeLocalY >= 0 && treeLocalY < CHUNK_SIZE) {
+                                            if (h === 1) blocksArr[localX][treeLocalY] = 4; // ствол
+                                            else if (h === 2) blocksArr[localX][treeLocalY] = 4;
+                                            else if (h === 3) blocksArr[localX][treeLocalY] = 7; // листва
+                                        }
+                                    }
+                                }
+                            }
+                            // Железо
+                            if (worldY > surfaceY + 3 && simpleNoise(worldX * 0.5, 400) > 0.85) {
+                                blocksArr[localX][localY] = 3;
+                            }
+                        } else {
+                            blocksArr[localX][localY] = 0; // воздух
+                        }
+                    }
+                }
+                return blocksArr;
             }
 
-            // Копать блок
-            function digBlock(x, y) {
-                const blockId = world[x][y];
-                const block = blocks[blockId];
+            // Получить блок из мировых координат
+            function getBlock(worldX, worldY) {
+                const chunkX = Math.floor(worldX / CHUNK_SIZE);
+                const chunkY = Math.floor(worldY / CHUNK_SIZE);
+                const key = `${chunkX},${chunkY}`;
+                if (!chunks.has(key)) {
+                    chunks.set(key, generateChunk(chunkX, chunkY));
+                }
+                const chunk = chunks.get(key);
+                const localX = ((worldX % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                const localY = ((worldY % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                return chunk[localX][localY];
+            }
+
+            function setBlock(worldX, worldY, blockId) {
+                const chunkX = Math.floor(worldX / CHUNK_SIZE);
+                const chunkY = Math.floor(worldY / CHUNK_SIZE);
+                const key = `${chunkX},${chunkY}`;
+                if (!chunks.has(key)) {
+                    chunks.set(key, generateChunk(chunkX, chunkY));
+                }
+                const chunk = chunks.get(key);
+                const localX = ((worldX % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                const localY = ((worldY % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                chunk[localX][localY] = blockId;
+            }
+
+            // Действия
+            function digBlock(worldX, worldY) {
+                const block = blocks[getBlock(worldX, worldY)];
                 if (!block || !block.diggable) return false;
-                // Добавляем ресурсы
                 if (block.drops) {
                     if (block.drops.wood) inventory.wood += block.drops.wood;
                     if (block.drops.stone) inventory.stone += block.drops.stone;
                     if (block.drops.iron) inventory.iron += block.drops.iron;
                     updateInventoryUI();
                 }
-                world[x][y] = 0;
+                setBlock(worldX, worldY, 0);
                 return true;
             }
 
-            // Построить блок
-            function buildBlock(x, y) {
-                if (world[x][y] !== 0) return false;
-                let blockToPlace = null;
+            function buildBlock(worldX, worldY) {
+                if (getBlock(worldX, worldY) !== 0) return false;
+                let blockId = null;
                 if (selectedBlock === 'wood' && inventory.wood >= 1) {
-                    blockToPlace = 5;
-                    inventory.wood -= 1;
+                    blockId = 5;
+                    inventory.wood--;
                 } else if (selectedBlock === 'stone' && inventory.stone >= 1) {
-                    blockToPlace = 6;
-                    inventory.stone -= 1;
+                    blockId = 6;
+                    inventory.stone--;
                 } else {
                     return false;
                 }
-                world[x][y] = blockToPlace;
+                setBlock(worldX, worldY, blockId);
                 updateInventoryUI();
                 return true;
             }
 
-            // Попытка действия (копать или строить)
-            function actionAt(x, y) {
-                if (mode === 'dig') {
-                    digBlock(x, y);
-                } else {
-                    buildBlock(x, y);
-                }
-                drawWorld();
+            function actionAt(worldX, worldY) {
+                if (mode === 'dig') digBlock(worldX, worldY);
+                else buildBlock(worldX, worldY);
             }
 
-            // Движение игрока
             function movePlayer(dx, dy) {
                 const newX = player.x + dx;
                 const newY = player.y + dy;
-                if (newX < 0 || newX >= worldSize || newY < 0 || newY >= worldSize) return;
-                // Нельзя ходить сквозь блоки? В майнкрафт-песочнице обычно можно ходить по блокам, но не входить в твёрдые?
-                // Сделаем проще: можно ходить по любым клеткам (в том числе по блокам) — игрок стоит на них.
+                // Проверяем, что блок, на который хотим встать, не твёрдый
+                const targetBlock = getBlock(newX, newY);
+                if (blocks[targetBlock] && blocks[targetBlock].solid) return;
                 player.x = newX;
                 player.y = newY;
-                drawWorld();
-            }
-
-            // Отрисовка мира и игрока
-            function drawWorld() {
-                ctx.clearRect(0, 0, 400, 400);
-                for (let i = 0; i < worldSize; i++) {
-                    for (let j = 0; j < worldSize; j++) {
-                        const blockId = world[i][j];
-                        const block = blocks[blockId] || blocks[0];
-                        ctx.fillStyle = block.color;
-                        ctx.fillRect(i * cellSize, j * cellSize, cellSize - 0.5, cellSize - 0.5);
-                        // Текстура для железа
-                        if (blockId === 3) {
-                            ctx.fillStyle = '#4a3b22';
-                            ctx.fillRect(i * cellSize + 4, j * cellSize + 4, 4, 4);
-                        }
+                // Предварительно подгружаем соседние чанки
+                for (let cx = -1; cx <= 1; cx++) {
+                    for (let cy = -1; cy <= 1; cy++) {
+                        const chunkX = Math.floor((player.x + cx * CHUNK_SIZE) / CHUNK_SIZE);
+                        const chunkY = Math.floor((player.y + cy * CHUNK_SIZE) / CHUNK_SIZE);
+                        const key = `${chunkX},${chunkY}`;
+                        if (!chunks.has(key)) chunks.set(key, generateChunk(chunkX, chunkY));
                     }
                 }
-                // Игрок (стилизованный)
+            }
+
+            // UI
+            function updateInventoryUI() {
+                woodSpan.innerText = inventory.wood;
+                stoneSpan.innerText = inventory.stone;
+                ironSpan.innerText = inventory.iron;
+            }
+
+            // Погода и время
+            function updateWeatherAndTime(deltaTime) {
+                timeOfDay += deltaTime * 0.005;
+                if (timeOfDay > 1) timeOfDay -= 1;
+                // Смена погоды
+                if (Math.random() < 0.0005 * deltaTime) {
+                    weather = weather === 'sunny' ? 'rainy' : 'sunny';
+                    weatherSpan.innerText = weather === 'sunny' ? 'солнечно' : '🌧️ дождь';
+                }
+                if (weather === 'rainy' && deltaTime < 0.1) {
+                    // Создаём частицы дождя
+                    for (let i = 0; i < 5; i++) {
+                        rainParticles.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            life: 0.5 + Math.random() * 0.5
+                        });
+                    }
+                }
+                // Обновление дождевых частиц
+                for (let i = 0; i < rainParticles.length; i++) {
+                    rainParticles[i].y += 5 * deltaTime * 30;
+                    rainParticles[i].life -= deltaTime;
+                    if (rainParticles[i].y > canvas.height || rainParticles[i].life <= 0) {
+                        rainParticles.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+
+            // Отрисовка неба, солнца/луны, гор
+            function drawSkyAndBackground(cameraX, cameraY) {
+                // Градиент неба в зависимости от времени суток
+                let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                let r,g,b;
+                if (timeOfDay < 0.25) { // утро
+                    let t = timeOfDay / 0.25;
+                    r = 135 + 165 * t; g = 206 + 49 * t; b = 235;
+                } else if (timeOfDay < 0.5) { // день
+                    r = 300; g = 255; b = 235; // ярко
+                } else if (timeOfDay < 0.75) { // закат
+                    let t = (timeOfDay - 0.5) / 0.25;
+                    r = 300 - 100 * t; g = 255 - 155 * t; b = 235 - 155 * t;
+                } else { // ночь
+                    let t = (timeOfDay - 0.75) / 0.25;
+                    r = 200 - 135 * t; g = 100 - 34 * t; b = 80 - 20 * t;
+                }
+                skyGrad.addColorStop(0, `rgb(${Math.min(255,r)}, ${Math.min(255,g)}, ${Math.min(255,b)})`);
+                skyGrad.addColorStop(1, `rgb(${Math.min(200,r-40)}, ${Math.min(100,g-40)}, ${Math.min(80,b-20)})`);
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Солнце или луна
+                let sunAngle = timeOfDay * Math.PI * 2;
+                let sunX = canvas.width * 0.8 + Math.sin(sunAngle) * 150;
+                let sunY = canvas.height * 0.2 + Math.cos(sunAngle) * 100;
+                if (timeOfDay > 0.7 && timeOfDay < 0.3) {
+                    ctx.fillStyle = '#ffeaa7';
+                    ctx.beginPath();
+                    ctx.arc(sunX, sunY, 25, 0, 2*Math.PI);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#dfe6e9';
+                    ctx.beginPath();
+                    ctx.arc(sunX, sunY, 20, 0, 2*Math.PI);
+                    ctx.fill();
+                }
+
+                // Горы на горизонте (процедурные)
+                for (let i = 0; i < 15; i++) {
+                    let mountainX = (i * 50 + (player.x * 0.1)) % (canvas.width + 100) - 50;
+                    let mountainHeight = 60 + Math.sin(i * 0.7 + player.x * 0.05) * 30;
+                    ctx.fillStyle = '#4a6741';
+                    ctx.beginPath();
+                    ctx.moveTo(mountainX, canvas.height - 60);
+                    ctx.lineTo(mountainX + 30, canvas.height - 60 - mountainHeight);
+                    ctx.lineTo(mountainX + 60, canvas.height - 60);
+                    ctx.fill();
+                }
+            }
+
+            // Отрисовка мира (видимая область вокруг игрока)
+            function drawWorld() {
+                const offsetX = canvas.width/2 - cellSize/2;
+                const offsetY = canvas.height/2 - cellSize/2;
+                const startX = player.x - Math.floor(viewSize/2);
+                const startY = player.y - Math.floor(viewSize/2);
+                for (let i = 0; i < viewSize; i++) {
+                    for (let j = 0; j < viewSize; j++) {
+                        const worldX = startX + i;
+                        const worldY = startY + j;
+                        const blockId = getBlock(worldX, worldY);
+                        if (blockId === 0) continue;
+                        const block = blocks[blockId];
+                        let color = typeof block.color === 'function' ? block.color(worldX, worldY) : block.color;
+                        // Эффект освещения в зависимости от времени суток
+                        let brightness = 0.6 + Math.sin(timeOfDay * Math.PI) * 0.3;
+                        if (timeOfDay > 0.7) brightness = 0.3;
+                        ctx.fillStyle = color;
+                        ctx.fillRect(i*cellSize + offsetX, j*cellSize + offsetY, cellSize-0.5, cellSize-0.5);
+                        // Немного теней
+                        ctx.fillStyle = `rgba(0,0,0,${0.2 * (1-brightness)})`;
+                        ctx.fillRect(i*cellSize + offsetX, j*cellSize + offsetY, cellSize-0.5, cellSize-0.5);
+                    }
+                }
+                // Игрок
+                const playerScreenX = (viewSize/2) * cellSize + offsetX;
+                const playerScreenY = (viewSize/2) * cellSize + offsetY;
                 ctx.fillStyle = '#f1c40f';
                 ctx.beginPath();
-                ctx.arc(player.x * cellSize + cellSize/2, player.y * cellSize + cellSize/2, cellSize * 0.35, 0, 2*Math.PI);
+                ctx.arc(playerScreenX + cellSize/2, playerScreenY + cellSize/2, cellSize*0.35, 0, 2*Math.PI);
                 ctx.fill();
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.arc(player.x * cellSize + cellSize/2 - 3, player.y * cellSize + cellSize/2 - 3, 2, 0, 2*Math.PI);
+                ctx.arc(playerScreenX + cellSize/2 - 3, playerScreenY + cellSize/2 - 3, 2, 0, 2*Math.PI);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(player.x * cellSize + cellSize/2 + 3, player.y * cellSize + cellSize/2 - 3, 2, 0, 2*Math.PI);
+                ctx.arc(playerScreenX + cellSize/2 + 3, playerScreenY + cellSize/2 - 3, 2, 0, 2*Math.PI);
                 ctx.fill();
-                // Рамка выбранного режима
+                // Рамка режима
                 ctx.strokeStyle = mode === 'dig' ? '#e74c3c' : '#2ecc71';
                 ctx.lineWidth = 2;
-                ctx.strokeRect(player.x * cellSize, player.y * cellSize, cellSize, cellSize);
+                ctx.strokeRect(playerScreenX, playerScreenY, cellSize, cellSize);
             }
 
-            // Смена режима
-            function toggleMode() {
-                if (mode === 'dig') {
-                    mode = 'build';
-                    modeSpan.innerText = 'строить (дерево)';
-                } else {
-                    mode = 'dig';
-                    modeSpan.innerText = 'копать';
+            function drawRain() {
+                if (weather !== 'rainy') return;
+                for (let p of rainParticles) {
+                    ctx.fillStyle = `rgba(173, 216, 230, 0.6)`;
+                    ctx.fillRect(p.x, p.y, 2, 6);
                 }
+            }
+
+            // Анимация и обновление
+            let lastFrameTime = 0;
+            function animate(now) {
+                if (!window.minerGameActive) return;
+                let delta = Math.min(0.033, (now - lastFrameTime) / 1000);
+                if (delta > 0.01) {
+                    updateWeatherAndTime(delta);
+                }
+                lastFrameTime = now;
+                // Отрисовка
+                drawSkyAndBackground();
                 drawWorld();
+                drawRain();
+                animationId = requestAnimationFrame(animate);
             }
 
-            // Смена выбранного блока для постройки (по нажатию на кнопку можно добавить, но пока просто по циклу)
-            function cycleBuildBlock() {
-                if (selectedBlock === 'wood') {
-                    selectedBlock = 'stone';
-                    modeSpan.innerText = 'строить (камень)';
-                } else {
-                    selectedBlock = 'wood';
-                    modeSpan.innerText = 'строить (дерево)';
-                }
+            // Управление
+            function toggleMode() {
+                mode = mode === 'dig' ? 'build' : 'dig';
+                modeSpan.innerText = mode === 'dig' ? 'копать' : `строить (${selectedBlock})`;
             }
-
-            // Новая игра
+            function cycleBlock() {
+                selectedBlock = selectedBlock === 'wood' ? 'stone' : 'wood';
+                if (mode === 'build') modeSpan.innerText = `строить (${selectedBlock})`;
+            }
             function newGame() {
-                generateWorld();
-                player = { x: 10, y: 10 };
+                chunks.clear();
                 inventory = { wood: 0, stone: 0, iron: 0 };
+                player = { x: 0, y: 30 }; // на поверхности
                 mode = 'dig';
                 selectedBlock = 'wood';
                 modeSpan.innerText = 'копать';
+                weather = 'sunny';
+                timeOfDay = 0.25;
+                rainParticles = [];
                 updateInventoryUI();
-                drawWorld();
+                // Предварительная генерация чанков вокруг
+                for (let cx = -2; cx <= 2; cx++) {
+                    for (let cy = -2; cy <= 2; cy++) {
+                        const key = `${cx},${cy}`;
+                        if (!chunks.has(key)) chunks.set(key, generateChunk(cx, cy));
+                    }
+                }
             }
 
-            // Управление с клавиатуры
+            // Обработчики
             function handleKey(e) {
                 if (!window.minerGameActive) return;
                 const key = e.key;
@@ -9252,11 +9427,9 @@ if(p) {
                     case 'ArrowDown': movePlayer(0, 1); break;
                     case 'ArrowLeft': movePlayer(-1, 0); break;
                     case 'ArrowRight': movePlayer(1, 0); break;
-                    case ' ': case 'Space': 
-                        actionAt(player.x, player.y);
-                        break;
+                    case ' ': case 'Space': actionAt(player.x, player.y); break;
                     case 'm': toggleMode(); break;
-                    case 'c': cycleBuildBlock(); break;
+                    case 'c': cycleBlock(); break;
                 }
             }
             window.addEventListener('keydown', handleKey);
@@ -9267,16 +9440,15 @@ if(p) {
             leftBtn.onclick = () => movePlayer(-1, 0);
             rightBtn.onclick = () => movePlayer(1, 0);
             modeBtn.onclick = () => toggleMode();
-            // Долгое нажатие на кнопку режима для смены блока
-            modeBtn.oncontextmenu = (e) => { e.preventDefault(); cycleBuildBlock(); };
+            cycleBlockBtn.onclick = () => cycleBlock();
             newGameBtn.onclick = () => newGame();
             closeBtn.onclick = () => {
                 window.removeEventListener('keydown', handleKey);
+                cancelAnimationFrame(animationId);
                 window.minerGameActive.remove();
                 window.minerGameActive = null;
             };
-
-            // Обработка кликов по canvas для копания/строительства
+            // Тап по canvas
             canvas.addEventListener('click', (e) => {
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
@@ -9292,10 +9464,14 @@ if(p) {
                 }
                 const canvasX = (cx - rect.left) * scaleX;
                 const canvasY = (cy - rect.top) * scaleY;
-                const x = Math.floor(canvasX / cellSize);
-                const y = Math.floor(canvasY / cellSize);
-                if (x >= 0 && x < worldSize && y >= 0 && y < worldSize) {
-                    actionAt(x, y);
+                const offsetX = canvas.width/2 - cellSize/2;
+                const offsetY = canvas.height/2 - cellSize/2;
+                const gridX = Math.floor((canvasX - offsetX) / cellSize);
+                const gridY = Math.floor((canvasY - offsetY) / cellSize);
+                if (gridX >= 0 && gridX < viewSize && gridY >= 0 && gridY < viewSize) {
+                    const worldX = player.x + gridX - Math.floor(viewSize/2);
+                    const worldY = player.y + gridY - Math.floor(viewSize/2);
+                    actionAt(worldX, worldY);
                 }
             });
             canvas.addEventListener('touchstart', (e) => {
@@ -9306,14 +9482,21 @@ if(p) {
                 const touch = e.touches[0];
                 const canvasX = (touch.clientX - rect.left) * scaleX;
                 const canvasY = (touch.clientY - rect.top) * scaleY;
-                const x = Math.floor(canvasX / cellSize);
-                const y = Math.floor(canvasY / cellSize);
-                if (x >= 0 && x < worldSize && y >= 0 && y < worldSize) {
-                    actionAt(x, y);
+                const offsetX = canvas.width/2 - cellSize/2;
+                const offsetY = canvas.height/2 - cellSize/2;
+                const gridX = Math.floor((canvasX - offsetX) / cellSize);
+                const gridY = Math.floor((canvasY - offsetY) / cellSize);
+                if (gridX >= 0 && gridX < viewSize && gridY >= 0 && gridY < viewSize) {
+                    const worldX = player.x + gridX - Math.floor(viewSize/2);
+                    const worldY = player.y + gridY - Math.floor(viewSize/2);
+                    actionAt(worldX, worldY);
                 }
             });
 
+            // Запуск игры
             newGame();
+            cellSize = canvas.width / viewSize;
+            animationId = requestAnimationFrame(animate);
         }
 
         minerIcon.onclick = () => {
