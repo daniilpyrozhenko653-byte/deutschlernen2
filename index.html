@@ -8993,8 +8993,8 @@ if(p) {
 
 
 
-    // ========== ПИКСЕЛЬНАЯ СТУДИЯ: раскраски, сохранение, загрузка своих картинок ==========
-(function addPixelStudioPro() {
+    // ========== ПОДЗЕМЕЛЬЕ ГЕРОЯ (Roguelike) ==========
+(function addDungeonGame() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9002,76 +9002,77 @@ if(p) {
     }
 
     waitForPanel((panel) => {
-        if (document.getElementById('gameDrawIcon')) return;
+        if (document.getElementById('gameDungeonIcon')) return;
 
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
 
-        const drawIcon = document.createElement('div');
-        drawIcon.id = 'gameDrawIcon';
-        drawIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
-        drawIcon.innerHTML = `<div style="font-size:48px;">🎨🖌️</div><div style="color:white;">Pixel Studio</div>`;
-        gamesContainer.appendChild(drawIcon);
+        const dungeonIcon = document.createElement('div');
+        dungeonIcon.id = 'gameDungeonIcon';
+        dungeonIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
+        dungeonIcon.innerHTML = `<div style="font-size:48px;">🗡️🛡️</div><div style="color:white;">Dungeon</div>`;
+        gamesContainer.appendChild(dungeonIcon);
 
-        function startPixelStudio() {
-            if (window.pixelActive) {
-                window.pixelActive.remove();
+        function startDungeon() {
+            if (window.dungeonActive) {
+                window.dungeonActive.remove();
+                if (window.dungeonInterval) clearInterval(window.dungeonInterval);
             }
 
             const gameDiv = document.createElement('div');
-            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none; overflow-y:auto;';
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden; margin:10px auto;">
-                    <div style="background:#34495e; padding:8px; text-align:center; color:white; font-size:16px;">🎨 ПИКСЕЛЬНАЯ СТУДИЯ ПРО</div>
-                    <canvas id="pixelCanvas" width="400" height="400" style="width:100%; height:auto; display:block; background:#ecf0f1; cursor:pointer; touch-action:none;"></canvas>
-                    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px; background:#1e2a2e; padding:8px;">
-                        <button id="pixelBrush" style="background:#27ae60; border:none; padding:5px 10px; border-radius:20px;">🖌️ Кисть</button>
-                        <button id="pixelEraser" style="background:#e67e22; border:none; padding:5px 10px; border-radius:20px;">🧽 Ластик</button>
-                        <button id="pixelFill" style="background:#3498db; border:none; padding:5px 10px; border-radius:20px;">🪣 Заливка</button>
-                        <button id="pixelClear" style="background:#e74c3c; border:none; padding:5px 10px; border-radius:20px;">🗑️ Очистить</button>
-                        <button id="pixelSave" style="background:#2ecc71; border:none; padding:5px 10px; border-radius:20px;">💾 Сохранить</button>
-                        <input type="file" id="pixelUploadImage" accept="image/*" style="display:none;">
-                        <button id="pixelUploadBtn" style="background:#9b59b6; border:none; padding:5px 10px; border-radius:20px;">📂 Загрузить картинку</button>
-                        <select id="pixelColoringSelect" style="background:#f39c12; border:none; padding:5px; border-radius:15px;">
-                            <option value="">-- Выбрать раскраску --</option>
-                            <option value="house">🏠 Домик</option>
-                            <option value="cat">🐱 Котик</option>
-                            <option value="flower">🌸 Цветок</option>
-                            <option value="car">🚗 Машинка</option>
-                        </select>
-                        <button id="pixelLoadColoring" style="background:#f1c40f; border:none; padding:5px 10px; border-radius:20px;">🖍️ Загрузить раскраску</button>
-                        <button id="pixelRules" style="background:#1abc9c; border:none; padding:5px 10px; border-radius:20px;">📖 Правила</button>
-                        <button id="pixelClose" style="background:#7f8c8d; border:none; padding:5px 10px; border-radius:20px;">✖</button>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
+                    <div style="background:#1e2a2e; padding:8px; text-align:center; color:white; font-size:16px;">🗡️ ПОДЗЕМЕЛЬЕ ГЕРОЯ</div>
+                    <canvas id="dungeonCanvas" width="700" height="500" style="width:100%; height:auto; display:block; background:#1a1a2e; cursor:pointer;"></canvas>
+                    <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:6px 10px; gap:5px; flex-wrap:wrap;">
+                        <span>❤️ <span id="dungeonHp">20</span></span>
+                        <span>⚔️ <span id="dungeonAtk">5</span></span>
+                        <span>🛡️ <span id="dungeonDef">2</span></span>
+                        <span>💰 <span id="dungeonGold">0</span></span>
+                        <span>⭐ <span id="dungeonLevel">1</span></span>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; background:#2c3e50; padding:8px;">
-                        <div style="text-align:center;">
-                            <div>🎨 Палитра</div>
-                            <div style="display:flex; gap:5px;">
-                                <div class="colorPicker" data-color="#e74c3c" style="width:30px; height:30px; background:#e74c3c; border-radius:5px; cursor:pointer;"></div>
-                                <div class="colorPicker" data-color="#2ecc71" style="width:30px; height:30px; background:#2ecc71; border-radius:5px; cursor:pointer;"></div>
-                                <div class="colorPicker" data-color="#3498db" style="width:30px; height:30px; background:#3498db; border-radius:5px; cursor:pointer;"></div>
-                                <div class="colorPicker" data-color="#f1c40f" style="width:30px; height:30px; background:#f1c40f; border-radius:5px; cursor:pointer;"></div>
-                                <div class="colorPicker" data-color="#2c3e50" style="width:30px; height:30px; background:#2c3e50; border-radius:5px; cursor:pointer;"></div>
-                                <div class="colorPicker" data-color="#ffffff" style="width:30px; height:30px; background:#ffffff; border:1px solid #fff; border-radius:5px; cursor:pointer;"></div>
-                            </div>
-                        </div>
+                    <div style="display:flex; gap:8px; background:#34495e; padding:8px; justify-content:center;">
+                        <button id="dungeonRestart" style="background:#27ae60; border:none; padding:5px 12px; border-radius:20px;">🔄 Новая игра</button>
+                        <button id="dungeonHelp" style="background:#f39c12; border:none; padding:5px 12px; border-radius:20px;">❓ Помощь</button>
+                        <button id="dungeonClose" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px;">✖ Закрыть</button>
                     </div>
-                    <div id="pixelToast" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none; z-index:100010;"></div>
+                    <div id="dungeonToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
-            window.pixelActive = gameDiv;
+            window.dungeonActive = gameDiv;
 
-            const canvas = document.getElementById('pixelCanvas');
+            const canvas = document.getElementById('dungeonCanvas');
             const ctx = canvas.getContext('2d');
-            const toastDiv = document.getElementById('pixelToast');
-            const uploadInput = document.getElementById('pixelUploadImage');
+            const hpSpan = document.getElementById('dungeonHp');
+            const atkSpan = document.getElementById('dungeonAtk');
+            const defSpan = document.getElementById('dungeonDef');
+            const goldSpan = document.getElementById('dungeonGold');
+            const levelSpan = document.getElementById('dungeonLevel');
+            const toastDiv = document.getElementById('dungeonToast');
 
-            let gridSize = 20;
-            let cellSize = canvas.width / gridSize;
-            let pixels = Array(gridSize).fill().map(() => Array(gridSize).fill('#ffffff'));
-            let currentColor = '#e74c3c';
-            let tool = 'brush';
+            let hero = { x: 5, y: 5, hp: 20, maxHp: 20, atk: 5, def: 2, gold: 0, level: 1, exp: 0 };
+            let map = [];
+            const size = 10;
+            let gameOver = false;
+
+            // Типы клеток
+            const TILE = {
+                FLOOR: 0,
+                WALL: 1,
+                EXIT: 2,
+                CHEST: 3,
+                MONSTER: 4
+            };
+
+            // Монстры
+            const monsters = {
+                1: { name: "🐀 Крыса", hp: 5, atk: 3, def: 0, gold: 5, exp: 10 },
+                2: { name: "👹 Гоблин", hp: 10, atk: 5, def: 1, gold: 10, exp: 20 },
+                3: { name: "🧌 Тролль", hp: 25, atk: 8, def: 3, gold: 20, exp: 40 },
+                4: { name: "🐉 Дракон", hp: 40, atk: 12, def: 5, gold: 50, exp: 100 }
+            };
 
             function showToast(msg, isErr = false) {
                 toastDiv.innerText = msg;
@@ -9080,229 +9081,244 @@ if(p) {
                 setTimeout(() => toastDiv.style.opacity = '0', 2000);
             }
 
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (let i = 0; i < gridSize; i++) {
-                    for (let j = 0; j < gridSize; j++) {
-                        ctx.fillStyle = pixels[i][j];
-                        ctx.fillRect(j * cellSize, i * cellSize, cellSize - 0.5, cellSize - 0.5);
-                        ctx.strokeStyle = '#bdc3c7';
-                        ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            function updateUI() {
+                hpSpan.innerText = hero.hp;
+                atkSpan.innerText = hero.atk;
+                defSpan.innerText = hero.def;
+                goldSpan.innerText = hero.gold;
+                levelSpan.innerText = hero.level;
+            }
+
+            // Генерация подземелья
+            function generateMap() {
+                map = Array(size).fill().map(() => Array(size).fill(TILE.WALL));
+                // Комнаты и коридоры (простая генерация)
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        if (Math.random() < 0.7) map[i][j] = TILE.FLOOR;
                     }
+                }
+                // Убедимся, что стартовая клетка свободна
+                map[hero.y][hero.x] = TILE.FLOOR;
+                // Выход в углу
+                map[size-2][size-2] = TILE.EXIT;
+                // Размещаем сундуки и монстров
+                for (let i = 0; i < 8; i++) {
+                    let x, y;
+                    do { x = Math.floor(Math.random() * size); y = Math.floor(Math.random() * size); } while (map[y][x] !== TILE.FLOOR || (x === hero.x && y === hero.y));
+                    map[y][x] = TILE.CHEST;
+                }
+                for (let i = 0; i < 12; i++) {
+                    let x, y, level = hero.level;
+                    do { x = Math.floor(Math.random() * size); y = Math.floor(Math.random() * size); } while (map[y][x] !== TILE.FLOOR || (x === hero.x && y === hero.y));
+                    let monsterId = Math.min(4, Math.floor(Math.random() * hero.level) + 1);
+                    map[y][x] = { type: TILE.MONSTER, id: monsterId };
                 }
             }
 
-            function floodFill(x, y, targetColor, replaceColor) {
-                if (targetColor === replaceColor) return;
-                if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
-                if (pixels[x][y] !== targetColor) return;
-                pixels[x][y] = replaceColor;
-                floodFill(x + 1, y, targetColor, replaceColor);
-                floodFill(x - 1, y, targetColor, replaceColor);
-                floodFill(x, y + 1, targetColor, replaceColor);
-                floodFill(x, y - 1, targetColor, replaceColor);
-            }
-
-            function handleCanvasClick(e) {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                let cx, cy;
-                if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; e.preventDefault(); }
-                else { cx = e.clientX; cy = e.clientY; }
-                const canvasX = (cx - rect.left) * scaleX;
-                const canvasY = (cy - rect.top) * scaleY;
-                const col = Math.floor(canvasX / cellSize);
-                const row = Math.floor(canvasY / cellSize);
-                if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
-                    if (tool === 'brush') {
-                        pixels[row][col] = currentColor;
-                    } else if (tool === 'eraser') {
-                        pixels[row][col] = '#ffffff';
-                    } else if (tool === 'fill') {
-                        const targetColor = pixels[row][col];
-                        floodFill(row, col, targetColor, currentColor);
+            // Боевая система
+            function fight(monsterId) {
+                const m = monsters[monsterId];
+                let monsterHp = m.hp;
+                let heroHp = hero.hp;
+                let log = [];
+                while (heroHp > 0 && monsterHp > 0) {
+                    let heroDamage = Math.max(1, hero.atk - m.def + Math.floor(Math.random() * 3));
+                    monsterHp -= heroDamage;
+                    if (monsterHp <= 0) break;
+                    let monsterDamage = Math.max(1, m.atk - hero.def + Math.floor(Math.random() * 3));
+                    heroHp -= monsterDamage;
+                }
+                if (heroHp <= 0) {
+                    gameOver = true;
+                    showToast("Вы погибли! Начните новую игру.", true);
+                    drawMap();
+                    return false;
+                } else {
+                    hero.hp = heroHp;
+                    hero.gold += m.gold;
+                    hero.exp += m.exp;
+                    // Проверка уровня
+                    let expNeeded = hero.level * 50;
+                    if (hero.exp >= expNeeded) {
+                        hero.level++;
+                        hero.exp -= expNeeded;
+                        hero.maxHp += 5;
+                        hero.hp = hero.maxHp;
+                        hero.atk += 2;
+                        hero.def += 1;
+                        showToast(`Повышение уровня! Теперь уровень ${hero.level}`);
                     }
-                    draw();
+                    updateUI();
+                    showToast(`Победа! +${m.gold} золота, +${m.exp} опыта`);
+                    return true;
                 }
             }
 
-            canvas.addEventListener('click', handleCanvasClick);
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasClick(e); });
+            // Взаимодействие с сундуком
+            function openChest() {
+                let reward = Math.floor(Math.random() * 20) + 10;
+                hero.gold += reward;
+                updateUI();
+                showToast(`Сундук открыт! +${reward} золота`);
+            }
 
-            // Инструменты
-            document.getElementById('pixelBrush').onclick = () => { tool = 'brush'; showToast("Кисть: рисуйте выбранным цветом"); };
-            document.getElementById('pixelEraser').onclick = () => { tool = 'eraser'; showToast("Ластик: стирает в белый цвет"); };
-            document.getElementById('pixelFill').onclick = () => { tool = 'fill'; showToast("Заливка: заполняет область цветом"); };
-            document.getElementById('pixelClear').onclick = () => {
-                pixels = Array(gridSize).fill().map(() => Array(gridSize).fill('#ffffff'));
-                draw();
-                showToast("Холст очищен");
-            };
-            document.getElementById('pixelSave').onclick = () => {
-                // Сохраняем canvas как PNG
-                const link = document.createElement('a');
-                link.download = 'pixel_art.png';
-                link.href = canvas.toDataURL();
-                link.click();
-                showToast("Картинка сохранена!");
-            };
-
-            // Загрузка своей картинки (преобразование в контур и подгонка под сетку)
-            document.getElementById('pixelUploadBtn').onclick = () => {
-                uploadInput.click();
-            };
-            uploadInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        // Рисуем картинку на временный canvas, уменьшаем до 20x20, затем преобразуем в контур (простой порог)
-                        const tempCanvas = document.createElement('canvas');
-                        tempCanvas.width = gridSize;
-                        tempCanvas.height = gridSize;
-                        const tempCtx = tempCanvas.getContext('2d');
-                        tempCtx.drawImage(img, 0, 0, gridSize, gridSize);
-                        const imgData = tempCtx.getImageData(0, 0, gridSize, gridSize);
-                        // Превращаем в чёрно-белый контур: если яркость < 128, то чёрный, иначе белый (контур)
-                        for (let i = 0; i < gridSize; i++) {
-                            for (let j = 0; j < gridSize; j++) {
-                                const idx = (i * gridSize + j) * 4;
-                                const r = imgData.data[idx];
-                                const g = imgData.data[idx+1];
-                                const b = imgData.data[idx+2];
-                                const brightness = (r + g + b) / 3;
-                                if (brightness < 128) {
-                                    pixels[i][j] = '#2c3e50'; // тёмный контур
-                                } else {
-                                    pixels[i][j] = '#ffffff'; // белый фон
-                                }
-                            }
-                        }
-                        draw();
-                        showToast("Картинка загружена и преобразована в контур! Раскрасьте её.");
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-
-            // Раскраски
-            const colorings = {
-                house: [
-                    ['#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000'],
-                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#000','#e74c3c','#e74c3c','#e74c3c','#000','#fff','#fff','#fff','#fff','#000','#fff','#fff','#fff','#000','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#000','#e74c3c','#e74c3c','#e74c3c','#000','#fff','#fff','#fff','#fff','#000','#fff','#fff','#fff','#000','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#000','#e74c3c','#e74c3c','#e74c3c','#000','#fff','#fff','#fff','#fff','#000','#fff','#fff','#fff','#000','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
-                    ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
-                    ['#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000']
-                ],
-                cat: [
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#000','#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000','#000','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#000','#f1c40f','#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000','#f1c40f','#000','#fff','#fff','#fff'],
-                    ['#fff','#000','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff'],
-                    ['#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff','#fff','#fff','#fff','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff'],
-                    ['#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#000','#000','#000','#000','#000','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff'],
-                    ['#fff','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff'],
-                    ['#fff','#fff','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#000','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#000','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff']
-                ],
-                flower: [
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#e74c3c','#e74c3c','#e74c3c','#fff','#fff','#e74c3c','#e74c3c','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#e74c3c','#fff','#e74c3c','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#e74c3c','#e74c3c','#e74c3c','#e74c3c','#e74c3c','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#2ecc71','#2ecc71','#2ecc71','#2ecc71','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#2ecc71','#2ecc71','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff']
-                ],
-                car: [
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#000','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#000','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#000','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#000','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#000','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#000','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#000','#2c3e50','#000','#fff','#fff','#fff','#fff','#fff','#000','#2c3e50','#000','#fff','#fff','#fff','#fff','#fff'],
-                    ['#fff','#fff','#fff','#fff','#000','#000','#000','#fff','#fff','#fff','#fff','#fff','#000','#000','#000','#fff','#fff','#fff','#fff','#fff']
-                ]
-            };
-
-            document.getElementById('pixelLoadColoring').onclick = () => {
-                const select = document.getElementById('pixelColoringSelect');
-                const selected = select.value;
-                if (!selected || !colorings[selected]) {
-                    showToast("Выберите раскраску из списка", true);
+            // Перемещение героя
+            function move(dx, dy) {
+                if (gameOver) return;
+                let newX = hero.x + dx;
+                let newY = hero.y + dy;
+                if (newX < 0 || newX >= size || newY < 0 || newY >= size) return;
+                let cell = map[newY][newX];
+                if (cell === TILE.WALL) return;
+                if (cell === TILE.EXIT) {
+                    showToast("Вы нашли выход! Следующий уровень!");
+                    hero.level++;
+                    hero.maxHp += 5;
+                    hero.hp = hero.maxHp;
+                    hero.atk += 2;
+                    hero.def += 1;
+                    updateUI();
+                    generateMap();
+                    hero.x = newX;
+                    hero.y = newY;
+                    drawMap();
                     return;
                 }
-                const coloring = colorings[selected];
-                for (let i = 0; i < gridSize; i++) {
-                    for (let j = 0; j < gridSize; j++) {
-                        if (i < coloring.length && j < coloring[i].length) {
-                            pixels[i][j] = coloring[i][j];
-                        } else {
-                            pixels[i][j] = '#ffffff';
+                if (cell === TILE.CHEST) {
+                    openChest();
+                    map[newY][newX] = TILE.FLOOR;
+                    hero.x = newX;
+                    hero.y = newY;
+                    drawMap();
+                    return;
+                }
+                if (cell && cell.type === TILE.MONSTER) {
+                    let monsterId = cell.id;
+                    let success = fight(monsterId);
+                    if (success) {
+                        map[newY][newX] = TILE.FLOOR;
+                        hero.x = newX;
+                        hero.y = newY;
+                        drawMap();
+                        if (gameOver) drawMap();
+                    } else {
+                        drawMap();
+                    }
+                    return;
+                }
+                hero.x = newX;
+                hero.y = newY;
+                drawMap();
+            }
+
+            // Отрисовка
+            function drawMap() {
+                canvas.width = 700; canvas.height = 500;
+                const cellW = canvas.width / size;
+                const cellH = canvas.height / size;
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        let x = j * cellW;
+                        let y = i * cellH;
+                        let cell = map[i][j];
+                        if (i === hero.y && j === hero.x) {
+                            ctx.fillStyle = '#f1c40f';
+                            ctx.fillRect(x, y, cellW, cellH);
+                            ctx.fillStyle = '#000';
+                            ctx.font = `${cellW * 0.6}px Arial`;
+                            ctx.fillText("⚔️", x + cellW/3, y + cellH/1.7);
+                            continue;
                         }
+                        if (cell === TILE.WALL) {
+                            ctx.fillStyle = '#2c3e50';
+                            ctx.fillRect(x, y, cellW, cellH);
+                        } else if (cell === TILE.FLOOR) {
+                            ctx.fillStyle = '#34495e';
+                            ctx.fillRect(x, y, cellW, cellH);
+                        } else if (cell === TILE.EXIT) {
+                            ctx.fillStyle = '#27ae60';
+                            ctx.fillRect(x, y, cellW, cellH);
+                            ctx.fillStyle = '#fff';
+                            ctx.font = `${cellW * 0.6}px Arial`;
+                            ctx.fillText("🚪", x + cellW/3, y + cellH/1.7);
+                        } else if (cell === TILE.CHEST) {
+                            ctx.fillStyle = '#e67e22';
+                            ctx.fillRect(x, y, cellW, cellH);
+                            ctx.fillStyle = '#fff';
+                            ctx.font = `${cellW * 0.6}px Arial`;
+                            ctx.fillText("🎁", x + cellW/3, y + cellH/1.7);
+                        } else if (cell && cell.type === TILE.MONSTER) {
+                            ctx.fillStyle = '#e74c3c';
+                            ctx.fillRect(x, y, cellW, cellH);
+                            ctx.fillStyle = '#fff';
+                            ctx.font = `${cellW * 0.6}px Arial`;
+                            ctx.fillText(monsters[cell.id].name.charAt(0), x + cellW/3, y + cellH/1.7);
+                        }
+                        ctx.strokeStyle = '#1a1a2e';
+                        ctx.strokeRect(x, y, cellW, cellH);
                     }
                 }
-                draw();
-                showToast(`Раскраска "${select.options[select.selectedIndex].text}" загружена!`);
-            };
-
-            // Правила
-            document.getElementById('pixelRules').onclick = () => {
-                const rulesDiv = document.createElement('div');
-                rulesDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100005; color:white; width:300px; text-align:center;';
-                rulesDiv.innerHTML = `
-                    <h3>📖 Правила рисования</h3>
-                    <p>1. Выберите цвет из палитры.</p>
-                    <p>2. Кисть — рисует, Ластик — стирает в белый, Заливка — закрашивает область.</p>
-                    <p>3. Сохраните рисунок кнопкой «Сохранить» (PNG).</p>
-                    <p>4. Загрузите свою картинку — она превратится в контур для раскрашивания.</p>
-                    <p>5. Готовые раскраски: домик, котик, цветок, машинка.</p>
-                    <button id="closeRulesBtn" style="background:#e74c3c; border:none; padding:5px 15px; border-radius:15px;">Закрыть</button>
-                `;
-                gameDiv.appendChild(rulesDiv);
-                document.getElementById('closeRulesBtn').onclick = () => rulesDiv.remove();
-            };
-            document.getElementById('pixelClose').onclick = () => { gameDiv.remove(); window.pixelActive = null; };
-
-            // Выбор цвета
-            document.querySelectorAll('.colorPicker').forEach(el => {
-                el.addEventListener('click', () => {
-                    currentColor = el.getAttribute('data-color');
-                    showToast(`Цвет: ${currentColor}`);
-                });
-            });
-
-            // Инициализация
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
-                    pixels[i][j] = '#ffffff';
+                if (gameOver) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '24px Arial';
+                    ctx.fillText("GAME OVER", canvas.width/2-80, canvas.height/2);
                 }
             }
-            draw();
+
+            // Обработка кликов по стрелкам (сенсорные кнопки)
+            function addDirectionButtons() {
+                const btnPanel = document.createElement('div');
+                btnPanel.style.cssText = 'position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:20px; background:rgba(0,0,0,0.5); padding:10px; z-index:100004;';
+                btnPanel.innerHTML = `
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+                        <div></div><button id="upBtn" style="background:#1abc9c; padding:10px 20px;">▲</button><div></div>
+                        <button id="leftBtn" style="background:#1abc9c; padding:10px 20px;">◀</button>
+                        <button id="downBtn" style="background:#1abc9c; padding:10px 20px;">▼</button>
+                        <button id="rightBtn" style="background:#1abc9c; padding:10px 20px;">▶</button>
+                    </div>
+                `;
+                gameDiv.appendChild(btnPanel);
+                document.getElementById('upBtn').onclick = () => move(0, -1);
+                document.getElementById('downBtn').onclick = () => move(0, 1);
+                document.getElementById('leftBtn').onclick = () => move(-1, 0);
+                document.getElementById('rightBtn').onclick = () => move(1, 0);
+            }
+
+            document.getElementById('dungeonRestart').onclick = () => {
+                hero = { x: 5, y: 5, hp: 20, maxHp: 20, atk: 5, def: 2, gold: 0, level: 1, exp: 0 };
+                gameOver = false;
+                generateMap();
+                updateUI();
+                drawMap();
+                showToast("Новая игра!");
+            };
+            document.getElementById('dungeonHelp').onclick = () => {
+                alert("Правила:\n- Нажимайте на стрелки для перемещения.\n- Сражайтесь с монстрами, открывайте сундуки.\n- Найдите выход (зелёная клетка), чтобы перейти на следующий уровень.\n- Повышайте уровень, чтобы стать сильнее.");
+            };
+            document.getElementById('dungeonClose').onclick = () => {
+                gameDiv.remove();
+                window.dungeonActive = null;
+            };
+            // Управление с клавиатуры
+            window.addEventListener('keydown', (e) => {
+                if (!window.dungeonActive) return;
+                if (e.key === 'ArrowUp') move(0, -1);
+                if (e.key === 'ArrowDown') move(0, 1);
+                if (e.key === 'ArrowLeft') move(-1, 0);
+                if (e.key === 'ArrowRight') move(1, 0);
+                e.preventDefault();
+            });
+            addDirectionButtons();
+            generateMap();
+            drawMap();
         }
 
-        drawIcon.onclick = () => {
+        dungeonIcon.onclick = () => {
             document.getElementById('unifiedGamePanel').style.display = 'none';
-            startPixelStudio();
+            startDungeon();
         };
     });
 })();
