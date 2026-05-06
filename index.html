@@ -8992,167 +8992,448 @@ if(p) {
 
 
 
-// ========== "ГЛУБИННЫЕ ЗЕМЛИ" (DEEPLANDS) - Полноценная Terraria-подобная песочница ==========
+// ========== ГЛУБИННЫЕ ЗЕМЛИ (DEEPLANDS) - ПОЛНАЯ ВЕРСИЯ ==========
 (function addDeeplands() {
-    // ... (вспомогательная загрузка) ...
+    function waitForPanel(callback) {
+        const panel = document.getElementById('unifiedGamePanel');
+        if (panel) callback(panel);
+        else setTimeout(() => waitForPanel(callback), 100);
+    }
+
     waitForPanel((panel) => {
         if (document.getElementById('gameDeeplandsIcon')) return;
+
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
+
         const deepIcon = document.createElement('div');
         deepIcon.id = 'gameDeeplandsIcon';
         deepIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
         deepIcon.innerHTML = `<div style="font-size:48px;">⛏️🌎</div><div style="color:white;">Deeplands</div>`;
         gamesContainer.appendChild(deepIcon);
-        deepIcon.onclick = () => { document.getElementById('unifiedGamePanel').style.display = 'none'; startDeeplands(); };
-    });
 
-    function startDeeplands() {
-        if (window.deepActive) { window.deepActive.remove(); cancelAnimationFrame(window.deepAnim); clearInterval(window.deepInterval); }
-        const gameDiv = document.createElement('div');
-        gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0f0f; z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
-        gameDiv.innerHTML = `
-            <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:800px; overflow:hidden; position:relative;">
-                <div style="background:#1e2a2e; padding:8px; text-align:center; color:#ffd966; font-weight:bold;">ГЛУБИННЫЕ ЗЕМЛИ ⛏️</div>
-                <canvas id="deepCanvas" width="800" height="600" style="width:100%; height:auto; background:#2c1e16; display:block; cursor:crosshair;"></canvas>
-                <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:6px 10px; font-size:13px; flex-wrap:wrap;">
-                    <span>❤️ <span id="deepHp">100</span></span>
-                    <span>🪙 <span id="deepGold">0</span></span>
-                    <div><span>🗡️ <span id="deepAtk">10</span></span> <span>🛡️ <span id="deepDef">5</span></span></div>
-                    <span>⌛ <span id="deepTime">День</span></span>
+        function startDeeplands() {
+            if (window.deepActive) {
+                window.deepActive.remove();
+                if (window.deepAnim) cancelAnimationFrame(window.deepAnim);
+                if (window.deepInterval) clearInterval(window.deepInterval);
+            }
+
+            const gameDiv = document.createElement('div');
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0f0f; z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+            gameDiv.innerHTML = `
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:800px; overflow:hidden; position:relative;">
+                    <div style="background:#1e2a2e; padding:8px; text-align:center; color:#ffd966; font-weight:bold;">ГЛУБИННЫЕ ЗЕМЛИ ⛏️</div>
+                    <canvas id="deepCanvas" width="800" height="600" style="width:100%; height:auto; background:#2c1e16; display:block; cursor:crosshair;"></canvas>
+                    <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:6px 10px; font-size:13px; flex-wrap:wrap;">
+                        <span>❤️ <span id="deepHp">100</span></span>
+                        <span>🪙 <span id="deepGold">0</span></span>
+                        <span>🗡️ <span id="deepAtk">10</span></span>
+                        <span>🛡️ <span id="deepDef">5</span></span>
+                        <span>⌛ <span id="deepTime">День</span></span>
+                    </div>
+                    <div style="display:flex; gap:5px; background:#34495e; padding:6px; justify-content:center; flex-wrap:wrap;">
+                        <button id="btnCraft" style="background:#f39c12; padding:4px 12px; border-radius:15px;">🏭 Крафт</button>
+                        <button id="btnInv" style="background:#3498db; padding:4px 12px; border-radius:15px;">🎒 Инвентарь</button>
+                        <button id="btnBuild" style="background:#27ae60; padding:4px 12px; border-radius:15px;">🧱 Строить</button>
+                        <button id="btnClose" style="background:#e74c3c; padding:4px 12px; border-radius:15px;">✖</button>
+                    </div>
+                    <div id="deepToast" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:4px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
                 </div>
-                <div style="display:flex; gap:5px; background:#34495e; padding:6px; justify-content:center; flex-wrap:wrap;">
-                    <button id="btnCrafting" style="background:#f39c12; padding:4px 12px; border-radius:15px;">🏭 Крафт</button>
-                    <button id="btnInventory" style="background:#3498db; padding:4px 12px; border-radius:15px;">🎒 Инвентарь</button>
-                    <button id="btnBuild" style="background:#27ae60; padding:4px 12px; border-radius:15px;">🧱 Строить</button>
-                    <button id="btnClose" style="background:#e74c3c; padding:4px 12px; border-radius:15px;">✖ Закрыть</button>
-                </div>
-                <div id="deepToast" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:4px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
-            </div>
-        `;
-        document.body.appendChild(gameDiv);
-        window.deepActive = gameDiv;
+            `;
+            document.body.appendChild(gameDiv);
+            window.deepActive = gameDiv;
 
-        const canvas = document.getElementById('deepCanvas'); canvas.width = 800; canvas.height = 600;
-        const ctx = canvas.getContext('2d');
-        const hpSpan = document.getElementById('deepHp'); const goldSpan = document.getElementById('deepGold');
-        const atkSpan = document.getElementById('deepAtk'); const defSpan = document.getElementById('deepDef');
-        const timeSpan = document.getElementById('deepTime'); const toastDiv = document.getElementById('deepToast');
+            // ----- ИНИЦИАЛИЗАЦИЯ -----
+            const canvas = document.getElementById('deepCanvas');
+            const ctx = canvas.getContext('2d');
+            const hpSpan = document.getElementById('deepHp');
+            const goldSpan = document.getElementById('deepGold');
+            const atkSpan = document.getElementById('deepAtk');
+            const defSpan = document.getElementById('deepDef');
+            const timeSpan = document.getElementById('deepTime');
+            const toastDiv = document.getElementById('deepToast');
 
-        let gameRunning = true; let buildMode = false; let inventoryOpen = false; let craftOpen = false;
-        const CHUNK_SIZE = 32; const TILE_SIZE = 32;
-        let world = { map: new Map() };
-        let player = { x: 400, y: 300, hp: 100, maxHp: 100, atk: 10, def: 5, gold: 0, inv: { wood: 10, stone: 10, coal: 5, iron: 0, goldOre: 0, sword: null, pickaxe: { level: 1 }, armor: null } };
-        let enemies = []; let dayTime = 0.25; let dayDuration = 60;
-        let mouseWorld = { x: 0, y: 0 };
-        let placedBlocks = new Map();
-        let viewOffset = { x: 0, y: 0 };
+            canvas.width = 800; canvas.height = 600;
+            let gameRunning = true;
+            let buildMode = false;
+            let invOpen = false;
+            let craftOpen = false;
 
-        // --- Procedural World Generation ---
-        function noise(n) { n = (n >> 1) ^ n; n = (n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff; return n / 0x7fffffff; }
-        function getBlock(wx, wy) {
-            if (wy > 20) { let base = (Math.sin(wx*0.1) + Math.sin(wy*0.1))*0.5 + 0.5; return (base > 0.7) ? (noise(wx+wy*1000) > 0.6 ? 3 : 2) : (wy > 30 ? (noise(wx*0.2) > 0.8 ? 4 : 2) : 1); }
-            let val = Math.sin(wx*0.1)*0.5 + 0.5; return (wy < val*20+8) ? 1 : (wy < 22 ? 2 : 0);
-        }
-        function updateChunk(cx, cy) {
-            for (let x = cx*CHUNK_SIZE; x < (cx+1)*CHUNK_SIZE; x++)
-                for (let y = cy*CHUNK_SIZE; y < (cy+1)*CHUNK_SIZE; y++) {
-                    let id = placedBlocks.get(`${x},${y}`);
-                    if (id === undefined) id = getBlock(x, y);
-                    world.map.set(`${x},${y}`, id);
+            // ----- МИР (бесконечные чанки) -----
+            const TILE_SIZE = 32;
+            let world = new Map(); // ключ "x,y" -> id блока
+            let placedBlocks = new Map();
+
+            // ID блоков: 0 - воздух, 1 - дерево, 2 - камень, 3 - железо, 4 - золото
+            function getBlockId(wx, wy) {
+                let v = world.get(`${wx},${wy}`);
+                if (v !== undefined) return v;
+                // Генерация ландшафта (шум)
+                let height = Math.floor(Math.sin(wx * 0.05) * 8 + 12);
+                if (wy < height) return 1; // земля/трава
+                if (wy < height + 3) return 2;
+                // руды
+                if (wy > 20 && wy < 28 && Math.random() < 0.02) return 3;
+                if (wy > 30 && wy < 40 && Math.random() < 0.015) return 4;
+                return 0;
+            }
+
+            function setBlock(wx, wy, id) {
+                world.set(`${wx},${wy}`, id);
+                if (id === 0) placedBlocks.delete(`${wx},${wy}`);
+                else placedBlocks.set(`${wx},${wy}`, id);
+            }
+
+            // ----- ИГРОК -----
+            let player = {
+                x: 400, y: 300,
+                hp: 100, maxHp: 100,
+                atk: 10, def: 5,
+                gold: 0,
+                inv: { wood: 10, stone: 5, iron: 0, goldOre: 0 },
+                pickLevel: 1,
+                sword: null
+            };
+
+            // ----- ВРАГИ -----
+            let enemies = [];
+
+            function spawnEnemy() {
+                let side = Math.floor(Math.random() * 4);
+                let x = player.x + (Math.random() - 0.5) * 400;
+                let y = player.y + (Math.random() - 0.5) * 400;
+                let type = Math.random() > 0.6 ? 'goblin' : 'slime';
+                let hp = type === 'slime' ? 20 : 35;
+                let atk = type === 'slime' ? 8 : 15;
+                enemies.push({ x, y, type, hp, maxHp: hp, atk, radius: 18 });
+            }
+
+            // ----- ЦИКЛ ДНЯ/НОЧИ -----
+            let dayTime = 0.25; // 0..1
+            let dayCycleSpeed = 0.002;
+
+            // ----- КАМЕРА -----
+            let viewX = 0, viewY = 0;
+            function updateCamera() {
+                viewX = player.x - canvas.width / 2;
+                viewY = player.y - canvas.height / 2;
+            }
+
+            // ----- УПРАВЛЕНИЕ ДВИЖЕНИЕМ -----
+            const keys = { w: false, s: false, a: false, d: false };
+            function movePlayer() {
+                let dx = 0, dy = 0;
+                if (keys.w) dy -= 1;
+                if (keys.s) dy += 1;
+                if (keys.a) dx -= 1;
+                if (keys.d) dx += 1;
+                if (dx !== 0 || dy !== 0) {
+                    let len = Math.hypot(dx, dy);
+                    dx /= len; dy /= len;
                 }
-        }
-        function getBlockId(wx, wy) { return world.map.get(`${wx},${wy}`) ?? 0; }
-        function setBlock(wx, wy, id) { world.map.set(`${wx},${wy}`, id); if (id === 0) placedBlocks.delete(`${wx},${wy}`); else placedBlocks.set(`${wx},${wy}`, id); }
-
-        // --- Player & Movement ---
-        const keys = { w: false, s: false, a: false, d: false };
-        function movePlayer() {
-            let mx = 0, my = 0;
-            if (keys.w) my -= 1; if (keys.s) my += 1; if (keys.a) mx -= 1; if (keys.d) mx += 1;
-            if (mx !== 0 || my !== 0) { let len = Math.hypot(mx, my); mx /= len; my /= len; }
-            let speed = 4;
-            let nx = player.x + mx*speed; let ny = player.y + my*speed;
-            let cx = Math.floor(nx / TILE_SIZE), cy = Math.floor(ny / TILE_SIZE);
-            if (getBlockId(cx, cy) === 0) { player.x = nx; player.y = ny; updateView(); }
-        }
-        function updateView() { viewOffset.x = player.x - canvas.width/2; viewOffset.y = player.y - canvas.height/2; }
-
-        // --- Combat & Enemies ---
-        class Enemy { constructor(x, y, type) { this.x = x; this.y = y; this.type = type; this.hp = type === 'slime' ? 20 : 35; this.atk = type === 'slime' ? 8 : 15; this.radius = 20; } }
-        function spawnEnemy() { if (enemies.length < 8) enemies.push(new Enemy(player.x + (Math.random()-0.5)*300, player.y + (Math.random()-0.5)*300, Math.random() > 0.6 ? 'goblin' : 'slime')); }
-        function updateEnemies() {
-            for (let i = 0; i < enemies.length; i++) {
-                let e = enemies[i]; let dx = player.x - e.x, dy = player.y - e.y; let dist = Math.hypot(dx, dy);
-                if (dist > 0.1) { let step = 1.5; e.x += dx/dist * step; e.y += dy/dist * step; }
-                if (dist < 25) { player.hp -= Math.max(1, e.atk - player.def/2); updateUI(); if (player.hp <= 0) gameRunning = false; enemies.splice(i,1); }
+                let speed = 4;
+                let nx = player.x + dx * speed;
+                let ny = player.y + dy * speed;
+                // коллизия с блоками
+                let tileX = Math.floor(nx / TILE_SIZE);
+                let tileY = Math.floor(ny / TILE_SIZE);
+                if (getBlockId(tileX, tileY) === 0) {
+                    player.x = nx;
+                    player.y = ny;
+                }
+                updateCamera();
             }
-            if (enemies.length === 0 && dayTime > 0.8) { for(let i=0; i<3; i++) spawnEnemy(); }
-        }
 
-        // --- Inventory & Crafting ---
-        function updateUI() { hpSpan.innerText = player.hp; goldSpan.innerText = player.gold; atkSpan.innerText = player.atk; defSpan.innerText = player.def; timeSpan.innerText = dayTime > 0.7 ? "🌙 Ночь" : "☀️ День"; }
-        function craft(type) {
-            let recipes = { sword: { wood: 5, stone: 0, iron: 3, gold: 1, cost: 0, effect: () => { player.atk = 20; if(player.sword) player.gold += 5; player.sword = 'iron'; } } };
-            if (recipes[type] && player.inv.wood >= recipes[type].wood && player.inv.stone >= recipes[type].stone && player.inv.iron >= recipes[type].iron && player.gold >= recipes[type].cost) {
-                player.inv.wood -= recipes[type].wood; player.inv.stone -= recipes[type].stone; player.inv.iron -= recipes[type].iron; player.gold -= recipes[type].cost;
-                recipes[type].effect(); updateUI(); showToast(`Создан ${type}!`);
-            } else showToast(`Не хватает ресурсов для ${type}!`, true);
-        }
-        function showToast(msg, err=false) { toastDiv.innerText = msg; toastDiv.style.backgroundColor = err ? '#e74c3c' : '#2ecc71'; toastDiv.style.opacity = '1'; setTimeout(() => toastDiv.style.opacity = '0', 2000); }
-
-        // --- Actions (Mine/Build) ---
-        function actionAt(wx, wy, isBuild) {
-            let block = getBlockId(wx, wy);
-            if (!isBuild && block !== 0) {
-                let reqPick = (block === 3 || block === 4) ? 2 : 1;
-                if (player.inv.pickaxe.level >= reqPick) {
-                    setBlock(wx, wy, 0);
-                    if (block === 1) { player.inv.wood++; showToast("+ Древесина"); }
-                    if (block === 2) { player.inv.stone++; showToast("+ Камень"); }
-                    if (block === 3) { player.inv.iron++; showToast("+ Железная руда"); }
-                    if (block === 4) { player.gold++; showToast("+ Золото"); }
+            // ----- ВЗАИМОДЕЙСТВИЕ (добыча/стройка) -----
+            function actionAt(worldX, worldY, isBuild) {
+                let tileX = Math.floor(worldX / TILE_SIZE);
+                let tileY = Math.floor(worldY / TILE_SIZE);
+                let block = getBlockId(tileX, tileY);
+                if (!isBuild && block !== 0) {
+                    // добыча
+                    let requiredPick = (block === 3 || block === 4) ? 2 : 1;
+                    if (player.pickLevel >= requiredPick) {
+                        setBlock(tileX, tileY, 0);
+                        if (block === 1) { player.inv.wood++; showToast("+ Древесина"); }
+                        else if (block === 2) { player.inv.stone++; showToast("+ Камень"); }
+                        else if (block === 3) { player.inv.iron++; showToast("+ Железная руда"); }
+                        else if (block === 4) { player.gold++; showToast("+ Золото"); }
+                        updateUI();
+                    } else {
+                        showToast("Слишком крепко! Нужна кирка лучше", true);
+                    }
+                } else if (isBuild && player.inv.wood > 0 && block === 0) {
+                    setBlock(tileX, tileY, 1);
+                    player.inv.wood--;
                     updateUI();
-                } else showToast("Ваша кирка слишком слаба!", true);
-            } else if (isBuild && player.inv.wood > 0 && block === 0) { setBlock(wx, wy, 1); player.inv.wood--; updateUI(); }
-        }
-
-        // --- Game Loop & Drawing ---
-        function draw() {
-            if (!gameRunning) { ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle='white'; ctx.font='20px Arial'; ctx.fillText("GAME OVER", canvas.width/2-70, canvas.height/2); return; }
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            for (let x = -2; x <= canvas.width/TILE_SIZE+2; x++) for (let y = -2; y <= canvas.height/TILE_SIZE+2; y++) {
-                let wx = Math.floor((x*TILE_SIZE + viewOffset.x)/TILE_SIZE), wy = Math.floor((y*TILE_SIZE + viewOffset.y)/TILE_SIZE);
-                let block = getBlockId(wx, wy); let colors = {0:'#1e1a1a',1:'#5d3a1a',2:'#7f8c8d',3:'#bdc3c7',4:'#f1c40f'};
-                ctx.fillStyle = colors[block] || '#2c3e50'; ctx.fillRect(x*TILE_SIZE - viewOffset.x%TILE_SIZE, y*TILE_SIZE - viewOffset.y%TILE_SIZE, TILE_SIZE-1, TILE_SIZE-1);
+                    showToast("Построено");
+                }
             }
-            for(let e of enemies){ ctx.fillStyle = e.type === 'slime' ? '#2ecc71' : '#e67e22'; ctx.beginPath(); ctx.arc(e.x - viewOffset.x, e.y - viewOffset.y, e.radius, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#000'; ctx.fillRect(e.x-12 - viewOffset.x, e.y-15 - viewOffset.y, 24, 5); ctx.fillStyle = '#e74c3c'; ctx.fillRect(e.x-12 - viewOffset.x, e.y-15 - viewOffset.y, 24*(e.hp/(e.type==='slime'?20:35)), 5); }
-            ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.arc(player.x - viewOffset.x, player.y - viewOffset.y, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText("🗡️", player.x-12 - viewOffset.x, player.y+8 - viewOffset.y);
-            if(buildMode){ ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 2; ctx.strokeRect(Math.floor(mouseWorld.x/TILE_SIZE)*TILE_SIZE - viewOffset.x, Math.floor(mouseWorld.y/TILE_SIZE)*TILE_SIZE - viewOffset.y, TILE_SIZE, TILE_SIZE); }
-            if(inventoryOpen){ ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(100,100,400,300); ctx.fillStyle='white'; ctx.font='16px Arial'; ctx.fillText(`Дерево: ${player.inv.wood}`, 120,140); ctx.fillText(`Камень: ${player.inv.stone}`, 120,180); ctx.fillText(`Железо: ${player.inv.iron}`, 120,220); ctx.fillText(`Золото: ${player.gold}`, 120,260); }
+
+            // ----- КРАФТ -----
+            function craft(item) {
+                if (item === 'sword' && player.inv.iron >= 3 && player.inv.wood >= 2) {
+                    player.inv.iron -= 3;
+                    player.inv.wood -= 2;
+                    player.atk += 5;
+                    showToast("Выкован железный меч! +5 атаки");
+                } else if (item === 'pickaxe' && player.inv.iron >= 2 && player.inv.wood >= 3) {
+                    player.inv.iron -= 2;
+                    player.inv.wood -= 3;
+                    player.pickLevel = 2;
+                    showToast("Улучшенная кирка! Теперь можно добывать железо и золото");
+                } else if (item === 'armor' && player.inv.iron >= 5) {
+                    player.inv.iron -= 5;
+                    player.def += 4;
+                    showToast("Железная броня +4 защиты");
+                } else {
+                    showToast("Не хватает ресурсов для крафта", true);
+                }
+                updateUI();
+            }
+
+            // ----- ОБНОВЛЕНИЕ UI и СОСТОЯНИЯ -----
+            function updateUI() {
+                hpSpan.innerText = player.hp;
+                goldSpan.innerText = player.gold;
+                atkSpan.innerText = player.atk;
+                defSpan.innerText = player.def;
+                timeSpan.innerText = (dayTime > 0.7) ? "🌙 Ночь" : "☀️ День";
+            }
+
+            function showToast(msg, isError = false) {
+                toastDiv.innerText = msg;
+                toastDiv.style.backgroundColor = isError ? '#e74c3c' : '#2ecc71';
+                toastDiv.style.opacity = '1';
+                setTimeout(() => toastDiv.style.opacity = '0', 2000);
+            }
+
+            // ----- ОБНОВЛЕНИЕ ИГРЫ (монстры, время) -----
+            function updateGame() {
+                if (!gameRunning) return;
+                movePlayer();
+
+                // день/ночь
+                dayTime += dayCycleSpeed;
+                if (dayTime >= 1) dayTime = 0;
+
+                // спавн монстров только ночью
+                if (dayTime > 0.7 && enemies.length < 6 && Math.random() < 0.01) {
+                    spawnEnemy();
+                }
+
+                // движение монстров и атака
+                for (let i = 0; i < enemies.length; i++) {
+                    let e = enemies[i];
+                    let dx = player.x - e.x;
+                    let dy = player.y - e.y;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist > 0.1) {
+                        let step = 1.2;
+                        e.x += dx / dist * step;
+                        e.y += dy / dist * step;
+                    }
+                    if (dist < 25) {
+                        let dmg = Math.max(1, e.atk - Math.floor(player.def / 2));
+                        player.hp -= dmg;
+                        enemies.splice(i, 1);
+                        i--;
+                        updateUI();
+                        if (player.hp <= 0) {
+                            gameRunning = false;
+                            showToast("GAME OVER! Нажмите Обновить страницу для новой игры", true);
+                        }
+                    }
+                }
+                updateUI();
+            }
+
+            // ----- ОТРИСОВКА -----
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // блоки в видимой области
+                let startX = Math.max(0, Math.floor(viewX / TILE_SIZE) - 2);
+                let startY = Math.max(0, Math.floor(viewY / TILE_SIZE) - 2);
+                let endX = startX + Math.ceil(canvas.width / TILE_SIZE) + 4;
+                let endY = startY + Math.ceil(canvas.height / TILE_SIZE) + 4;
+                for (let x = startX; x < endX; x++) {
+                    for (let y = startY; y < endY; y++) {
+                        let block = getBlockId(x, y);
+                        if (block === 0) continue;
+                        let color = block === 1 ? '#5d3a1a' : (block === 2 ? '#7f8c8d' : (block === 3 ? '#bdc3c7' : (block === 4 ? '#f1c40f' : '#2c3e50')));
+                        ctx.fillStyle = color;
+                        let screenX = x * TILE_SIZE - viewX;
+                        let screenY = y * TILE_SIZE - viewY;
+                        ctx.fillRect(screenX, screenY, TILE_SIZE - 1, TILE_SIZE - 1);
+                    }
+                }
+                // монстры
+                for (let e of enemies) {
+                    ctx.fillStyle = e.type === 'slime' ? '#2ecc71' : '#e67e22';
+                    ctx.beginPath();
+                    ctx.arc(e.x - viewX, e.y - viewY, e.radius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(e.x - 12 - viewX, e.y - 15 - viewY, 24, 4);
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.fillRect(e.x - 12 - viewX, e.y - 15 - viewY, 24 * (e.hp / e.maxHp), 4);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = "16px Arial";
+                    ctx.fillText(e.type === 'slime' ? '👾' : '👹', e.x - 8 - viewX, e.y + 6 - viewY);
+                }
+                // игрок
+                ctx.fillStyle = '#3498db';
+                ctx.beginPath();
+                ctx.arc(player.x - viewX, player.y - viewY, 16, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = "20px Arial";
+                ctx.fillText("⚔️", player.x - 10 - viewX, player.y + 8 - viewY);
+                // рамка режима стройки
+                if (buildMode) {
+                    let mx = (mouseX + viewX) || player.x;
+                    let my = (mouseY + viewY) || player.y;
+                    let tileX = Math.floor(mx / TILE_SIZE) * TILE_SIZE;
+                    let tileY = Math.floor(my / TILE_SIZE) * TILE_SIZE;
+                    ctx.strokeStyle = '#2ecc71';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(tileX - viewX, tileY - viewY, TILE_SIZE, TILE_SIZE);
+                }
+                // инвентарь
+                if (invOpen) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                    ctx.fillRect(100, 80, 400, 320);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = "16px Arial";
+                    ctx.fillText("ИНВЕНТАРЬ", 250, 110);
+                    ctx.fillText(`Древесина: ${player.inv.wood}`, 130, 160);
+                    ctx.fillText(`Камень: ${player.inv.stone}`, 130, 200);
+                    ctx.fillText(`Железо: ${player.inv.iron}`, 130, 240);
+                    ctx.fillText(`Золото: ${player.gold}`, 130, 280);
+                    ctx.fillText(`Сила атаки: ${player.atk}`, 130, 320);
+                    ctx.fillText(`Защита: ${player.def}`, 130, 360);
+                }
+                if (craftOpen) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                    ctx.fillRect(100, 80, 400, 320);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = "16px Arial";
+                    ctx.fillText("КРАФТ", 250, 110);
+                    ctx.fillText("1. Железный меч (3 железо, 2 дерево) → +5 атаки", 120, 160);
+                    ctx.fillText("2. Улучшенная кирка (2 железо, 3 дерево) → добыча руд", 120, 200);
+                    ctx.fillText("3. Железная броня (5 железо) → +4 защиты", 120, 240);
+                }
+                if (!gameRunning) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = "30px Arial";
+                    ctx.fillText("GAME OVER", canvas.width / 2 - 100, canvas.height / 2);
+                }
+            }
+
+            // ----- МЫШЬ ДЛЯ ДЕЙСТВИЙ -----
+            let mouseX = 0, mouseY = 0;
+            function handleCanvasClick(e) {
+                if (!gameRunning) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                let cx, cy;
+                if (e.touches) {
+                    cx = e.touches[0].clientX;
+                    cy = e.touches[0].clientY;
+                    e.preventDefault();
+                } else {
+                    cx = e.clientX;
+                    cy = e.clientY;
+                }
+                const canvasX = (cx - rect.left) * scaleX;
+                const canvasY = (cy - rect.top) * scaleY;
+                mouseX = canvasX + viewX;
+                mouseY = canvasY + viewY;
+                actionAt(mouseX, mouseY, buildMode);
+            }
+            function handleMouseMove(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                let cx = e.clientX;
+                let cy = e.clientY;
+                if (e.touches) {
+                    cx = e.touches[0].clientX;
+                    cy = e.touches[0].clientY;
+                }
+                const canvasX = (cx - rect.left) * scaleX;
+                const canvasY = (cy - rect.top) * scaleY;
+                mouseX = canvasX + viewX;
+                mouseY = canvasY + viewY;
+            }
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('touchstart', handleCanvasClick);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMouseMove(e); });
+
+            // ----- КЛАВИАТУРА -----
+            window.addEventListener('keydown', (e) => {
+                if (!window.deepActive) return;
+                const k = e.key;
+                if (k === 'w' || k === 'ArrowUp') keys.w = true;
+                if (k === 's' || k === 'ArrowDown') keys.s = true;
+                if (k === 'a' || k === 'ArrowLeft') keys.a = true;
+                if (k === 'd' || k === 'ArrowRight') keys.d = true;
+                if (k === 'b') {
+                    buildMode = !buildMode;
+                    showToast(buildMode ? "Режим строительства" : "Режим добычи");
+                }
+                if (k === 'i') { invOpen = !invOpen; craftOpen = false; }
+                if (k === 'c') { craftOpen = !craftOpen; invOpen = false; }
+                e.preventDefault();
+            });
+            window.addEventListener('keyup', (e) => {
+                const k = e.key;
+                if (k === 'w' || k === 'ArrowUp') keys.w = false;
+                if (k === 's' || k === 'ArrowDown') keys.s = false;
+                if (k === 'a' || k === 'ArrowLeft') keys.a = false;
+                if (k === 'd' || k === 'ArrowRight') keys.d = false;
+            });
+
+            // ----- КНОПКИ UI -----
+            document.getElementById('btnCraft').onclick = () => {
+                let item = prompt("Что скрафтить? (sword / pickaxe / armor)", "sword");
+                if (item) craft(item);
+            };
+            document.getElementById('btnInv').onclick = () => {
+                invOpen = !invOpen;
+                craftOpen = false;
+            };
+            document.getElementById('btnBuild').onclick = () => {
+                buildMode = !buildMode;
+                showToast(buildMode ? "🧱 Режим строительства" : "⛏️ Режим добычи");
+            };
+            document.getElementById('btnClose').onclick = () => {
+                if (window.deepAnim) cancelAnimationFrame(window.deepAnim);
+                gameDiv.remove();
+                window.deepActive = null;
+            };
+
+            // ----- ИГРОВОЙ ЦИКЛ -----
+            function gameLoop() {
+                if (!window.deepActive) return;
+                updateGame();
+                draw();
+                window.deepAnim = requestAnimationFrame(gameLoop);
+            }
+            updateCamera();
+            gameLoop();
         }
 
-        function updateGame() { movePlayer(); updateEnemies(); dayTime += 0.001; if (dayTime >= 1) dayTime = 0; updateUI(); }
-
-        function gameLoop() { if (!gameRunning && !window.deepActive) return; updateGame(); draw(); requestAnimationFrame(gameLoop); }
-
-        // --- Event Handlers ---
-        function handleMouse(e, isTap=false) {
-            let rect = canvas.getBoundingClientRect(); let scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
-            let cx = (e.clientX - rect.left)*scaleX + viewOffset.x, cy = (e.clientY - rect.top)*scaleY + viewOffset.y;
-            mouseWorld.x = cx; mouseWorld.y = cy;
-            if (e.type === 'click') { let wx = Math.floor(cx/TILE_SIZE), wy = Math.floor(cy/TILE_SIZE); actionAt(wx, wy, buildMode); }
-        }
-        canvas.addEventListener('click', handleMouse); canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleMouse(e.touches[0], true); });
-        window.addEventListener('keydown', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; if (e.key === 'b') { buildMode = !buildMode; showToast(buildMode ? "Режим стройки" : "Режим добычи"); } e.preventDefault(); });
-        window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
-        document.getElementById('btnCrafting').onclick = () => { let w = prompt("Крафт: sword - меч (+атака)", "sword"); if(w) craft(w); };
-        document.getElementById('btnInventory').onclick = () => { inventoryOpen = !inventoryOpen; draw(); };
-        document.getElementById('btnBuild').onclick = () => { buildMode = !buildMode; showToast(buildMode ? "Стройка" : "Добыча"); };
-        document.getElementById('btnClose').onclick = () => { gameRunning = false; cancelAnimationFrame(window.deepAnim); clearInterval(window.deepInterval); gameDiv.remove(); window.deepActive = null; };
-        for(let cx = -5; cx <= 5; cx++) for(let cy = -5; cy <= 5; cy++) updateChunk(cx, cy);
-        gameLoop();
-    }
+        deepIcon.onclick = () => {
+            document.getElementById('unifiedGamePanel').style.display = 'none';
+            startDeeplands();
+        };
+    });
 })();
 
 
