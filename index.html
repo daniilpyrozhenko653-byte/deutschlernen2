@@ -8404,6 +8404,267 @@ if(p) {
 
 
 
+// ========== ДОБАВЛЕНИЕ ИГРЫ 2048 ==========
+(function add2048Game() {
+    function waitForPanel(callback) {
+        const panel = document.getElementById('unifiedGamePanel');
+        if (panel) callback(panel);
+        else setTimeout(() => waitForPanel(callback), 100);
+    }
+
+    waitForPanel((panel) => {
+        if (document.getElementById('game2048Icon')) return;
+
+        const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
+        if (!gamesContainer) return;
+
+        const icon2048 = document.createElement('div');
+        icon2048.id = 'game2048Icon';
+        icon2048.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
+        icon2048.innerHTML = `<div style="font-size:48px;">🧩2048</div><div style="color:white; font-size:12px;">2048 Puzzle</div>`;
+        gamesContainer.appendChild(icon2048);
+
+        // ---------- САМА ИГРА 2048 ----------
+        function start2048() {
+            if (window.game2048Active) {
+                if (window.game2048Active.parentNode) window.game2048Active.remove();
+            }
+
+            const gameDiv = document.createElement('div');
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+            gameDiv.innerHTML = `
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:450px; overflow:hidden;">
+                    <div style="background:#e67e22; padding:8px; text-align:center; color:white;">🧩 2048 (стрелки / кнопки)</div>
+                    <canvas id="g2048Canvas" width="400" height="400" style="width:100%; height:auto; background:#bbada0; display:block;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
+                        <span>🏆 Счёт: <span id="g2048Score">0</span></span>
+                        <span>🎯 Рекорд: <span id="g2048High">0</span></span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px; padding:0 8px 8px 8px;">
+                        <div></div><button id="g2048Up" style="background:#1abc9c; border:none; padding:8px; border-radius:30px;">▲ ВВЕРХ</button><div></div>
+                        <button id="g2048Left" style="background:#1abc9c; border:none; padding:8px;">◀ ЛЕВО</button>
+                        <button id="g2048Down" style="background:#1abc9c; border:none; padding:8px;">▼ ВНИЗ</button>
+                        <button id="g2048Right" style="background:#1abc9c; border:none; padding:8px;">ПРАВО ▶</button>
+                    </div>
+                    <div id="g2048GameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px; border-radius:20px; text-align:center;">
+                        💀 Игра окончена! 💀<br><button id="g2048RestartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
+                    </div>
+                    <button id="g2048CloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:8px;">Закрыть</button>
+                </div>
+            `;
+            document.body.appendChild(gameDiv);
+            window.game2048Active = gameDiv;
+
+            const canvas = document.getElementById('g2048Canvas');
+            const ctx = canvas.getContext('2d');
+            const scoreSpan = document.getElementById('g2048Score');
+            const highSpan = document.getElementById('g2048High');
+            const gameOverDiv = document.getElementById('g2048GameOverMsg');
+            const restartBtn = document.getElementById('g2048RestartBtn');
+            const closeBtn = document.getElementById('g2048CloseBtn');
+
+            const upBtn = document.getElementById('g2048Up');
+            const downBtn = document.getElementById('g2048Down');
+            const leftBtn = document.getElementById('g2048Left');
+            const rightBtn = document.getElementById('g2048Right');
+
+            let board = Array(4).fill().map(() => Array(4).fill(0));
+            let score = 0;
+            let highScore = localStorage.getItem('game2048High') ? parseInt(localStorage.getItem('game2048High')) : 0;
+            highSpan.innerText = highScore;
+            let gameActive = true;
+
+            function addRandomTile() {
+                let empty = [];
+                for (let i=0; i<4; i++) {
+                    for (let j=0; j<4; j++) {
+                        if (board[i][j] === 0) empty.push([i,j]);
+                    }
+                }
+                if (empty.length === 0) return false;
+                let [r,c] = empty[Math.floor(Math.random() * empty.length)];
+                board[r][c] = Math.random() < 0.9 ? 2 : 4;
+                return true;
+            }
+
+            function updateScoreUI() {
+                scoreSpan.innerText = score;
+                if (score > highScore) {
+                    highScore = score;
+                    highSpan.innerText = highScore;
+                    localStorage.setItem('game2048High', highScore);
+                }
+            }
+
+            // Сдвиг и слияние в одном направлении
+            function move(direction) {
+                let oldBoard = JSON.parse(JSON.stringify(board));
+                let addedScore = 0;
+
+                if (direction === 'left') {
+                    for (let i=0; i<4; i++) {
+                        let row = board[i].filter(v => v !== 0);
+                        for (let j=0; j<row.length-1; j++) {
+                            if (row[j] === row[j+1]) {
+                                row[j] *= 2;
+                                addedScore += row[j];
+                                row.splice(j+1,1);
+                            }
+                        }
+                        while (row.length < 4) row.push(0);
+                        board[i] = row;
+                    }
+                }
+                else if (direction === 'right') {
+                    for (let i=0; i<4; i++) {
+                        let row = board[i].filter(v => v !== 0);
+                        for (let j=row.length-1; j>0; j--) {
+                            if (row[j] === row[j-1]) {
+                                row[j] *= 2;
+                                addedScore += row[j];
+                                row.splice(j-1,1);
+                                j--;
+                            }
+                        }
+                        while (row.length < 4) row.unshift(0);
+                        board[i] = row;
+                    }
+                }
+                else if (direction === 'up') {
+                    for (let j=0; j<4; j++) {
+                        let col = [board[0][j], board[1][j], board[2][j], board[3][j]].filter(v => v !== 0);
+                        for (let i=0; i<col.length-1; i++) {
+                            if (col[i] === col[i+1]) {
+                                col[i] *= 2;
+                                addedScore += col[i];
+                                col.splice(i+1,1);
+                            }
+                        }
+                        while (col.length < 4) col.push(0);
+                        for (let i=0; i<4; i++) board[i][j] = col[i];
+                    }
+                }
+                else if (direction === 'down') {
+                    for (let j=0; j<4; j++) {
+                        let col = [board[0][j], board[1][j], board[2][j], board[3][j]].filter(v => v !== 0);
+                        for (let i=col.length-1; i>0; i--) {
+                            if (col[i] === col[i-1]) {
+                                col[i] *= 2;
+                                addedScore += col[i];
+                                col.splice(i-1,1);
+                                i--;
+                            }
+                        }
+                        while (col.length < 4) col.unshift(0);
+                        for (let i=0; i<4; i++) board[i][j] = col[i];
+                    }
+                }
+
+                if (JSON.stringify(oldBoard) !== JSON.stringify(board)) {
+                    score += addedScore;
+                    updateScoreUI();
+                    addRandomTile();
+                    draw();
+                    if (!canMove()) {
+                        gameActive = false;
+                        gameOverDiv.style.display = 'flex';
+                    }
+                } else {
+                    if (!canMove()) {
+                        gameActive = false;
+                        gameOverDiv.style.display = 'flex';
+                    }
+                }
+            }
+
+            function canMove() {
+                for (let i=0; i<4; i++) {
+                    for (let j=0; j<4; j++) {
+                        if (board[i][j] === 0) return true;
+                        if (j<3 && board[i][j] === board[i][j+1]) return true;
+                        if (i<3 && board[i][j] === board[i+1][j]) return true;
+                    }
+                }
+                return false;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, 400, 400);
+                const colors = {
+                    0: '#cdc1b4',
+                    2: '#eee4da', 4: '#ede0c8', 8: '#f2b179', 16: '#f59563',
+                    32: '#f67c5f', 64: '#f65e3b', 128: '#edcf72', 256: '#edcc61',
+                    512: '#edc850', 1024: '#edc53f', 2048: '#edc22e'
+                };
+                const fontSize = 24;
+                for (let i=0; i<4; i++) {
+                    for (let j=0; j<4; j++) {
+                        let val = board[i][j];
+                        let color = colors[val] || '#3c3a32';
+                        ctx.fillStyle = color;
+                        ctx.fillRect(j*100, i*100, 100, 100);
+                        ctx.fillStyle = val > 4 ? 'white' : '#776e65';
+                        ctx.font = `bold ${fontSize}px Arial`;
+                        if (val !== 0) {
+                            ctx.fillText(val, j*100+50 - ctx.measureText(val).width/2, i*100+60);
+                        }
+                    }
+                }
+            }
+
+            function restart() {
+                board = Array(4).fill().map(() => Array(4).fill(0));
+                score = 0;
+                scoreSpan.innerText = '0';
+                gameActive = true;
+                addRandomTile();
+                addRandomTile();
+                gameOverDiv.style.display = 'none';
+                draw();
+            }
+
+            // Управление
+            function handleMove(dir) {
+                if (!gameActive) return;
+                move(dir);
+            }
+
+            const keyHandler = (e) => {
+                if (!window.game2048Active) return;
+                e.preventDefault();
+                if (e.key === 'ArrowUp') handleMove('up');
+                else if (e.key === 'ArrowDown') handleMove('down');
+                else if (e.key === 'ArrowLeft') handleMove('left');
+                else if (e.key === 'ArrowRight') handleMove('right');
+            };
+            window.addEventListener('keydown', keyHandler);
+
+            upBtn.onclick = () => handleMove('up');
+            downBtn.onclick = () => handleMove('down');
+            leftBtn.onclick = () => handleMove('left');
+            rightBtn.onclick = () => handleMove('right');
+
+            restartBtn.onclick = () => restart();
+            closeBtn.onclick = () => {
+                window.removeEventListener('keydown', keyHandler);
+                window.game2048Active.remove();
+                window.game2048Active = null;
+            };
+
+            // Инициализация
+            restart();
+        }
+
+        icon2048.onclick = () => {
+            const panel = document.getElementById('unifiedGamePanel');
+            if (panel) panel.style.display = 'none';
+            start2048();
+        };
+    });
+})();
+
+
+    
 
 
     
