@@ -8988,8 +8988,8 @@ if(p) {
 
 
 
-    // ========== ИГРА "ФЕРМА" (FARM LIFE) ==========
-(function addFarmGame() {
+    // ========== РЕАЛИСТИЧНАЯ ФЕРМА (без алертов, без энергии) ==========
+(function addRealisticFarm() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9008,88 +9008,98 @@ if(p) {
         farmIcon.innerHTML = `<div style="font-size:48px;">🧑‍🌾🌾</div><div style="color:white;">Ферма</div>`;
         gamesContainer.appendChild(farmIcon);
 
-        // ---------- ЛОГИКА ФЕРМЫ ----------
-        function startFarmGame() {
+        function startFarm() {
             if (window.farmGameActive) {
                 window.farmGameActive.remove();
-                if (window.farmInterval) clearInterval(window.farmInterval);
+                if (window.farmUpdateInterval) clearInterval(window.farmUpdateInterval);
+                if (window.farmToastTimeout) clearTimeout(window.farmToastTimeout);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:850px; overflow:hidden;">
-                    <div style="background:#4a7c59; padding:12px; text-align:center; color:white; font-weight:bold; font-size:18px;">🧑‍🌾 ДОБРО ПОЖАЛОВАТЬ НА ФЕРМУ</div>
-                    <canvas id="farmCanvas" width="800" height="550" style="width:100%; height:auto; display:block; background:#8FBC8F;"></canvas>
-                    <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:8px 12px; font-size:14px; flex-wrap:wrap;">
-                        <span>💰 Деньги: $<span id="farmMoney">500</span></span>
-                        <span>⚡ Энергия: <span id="farmEnergy">100</span>%</span>
-                        <span>🌾 Урожай: <span id="farmHarvest">0</span> кг</span>
-                        <span>📦 Семена: 🌾<span id="farmWheatSeeds">5</span> 🌽<span id="farmCornSeeds">5</span> 🍅<span id="farmTomatoSeeds">5</span> 🎃<span id="farmPumpkinSeeds">5</span></span>
+                <div style="background:#2c5e2e; border-radius:20px; width:95%; max-width:680px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+                    <div style="background:#3c7840; padding:8px 12px; text-align:center; color:#ffecb3; font-weight:bold; font-size:16px;">🧑‍🌾 УСАДЬБА «ЗОЛОТОЙ КОЛОС»</div>
+                    <canvas id="farmCanvas" width="640" height="480" style="width:100%; height:auto; display:block; background:#7cb342;"></canvas>
+                    <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:6px 10px; font-size:13px; flex-wrap:wrap; gap:5px;">
+                        <span>💰 $<span id="farmMoney">500</span></span>
+                        <span>🌾 <span id="farmHarvest">0</span> кг</span>
+                        <div style="display:flex; gap:8px;">
+                            <span>🌾<span id="farmWheatSeeds">5</span></span>
+                            <span>🌽<span id="farmCornSeeds">5</span></span>
+                            <span>🍅<span id="farmTomatoSeeds">5</span></span>
+                            <span>🎃<span id="farmPumpkinSeeds">5</span></span>
+                        </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; background:#34495e; padding:8px;">
-                        <select id="farmToolSelect" style="background:#f39c12; border:none; padding:5px; border-radius:10px; font-weight:bold;">
-                            <option value="hoe">🌱 Посадить</option>
-                            <option value="water">💧 Полить</option>
-                            <option value="harvest">✂️ Собрать</option>
-                        </select>
-                        <select id="farmSeedSelect" style="background:#f39c12; border:none; padding:5px; border-radius:10px; font-weight:bold;">
+                    <div style="display:flex; justify-content:space-between; background:#34495e; padding:6px 8px; gap:6px; flex-wrap:wrap;">
+                        <select id="farmSeedSelect" style="background:#f39c12; border:none; padding:4px 8px; border-radius:15px; font-weight:bold;">
                             <option value="wheat">🌾 Пшеница ($20)</option>
                             <option value="corn">🌽 Кукуруза ($15)</option>
                             <option value="tomato">🍅 Помидор ($25)</option>
                             <option value="pumpkin">🎃 Тыква ($40)</option>
                         </select>
-                        <button id="farmBuySeedsBtn" style="background:#27ae60; border:none; padding:5px 10px; border-radius:10px;">🛒 Купить семена</button>
-                        <button id="farmSellAllBtn" style="background:#e67e22; border:none; padding:5px 10px; border-radius:10px;">💰 Продать урожай</button>
-                        <button id="farmCloseBtn" style="background:#c0392b; border:none; padding:5px 10px; border-radius:10px;">✖ Закрыть</button>
+                        <button id="farmBuySeedsBtn" style="background:#27ae60; border:none; padding:4px 12px; border-radius:15px;">🛒 Купить</button>
+                        <button id="farmPlantBtn" style="background:#8e44ad; border:none; padding:4px 12px; border-radius:15px;">🌱 Посадить</button>
+                        <button id="farmWaterBtn" style="background:#3498db; border:none; padding:4px 12px; border-radius:15px;">💧 Полить</button>
+                        <button id="farmHarvestBtn" style="background:#e67e22; border:none; padding:4px 12px; border-radius:15px;">✂️ Собрать</button>
+                        <button id="farmSellAllBtn" style="background:#e74c3c; border:none; padding:4px 12px; border-radius:15px;">💰 Продать урожай</button>
+                        <button id="farmCloseBtn" style="background:#7f8c8d; border:none; padding:4px 12px; border-radius:15px;">✖</button>
                     </div>
+                    <div id="farmToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#f1c40f; color:#2c3e50; padding:6px 14px; border-radius:30px; font-size:12px; font-weight:bold; opacity:0; transition:0.2s; pointer-events:none; z-index:100003;"></div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
             window.farmGameActive = gameDiv;
 
-            // ---------- КОНСТАНТЫ И СОСТОЯНИЕ ----------
+            // ---- DOM элементы ----
             const canvas = document.getElementById('farmCanvas');
             const ctx = canvas.getContext('2d');
             const moneySpan = document.getElementById('farmMoney');
-            const energySpan = document.getElementById('farmEnergy');
             const harvestSpan = document.getElementById('farmHarvest');
             const wheatSeedsSpan = document.getElementById('farmWheatSeeds');
             const cornSeedsSpan = document.getElementById('farmCornSeeds');
             const tomatoSeedsSpan = document.getElementById('farmTomatoSeeds');
             const pumpkinSeedsSpan = document.getElementById('farmPumpkinSeeds');
-            const toolSelect = document.getElementById('farmToolSelect');
             const seedSelect = document.getElementById('farmSeedSelect');
-            const buySeedsBtn = document.getElementById('farmBuySeedsBtn');
+            const buyBtn = document.getElementById('farmBuySeedsBtn');
+            const plantBtn = document.getElementById('farmPlantBtn');
+            const waterBtn = document.getElementById('farmWaterBtn');
+            const harvestBtn = document.getElementById('farmHarvestBtn');
             const sellAllBtn = document.getElementById('farmSellAllBtn');
             const closeBtn = document.getElementById('farmCloseBtn');
+            const toastDiv = document.getElementById('farmToast');
 
-            // Параметры поля (8x6 клеток)
-            const rows = 6;
-            const cols = 8;
-            let plots = [];
+            function showToast(text, isError = false) {
+                toastDiv.innerText = text;
+                toastDiv.style.backgroundColor = isError ? '#e74c3c' : '#2ecc71';
+                toastDiv.style.color = 'white';
+                toastDiv.style.opacity = '1';
+                if (window.farmToastTimeout) clearTimeout(window.farmToastTimeout);
+                window.farmToastTimeout = setTimeout(() => {
+                    toastDiv.style.opacity = '0';
+                }, 1500);
+            }
+
+            // ---- Параметры поля (6x8) ----
+            const rows = 6, cols = 8;
+            let plots = []; // каждый { crop, plantedAt, stage, watered }
             let money = 500;
-            let energy = 100;
             let harvestedTotal = 0;
-            let lastHarvestTick = 0;
-
-            // Структура грядки: { crop: тип, plantedAt: время посадки, stage: 0-3, watered: false }
-            let cropPrices = { wheat: 20, corn: 15, tomato: 25, pumpkin: 40 };
             let seedsCount = { wheat: 5, corn: 5, tomato: 5, pumpkin: 5 };
-            let growthTimes = { wheat: 180, corn: 120, tomato: 60, pumpkin: 240 }; // секунды
+
+            const cropPrices = { wheat: 20, corn: 15, tomato: 25, pumpkin: 40 };
+            const growthTimes = { wheat: 180, corn: 120, tomato: 60, pumpkin: 240 }; // секунды
 
             // Инициализация поля
             for (let i = 0; i < rows; i++) {
                 plots[i] = [];
                 for (let j = 0; j < cols; j++) {
-                    plots[i][j] = { crop: null, plantedAt: null, stage: 0, watered: false };
+                    plots[i][j] = { crop: null, plantedAt: 0, stage: 0, watered: false };
                 }
             }
 
-            // Функция обновления UI
             function updateUI() {
                 moneySpan.innerText = money;
-                energySpan.innerText = energy;
                 harvestSpan.innerText = harvestedTotal;
                 wheatSeedsSpan.innerText = seedsCount.wheat;
                 cornSeedsSpan.innerText = seedsCount.corn;
@@ -9097,204 +9107,270 @@ if(p) {
                 pumpkinSeedsSpan.innerText = seedsCount.pumpkin;
             }
 
-            // Посадка
-            function plantCrop(row, col, cropType) {
-                if (energy < 10) { alert("Нет энергии! Отдохните."); return false; }
-                if (seedsCount[cropType] <= 0) { alert("Нет семян! Купите в магазине."); return false; }
-                if (plots[row][col].crop !== null) { alert("Здесь уже что-то растёт!"); return false; }
-                let now = Date.now() / 1000;
-                plots[row][col] = { crop: cropType, plantedAt: now, stage: 0, watered: false };
-                seedsCount[cropType]--;
-                energy -= 10;
-                updateUI();
-                drawFarm();
-                return true;
-            }
-
-            // Полив
-            function waterCrop(row, col) {
-                if (energy < 5) { alert("Нет энергии!"); return false; }
-                if (plots[row][col].crop === null) { alert("Здесь ничего не посажено!"); return false; }
-                if (plots[row][col].watered) { alert("Уже полито!"); return false; }
-                plots[row][col].watered = true;
-                energy -= 5;
-                updateUI();
-                drawFarm();
-                return true;
-            }
-
-            // Сбор урожая
-            function harvestCrop(row, col) {
-                if (energy < 15) { alert("Нет энергии!"); return false; }
-                let plot = plots[row][col];
-                if (plot.crop === null) { alert("Здесь ничего не посажено!"); return false; }
-                let growthTime = growthTimes[plot.crop];
-                let now = Date.now() / 1000;
-                let age = now - plot.plantedAt;
-                let multiplier = plot.watered ? 1.5 : 1;
-                if (age >= growthTime) {
-                    let harvestAmount = Math.floor(10 * multiplier);
-                    money += cropPrices[plot.crop] * harvestAmount;
-                    harvestedTotal += harvestAmount;
-                    plots[row][col] = { crop: null, plantedAt: null, stage: 0, watered: false };
-                    energy -= 15;
-                    updateUI();
-                    drawFarm();
-                    return true;
-                } else {
-                    alert("Урожай ещё не вырос!");
-                    return false;
-                }
-            }
-
-            // Покупка семян
             function buySeeds() {
-                let crop = seedSelect.value;
-                let price = cropPrices[crop];
+                const crop = seedSelect.value;
+                const price = cropPrices[crop];
                 if (money >= price) {
                     money -= price;
                     seedsCount[crop]++;
                     updateUI();
-                    drawFarm();
+                    showToast(`Куплены семена ${crop} за $${price}`, false);
                 } else {
-                    alert("Не хватает денег!");
+                    showToast(`Не хватает денег! Нужно $${price}`, true);
                 }
             }
 
-            // Продажа всего урожая
-            function sellAll() {
-                let total = 0;
+            function plantCrop(row, col, crop) {
+                if (seedsCount[crop] <= 0) {
+                    showToast(`Нет семян ${crop}! Купите в магазине`, true);
+                    return false;
+                }
+                if (plots[row][col].crop !== null) {
+                    showToast("Здесь уже что-то растёт", true);
+                    return false;
+                }
+                const now = Date.now() / 1000;
+                plots[row][col] = { crop, plantedAt: now, stage: 0, watered: false };
+                seedsCount[crop]--;
+                updateUI();
+                drawFarm();
+                showToast(`Посажена ${crop}`, false);
+                return true;
+            }
+
+            function waterCrop(row, col) {
+                if (plots[row][col].crop === null) {
+                    showToast("Здесь ничего не посажено", true);
+                    return false;
+                }
+                if (plots[row][col].watered) {
+                    showToast("Уже полито", true);
+                    return false;
+                }
+                plots[row][col].watered = true;
+                drawFarm();
+                showToast("Грядка полита", false);
+                return true;
+            }
+
+            function harvestCrop(row, col) {
+                const plot = plots[row][col];
+                if (plot.crop === null) {
+                    showToast("Здесь ничего нет", true);
+                    return false;
+                }
+                const now = Date.now() / 1000;
+                const age = now - plot.plantedAt;
+                const needed = growthTimes[plot.crop];
+                if (age < needed) {
+                    const remaining = Math.ceil(needed - age);
+                    showToast(`Ещё не выросло (осталось ~${remaining} сек)`, true);
+                    return false;
+                }
+                const multiplier = plot.watered ? 1.5 : 1;
+                const amount = Math.floor(10 * multiplier);
+                money += cropPrices[plot.crop] * amount;
+                harvestedTotal += amount;
+                plots[row][col] = { crop: null, plantedAt: 0, stage: 0, watered: false };
+                updateUI();
+                drawFarm();
+                showToast(`Собрано ${amount} кг ${plot.crop} за $${cropPrices[plot.crop]*amount}`, false);
+                return true;
+            }
+
+            function sellAllHarvest() {
+                let sold = false;
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
-                        let plot = plots[i][j];
+                        const plot = plots[i][j];
                         if (plot.crop !== null) {
-                            let growthTime = growthTimes[plot.crop];
-                            let age = (Date.now() / 1000) - plot.plantedAt;
-                            if (age >= growthTime) {
-                                let amount = 10 * (plot.watered ? 1.5 : 1);
-                                total += cropPrices[plot.crop] * amount;
-                                plots[i][j] = { crop: null, plantedAt: null, stage: 0, watered: false };
+                            const now = Date.now() / 1000;
+                            if (now - plot.plantedAt >= growthTimes[plot.crop]) {
+                                const multiplier = plot.watered ? 1.5 : 1;
+                                const amount = Math.floor(10 * multiplier);
+                                money += cropPrices[plot.crop] * amount;
+                                harvestedTotal += amount;
+                                plots[i][j] = { crop: null, plantedAt: 0, stage: 0, watered: false };
+                                sold = true;
                             }
                         }
                     }
                 }
-                if (total > 0) {
-                    money += total;
-                    harvestedTotal += total / 5;
+                if (sold) {
                     updateUI();
                     drawFarm();
-                    alert(`Продано! Выручка: $${total}`);
+                    showToast("Весь готовый урожай продан!", false);
                 } else {
-                    alert("Нет готового урожая для продажи!");
+                    showToast("Нет готового урожая для продажи", true);
                 }
             }
 
-            // Обновление стадий роста
+            // Рост растений
             function updateGrowth() {
-                let now = Date.now() / 1000;
+                const now = Date.now() / 1000;
+                let changed = false;
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
-                        let plot = plots[i][j];
-                        if (plot.crop !== null) {
-                            let age = now - plot.plantedAt;
-                            let growthTime = growthTimes[plot.crop];
-                            let stageFloat = (age / growthTime) * 4;
+                        const p = plots[i][j];
+                        if (p.crop !== null) {
+                            const age = now - p.plantedAt;
+                            const stageFloat = (age / growthTimes[p.crop]) * 4;
                             let newStage = Math.min(3, Math.floor(stageFloat));
-                            if (newStage !== plot.stage) {
-                                plot.stage = newStage;
+                            if (newStage !== p.stage) {
+                                p.stage = newStage;
+                                changed = true;
                             }
                         }
                     }
                 }
-                drawFarm();
+                if (changed) drawFarm();
             }
 
-            // Функция отрисовки
+            // ---- РЕАЛИСТИЧНАЯ ОТРИСОВКА (домик, животные, растения) ----
             function drawFarm() {
-                if (!window.farmGameActive) return;
-                canvas.width = 800;
-                canvas.height = 550;
-                let cellW = canvas.width / cols;
-                let cellH = canvas.height / rows;
-                // Фон
-                ctx.fillStyle = '#8FBC8F';
+                canvas.width = 640; canvas.height = 480;
+                // Земля
+                ctx.fillStyle = '#7cb342';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // Дом
-                ctx.fillStyle = '#D4A373';
-                ctx.fillRect(30, 20, 120, 100);
-                ctx.fillStyle = '#A0522D';
-                ctx.fillRect(80, 20, 40, 40);
-                ctx.fillStyle = '#FFD700';
+                // Трава с текстурой
+                for (let i = 0; i < 200; i++) {
+                    ctx.fillStyle = `rgba(80, 120, 30, ${Math.random() * 0.3})`;
+                    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 2);
+                }
+                // Дом (деревенский)
+                ctx.fillStyle = '#b87c4f';
+                ctx.fillRect(20, 250, 140, 120);
+                ctx.fillStyle = '#c0392b';
+                ctx.fillRect(70, 280, 40, 50);
+                ctx.fillStyle = '#f1c40f';
                 ctx.beginPath();
-                ctx.moveTo(20, 20);
-                ctx.lineTo(160, 20);
-                ctx.lineTo(90, 0);
+                ctx.moveTo(10, 250);
+                ctx.lineTo(170, 250);
+                ctx.lineTo(90, 190);
                 ctx.fill();
-                // Пруд
-                ctx.fillStyle = '#4A90E2';
-                ctx.beginPath();
-                ctx.ellipse(680, 480, 70, 40, 0, 0, Math.PI * 2);
-                ctx.fill();
-                // Трактор
-                ctx.fillStyle = '#D32F2F';
-                ctx.fillRect(600, 20, 80, 40);
-                ctx.fillStyle = '#212121';
-                ctx.beginPath();
-                ctx.arc(610, 60, 12, 0, Math.PI * 2);
-                ctx.arc(670, 60, 12, 0, Math.PI * 2);
-                ctx.fill();
-                // Куры
-                ctx.fillStyle = '#FFA500';
-                ctx.beginPath();
-                ctx.arc(720, 520, 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(728, 510);
-                ctx.lineTo(738, 505);
-                ctx.lineTo(728, 505);
-                ctx.fill();
-                ctx.fillStyle = '#FFA500';
-                ctx.beginPath();
-                ctx.arc(760, 530, 8, 0, Math.PI * 2);
-                ctx.fill();
-                // Корова
-                ctx.fillStyle = '#FFF';
-                ctx.fillRect(50, 480, 70, 50);
+                // Окна дома
+                ctx.fillStyle = '#85c1e9';
+                ctx.fillRect(35, 270, 25, 25);
+                ctx.fillRect(120, 270, 25, 25);
                 ctx.fillStyle = '#000';
-                ctx.fillRect(60, 520, 8, 8);
-                ctx.fillRect(100, 520, 8, 8);
-                // Грядки
+                ctx.fillRect(45, 280, 5, 5);
+                ctx.fillRect(130, 280, 5, 5);
+                // Сарай
+                ctx.fillStyle = '#a0522d';
+                ctx.fillRect(540, 320, 90, 80);
+                ctx.fillStyle = '#d35400';
+                ctx.fillRect(575, 340, 20, 30);
+                // Колодец
+                ctx.fillStyle = '#5d4e37';
+                ctx.fillRect(500, 230, 30, 40);
+                ctx.beginPath();
+                ctx.arc(515, 230, 18, 0, Math.PI*2);
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fill();
+                // Животные (курица, корова)
+                ctx.fillStyle = '#e67e22';
+                ctx.beginPath();
+                ctx.ellipse(300, 420, 12, 10, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#d35400';
+                ctx.beginPath();
+                ctx.moveTo(308, 412);
+                ctx.lineTo(318, 408);
+                ctx.lineTo(308, 408);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(290, 425, 25, 18);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(292, 432, 5, 5);
+                ctx.fillRect(308, 432, 5, 5);
+                // Поле (грядки)
+                const cellW = canvas.width / cols;
+                const cellH = (canvas.height - 80) / rows;
+                const offsetY = 40;
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
                         let x = j * cellW;
-                        let y = i * cellH;
-                        ctx.fillStyle = '#5D3A1A';
+                        let y = offsetY + i * cellH;
+                        ctx.fillStyle = '#6b4c3b';
                         ctx.fillRect(x+2, y+2, cellW-4, cellH-4);
-                        let plot = plots[i][j];
+                        ctx.fillStyle = '#b87c4f';
+                        ctx.fillRect(x+1, y+1, cellW-2, cellH-2);
+                        const plot = plots[i][j];
                         if (plot.crop !== null) {
-                            let colors = { wheat: '#F4D03F', corn: '#F39C12', tomato: '#E74C3C', pumpkin: '#E67E22' };
-                            ctx.fillStyle = colors[plot.crop] || '#7DCEA0';
-                            let stage = plot.stage;
-                            let size = (stage + 1) * (cellW / 5);
-                            ctx.fillRect(x + cellW/2 - size/2, y + cellH - size, size, size);
-                            if (stage === 3) {
-                                ctx.fillStyle = '#FFD700';
+                            // Рисуем реалистичное растение в зависимости от стадии
+                            const stage = plot.stage;
+                            const cx = x + cellW/2;
+                            const baseY = y + cellH - 12;
+                            if (plot.crop === 'wheat') {
+                                ctx.fillStyle = '#f4d03f';
+                                for (let k=0; k<stage+1; k++) {
+                                    ctx.fillRect(cx-3, baseY - k*8, 6, 6);
+                                }
+                                ctx.fillStyle = '#b8860b';
+                                ctx.fillRect(cx-1, baseY, 2, 15);
+                            } else if (plot.crop === 'corn') {
+                                ctx.fillStyle = '#f39c12';
+                                ctx.fillRect(cx-4, baseY-15, 8, 20);
+                                ctx.fillStyle = '#8B5A2B';
+                                for (let k=0; k<stage; k++) ctx.fillRect(cx-2, baseY-5 - k*5, 4, 4);
+                            } else if (plot.crop === 'tomato') {
+                                ctx.fillStyle = '#e74c3c';
                                 ctx.beginPath();
-                                ctx.arc(x + cellW/2, y + cellH - 8, 8, 0, Math.PI*2);
+                                ctx.arc(cx, baseY-8, 7, 0, Math.PI*2);
                                 ctx.fill();
+                                ctx.fillStyle = '#27ae60';
+                                ctx.fillRect(cx-1, baseY-12, 2, 12);
+                            } else if (plot.crop === 'pumpkin') {
+                                ctx.fillStyle = '#e67e22';
+                                ctx.beginPath();
+                                ctx.ellipse(cx, baseY-6, 9, 7, 0, 0, Math.PI*2);
+                                ctx.fill();
+                                ctx.fillStyle = '#2c3e50';
+                                ctx.fillRect(cx-1, baseY-8, 2, 6);
                             }
                             if (plot.watered) {
-                                ctx.fillStyle = 'rgba(100,200,255,0.4)';
+                                ctx.fillStyle = 'rgba(100,200,255,0.3)';
                                 ctx.fillRect(x+2, y+2, cellW-4, cellH-4);
                             }
+                            // Спелые колоски (стадия 3)
+                            if (stage === 3) {
+                                ctx.fillStyle = '#ffd700';
+                                ctx.beginPath();
+                                ctx.arc(cx, baseY-12, 6, 0, Math.PI*2);
+                                ctx.fill();
+                                ctx.fillStyle = '#daa520';
+                                ctx.font = "bold 12px Arial";
+                                ctx.fillText("✓", cx-3, baseY-9);
+                            }
+                        } else {
+                            // пустая грядка с бороздками
+                            ctx.fillStyle = '#5d3a1a';
+                            ctx.fillRect(x+5, y+cellH/2-3, cellW-10, 3);
                         }
                     }
                 }
+                // Трактор
+                ctx.fillStyle = '#d32f2f';
+                ctx.fillRect(480, 20, 70, 35);
+                ctx.fillStyle = '#212121';
+                ctx.beginPath();
+                ctx.arc(490, 55, 10, 0, 2*Math.PI);
+                ctx.arc(540, 55, 10, 0, 2*Math.PI);
+                ctx.fill();
+                // Облака
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.beginPath();
+                ctx.ellipse(100, 40, 30, 20, 0, 0, 2*Math.PI);
+                ctx.ellipse(130, 30, 35, 25, 0, 0, 2*Math.PI);
+                ctx.ellipse(160, 40, 30, 20, 0, 0, 2*Math.PI);
+                ctx.fill();
             }
 
-            // Обработчик кликов по полю
+            // Выбор грядки через клик по canvas
+            let selectedTool = 'plant'; // plant, water, harvest
+            let selectedRow = null, selectedCol = null;
+
             function handleCanvasClick(e) {
-                if (!window.farmGameActive) return;
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
@@ -9309,40 +9385,57 @@ if(p) {
                 }
                 const canvasX = (clientX - rect.left) * scaleX;
                 const canvasY = (clientY - rect.top) * scaleY;
-                const col = Math.floor(canvasX / (canvas.width / cols));
-                const row = Math.floor(canvasY / (canvas.height / rows));
+                const cellW = canvas.width / cols;
+                const cellH = (canvas.height - 40) / rows;
+                const offsetY = 40;
+                if (canvasY < offsetY) return;
+                const col = Math.floor(canvasX / cellW);
+                const row = Math.floor((canvasY - offsetY) / cellH);
                 if (row >= 0 && row < rows && col >= 0 && col < cols) {
-                    let action = toolSelect.value;
-                    if (action === 'hoe') {
-                        let crop = prompt("🌾 Введите тип культуры: wheat, corn, tomato, pumpkin", "wheat");
-                        if (crop && seedsCount[crop] > 0) plantCrop(row, col, crop);
-                        else alert("Нет семян для этой культуры!");
-                    } else if (action === 'water') waterCrop(row, col);
-                    else if (action === 'harvest') harvestCrop(row, col);
+                    if (selectedTool === 'plant') {
+                        const crop = seedSelect.value;
+                        plantCrop(row, col, crop);
+                    } else if (selectedTool === 'water') {
+                        waterCrop(row, col);
+                    } else if (selectedTool === 'harvest') {
+                        harvestCrop(row, col);
+                    }
+                    drawFarm();
                 }
             }
 
-            canvas.addEventListener('click', handleCanvasClick);
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasClick(e); });
-            buySeedsBtn.onclick = buySeeds;
-            sellAllBtn.onclick = sellAll;
+            // Назначение кнопок выбора инструмента
+            plantBtn.onclick = () => { selectedTool = 'plant'; showToast("Режим: ПОСАДКА", false); };
+            waterBtn.onclick = () => { selectedTool = 'water'; showToast("Режим: ПОЛИВ", false); };
+            harvestBtn.onclick = () => { selectedTool = 'harvest'; showToast("Режим: СБОР", false); };
+            buyBtn.onclick = buySeeds;
+            sellAllBtn.onclick = sellAllHarvest;
             closeBtn.onclick = () => {
-                if (window.farmInterval) clearInterval(window.farmInterval);
+                if (window.farmUpdateInterval) clearInterval(window.farmUpdateInterval);
                 window.farmGameActive.remove();
                 window.farmGameActive = null;
             };
-            // Запуск цикла обновления
-            window.farmInterval = setInterval(() => {
-                if (!window.farmGameActive) { clearInterval(window.farmInterval); return; }
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasClick(e); });
+
+            // Обновление роста каждую секунду
+            window.farmUpdateInterval = setInterval(() => {
+                if (!window.farmGameActive) {
+                    clearInterval(window.farmUpdateInterval);
+                    return;
+                }
                 updateGrowth();
             }, 1000);
+
+            // Первоначальный рендер
             updateUI();
             drawFarm();
         }
 
         farmIcon.onclick = () => {
-            document.getElementById('unifiedGamePanel').style.display = 'none';
-            startFarmGame();
+            const panel = document.getElementById('unifiedGamePanel');
+            if (panel) panel.style.display = 'none';
+            startFarm();
         };
     });
 })();
