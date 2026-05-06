@@ -8992,8 +8992,8 @@ if(p) {
 
 
 
-    // ========== 3D ФЕРМА НА THREE.JS ==========
-(function add3DFarm() {
+    // ========== 3D ФЕРМА: БОЛЬШОЙ МИР, ЛЕС, ГОРЫ, ФРУКТОВЫЕ ДЕРЕВЬЯ ==========
+(function addBig3DFarm() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9009,12 +9009,9 @@ if(p) {
         const farmIcon = document.createElement('div');
         farmIcon.id = 'gameFarmIcon';
         farmIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
-        farmIcon.innerHTML = `<div style="font-size:48px;">🌾🚜</div><div style="color:white;">Ферма 3D</div>`;
+        farmIcon.innerHTML = `<div style="font-size:48px;">🌲🍎</div><div style="color:white;">3D Ферма</div>`;
         gamesContainer.appendChild(farmIcon);
 
-        // --------------------------------------------------------------
-        // Основная функция запуска 3D-фермы
-        // --------------------------------------------------------------
         function start3DFarm() {
             if (window.farm3D) {
                 if (window.farm3D.container) window.farm3D.container.remove();
@@ -9022,38 +9019,36 @@ if(p) {
                 window.farm3D = null;
             }
 
-            // Создаём контейнер для игры (поверх всего)
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:100002; display:flex; flex-direction:column;';
             document.body.appendChild(gameDiv);
 
-            // Добавим панель управления поверх canvas Three.js
+            // UI панель
             const uiDiv = document.createElement('div');
             uiDiv.style.cssText = 'position:absolute; bottom:10px; left:0; right:0; background:rgba(0,0,0,0.7); padding:8px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; z-index:100003; backdrop-filter:blur(5px);';
             uiDiv.innerHTML = `
                 <select id="seedSelect3d" style="background:#f39c12; border:none; padding:4px 8px; border-radius:15px;">
-                    <option value="wheat">🌾 Пшеница</option>
-                    <option value="corn">🌽 Кукуруза</option>
-                    <option value="tomato">🍅 Помидор</option>
-                    <option value="pumpkin">🎃 Тыква</option>
+                    <option value="wheat">🌾 Пшеница ($20)</option>
+                    <option value="corn">🌽 Кукуруза ($15)</option>
+                    <option value="tomato">🍅 Помидор ($25)</option>
+                    <option value="pumpkin">🎃 Тыква ($40)</option>
                 </select>
                 <button id="plantBtn3d" style="background:#27ae60; border:none; padding:4px 12px; border-radius:15px;">🌱 Посадить</button>
                 <button id="waterBtn3d" style="background:#3498db; border:none; padding:4px 12px; border-radius:15px;">💧 Полить</button>
                 <button id="harvestBtn3d" style="background:#e67e22; border:none; padding:4px 12px; border-radius:15px;">✂️ Собрать</button>
                 <button id="buySeedsBtn3d" style="background:#2ecc71; border:none; padding:4px 12px; border-radius:15px;">🛒 Купить семена</button>
-                <button id="animalShopBtn3d" style="background:#f1c40f; border:none; padding:4px 12px; border-radius:15px;">🐮 Магазин</button>
+                <button id="animalShopBtn3d" style="background:#f1c40f; border:none; padding:4px 12px; border-radius:15px;">🐮 Купить животное</button>
                 <button id="sellAllBtn3d" style="background:#e74c3c; border:none; padding:4px 12px; border-radius:15px;">🚚 Продать урожай</button>
                 <button id="close3dBtn" style="background:#7f8c8d; border:none; padding:4px 12px; border-radius:15px;">✖ Закрыть</button>
             `;
             gameDiv.appendChild(uiDiv);
 
-            // Информационная панель
             const infoDiv = document.createElement('div');
             infoDiv.style.cssText = 'position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.6); color:white; padding:6px 12px; border-radius:15px; font-size:14px; z-index:100003; pointer-events:none;';
-            infoDiv.innerHTML = `💰 $<span id="money3d">500</span> &nbsp; 🌾 <span id="harvest3d">0</span> кг &nbsp; 🥚<span id="eggs3d">0</span> 🥛<span id="milk3d">0</span> 🧶<span id="wool3d">0</span>`;
+            infoDiv.innerHTML = `💰 $<span id="money3d">500</span> &nbsp; 🌾 <span id="harvest3d">0</span> кг &nbsp; 🥚<span id="eggs3d">0</span> 🥛<span id="milk3d">0</span> 🧶<span id="wool3d">0</span> &nbsp; 🍎<span id="apples3d">0</span>`;
             gameDiv.appendChild(infoDiv);
 
-            // Подключаем Three.js и дополнения
+            // Подключаем Three.js
             const scriptThree = document.createElement('script');
             scriptThree.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
             scriptThree.onload = () => {
@@ -9064,24 +9059,29 @@ if(p) {
             };
             document.head.appendChild(scriptThree);
 
-            // Глобальные переменные игры
+            // Игровые переменные
             let scene, camera, renderer, controls;
-            let plants = []; // массив объектов { mesh, crop, stage, watered, plantedAt, row, col }
+            let plants = [];      // грядки
             let animals = [];
+            let fruitTrees = [];   // { mesh, apples, lastHarvest }
             let money = 500;
             let harvestedTotal = 0;
+            let applesCount = 0;
             let seedsCount = { wheat: 5, corn: 5, tomato: 5, pumpkin: 5 };
             let animalProducts = { eggs: 0, milk: 0, wool: 0 };
             let truckAvailable = true;
             let truckMesh = null;
-            let truckInterval = null;
-            let growthInterval = null;
-            // Параметры поля: 10x10 грядок
-            const rows = 10, cols = 10;
+            let selectedAction = 'plant'; // plant, water, harvest
+
+            const rows = 15, cols = 15;
             const cellSize = 1.2;
-            const startX = -6, startZ = -6;
+            const startX = -9, startZ = -9;
             const growthTimesSec = { wheat: 180, corn: 120, tomato: 60, pumpkin: 240 };
             const cropPrices = { wheat: 20, corn: 15, tomato: 25, pumpkin: 40 };
+            const fruitTreePositions = [
+                { x: -12, z: -12 }, { x: 10, z: -11 }, { x: -10, z: 11 }, { x: 12, z: 12 },
+                { x: -14, z: 5 }, { x: 14, z: 6 }, { x: 5, z: -14 }, { x: -5, z: 14 }
+            ];
 
             function updateUI() {
                 document.getElementById('money3d').innerText = money;
@@ -9089,34 +9089,31 @@ if(p) {
                 document.getElementById('eggs3d').innerText = animalProducts.eggs;
                 document.getElementById('milk3d').innerText = animalProducts.milk;
                 document.getElementById('wool3d').innerText = animalProducts.wool;
+                document.getElementById('apples3d').innerText = applesCount;
             }
 
-            function showMessage(msg, isError=false) {
+            function showMessage(msg, isError = false) {
                 const msgDiv = document.createElement('div');
-                msgDiv.style.cssText = `position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:${isError?'#e74c3c':'#2ecc71'}; color:white; padding:5px 12px; border-radius:20px; font-size:12px; z-index:100004; pointer-events:none;`;
+                msgDiv.style.cssText = `position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:${isError ? '#e74c3c' : '#2ecc71'}; color:white; padding:5px 12px; border-radius:20px; font-size:12px; z-index:100004; pointer-events:none;`;
                 msgDiv.innerText = msg;
                 gameDiv.appendChild(msgDiv);
                 setTimeout(() => msgDiv.remove(), 2000);
             }
 
-            // Создание растений (простая геометрия: стебель + шапка)
+            // Создание растения на грядке
             function createPlantMesh(crop, stage) {
                 const group = new THREE.Group();
-                // стебель
                 const stemMat = new THREE.MeshStandardMaterial({ color: 0x6b8e23 });
                 const stem = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2), stemMat);
                 stem.position.y = 0.2;
                 group.add(stem);
-                // верхушка в зависимости от культуры и стадии
-                let color = 0xf4d03f;
-                let size = 0.3;
-                if (crop === 'wheat') size = 0.25 + stage*0.1;
-                else if (crop === 'corn') color = 0xf39c12;
+                let color = 0xf4d03f, size = 0.25 + stage * 0.1;
+                if (crop === 'corn') color = 0xf39c12;
                 else if (crop === 'tomato') color = 0xe74c3c;
                 else if (crop === 'pumpkin') color = 0xe67e22;
-                const topMat = new THREE.MeshStandardMaterial({ color: color });
+                const topMat = new THREE.MeshStandardMaterial({ color });
                 const top = new THREE.Mesh(new THREE.SphereGeometry(size, 6, 6), topMat);
-                top.position.y = 0.5 + stage*0.1;
+                top.position.y = 0.5 + stage * 0.1;
                 group.add(top);
                 if (stage >= 3) {
                     const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
@@ -9127,7 +9124,7 @@ if(p) {
                 return group;
             }
 
-            // Создание животных
+            // Создание животного
             function createAnimal(type, x, z) {
                 const group = new THREE.Group();
                 let bodyColor = 0xe67e22;
@@ -9144,16 +9141,68 @@ if(p) {
                 return group;
             }
 
+            // Создание сосны
+            function createPine(x, z) {
+                const group = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 1.2, 4), new THREE.MeshStandardMaterial({ color: 0x8B5A2B }));
+                trunk.position.y = 0.6;
+                group.add(trunk);
+                const foliage1 = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.0, 6), new THREE.MeshStandardMaterial({ color: 0x2e7d32 }));
+                foliage1.position.y = 1.3;
+                group.add(foliage1);
+                const foliage2 = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 6), new THREE.MeshStandardMaterial({ color: 0x1b5e20 }));
+                foliage2.position.y = 1.9;
+                group.add(foliage2);
+                group.position.set(x, 0, z);
+                return group;
+            }
+
+            // Создание фруктового дерева (яблоня)
+            function createFruitTree(x, z) {
+                const group = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 1.5, 6), new THREE.MeshStandardMaterial({ color: 0x8B5A2B }));
+                trunk.position.y = 0.75;
+                group.add(trunk);
+                const foliage = new THREE.Mesh(new THREE.SphereGeometry(0.9, 8, 8), new THREE.MeshStandardMaterial({ color: 0x4caf50 }));
+                foliage.position.y = 1.6;
+                group.add(foliage);
+                // яблоки (маленькие красные шарики)
+                for (let i = 0; i < 8; i++) {
+                    const apple = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), new THREE.MeshStandardMaterial({ color: 0xe74c3c }));
+                    apple.position.set((Math.random() - 0.5) * 0.8, 1.5 + Math.random() * 0.6, (Math.random() - 0.5) * 0.8);
+                    group.add(apple);
+                }
+                group.position.set(x, 0, z);
+                return group;
+            }
+
+            // Генерация гор (куча камней)
+            function addMountains() {
+                const stoneMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d });
+                for (let i = 0; i < 60; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 18 + Math.random() * 8;
+                    const x = Math.cos(angle) * radius;
+                    const z = Math.sin(angle) * radius;
+                    const size = 0.5 + Math.random() * 0.8;
+                    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(size), stoneMat);
+                    rock.position.set(x, -0.2 + Math.random() * 0.5, z);
+                    rock.scale.set(1, Math.random() * 1.5 + 0.5, 1);
+                    scene.add(rock);
+                }
+            }
+
             // Инициализация сцены
             function init3D() {
                 scene = new THREE.Scene();
                 scene.background = new THREE.Color(0x87CEEB);
+                scene.fog = new THREE.Fog(0x87CEEB, 35, 60);
                 camera = new THREE.PerspectiveCamera(45, gameDiv.clientWidth / gameDiv.clientHeight, 0.1, 1000);
-                camera.position.set(12, 10, 12);
+                camera.position.set(16, 14, 16);
                 camera.lookAt(0, 0, 0);
                 renderer = new THREE.WebGLRenderer({ antialias: true });
                 renderer.setSize(gameDiv.clientWidth, gameDiv.clientHeight);
-                renderer.shadowMap.enabled = true; // тени для объёма
+                renderer.shadowMap.enabled = true;
                 gameDiv.appendChild(renderer.domElement);
                 controls = new THREE.OrbitControls(camera, renderer.domElement);
                 controls.enableDamping = true;
@@ -9162,63 +9211,75 @@ if(p) {
                 controls.rotateSpeed = 1.0;
                 controls.enableTouchRotate = true;
                 // Освещение
-                const ambient = new THREE.AmbientLight(0x404040);
+                const ambient = new THREE.AmbientLight(0x404060);
                 scene.add(ambient);
-                const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-                sunLight.position.set(10, 20, 5);
+                const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
+                sunLight.position.set(15, 20, 5);
                 sunLight.castShadow = true;
                 sunLight.receiveShadow = false;
                 scene.add(sunLight);
-                const fillLight = new THREE.PointLight(0xccaa88, 0.5);
-                fillLight.position.set(0, 5, 0);
+                const fillLight = new THREE.PointLight(0xccaa88, 0.4);
+                fillLight.position.set(0, 8, 0);
                 scene.add(fillLight);
-                // Земля (плоскость с текстурой травы)
-                const groundMat = new THREE.MeshStandardMaterial({ color: 0x6b8e23 });
-                const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), groundMat);
-                ground.rotation.x = -Math.PI/2;
-                ground.position.y = -0.1;
+                // Земля (большая плоскость)
+                const groundMat = new THREE.MeshStandardMaterial({ color: 0x6b8e23, roughness: 0.8 });
+                const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -0.2;
                 ground.receiveShadow = true;
                 scene.add(ground);
-                // Дом
+                // Дом фермера
                 const houseGroup = new THREE.Group();
-                const walls = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.5, 2.5), new THREE.MeshStandardMaterial({ color: 0xb87c4f }));
-                walls.position.y = 0.75;
+                const walls = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.8, 2.8), new THREE.MeshStandardMaterial({ color: 0xb87c4f }));
+                walls.position.y = 0.9;
                 walls.castShadow = true;
                 houseGroup.add(walls);
-                const roof = new THREE.Mesh(new THREE.ConeGeometry(1.8, 1.2, 4), new THREE.MeshStandardMaterial({ color: 0xc0392b }));
-                roof.rotation.y = Math.PI/4;
-                roof.position.y = 1.5;
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(2.0, 1.4, 4), new THREE.MeshStandardMaterial({ color: 0xc0392b }));
+                roof.rotation.y = Math.PI / 4;
+                roof.position.y = 1.8;
                 houseGroup.add(roof);
-                const door = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1, 0.2), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
-                door.position.set(0, 0.4, 1.26);
+                const door = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.2, 0.2), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
+                door.position.set(0, 0.5, 1.45);
                 houseGroup.add(door);
-                houseGroup.position.set(-5, 0, -4);
+                houseGroup.position.set(-7, 0, -6);
                 scene.add(houseGroup);
-                // Создаём грядки и растения
+                // Грядки
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
                         const x = startX + j * cellSize;
                         const z = startZ + i * cellSize;
-                        // Грядка (коричневый квадрат)
-                        const soil = new THREE.Mesh(new THREE.BoxGeometry(cellSize-0.1, 0.1, cellSize-0.1), new THREE.MeshStandardMaterial({ color: 0x8B5A2B }));
-                        soil.position.set(x, -0.05, z);
+                        const soil = new THREE.Mesh(new THREE.BoxGeometry(cellSize - 0.1, 0.1, cellSize - 0.1), new THREE.MeshStandardMaterial({ color: 0x8B5A2B }));
+                        soil.position.set(x, -0.15, z);
                         soil.receiveShadow = true;
                         scene.add(soil);
-                        // Пустой placeholder для растения
-                        plants.push({ mesh: null, crop: null, stage: 0, watered: false, plantedAt: 0, row: i, col: j, x, z });
+                        plants.push({
+                            mesh: null, crop: null, stage: 0, watered: false,
+                            plantedAt: 0, row: i, col: j, x, z
+                        });
                     }
                 }
-                // Несколько стартовых животных
-                const animalTypes = ['chicken', 'cow', 'sheep'];
-                for (let i=0; i<5; i++) {
-                    const type = animalTypes[Math.floor(Math.random()*animalTypes.length)];
-                    const ax = -3 + Math.random() * 10;
-                    const az = -4 + Math.random() * 10;
-                    const animal = createAnimal(type, ax, az);
-                    scene.add(animal);
-                    animals.push({ mesh: animal, type, productTimer: 0, speed: 0.5, dir: Math.random()*2*Math.PI });
+                // Сосны вокруг поля
+                for (let i = -16; i <= 16; i += 2.5) {
+                    for (let j = -16; j <= 16; j += 2.5) {
+                        if (Math.abs(i) < 12 && Math.abs(j) < 12) continue;
+                        if (Math.random() > 0.4) continue;
+                        const pine = createPine(i, j);
+                        scene.add(pine);
+                    }
                 }
-                // Грузовик (простая модель)
+                // Фруктовые деревья
+                fruitTreePositions.forEach(pos => {
+                    const tree = createFruitTree(pos.x, pos.z);
+                    scene.add(tree);
+                    fruitTrees.push({
+                        mesh: tree, apples: 3 + Math.floor(Math.random() * 3),
+                        lastHarvest: Date.now() / 1000,
+                        x: pos.x, z: pos.z
+                    });
+                });
+                // Горы
+                addMountains();
+                // Грузовик
                 const truckGroup = new THREE.Group();
                 const cab = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 1.2), new THREE.MeshStandardMaterial({ color: 0x2ecc71 }));
                 cab.position.set(0.5, 0.3, 0);
@@ -9227,165 +9288,176 @@ if(p) {
                 body.position.set(-0.2, 0.2, 0);
                 truckGroup.add(body);
                 const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333 });
-                const wheelPos = [[-0.6,0,0.6], [0.6,0,0.6], [-0.6,0,-0.6], [0.6,0,-0.6]];
-                wheelPos.forEach(pos => {
+                [[-0.6,0,0.6], [0.6,0,0.6], [-0.6,0,-0.6], [0.6,0,-0.6]].forEach(pos => {
                     const wheel = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), wheelMat);
                     wheel.position.set(pos[0], 0.1, pos[2]);
                     truckGroup.add(wheel);
                 });
-                truckGroup.position.set(6, 0, 5);
+                truckGroup.position.set(8, 0, 7);
                 scene.add(truckGroup);
                 truckMesh = truckGroup;
-                // Анимация животных и грузовика
-                setInterval(() => {
-                    if (!window.farm3D) return;
-                    animals.forEach(anim => {
-                        const dx = Math.cos(anim.dir) * anim.speed * 0.1;
-                        const dz = Math.sin(anim.dir) * anim.speed * 0.1;
-                        let nx = anim.mesh.position.x + dx;
-                        let nz = anim.mesh.position.z + dz;
-                        if (nx > 8 || nx < -8 || nz > 6 || nz < -6) {
-                            anim.dir += Math.PI + (Math.random() - 0.5);
-                            anim.speed = 0.3 + Math.random() * 0.5;
-                            return;
-                        }
-                        anim.mesh.position.x = nx;
-                        anim.mesh.position.z = nz;
-                        anim.mesh.lookAt(nx + Math.cos(anim.dir), 0, nz + Math.sin(anim.dir));
-                    });
-                    // Грузовик (если в пути)
-                    if (!truckAvailable) return;
-                }, 200);
-                // Обновление роста
-                growthInterval = setInterval(() => {
-                    const now = Date.now() / 1000;
-                    let changed = false;
-                    plants.forEach(p => {
-                        if (p.crop) {
-                            const age = now - p.plantedAt;
-                            const newStage = Math.min(3, Math.floor((age / growthTimesSec[p.crop]) * 4));
-                            if (newStage !== p.stage) {
-                                p.stage = newStage;
-                                if (p.mesh) scene.remove(p.mesh);
-                                p.mesh = createPlantMesh(p.crop, p.stage);
-                                p.mesh.position.set(p.x, 0, p.z);
-                                scene.add(p.mesh);
-                                changed = true;
-                            }
-                        }
-                    });
-                    // Продукция животных
-                    animals.forEach(anim => {
-                        anim.productTimer = (anim.productTimer || 0) + 1;
-                        if (anim.productTimer >= 30) { // раз в 30 сек
-                            anim.productTimer = 0;
-                            if (anim.type === 'chicken') animalProducts.eggs++;
-                            else if (anim.type === 'cow') animalProducts.milk++;
-                            else if (anim.type === 'sheep') animalProducts.wool++;
-                            updateUI();
-                        }
-                    });
-                }, 1000);
-                // Функции действий
-                window.plantOnGrid = (row, col, crop) => {
-                    const idx = row * cols + col;
-                    const p = plants[idx];
-                    if (seedsCount[crop] <= 0) { showMessage(`Нет семян ${crop}`, true); return; }
-                    if (p.crop) { showMessage("Здесь уже посажено", true); return; }
-                    p.crop = crop;
-                    p.plantedAt = Date.now()/1000;
-                    p.stage = 0;
-                    p.watered = false;
-                    if (p.mesh) scene.remove(p.mesh);
-                    p.mesh = createPlantMesh(crop, 0);
-                    p.mesh.position.set(p.x, 0, p.z);
-                    scene.add(p.mesh);
-                    seedsCount[crop]--;
-                    updateUI();
-                    showMessage(`Посажена ${crop}`);
-                };
-                window.waterPlant = (row, col) => {
-                    const p = plants[row*cols+col];
-                    if (!p.crop) { showMessage("Пустая грядка", true); return; }
-                    if (p.watered) { showMessage("Уже полито", true); return; }
-                    p.watered = true;
-                    showMessage("Полито!");
-                };
-                window.harvestPlant = (row, col) => {
-                    const p = plants[row*cols+col];
-                    if (!p.crop) { showMessage("Ничего нет", true); return; }
-                    const now = Date.now()/1000;
-                    if (now - p.plantedAt < growthTimesSec[p.crop]) { showMessage("Ещё не созрело", true); return; }
-                    const amount = 10 * (p.watered ? 1.5 : 1);
-                    money += cropPrices[p.crop] * amount;
-                    harvestedTotal += amount;
-                    scene.remove(p.mesh);
-                    p.crop = null;
-                    p.mesh = null;
-                    updateUI();
-                    showMessage(`Собрано ${amount} кг за $${cropPrices[p.crop]*amount}`);
-                };
-                // Обработка кликов по грядкам (Raycaster)
+
+                // Обработка кликов через Raycaster
                 const raycaster = new THREE.Raycaster();
                 const mouse = new THREE.Vector2();
-                let selectedAction = 'plant';
+                renderer.domElement.addEventListener('click', (event) => {
+                    const rect = renderer.domElement.getBoundingClientRect();
+                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                    raycaster.setFromCamera(mouse, camera);
+                    // Проверка на фруктовые деревья
+                    const treeIntersects = raycaster.intersectObjects(fruitTrees.map(t => t.mesh));
+                    if (treeIntersects.length > 0) {
+                        const idx = fruitTrees.findIndex(t => t.mesh === treeIntersects[0].object);
+                        if (idx !== -1) {
+                            const tree = fruitTrees[idx];
+                            if (tree.apples > 0) {
+                                const now = Date.now() / 1000;
+                                if (now - tree.lastHarvest > 30) {
+                                    applesCount += tree.apples;
+                                    money += tree.apples * 5;
+                                    harvestedTotal += tree.apples;
+                                    tree.apples = 0;
+                                    tree.lastHarvest = now;
+                                    updateUI();
+                                    showMessage(`Собрано ${tree.apples} яблок, +$${tree.apples * 5}`);
+                                    // Визуально убираем яблоки (пересоздаём дерево без яблок)
+                                    scene.remove(tree.mesh);
+                                    const newTree = createFruitTree(tree.x, tree.z);
+                                    scene.add(newTree);
+                                    tree.mesh = newTree;
+                                    tree.apples = 3 + Math.floor(Math.random() * 3);
+                                } else {
+                                    showMessage("Яблоки ещё не выросли", true);
+                                }
+                            } else {
+                                showMessage("Нет яблок", true);
+                            }
+                            return;
+                        }
+                    }
+                    // Проверка на грядки (через их позиции)
+                    const plantIntersects = raycaster.intersectObjects(plants.map(p => {
+                        const box = new THREE.BoxGeometry(cellSize - 0.1, 0.2, cellSize - 0.1);
+                        const temp = new THREE.Mesh(box);
+                        temp.position.set(p.x, -0.05, p.z);
+                        return temp;
+                    }));
+                    if (plantIntersects.length > 0) {
+                        const hit = plantIntersects[0];
+                        const plantObj = plants.find(p => {
+                            const temp = new THREE.Mesh(new THREE.BoxGeometry(cellSize - 0.1, 0.2, cellSize - 0.1));
+                            temp.position.set(p.x, -0.05, p.z);
+                            return temp.uuid === hit.object.uuid;
+                        });
+                        if (plantObj) {
+                            if (selectedAction === 'plant') {
+                                const crop = document.getElementById('seedSelect3d').value;
+                                if (seedsCount[crop] <= 0) showMessage(`Нет семян ${crop}`, true);
+                                else if (plantObj.crop) showMessage("Здесь уже посажено", true);
+                                else {
+                                    plantObj.crop = crop;
+                                    plantObj.plantedAt = Date.now() / 1000;
+                                    plantObj.stage = 0;
+                                    plantObj.watered = false;
+                                    if (plantObj.mesh) scene.remove(plantObj.mesh);
+                                    plantObj.mesh = createPlantMesh(crop, 0);
+                                    plantObj.mesh.position.set(plantObj.x, 0, plantObj.z);
+                                    scene.add(plantObj.mesh);
+                                    seedsCount[crop]--;
+                                    updateUI();
+                                    showMessage(`Посажена ${crop}`);
+                                }
+                            } else if (selectedAction === 'water') {
+                                if (!plantObj.crop) showMessage("Пустая грядка", true);
+                                else if (plantObj.watered) showMessage("Уже полито", true);
+                                else {
+                                    plantObj.watered = true;
+                                    showMessage("Полито!");
+                                }
+                            } else if (selectedAction === 'harvest') {
+                                if (!plantObj.crop) showMessage("Ничего нет", true);
+                                else {
+                                    const now = Date.now() / 1000;
+                                    if (now - plantObj.plantedAt < growthTimesSec[plantObj.crop]) {
+                                        showMessage("Ещё не созрело", true);
+                                    } else {
+                                        const amount = 10 * (plantObj.watered ? 1.5 : 1);
+                                        money += cropPrices[plantObj.crop] * amount;
+                                        harvestedTotal += amount;
+                                        scene.remove(plantObj.mesh);
+                                        plantObj.crop = null;
+                                        plantObj.mesh = null;
+                                        updateUI();
+                                        showMessage(`Собрано ${amount} кг за $${cropPrices[plantObj.crop] * amount}`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Кнопки управления
                 document.getElementById('plantBtn3d').onclick = () => { selectedAction = 'plant'; showMessage("Режим посадки"); };
                 document.getElementById('waterBtn3d').onclick = () => { selectedAction = 'water'; showMessage("Режим полива"); };
                 document.getElementById('harvestBtn3d').onclick = () => { selectedAction = 'harvest'; showMessage("Режим сбора"); };
                 document.getElementById('buySeedsBtn3d').onclick = () => {
                     const crop = document.getElementById('seedSelect3d').value;
                     const price = cropPrices[crop];
-                    if (money >= price) { money -= price; seedsCount[crop]++; updateUI(); showMessage(`Куплены семена ${crop}`); }
-                    else showMessage("Не хватает денег", true);
+                    if (money >= price) {
+                        money -= price;
+                        seedsCount[crop]++;
+                        updateUI();
+                        showMessage(`Куплены семена ${crop}`);
+                    } else showMessage("Не хватает денег", true);
                 };
                 document.getElementById('animalShopBtn3d').onclick = () => {
-                    const shop = document.createElement('div');
-                    shop.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100005; color:white; text-align:center;';
-                    shop.innerHTML = `<h3>🐮 Магазин</h3>
-                        <button id="buyChicken3d">🐔 Курица $50</button><br>
-                        <button id="buyCow3d">🐮 Корова $150</button><br>
-                        <button id="buySheep3d">🐑 Овца $120</button><br>
-                        <button id="closeShop3d">Закрыть</button>`;
-                    gameDiv.appendChild(shop);
+                    const shopDiv = document.createElement('div');
+                    shopDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100005; color:white; text-align:center;';
+                    shopDiv.innerHTML = `<h3>🐮 Купить животное</h3>
+                        <button id="buyChicken">🐔 Курица $50</button><br>
+                        <button id="buyCow">🐮 Корова $150</button><br>
+                        <button id="buySheep">🐑 Овца $120</button><br>
+                        <button id="closeShop">Закрыть</button>`;
+                    gameDiv.appendChild(shopDiv);
                     const buy = (type, price) => {
                         if (money >= price) {
                             money -= price;
-                            const animal = createAnimal(type, (Math.random()-0.5)*10, (Math.random()-0.5)*10);
+                            const animal = createAnimal(type, (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12);
                             scene.add(animal);
-                            animals.push({ mesh: animal, type, productTimer: 0, speed: 0.5, dir: Math.random()*2*Math.PI });
+                            animals.push({ mesh: animal, type, productTimer: 0, speed: 0.5, dir: Math.random() * 2 * Math.PI });
                             updateUI();
                             showMessage(`Куплен ${type}`);
-                            shop.remove();
+                            shopDiv.remove();
                         } else showMessage("Не хватает денег", true);
                     };
-                    shop.querySelector('#buyChicken3d').onclick = () => buy('chicken',50);
-                    shop.querySelector('#buyCow3d').onclick = () => buy('cow',150);
-                    shop.querySelector('#buySheep3d').onclick = () => buy('sheep',120);
-                    shop.querySelector('#closeShop3d').onclick = () => shop.remove();
+                    shopDiv.querySelector('#buyChicken').onclick = () => buy('chicken', 50);
+                    shopDiv.querySelector('#buyCow').onclick = () => buy('cow', 150);
+                    shopDiv.querySelector('#buySheep').onclick = () => buy('sheep', 120);
+                    shopDiv.querySelector('#closeShop').onclick = () => shopDiv.remove();
                 };
                 document.getElementById('sellAllBtn3d').onclick = () => {
                     if (!truckAvailable) { showMessage("Грузовик уже уехал", true); return; }
                     let total = 0;
                     plants.forEach(p => {
-                        if (p.crop && (Date.now()/1000 - p.plantedAt) >= growthTimesSec[p.crop]) {
+                        if (p.crop && (Date.now() / 1000 - p.plantedAt) >= growthTimesSec[p.crop]) {
                             total += cropPrices[p.crop] * 10 * (p.watered ? 1.5 : 1);
-                            p.crop = null;
                             if (p.mesh) scene.remove(p.mesh);
+                            p.crop = null;
                             p.mesh = null;
                         }
                     });
                     if (total === 0) { showMessage("Нет готового урожая", true); return; }
                     truckAvailable = false;
-                    // Анимация грузовика: уезжает и возвращается
-                    let startPos = truckMesh.position.clone();
-                    let targetPos = new THREE.Vector3(12, 0, 8);
+                    const startPos = truckMesh.position.clone();
+                    const targetPos = new THREE.Vector3(14, 0, 10);
                     let progress = 0;
-                    const duration = 2000;
+                    const duration = 1500;
                     const startTime = performance.now();
-                    function animateTruckOut(now) {
+                    function animateOut(now) {
                         const t = Math.min(1, (now - startTime) / duration);
                         truckMesh.position.lerpVectors(startPos, targetPos, t);
-                        if (t < 1) requestAnimationFrame(animateTruckOut);
+                        if (t < 1) requestAnimationFrame(animateOut);
                         else {
                             setTimeout(() => {
                                 const backStart = truckMesh.position.clone();
@@ -9404,60 +9476,74 @@ if(p) {
                                     }
                                 }
                                 requestAnimationFrame(animateBack);
-                            }, 500);
+                            }, 800);
                         }
                     }
-                    requestAnimationFrame(animateTruckOut);
+                    requestAnimationFrame(animateOut);
                 };
-                // Raycaster для кликов по грядкам
-                renderer.domElement.addEventListener('click', (event) => {
-                    const rect = renderer.domElement.getBoundingClientRect();
-                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-                    raycaster.setFromCamera(mouse, camera);
-                    const intersects = raycaster.intersectObjects(plants.filter(p => p.mesh).map(p => p.mesh));
-                    if (intersects.length > 0) {
-                        const hitMesh = intersects[0].object;
-                        const plantObj = plants.find(p => p.mesh === hitMesh);
-                        if (plantObj) {
-                            if (selectedAction === 'plant') window.plantOnGrid(plantObj.row, plantObj.col, document.getElementById('seedSelect3d').value);
-                            else if (selectedAction === 'water') window.waterPlant(plantObj.row, plantObj.col);
-                            else if (selectedAction === 'harvest') window.harvestPlant(plantObj.row, plantObj.col);
+                document.getElementById('close3dBtn').onclick = () => {
+                    if (window.farm3D.interval) clearInterval(window.farm3D.interval);
+                    gameDiv.remove();
+                    window.farm3D = null;
+                };
+
+                // Анимация животных
+                setInterval(() => {
+                    if (!window.farm3D) return;
+                    animals.forEach(anim => {
+                        const dx = Math.cos(anim.dir) * anim.speed * 0.1;
+                        const dz = Math.sin(anim.dir) * anim.speed * 0.1;
+                        let nx = anim.mesh.position.x + dx;
+                        let nz = anim.mesh.position.z + dz;
+                        if (nx > 13 || nx < -13 || nz > 12 || nz < -12) {
+                            anim.dir += Math.PI + (Math.random() - 0.5);
+                            anim.speed = 0.3 + Math.random() * 0.5;
+                            return;
                         }
-                    } else {
-                        // можно посадить на пустую грядку, но грядка без mesh, поэтому дополнительный поиск по координатам
-                        const planeIntersect = raycaster.intersectObjects(plants.map(p => {
-                            // создаём временную геометрию для хитбокса грядки
-                            const box = new THREE.BoxGeometry(cellSize-0.1, 0.1, cellSize-0.1);
-                            const fakeMesh = new THREE.Mesh(box);
-                            fakeMesh.position.set(p.x, -0.05, p.z);
-                            return fakeMesh;
-                        }));
-                        if (planeIntersect.length > 0) {
-                            const idx = planeIntersect[0].object.uuid;
-                            const plantObj = plants.find((_,i) => {
-                                const temp = new THREE.Mesh(new THREE.BoxGeometry(cellSize-0.1,0.1,cellSize-0.1));
-                                temp.position.set(plants[i].x, -0.05, plants[i].z);
-                                return temp.uuid === idx;
-                            });
-                            if (plantObj && !plantObj.crop && selectedAction === 'plant') {
-                                window.plantOnGrid(plantObj.row, plantObj.col, document.getElementById('seedSelect3d').value);
-                            } else if (plantObj && selectedAction === 'water') window.waterPlant(plantObj.row, plantObj.col);
-                            else if (plantObj && selectedAction === 'harvest') window.harvestPlant(plantObj.row, plantObj.col);
+                        anim.mesh.position.x = nx;
+                        anim.mesh.position.z = nz;
+                        anim.mesh.lookAt(nx + Math.cos(anim.dir), 0, nz + Math.sin(anim.dir));
+                    });
+                }, 200);
+
+                // Рост растений и продукция животных
+                window.farm3D.interval = setInterval(() => {
+                    const now = Date.now() / 1000;
+                    plants.forEach(p => {
+                        if (p.crop) {
+                            const age = now - p.plantedAt;
+                            const newStage = Math.min(3, Math.floor((age / growthTimesSec[p.crop]) * 4));
+                            if (newStage !== p.stage) {
+                                p.stage = newStage;
+                                if (p.mesh) scene.remove(p.mesh);
+                                p.mesh = createPlantMesh(p.crop, p.stage);
+                                p.mesh.position.set(p.x, 0, p.z);
+                                scene.add(p.mesh);
+                            }
                         }
-                    }
-                });
-                // Анимация
+                    });
+                    animals.forEach(anim => {
+                        anim.productTimer = (anim.productTimer || 0) + 1;
+                        if (anim.productTimer >= 30) {
+                            anim.productTimer = 0;
+                            if (anim.type === 'chicken') animalProducts.eggs++;
+                            else if (anim.type === 'cow') animalProducts.milk++;
+                            else if (anim.type === 'sheep') animalProducts.wool++;
+                            updateUI();
+                        }
+                    });
+                }, 1000);
+
                 function animate() {
                     requestAnimationFrame(animate);
-                    controls.update(); // обновление камеры
+                    controls.update();
                     renderer.render(scene, camera);
                 }
                 animate();
                 updateUI();
-                window.farm3D = { container: gameDiv, interval: growthInterval };
             }
         }
+
         farmIcon.onclick = () => {
             document.getElementById('unifiedGamePanel').style.display = 'none';
             start3DFarm();
