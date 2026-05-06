@@ -8993,8 +8993,8 @@ if(p) {
 
 
 
-    // ========== ИЗОМЕТРИЧЕСКАЯ ФЕРМА (надёжная, без 3D) ==========
-(function addIsoFarm() {
+    // ========== ГОРОДСКОЙ СИМУЛЯТОР (City Builder) ==========
+(function addCityBuilder() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9002,95 +9002,66 @@ if(p) {
     }
 
     waitForPanel((panel) => {
-        if (document.getElementById('gameIsoFarmIcon')) return;
+        if (document.getElementById('gameCityIcon')) return;
 
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
 
-        const farmIcon = document.createElement('div');
-        farmIcon.id = 'gameIsoFarmIcon';
-        farmIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
-        farmIcon.innerHTML = `<div style="font-size:48px;">🧑‍🌾🌾</div><div style="color:white;">Иso Ферма</div>`;
-        gamesContainer.appendChild(farmIcon);
+        const cityIcon = document.createElement('div');
+        cityIcon.id = 'gameCityIcon';
+        cityIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
+        cityIcon.innerHTML = `<div style="font-size:48px;">🏙️🏗️</div><div style="color:white;">City Builder</div>`;
+        gamesContainer.appendChild(cityIcon);
 
-        function startFarm() {
-            if (window.isoFarmActive) {
-                window.isoFarmActive.remove();
-                if (window.isoInterval) clearInterval(window.isoInterval);
+        function startCityBuilder() {
+            if (window.cityGameActive) {
+                window.cityGameActive.remove();
+                if (window.cityInterval) clearInterval(window.cityInterval);
             }
 
             const gameDiv = document.createElement('div');
-            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2d5a2c; border-radius:20px; width:95%; max-width:750px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                    <div style="background:#3c7840; padding:8px; text-align:center; color:#ffecb3; font-size:16px;">🌾 ИЗОМЕТРИЧЕСКАЯ ФЕРМА</div>
-                    <canvas id="isoCanvas" width="700" height="500" style="width:100%; height:auto; display:block; background:#6b8e23; cursor:pointer;"></canvas>
-                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; background:#2c3e50; color:white; padding:6px 10px; gap:5px;">
-                        <span>💰 $<span id="isoMoney">500</span></span>
-                        <span>🌾 <span id="isoHarvest">0</span> кг</span>
-                        <span>🐔<span id="isoEggs">0</span> 🥛<span id="isoMilk">0</span> 🧶<span id="isoWool">0</span></span>
-                        <span>🍎<span id="isoApples">0</span></span>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
+                    <div style="background:#34495e; padding:8px; text-align:center; color:white; font-size:16px;">🏙️ СТРОИМ ГОРОД</div>
+                    <canvas id="cityCanvas" width="700" height="500" style="width:100%; height:auto; display:block; background:#2d2d2d; cursor:pointer;"></canvas>
+                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; background:#1e2a2e; color:white; padding:6px 10px; gap:5px;">
+                        <span>🪵 <span id="cityWood">50</span></span>
+                        <span>🪨 <span id="cityStone">30</span></span>
+                        <span>🪙 <span id="cityGold">20</span></span>
+                        <span>🏠 <span id="cityHouses">0</span></span>
+                        <span>👥 <span id="cityCitizens">0</span></span>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:6px; background:#34495e; padding:8px; justify-content:center;">
-                        <select id="isoSeedSelect" style="background:#f39c12; border:none; padding:4px 10px; border-radius:20px;">
-                            <option value="wheat">🌾 Пшеница ($20)</option>
-                            <option value="corn">🌽 Кукуруза ($15)</option>
-                            <option value="tomato">🍅 Помидор ($25)</option>
-                            <option value="pumpkin">🎃 Тыква ($40)</option>
-                        </select>
-                        <button id="isoPlantBtn" style="background:#27ae60; border:none; padding:5px 12px; border-radius:20px;">🌱 Посадить</button>
-                        <button id="isoWaterBtn" style="background:#3498db; border:none; padding:5px 12px; border-radius:20px;">💧 Полить</button>
-                        <button id="isoHarvestBtn" style="background:#e67e22; border:none; padding:5px 12px; border-radius:20px;">✂️ Собрать</button>
-                        <button id="isoBuySeedsBtn" style="background:#2ecc71; border:none; padding:5px 12px; border-radius:20px;">🛒 Купить семена</button>
-                        <button id="isoAnimalShopBtn" style="background:#f1c40f; border:none; padding:5px 12px; border-radius:20px;">🐮 Животные</button>
-                        <button id="isoSellAllBtn" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px;">🚚 Продать урожай</button>
-                        <button id="isoCloseBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">✖</button>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; background:#2c3e50; padding:8px; justify-content:center;">
+                        <button class="cityBuildBtn" data-type="house" style="background:#27ae60; border:none; padding:5px 12px; border-radius:20px;">🏠 Дом ($20,🪵5,🪨3)</button>
+                        <button class="cityBuildBtn" data-type="lumber" style="background:#f39c12; border:none; padding:5px 12px; border-radius:20px;">🪵 Лесопилка ($30,🪵10,🪨5)</button>
+                        <button class="cityBuildBtn" data-type="mine" style="background:#95a5a6; border:none; padding:5px 12px; border-radius:20px;">⛏️ Шахта ($50,🪵15,🪨15)</button>
+                        <button class="cityBuildBtn" data-type="market" style="background:#e67e22; border:none; padding:5px 12px; border-radius:20px;">🏛️ Рынок ($80,🪵20,🪨20,🪙20)</button>
+                        <button id="citySellBtn" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px;">💰 Продать город</button>
+                        <button id="cityCloseBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">✖</button>
                     </div>
-                    <div id="isoToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
+                    <div id="cityToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
-            window.isoFarmActive = gameDiv;
+            window.cityGameActive = gameDiv;
 
-            // ---------- DOM элементы ----------
-            const canvas = document.getElementById('isoCanvas');
+            const canvas = document.getElementById('cityCanvas');
             const ctx = canvas.getContext('2d');
-            const moneySpan = document.getElementById('isoMoney');
-            const harvestSpan = document.getElementById('isoHarvest');
-            const eggsSpan = document.getElementById('isoEggs');
-            const milkSpan = document.getElementById('isoMilk');
-            const woolSpan = document.getElementById('isoWool');
-            const applesSpan = document.getElementById('isoApples');
-            const toastDiv = document.getElementById('isoToast');
+            const woodSpan = document.getElementById('cityWood');
+            const stoneSpan = document.getElementById('cityStone');
+            const goldSpan = document.getElementById('cityGold');
+            const housesSpan = document.getElementById('cityHouses');
+            const citizensSpan = document.getElementById('cityCitizens');
+            const toastDiv = document.getElementById('cityToast');
+            const sellBtn = document.getElementById('citySellBtn');
+            const closeBtn = document.getElementById('cityCloseBtn');
 
-            let money = 500;
-            let harvestedTotal = 0;
-            let apples = 0;
-            let seedsCount = { wheat: 5, corn: 5, tomato: 5, pumpkin: 5 };
-            let animalProducts = { eggs: 0, milk: 0, wool: 0 };
-            let animals = []; // { type, x, z, productTimer }
-            let fruitTrees = []; // { x, z, apples, readyTimer }
-
-            // Поле 8x8 (в изометрии)
-            const rows = 8, cols = 8;
-            let plots = []; // crop, stage, watered, plantedAt
-            const growthTimes = { wheat: 120, corn: 90, tomato: 60, pumpkin: 180 };
-            const cropPrices = { wheat: 20, corn: 15, tomato: 25, pumpkin: 40 };
-            let selectedAction = 'plant'; // plant, water, harvest
-
-            // Инициализация поля
-            for (let i = 0; i < rows; i++) {
-                plots[i] = [];
-                for (let j = 0; j < cols; j++) {
-                    plots[i][j] = { crop: null, stage: 0, watered: false, plantedAt: 0 };
-                }
-            }
-
-            // Несколько фруктовых деревьев
-            const treePositions = [[-3.5, -2.5], [3.5, -3], [-3, 3], [3.8, 3.2]];
-            treePositions.forEach(pos => {
-                fruitTrees.push({ x: pos[0], z: pos[1], apples: 3, readyTimer: 0 });
-            });
+            let wood = 50, stone = 30, gold = 20;
+            let houses = 0, citizens = 0;
+            let map = Array(10).fill().map(() => Array(10).fill(null)); // null или тип здания
+            let selectedBuilding = null;
+            let inventoryTimer = null;
 
             function showToast(msg, isErr = false) {
                 toastDiv.innerText = msg;
@@ -9100,356 +9071,191 @@ if(p) {
             }
 
             function updateUI() {
-                moneySpan.innerText = money;
-                harvestSpan.innerText = harvestedTotal;
-                eggsSpan.innerText = animalProducts.eggs;
-                milkSpan.innerText = animalProducts.milk;
-                woolSpan.innerText = animalProducts.wool;
-                applesSpan.innerText = apples;
+                woodSpan.innerText = wood;
+                stoneSpan.innerText = stone;
+                goldSpan.innerText = gold;
+                housesSpan.innerText = houses;
+                citizensSpan.innerText = citizens;
             }
 
-            // Посадка
-            function plant(row, col, crop) {
-                if (seedsCount[crop] <= 0) { showToast(`Нет семян ${crop}`, true); return false; }
-                if (plots[row][col].crop !== null) { showToast("Здесь уже посажено", true); return false; }
-                plots[row][col].crop = crop;
-                plots[row][col].plantedAt = Date.now() / 1000;
-                plots[row][col].stage = 0;
-                plots[row][col].watered = false;
-                seedsCount[crop]--;
+            // Стоимость и доходы зданий
+            const buildings = {
+                house: { name: '🏠 Дом', cost: { wood: 5, stone: 3, gold: 20 }, income: { gold: 2, citizens: 2 }, icon: '🏠' },
+                lumber: { name: '🪵 Лесопилка', cost: { wood: 10, stone: 5, gold: 30 }, income: { wood: 4 }, icon: '🪵' },
+                mine: { name: '⛏️ Шахта', cost: { wood: 15, stone: 15, gold: 50 }, income: { stone: 3, gold: 1 }, icon: '⛏️' },
+                market: { name: '🏛️ Рынок', cost: { wood: 20, stone: 20, gold: 80 }, income: { gold: 8 }, icon: '🏛️' }
+            };
+
+            // Проверка возможности постройки
+            function canBuild(type, row, col) {
+                if (map[row][col] !== null) return false;
+                const cost = buildings[type].cost;
+                if (wood < cost.wood) return false;
+                if (stone < cost.stone) return false;
+                if (gold < cost.gold) return false;
+                return true;
+            }
+
+            // Построить здание
+            function build(type, row, col) {
+                if (!canBuild(type, row, col)) {
+                    showToast("Не хватает ресурсов или клетка занята", true);
+                    return false;
+                }
+                const cost = buildings[type].cost;
+                wood -= cost.wood;
+                stone -= cost.stone;
+                gold -= cost.gold;
+                map[row][col] = type;
+                if (type === 'house') houses++;
                 updateUI();
-                drawFarm();
-                showToast(`Посажена ${crop}`);
+                drawCity();
+                showToast(`Построен ${buildings[type].name}`);
                 return true;
             }
 
-            function water(row, col) {
-                if (!plots[row][col].crop) { showToast("Пустая грядка", true); return false; }
-                if (plots[row][col].watered) { showToast("Уже полито", true); return false; }
-                plots[row][col].watered = true;
-                drawFarm();
-                showToast("Полито");
-                return true;
-            }
-
-            function harvest(row, col) {
-                const p = plots[row][col];
-                if (!p.crop) { showToast("Ничего нет", true); return false; }
-                const now = Date.now() / 1000;
-                if (now - p.plantedAt < growthTimes[p.crop]) { showToast("Ещё не созрело", true); return false; }
-                const amount = 10 * (p.watered ? 1.5 : 1);
-                money += cropPrices[p.crop] * amount;
-                harvestedTotal += amount;
-                plots[row][col] = { crop: null, stage: 0, watered: false, plantedAt: 0 };
-                updateUI();
-                drawFarm();
-                showToast(`Собрано ${amount} кг за $${cropPrices[p.crop] * amount}`);
-                return true;
-            }
-
-            // Покупка семян
-            function buySeeds() {
-                const crop = document.getElementById('isoSeedSelect').value;
-                const price = cropPrices[crop];
-                if (money >= price) {
-                    money -= price;
-                    seedsCount[crop]++;
-                    updateUI();
-                    showToast(`Куплены семена ${crop}`);
-                } else showToast("Не хватает денег", true);
-            }
-
-            // Магазин животных
-            function openAnimalShop() {
-                const shopDiv = document.createElement('div');
-                shopDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100005; color:white; text-align:center;';
-                shopDiv.innerHTML = `<h3>🐮 Магазин</h3>
-                    <button id="buyChicken">🐔 Курица $40</button><br>
-                    <button id="buyCow">🐮 Корова $150</button><br>
-                    <button id="buySheep">🐑 Овца $120</button><br>
-                    <button id="closeShop">Закрыть</button>`;
-                gameDiv.appendChild(shopDiv);
-                const buy = (type, price) => {
-                    if (money >= price) {
-                        money -= price;
-                        animals.push({ type, x: (Math.random() - 0.5) * 6, z: (Math.random() - 0.5) * 6, productTimer: 0 });
-                        updateUI();
-                        drawFarm();
-                        showToast(`Куплен ${type}`);
-                        shopDiv.remove();
-                    } else showToast("Не хватает денег", true);
-                };
-                shopDiv.querySelector('#buyChicken').onclick = () => buy('chicken', 40);
-                shopDiv.querySelector('#buyCow').onclick = () => buy('cow', 150);
-                shopDiv.querySelector('#buySheep').onclick = () => buy('sheep', 120);
-                shopDiv.querySelector('#closeShop').onclick = () => shopDiv.remove();
-            }
-
-            // Продажа всего урожая (грузовик)
-            let truckCooldown = false;
-            function sellAll() {
-                if (truckCooldown) { showToast("Грузовик ещё не вернулся", true); return; }
-                let total = 0;
-                for (let i=0; i<rows; i++) {
-                    for (let j=0; j<cols; j++) {
-                        const p = plots[i][j];
-                        if (p.crop && (Date.now()/1000 - p.plantedAt) >= growthTimes[p.crop]) {
-                            total += cropPrices[p.crop] * 10 * (p.watered ? 1.5 : 1);
-                            plots[i][j] = { crop: null, stage: 0, watered: false, plantedAt: 0 };
+            // Доход каждые 10 секунд
+            function collectIncome() {
+                let woodInc = 0, stoneInc = 0, goldInc = 0, citizenInc = 0;
+                for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                        const type = map[i][j];
+                        if (type) {
+                            const inc = buildings[type].income;
+                            woodInc += inc.wood || 0;
+                            stoneInc += inc.stone || 0;
+                            goldInc += inc.gold || 0;
+                            if (type === 'house') citizenInc += 2;
                         }
                     }
                 }
-                if (total === 0) { showToast("Нет готового урожая", true); return; }
-                truckCooldown = true;
-                showToast("🚚 Грузовик уехал с урожаем...");
-                drawFarm(); // показать грузовик уезжающим
-                setTimeout(() => {
-                    money += total;
-                    harvestedTotal += total / 20;
-                    updateUI();
-                    drawFarm();
-                    showToast(`✅ Грузовик вернулся, выручка $${total}`);
-                    truckCooldown = false;
-                }, 3000);
+                wood += woodInc;
+                stone += stoneInc;
+                gold += goldInc;
+                citizens += citizenInc;
+                updateUI();
+                drawCity();
+                if (woodInc + stoneInc + goldInc > 0) {
+                    showToast(`Доход: +${woodInc}🪵 +${stoneInc}🪨 +${goldInc}🪙 +${citizenInc}👥`);
+                }
             }
 
-            // Рисование изометрической сетки, дома, деревьев, животных, грядок
-            function drawFarm() {
+            // Продажа города (оценка)
+            function sellCity() {
+                let totalValue = 0;
+                for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                        const type = map[i][j];
+                        if (type) {
+                            const cost = buildings[type].cost;
+                            totalValue += (cost.wood + cost.stone * 2 + cost.gold * 3) / 2;
+                        }
+                    }
+                }
+                totalValue += citizens * 5;
+                if (totalValue === 0) {
+                    showToast("Нет зданий для продажи", true);
+                    return;
+                }
+                gold += Math.floor(totalValue);
+                wood += Math.floor(totalValue / 3);
+                stone += Math.floor(totalValue / 4);
+                // Очищаем карту
+                map = Array(10).fill().map(() => Array(10).fill(null));
+                houses = 0;
+                citizens = 0;
+                updateUI();
+                drawCity();
+                showToast(`Город продан! Выручка ~${Math.floor(totalValue)} ресурсов.`);
+            }
+
+            // Отрисовка города
+            function drawCity() {
                 canvas.width = 700; canvas.height = 500;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2 - 30;
-                const tileW = 40, tileH = 20;
-                // Фон (земля)
-                ctx.fillStyle = '#6b8e23';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // Дом (изометрический)
-                ctx.fillStyle = '#b87c4f';
-                ctx.beginPath();
-                ctx.moveTo(centerX - 60, centerY - 80);
-                ctx.lineTo(centerX, centerY - 110);
-                ctx.lineTo(centerX + 60, centerY - 80);
-                ctx.lineTo(centerX, centerY - 50);
-                ctx.fill();
-                ctx.fillStyle = '#c0392b';
-                ctx.beginPath();
-                ctx.moveTo(centerX - 50, centerY - 80);
-                ctx.lineTo(centerX, centerY - 105);
-                ctx.lineTo(centerX + 50, centerY - 80);
-                ctx.lineTo(centerX, centerY - 55);
-                ctx.fill();
-                // Грядки
-                const offsetX = centerX - (cols * tileW)/2;
-                const offsetY = centerY + 20;
-                for (let i = 0; i < rows; i++) {
-                    for (let j = 0; j < cols; j++) {
-                        const x = offsetX + j * tileW + (i % 2) * tileW/2;
-                        const y = offsetY + i * tileH/2;
-                        ctx.fillStyle = '#8B5A2B';
-                        ctx.fillRect(x, y, tileW-2, tileH-2);
-                        ctx.fillStyle = '#c19a6b';
-                        ctx.fillRect(x+2, y+2, tileW-6, tileH-6);
-                        const p = plots[i][j];
-                        if (p.crop) {
-                            let color = '#f4d03f';
-                            if (p.crop === 'corn') color = '#f39c12';
-                            if (p.crop === 'tomato') color = '#e74c3c';
-                            if (p.crop === 'pumpkin') color = '#e67e22';
-                            const size = 8 + p.stage * 4;
-                            ctx.fillStyle = color;
-                            ctx.beginPath();
-                            ctx.ellipse(x + tileW/2, y + tileH/2 - 5, size/2, size/2, 0, 0, 2*Math.PI);
-                            ctx.fill();
-                            if (p.watered) {
-                                ctx.fillStyle = 'rgba(100,200,255,0.3)';
-                                ctx.fillRect(x, y, tileW-2, tileH-2);
-                            }
-                            if (p.stage >= 3) {
-                                ctx.fillStyle = '#ffd700';
-                                ctx.beginPath();
-                                ctx.arc(x + tileW/2, y + tileH/2 - 10, 5, 0, 2*Math.PI);
-                                ctx.fill();
-                            }
+                const cellW = canvas.width / 10;
+                const cellH = canvas.height / 10;
+                for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                        const x = j * cellW;
+                        const y = i * cellH;
+                        // фон клетки
+                        ctx.fillStyle = (i + j) % 2 === 0 ? '#4a6741' : '#3c5a2f';
+                        ctx.fillRect(x, y, cellW, cellH);
+                        ctx.strokeStyle = '#2c3e50';
+                        ctx.strokeRect(x, y, cellW, cellH);
+                        const type = map[i][j];
+                        if (type) {
+                            ctx.font = `${cellW * 0.6}px Arial`;
+                            ctx.fillStyle = '#fff';
+                            ctx.fillText(buildings[type].icon, x + cellW/3, y + cellH/1.7);
                         }
                     }
                 }
-                // Деревья
-                fruitTrees.forEach(tree => {
-                    const x = centerX + tree.x * 15;
-                    const y = centerY + tree.z * 10;
-                    ctx.fillStyle = '#8B5A2B';
-                    ctx.fillRect(x-3, y-5, 6, 15);
-                    ctx.fillStyle = '#4caf50';
-                    ctx.beginPath();
-                    ctx.ellipse(x, y-8, 10, 12, 0, 0, 2*Math.PI);
-                    ctx.fill();
-                    if (tree.apples > 0) {
-                        ctx.fillStyle = '#e74c3c';
-                        for (let a=0; a<tree.apples; a++) {
-                            ctx.beginPath();
-                            ctx.arc(x-3 + a*3, y-12, 2, 0, 2*Math.PI);
-                            ctx.fill();
-                        }
-                    }
-                });
-                // Животные
-                animals.forEach(anim => {
-                    const x = centerX + anim.x * 12;
-                    const y = centerY + anim.z * 8;
-                    ctx.fillStyle = anim.type === 'chicken' ? '#e67e22' : (anim.type === 'cow' ? '#ffffff' : '#dddddd');
-                    ctx.beginPath();
-                    ctx.ellipse(x, y, 8, 6, 0, 0, 2*Math.PI);
-                    ctx.fill();
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(x-3, y-2, 2, 2);
-                    ctx.fillRect(x+1, y-2, 2, 2);
-                });
-                // Грузовик (при продаже)
-                if (truckCooldown) {
-                    ctx.fillStyle = '#e67e22';
-                    ctx.fillRect(centerX+100, centerY-20, 40, 20);
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.fillRect(centerX+110, centerY-30, 15, 15);
-                } else {
-                    ctx.fillStyle = '#e67e22';
-                    ctx.fillRect(centerX+120, centerY-10, 40, 20);
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.fillRect(centerX+130, centerY-20, 15, 15);
+                // Подсветка выбранного здания
+                if (selectedBuilding) {
+                    ctx.fillStyle = 'rgba(255,255,0,0.3)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
             }
 
-            // Преобразование координат клика в индекс грядки
-            function getPlotFromClick(clientX, clientY) {
+            // Обработка клика по клетке
+            function handleCanvasClick(e) {
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
-                const canvasX = (clientX - rect.left) * scaleX;
-                const canvasY = (clientY - rect.top) * scaleY;
-                const centerX = canvas.width/2;
-                const centerY = canvas.height/2 - 30;
-                const offsetX = centerX - (cols * 40)/2;
-                const offsetY = centerY + 20;
-                for (let i = 0; i < rows; i++) {
-                    for (let j = 0; j < cols; j++) {
-                        const x = offsetX + j * 40 + (i % 2) * 20;
-                        const y = offsetY + i * 10;
-                        if (canvasX > x && canvasX < x+38 && canvasY > y && canvasY < y+18) {
-                            return { row: i, col: j };
-                        }
-                    }
-                }
-                return null;
-            }
-
-            // Клик по canvas
-            function onCanvasClick(e) {
                 let cx, cy;
                 if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; e.preventDefault(); }
                 else { cx = e.clientX; cy = e.clientY; }
-                const plot = getPlotFromClick(cx, cy);
-                if (plot) {
-                    if (selectedAction === 'plant') {
-                        const crop = document.getElementById('isoSeedSelect').value;
-                        plant(plot.row, plot.col, crop);
-                    } else if (selectedAction === 'water') {
-                        water(plot.row, plot.col);
-                    } else if (selectedAction === 'harvest') {
-                        harvest(plot.row, plot.col);
-                    }
-                } else {
-                    // Проверить клик по деревьям (приблизительно)
-                    const rect = canvas.getBoundingClientRect();
-                    const scaleX = canvas.width / rect.width;
-                    const scaleY = canvas.height / rect.height;
-                    const canvasX = (cx - rect.left) * scaleX;
-                    const canvasY = (cy - rect.top) * scaleY;
-                    const centerX = canvas.width/2;
-                    const centerY = canvas.height/2 - 30;
-                    for (let t of fruitTrees) {
-                        const treeX = centerX + t.x * 15;
-                        const treeY = centerY + t.z * 10;
-                        if (Math.hypot(canvasX - treeX, canvasY - treeY) < 20) {
-                            if (t.apples > 0) {
-                                apples += t.apples;
-                                money += t.apples * 5;
-                                harvestedTotal += t.apples;
-                                t.apples = 0;
-                                t.readyTimer = Date.now() / 1000;
-                                updateUI();
-                                drawFarm();
-                                showToast(`Собрано яблок, +$${t.apples * 5}`);
-                            } else {
-                                showToast("Нет яблок", true);
-                            }
-                            return;
+                const canvasX = (cx - rect.left) * scaleX;
+                const canvasY = (cy - rect.top) * scaleY;
+                const col = Math.floor(canvasX / (canvas.width / 10));
+                const row = Math.floor(canvasY / (canvas.height / 10));
+                if (row >= 0 && row < 10 && col >= 0 && col < 10) {
+                    if (selectedBuilding) {
+                        build(selectedBuilding, row, col);
+                        selectedBuilding = null;
+                    } else {
+                        // Показать информацию о здании
+                        const type = map[row][col];
+                        if (type) {
+                            const inc = buildings[type].income;
+                            showToast(`${buildings[type].name} | Доход: +${inc.wood||0}🪵 +${inc.stone||0}🪨 +${inc.gold||0}🪙`);
+                        } else {
+                            showToast("Пустая клетка. Выберите здание для постройки.");
                         }
                     }
                 }
             }
 
-            canvas.addEventListener('click', onCanvasClick);
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onCanvasClick(e); });
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasClick(e); });
 
-            // Кнопки управления
-            document.getElementById('isoPlantBtn').onclick = () => { selectedAction = 'plant'; showToast("Режим посадки"); };
-            document.getElementById('isoWaterBtn').onclick = () => { selectedAction = 'water'; showToast("Режим полива"); };
-            document.getElementById('isoHarvestBtn').onclick = () => { selectedAction = 'harvest'; showToast("Режим сбора"); };
-            document.getElementById('isoBuySeedsBtn').onclick = buySeeds;
-            document.getElementById('isoAnimalShopBtn').onclick = openAnimalShop;
-            document.getElementById('isoSellAllBtn').onclick = sellAll;
-            document.getElementById('isoCloseBtn').onclick = () => {
-                if (window.isoInterval) clearInterval(window.isoInterval);
-                window.isoFarmActive.remove();
-                window.isoFarmActive = null;
+            // Кнопки выбора зданий
+            document.querySelectorAll('.cityBuildBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.type;
+                    selectedBuilding = type;
+                    showToast(`Строим: ${buildings[type].name} (нажмите на клетку)`);
+                    drawCity();
+                });
+            });
+
+            sellBtn.onclick = () => sellCity();
+            closeBtn.onclick = () => {
+                if (window.cityInterval) clearInterval(window.cityInterval);
+                window.cityGameActive.remove();
+                window.cityGameActive = null;
             };
 
-            // Обновление стадий роста и регенерация яблок, продукции животных
-            function updateGrowthAndAnimals() {
-                const now = Date.now() / 1000;
-                let needRedraw = false;
-                for (let i=0; i<rows; i++) {
-                    for (let j=0; j<cols; j++) {
-                        const p = plots[i][j];
-                        if (p.crop) {
-                            const age = now - p.plantedAt;
-                            const newStage = Math.min(3, Math.floor((age / growthTimes[p.crop]) * 4));
-                            if (newStage !== p.stage) {
-                                p.stage = newStage;
-                                needRedraw = true;
-                            }
-                        }
-                    }
-                }
-                // Фрукты регенерация каждые 30 сек
-                fruitTrees.forEach(t => {
-                    if (t.apples === 0 && now - t.readyTimer > 30) {
-                        t.apples = 3;
-                        needRedraw = true;
-                    }
-                });
-                // Животные дают продукцию каждые 20 сек
-                animals.forEach(anim => {
-                    anim.productTimer = (anim.productTimer || 0) + 1;
-                    if (anim.productTimer >= 20) {
-                        anim.productTimer = 0;
-                        if (anim.type === 'chicken') animalProducts.eggs++;
-                        else if (anim.type === 'cow') animalProducts.milk++;
-                        else if (anim.type === 'sheep') animalProducts.wool++;
-                        updateUI();
-                        needRedraw = true;
-                    }
-                });
-                if (needRedraw) drawFarm();
-            }
-
-            window.isoInterval = setInterval(updateGrowthAndAnimals, 1000);
-            drawFarm();
+            // Таймер дохода
+            window.cityInterval = setInterval(() => collectIncome(), 10000);
+            drawCity();
             updateUI();
         }
 
-        farmIcon.onclick = () => {
+        cityIcon.onclick = () => {
             document.getElementById('unifiedGamePanel').style.display = 'none';
-            startFarm();
+            startCityBuilder();
         };
     });
 })();
