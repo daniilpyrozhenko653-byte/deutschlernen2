@@ -8988,8 +8988,8 @@ if(p) {
 
 
 
-    // ========== ФЕРМА: симулятор фермы без игрока ==========
-(function addFarmGame() {
+    // ========== FARMING VALLEY — симулятор фермы ==========
+(function addFarmingGame() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9005,262 +9005,384 @@ if(p) {
         const farmIcon = document.createElement('div');
         farmIcon.id = 'gameFarmIcon';
         farmIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
-        farmIcon.innerHTML = `<div style="font-size:48px;">🌾🐄</div><div style="color:white;">Ферма</div>`;
+        farmIcon.innerHTML = `<div style="font-size:48px;">🌾🐓</div><div style="color:white;">Ферма</div>`;
         gamesContainer.appendChild(farmIcon);
 
         function startFarm() {
             if (window.farmGameActive) {
                 window.farmGameActive.remove();
-                if (window.farmInterval) clearInterval(window.farmInterval);
+                if (window.farmAnim) cancelAnimationFrame(window.farmAnim);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:500px; overflow:hidden;">
-                    <div style="background:#27ae60; padding:12px; text-align:center; color:white; font-weight:bold;">🌾 Моя ферма 🌽</div>
-                    <div style="padding:12px; background:#34495e; color:white;">
-                        <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
-                            <span>💰 Монеты: <span id="farmCoins">100</span></span>
-                            <span>🌾 Пшеница: <span id="farmWheat">0</span></span>
-                            <span>🥛 Молоко: <span id="farmMilk">0</span></span>
-                            <span>🐣 Яйца: <span id="farmEggs">0</span></span>
-                        </div>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:800px; overflow:hidden;">
+                    <div style="background:#27ae60; padding:10px; text-align:center; color:white; font-weight:bold;">🌾 FARMING VALLEY — твоя ферма 🌻</div>
+                    <canvas id="farmCanvas" width="700" height="500" style="width:100%; height:auto; background:#87CEEB; display:block;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:8px; background:#2c3e50; color:white; font-size:12px; flex-wrap:wrap;">
+                        <span>💰 Монеты: <span id="farmMoney">100</span></span>
+                        <span>🌱 Семена: <span id="farmSeeds">5</span></span>
+                        <span>🧺 Урожай: <span id="farmCrops">0</span></span>
+                        <span>🍎 Еда для животных: <span id="farmAnimalFood">5</span></span>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px;">
-                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
-                            <div style="font-size:32px;">🌾</div>
-                            <div>Поле</div>
-                            <button id="plantWheatBtn" style="margin-top:5px; background:#f39c12;">Посадить (10💰)</button>
-                            <button id="harvestWheatBtn" style="margin-top:5px; background:#e67e22;">Собрать (+5🌾)</button>
-                            <div>Продать: <button id="sellWheatBtn" style="background:#3498db;">1🌾 = 2💰</button></div>
-                        </div>
-                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
-                            <div style="font-size:32px;">🐄</div>
-                            <div>Корова</div>
-                            <button id="buyCowBtn" style="margin-top:5px; background:#f39c12;">Купить (50💰)</button>
-                            <button id="collectMilkBtn" style="margin-top:5px; background:#e67e22;">Доить (+1🥛)</button>
-                            <div>Продать: <button id="sellMilkBtn" style="background:#3498db;">1🥛 = 3💰</button></div>
-                        </div>
-                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
-                            <div style="font-size:32px;">🐔</div>
-                            <div>Курица</div>
-                            <button id="buyChickenBtn" style="margin-top:5px; background:#f39c12;">Купить (30💰)</button>
-                            <button id="collectEggsBtn" style="margin-top:5px; background:#e67e22;">Собрать яйца (+1🐣)</button>
-                            <div>Продать: <button id="sellEggsBtn" style="background:#3498db;">1🐣 = 2💰</button></div>
-                        </div>
-                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
-                            <div style="font-size:32px;">📦</div>
-                            <div>Склад</div>
-                            <div>Улучшения:</div>
-                            <button id="upgradeFieldBtn" style="background:#f39c12;">Поле +урожай (100💰)</button>
-                            <button id="autoCollectBtn" style="background:#f39c12;">Автосбор (200💰)</button>
-                        </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:5px; padding:8px;">
+                        <button id="farmPlantBtn" style="background:#27ae60; border:none; padding:6px 12px; border-radius:20px;">🌱 Посадить</button>
+                        <button id="farmWaterBtn" style="background:#3498db; border:none; padding:6px 12px; border-radius:20px;">💧 Полить</button>
+                        <button id="farmHarvestBtn" style="background:#f39c12; border:none; padding:6px 12px; border-radius:20px;">🧺 Собрать</button>
+                        <button id="farmFeedBtn" style="background:#e67e22; border:none; padding:6px 12px; border-radius:20px;">🍎 Кормить кур</button>
+                        <button id="farmShopBtn" style="background:#9b59b6; border:none; padding:6px 12px; border-radius:20px;">🏪 Магазин</button>
+                        <button id="farmNewDayBtn" style="background:#1abc9c; border:none; padding:6px 12px; border-radius:20px;">🌟 Новый день</button>
+                        <button id="farmCloseBtn" style="background:#c0392b; border:none; padding:6px 12px; border-radius:20px;">✖ Закрыть</button>
                     </div>
-                    <div style="padding:10px; text-align:center; background:#1e272e;">
-                        <span id="farmStatus" style="color:#f1c40f;">Добро пожаловать на ферму!</span>
+                    <div style="padding:4px 8px; background:#1e272e; color:white; font-size:11px; text-align:center;">
+                        🌞 Кликни по грядке → действие (посадить/полить/собрать)
                     </div>
-                    <button id="farmCloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:10px;">Закрыть</button>
                 </div>
             `;
             document.body.appendChild(gameDiv);
             window.farmGameActive = gameDiv;
 
-            // Элементы UI
-            const coinsSpan = document.getElementById('farmCoins');
-            const wheatSpan = document.getElementById('farmWheat');
-            const milkSpan = document.getElementById('farmMilk');
-            const eggsSpan = document.getElementById('farmEggs');
-            const statusSpan = document.getElementById('farmStatus');
+            const canvas = document.getElementById('farmCanvas');
+            const ctx = canvas.getContext('2d');
+            const moneySpan = document.getElementById('farmMoney');
+            const seedsSpan = document.getElementById('farmSeeds');
+            const cropsSpan = document.getElementById('farmCrops');
+            const animalFoodSpan = document.getElementById('farmAnimalFood');
+            const plantBtn = document.getElementById('farmPlantBtn');
+            const waterBtn = document.getElementById('farmWaterBtn');
+            const harvestBtn = document.getElementById('farmHarvestBtn');
+            const feedBtn = document.getElementById('farmFeedBtn');
+            const shopBtn = document.getElementById('farmShopBtn');
+            const newDayBtn = document.getElementById('farmNewDayBtn');
+            const closeBtn = document.getElementById('farmCloseBtn');
 
-            // Состояние фермы
-            let coins = 100;
-            let wheat = 0;
-            let milk = 0;
-            let eggs = 0;
-            let hasCow = false;
-            let hasChicken = false;
-            let fieldLevel = 1; // 1 = 5 пшеницы за сбор, 2 = 10, 3 = 15
-            let autoCollect = false;
-            let autoInterval = null;
+            // ----- ПАРАМЕТРЫ ФЕРМЫ -----
+            const rows = 7, cols = 9;   // грядки 7x9
+            let plots = [];              // каждая грядка: { planted, growthStage, watered, type }
+            let money = 100;
+            let seeds = 5;              // семена пшеницы
+            let harvestedCrops = 0;     // урожай (пшеница) для продажи
+            let animalFood = 5;         // еда для кур
+            let chickens = 3;           // количество кур
+            let chickenFedToday = false;
+            let day = 1;
+            let selectedAction = 'plant'; // plant, water, harvest
 
+            // Типы культур
+            const cropsData = {
+                wheat: { name: 'Пшеница', growthTime: 3, sellPrice: 15, seedPrice: 10, stageColors: ['#8B5A2B','#8B5A2B','#F4D03F','#F1C40F'] }
+            };
+
+            // Инициализация грядок
+            function initPlots() {
+                for (let r=0; r<rows; r++) {
+                    plots[r] = [];
+                    for (let c=0; c<cols; c++) {
+                        plots[r][c] = {
+                            planted: false,
+                            growthStage: 0,   // 1..3, 0=пусто
+                            watered: false,
+                            type: 'wheat'
+                        };
+                    }
+                }
+            }
+
+            // UI обновление
             function updateUI() {
-                coinsSpan.innerText = coins;
-                wheatSpan.innerText = wheat;
-                milkSpan.innerText = milk;
-                eggsSpan.innerText = eggs;
+                moneySpan.innerText = money;
+                seedsSpan.innerText = seeds;
+                cropsSpan.innerText = harvestedCrops;
+                animalFoodSpan.innerText = animalFood;
             }
 
-            function showMessage(msg) {
-                statusSpan.innerText = msg;
-                setTimeout(() => { if (statusSpan.innerText === msg) statusSpan.innerText = 'Готово!'; }, 2000);
-            }
-
-            // Действия
-            function plantWheat() {
-                if (coins >= 10) {
-                    coins -= 10;
-                    // Через 5 секунд пшеница вырастет (упростим: просто дадим возможность собрать)
-                    showMessage('🌱 Пшеница посажена! Через 5 сек можно собрать.');
-                    setTimeout(() => {
-                        if (window.farmGameActive) {
-                            showMessage('🌾 Пшеница созрела! Нажмите "Собрать"');
-                            // Можно установить флаг, но для простоты оставим так
+            // Начать новый день
+            function newDay() {
+                // Сброс полива
+                for (let r=0; r<rows; r++) {
+                    for (let c=0; c<cols; c++) {
+                        if (plots[r][c].planted) {
+                            plots[r][c].watered = false;
+                            // если был полит и не собран, то рост +1
+                            // полив остаётся на следующий день? Нет, нужно сначала полить, потом рост в конце дня.
+                            // Логика: в начале дня все грядки не политы. За день игрок поливает. В конце дня (кнопка "Новый день") рост увеличивается у политых.
                         }
-                    }, 5000);
-                } else {
-                    showMessage('Не хватает монет!');
+                    }
                 }
-                updateUI();
-            }
-
-            function harvestWheat() {
-                let gain = 5 * fieldLevel;
-                wheat += gain;
-                showMessage(`+${gain} пшеницы!`);
-                updateUI();
-            }
-
-            function sellWheat() {
-                if (wheat >= 1) {
-                    wheat--;
-                    coins += 2;
-                    showMessage('Продана пшеница +2💰');
-                } else {
-                    showMessage('Нет пшеницы!');
-                }
-                updateUI();
-            }
-
-            function buyCow() {
-                if (coins >= 50 && !hasCow) {
-                    coins -= 50;
-                    hasCow = true;
-                    showMessage('Куплена корова! 🐄');
-                } else if (hasCow) {
-                    showMessage('У вас уже есть корова!');
-                } else {
-                    showMessage('Не хватает монет!');
-                }
-                updateUI();
-            }
-
-            function collectMilk() {
-                if (hasCow) {
-                    milk++;
-                    showMessage('+1 молоко 🥛');
-                } else {
-                    showMessage('Купите корову сначала!');
-                }
-                updateUI();
-            }
-
-            function sellMilk() {
-                if (milk >= 1) {
-                    milk--;
-                    coins += 3;
-                    showMessage('Продано молоко +3💰');
-                } else {
-                    showMessage('Нет молока!');
-                }
-                updateUI();
-            }
-
-            function buyChicken() {
-                if (coins >= 30 && !hasChicken) {
-                    coins -= 30;
-                    hasChicken = true;
-                    showMessage('Куплена курица! 🐔');
-                } else if (hasChicken) {
-                    showMessage('У вас уже есть курица!');
-                } else {
-                    showMessage('Не хватает монет!');
-                }
-                updateUI();
-            }
-
-            function collectEggs() {
-                if (hasChicken) {
-                    eggs++;
-                    showMessage('+1 яйцо 🥚');
-                } else {
-                    showMessage('Купите курицу!');
-                }
-                updateUI();
-            }
-
-            function sellEggs() {
-                if (eggs >= 1) {
-                    eggs--;
-                    coins += 2;
-                    showMessage('Проданы яйца +2💰');
-                } else {
-                    showMessage('Нет яиц!');
-                }
-                updateUI();
-            }
-
-            function upgradeField() {
-                if (coins >= 100 && fieldLevel < 3) {
-                    coins -= 100;
-                    fieldLevel++;
-                    showMessage(`Поле улучшено до уровня ${fieldLevel}! Сбор даёт ${5*fieldLevel} пшеницы.`);
-                } else if (fieldLevel >= 3) {
-                    showMessage('Максимальный уровень поля!');
-                } else {
-                    showMessage('Не хватает монет!');
-                }
-                updateUI();
-            }
-
-            function toggleAutoCollect() {
-                if (!autoCollect && coins >= 200) {
-                    coins -= 200;
-                    autoCollect = true;
-                    showMessage('Автосбор включён! Каждые 10 сек ресурсы собираются автоматически.');
-                    if (autoInterval) clearInterval(autoInterval);
-                    autoInterval = setInterval(() => {
-                        if (window.farmGameActive && autoCollect) {
-                            if (hasCow) milk++;
-                            if (hasChicken) eggs++;
-                            wheat += 3 * fieldLevel; // автоурожай поля
-                            updateUI();
-                            showMessage('🚜 Автосбор: + ресурсы');
+                // Рост культур, которые были политы в предыдущий день? Сделаем проще: при нажатии "Новый день" политые грядки увеличивают рост на 1.
+                for (let r=0; r<rows; r++) {
+                    for (let c=0; c<cols; c++) {
+                        if (plots[r][c].planted && plots[r][c].watered) {
+                            if (plots[r][c].growthStage < 3) {
+                                plots[r][c].growthStage++;
+                            }
+                            plots[r][c].watered = false; // сброс полива после роста
+                        } else if (plots[r][c].planted && !plots[r][c].watered) {
+                            // не полили - не растёт (можно штраф: завядание? нет)
                         }
-                    }, 10000);
-                } else if (autoCollect) {
-                    showMessage('Автосбор уже включён!');
-                } else {
-                    showMessage('Не хватает монет для автосбора (200💰)');
+                    }
                 }
+                // Куры: если покормлены сегодня, дают продукцию
+                if (chickenFedToday) {
+                    let eggs = chickens + Math.floor(Math.random() * 2);
+                    money += eggs;
+                    // сообщение
+                    showToast(`🐔 Куры снесли ${eggs} яиц! +${eggs} монет`);
+                    chickenFedToday = false;
+                } else {
+                    showToast(`🐔 Куры голодны! Покормите их, чтобы получить яйца.`);
+                }
+                // Сброс кормёжки на сегодня
+                chickenFedToday = false;
+                day++;
+                showToast(`🌟 День ${day}. Растения подросли!`);
+                drawFarm();
                 updateUI();
             }
 
-            // Назначение кнопок
-            document.getElementById('plantWheatBtn').onclick = plantWheat;
-            document.getElementById('harvestWheatBtn').onclick = harvestWheat;
-            document.getElementById('sellWheatBtn').onclick = sellWheat;
-            document.getElementById('buyCowBtn').onclick = buyCow;
-            document.getElementById('collectMilkBtn').onclick = collectMilk;
-            document.getElementById('sellMilkBtn').onclick = sellMilk;
-            document.getElementById('buyChickenBtn').onclick = buyChicken;
-            document.getElementById('collectEggsBtn').onclick = collectEggs;
-            document.getElementById('sellEggsBtn').onclick = sellEggs;
-            document.getElementById('upgradeFieldBtn').onclick = upgradeField;
-            document.getElementById('autoCollectBtn').onclick = toggleAutoCollect;
+            // Кормление кур
+            function feedChickens() {
+                if (animalFood >= chickens) {
+                    animalFood -= chickens;
+                    chickenFedToday = true;
+                    showToast(`🐔 Покормили кур! Завтра они снесут яйца.`);
+                } else {
+                    showToast(`🍎 Не хватает еды для кур! Купите еду в магазине.`);
+                }
+                updateUI();
+                drawFarm();
+            }
 
-            // Закрытие
-            document.getElementById('farmCloseBtn').onclick = () => {
-                if (autoInterval) clearInterval(autoInterval);
+            // Магазин
+            function openShop() {
+                let shopDiv = document.createElement('div');
+                shopDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100003; color:white; width:280px; text-align:center;';
+                shopDiv.innerHTML = `
+                    <h3>🏪 Магазин фермера</h3>
+                    <div>💰 У вас ${money} монет</div>
+                    <hr>
+                    <button id="buySeeds" style="background:#27ae60; margin:5px;">🌱 Семена пшеницы (10 монет)</button>
+                    <button id="buyAnimalFeed" style="background:#e67e22; margin:5px;">🍎 Корм для животных (5 монет/шт)</button>
+                    <button id="sellCrops" style="background:#f39c12; margin:5px;">🧺 Продать урожай (15 монет/шт)</button>
+                    <hr>
+                    <button id="closeShop" style="background:#c0392b;">Закрыть</button>
+                `;
+                document.body.appendChild(shopDiv);
+                document.getElementById('buySeeds').onclick = () => {
+                    if (money >= 10) { money -= 10; seeds++; updateUI(); showToast('🌱 Куплены семена!'); }
+                    else showToast('❌ Не хватает монет!');
+                    shopDiv.remove();
+                };
+                document.getElementById('buyAnimalFeed').onclick = () => {
+                    if (money >= 5) { money -= 5; animalFood++; updateUI(); showToast('🍎 Куплен корм!'); }
+                    else showToast('❌ Не хватает монет!');
+                    shopDiv.remove();
+                };
+                document.getElementById('sellCrops').onclick = () => {
+                    if (harvestedCrops > 0) {
+                        let earn = harvestedCrops * 15;
+                        money += earn;
+                        harvestedCrops = 0;
+                        updateUI();
+                        showToast(`🧺 Продано! +${earn} монет`);
+                    } else {
+                        showToast('Нет урожая для продажи!');
+                    }
+                    shopDiv.remove();
+                };
+                document.getElementById('closeShop').onclick = () => shopDiv.remove();
+            }
+
+            // Действия на грядке
+            function plantSeed(plot, r, c) {
+                if (!plot.planted && seeds > 0) {
+                    plot.planted = true;
+                    plot.growthStage = 1;
+                    plot.watered = false;
+                    plot.type = 'wheat';
+                    seeds--;
+                    showToast(`🌱 Посажена пшеница на грядке (${r+1},${c+1})`);
+                    updateUI();
+                    drawFarm();
+                } else if (plot.planted) {
+                    showToast('Здесь уже что-то растёт!');
+                } else {
+                    showToast('Нет семян! Купите в магазине.');
+                }
+            }
+
+            function waterPlot(plot, r, c) {
+                if (plot.planted && !plot.watered) {
+                    plot.watered = true;
+                    showToast(`💧 Грядка (${r+1},${c+1}) полита!`);
+                    drawFarm();
+                } else if (plot.planted && plot.watered) {
+                    showToast('Уже полито!');
+                } else if (!plot.planted) {
+                    showToast('Сначала посадите семена!');
+                }
+            }
+
+            function harvestPlot(plot, r, c) {
+                if (plot.planted && plot.growthStage >= 3) {
+                    harvestedCrops++;
+                    plot.planted = false;
+                    plot.growthStage = 0;
+                    plot.watered = false;
+                    showToast(`🧺 Собрана пшеница! +1 урожай`);
+                    updateUI();
+                    drawFarm();
+                } else if (plot.planted && plot.growthStage < 3) {
+                    showToast(`🌾 Растение ещё не выросло (стадия ${plot.growthStage}/3). Поливайте каждый день!`);
+                } else {
+                    showToast('Здесь ничего не посажено.');
+                }
+            }
+
+            // Обработка клика по канвасу
+            function handleCanvasClick(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                    e.preventDefault();
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                const canvasX = (clientX - rect.left) * scaleX;
+                const canvasY = (clientY - rect.top) * scaleY;
+                // Определим размеры грядок
+                const padding = 40;
+                const gridW = canvas.width - 2*padding;
+                const gridH = canvas.height - 2*padding - 50; // место под дом и животных
+                const cellW = gridW / cols;
+                const cellH = gridH / rows;
+                for (let r=0; r<rows; r++) {
+                    for (let c=0; c<cols; c++) {
+                        let x = padding + c*cellW;
+                        let y = padding + r*cellH;
+                        if (canvasX >= x && canvasX <= x+cellW && canvasY >= y && canvasY <= y+cellH) {
+                            let plot = plots[r][c];
+                            if (selectedAction === 'plant') plantSeed(plot, r, c);
+                            else if (selectedAction === 'water') waterPlot(plot, r, c);
+                            else if (selectedAction === 'harvest') harvestPlot(plot, r, c);
+                            return;
+                        }
+                    }
+                }
+                // Клик вне грядок - возможно, показываем подсказку
+                showToast('Кликни по грядке!');
+            }
+
+            // Отрисовка фермы с домиком, курами, грядками
+            function drawFarm() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Небо, земля
+                ctx.fillStyle = '#87CEEB'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = '#5d8c48'; ctx.fillRect(0, canvas.height-100, canvas.width, 100);
+                // Дом
+                ctx.fillStyle = '#e67e22'; ctx.fillRect(20, canvas.height-180, 120, 100);
+                ctx.fillStyle = '#c0392b'; ctx.fillRect(60, canvas.height-220, 40, 40);
+                ctx.fillStyle = '#f1c40f'; ctx.fillRect(70, canvas.height-210, 20, 20);
+                // Забор
+                ctx.fillStyle = '#8B5A2B';
+                for (let i=0;i<10;i++) ctx.fillRect(160+i*15, canvas.height-120, 5, 30);
+                // Грядки
+                const padding = 40;
+                const gridW = canvas.width - 2*padding;
+                const gridH = canvas.height - 2*padding - 50;
+                const cellW = gridW / cols;
+                const cellH = gridH / rows;
+                for (let r=0; r<rows; r++) {
+                    for (let c=0; c<cols; c++) {
+                        let x = padding + c*cellW;
+                        let y = padding + r*cellH;
+                        ctx.fillStyle = '#c19a6b';
+                        ctx.fillRect(x, y, cellW-2, cellH-2);
+                        ctx.fillStyle = '#5d3a1a';
+                        ctx.fillRect(x+2, y+2, cellW-6, cellH-6);
+                        let plot = plots[r][c];
+                        if (plot.planted) {
+                            let stage = plot.growthStage;
+                            if (stage === 1) ctx.fillStyle = '#8B5A2B';
+                            else if (stage === 2) ctx.fillStyle = '#F4D03F';
+                            else ctx.fillStyle = '#F1C40F';
+                            ctx.beginPath();
+                            ctx.rect(x+5, y+5, cellW-12, cellH-12);
+                            ctx.fill();
+                            // капелька, если полито
+                            if (plot.watered) {
+                                ctx.fillStyle = '#3498db';
+                                ctx.fillRect(x+cellW-15, y+cellH-15, 5, 10);
+                            }
+                        } else {
+                            ctx.fillStyle = '#2c3e50';
+                            ctx.fillRect(x+5, y+5, cellW-12, cellH-12);
+                        }
+                    }
+                }
+                // куры на переднем плане
+                for (let i=0; i<chickens; i++) {
+                    let cx = 500 + i*35;
+                    let cy = canvas.height-70;
+                    ctx.fillStyle = '#f39c12';
+                    ctx.beginPath(); ctx.arc(cx, cy, 12, 0, 2*Math.PI); ctx.fill();
+                    ctx.fillStyle = '#e67e22';
+                    ctx.beginPath(); ctx.moveTo(cx+10, cy-5); ctx.lineTo(cx+20, cy-10); ctx.lineTo(cx+15, cy); ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath(); ctx.arc(cx-4, cy-3, 2, 0, 2*Math.PI); ctx.fill();
+                }
+                // Текст
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(`🏠 День ${day}`, 30, 50);
+                ctx.fillStyle = '#000';
+                ctx.font = '12px Arial';
+                ctx.fillText('грядки', canvas.width-50, canvas.height-20);
+            }
+
+            function showToast(msg) {
+                let toast = document.createElement('div');
+                toast.textContent = msg;
+                toast.style.cssText = 'position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:8px 16px; border-radius:30px; font-size:12px; z-index:100004;';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+            }
+
+            // Назначение действий кнопкам
+            plantBtn.onclick = () => { selectedAction = 'plant'; showToast('🌱 Режим: посадка'); };
+            waterBtn.onclick = () => { selectedAction = 'water'; showToast('💧 Режим: полив'); };
+            harvestBtn.onclick = () => { selectedAction = 'harvest'; showToast('🧺 Режим: сбор'); };
+            feedBtn.onclick = () => feedChickens();
+            shopBtn.onclick = () => openShop();
+            newDayBtn.onclick = () => newDay();
+            closeBtn.onclick = () => {
                 window.farmGameActive.remove();
                 window.farmGameActive = null;
             };
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasClick(e); });
 
+            // Старт
+            initPlots();
+            // Делаем несколько заранее посаженных культур для красоты
+            for (let i=0; i<3; i++) {
+                plots[1][i].planted = true;
+                plots[1][i].growthStage = 2;
+                plots[1][i].watered = true;
+            }
             updateUI();
+            drawFarm();
         }
 
         farmIcon.onclick = () => {
-            document.getElementById('unifiedGamePanel').style.display = 'none';
+            const pnl = document.getElementById('unifiedGamePanel');
+            if (pnl) pnl.style.display = 'none';
             startFarm();
         };
     });
