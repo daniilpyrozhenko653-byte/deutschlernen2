@@ -8404,7 +8404,7 @@ if(p) {
 
 
 
-// ========== ШАХМАТЫ (ПОЛНАЯ ЛОГИКА) ==========
+// ========== ШАХМАТЫ (2 ИГРОКА ИЛИ БОТ, 3 УРОВНЯ СЛОЖНОСТИ) ==========
 (function addChessGame() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
@@ -8421,10 +8421,10 @@ if(p) {
         const chessIcon = document.createElement('div');
         chessIcon.id = 'gameChessIcon';
         chessIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
-        chessIcon.innerHTML = `<div style="font-size:48px;">♟️♜</div><div style="color:white;">Шахматы</div>`;
+        chessIcon.innerHTML = `<div style="font-size:48px;">♟️🤖</div><div style="color:white;">Шахматы</div>`;
         gamesContainer.appendChild(chessIcon);
 
-        // ---------- ИГРА ----------
+        // ---------- ШАХМАТЫ С ВЫБОРОМ РЕЖИМА ----------
         function startChess() {
             if (window.chessGameActive) {
                 window.chessGameActive.remove();
@@ -8437,13 +8437,22 @@ if(p) {
                 <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:480px; overflow:hidden;">
                     <div style="background:#b58863; padding:8px; text-align:center; color:white; font-weight:bold;">♜ Шахматы ♞</div>
                     <canvas id="chessCanvas" width="400" height="400" style="width:100%; height:auto; display:block;"></canvas>
-                    <div style="display:flex; justify-content:space-between; padding:8px; background:#2c3e50; color:white;">
-                        <span>Ход: <span id="chessTurn">белые</span></span>
-                        <span id="chessStatus"></span>
-                    </div>
-                    <div style="display:flex; gap:8px; padding:0 8px 8px 8px;">
-                        <button id="chessNewGame" style="flex:1; background:#27ae60; border:none; padding:8px; border-radius:20px;">🔄 Новая игра</button>
-                        <button id="chessClose" style="flex:1; background:#c0392b; border:none; padding:8px; border-radius:20px;">✖ Закрыть</button>
+                    <div style="background:#2c3e50; padding:6px;">
+                        <div style="display:flex; justify-content:space-between; color:white; margin-bottom:5px;">
+                            <span>Ход: <span id="chessTurn">белые</span></span>
+                            <span id="chessStatus"></span>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:5px;">
+                            <button id="chessMode2p" style="flex:1; background:#3498db; border:none; padding:5px; border-radius:15px;">👥 2 игрока</button>
+                            <button id="chessModeBot" style="flex:1; background:#e67e22; border:none; padding:5px; border-radius:15px;">🤖 vs Бот</button>
+                            <select id="chessDifficulty" style="background:#1abc9c; border:none; padding:5px; border-radius:15px; color:white;">
+                                <option value="easy">Легкий</option>
+                                <option value="medium">Средний</option>
+                                <option value="hard">Сложный</option>
+                            </select>
+                        </div>
+                        <button id="chessNewGame" style="width:100%; background:#27ae60; border:none; padding:5px; border-radius:15px; margin-bottom:5px;">🔄 Новая игра (сброс)</button>
+                        <button id="chessClose" style="width:100%; background:#c0392b; border:none; padding:5px; border-radius:15px;">✖ Закрыть</button>
                     </div>
                 </div>
             `;
@@ -8454,18 +8463,25 @@ if(p) {
             const ctx = canvas.getContext('2d');
             const turnSpan = document.getElementById('chessTurn');
             const statusSpan = document.getElementById('chessStatus');
+            const mode2pBtn = document.getElementById('chessMode2p');
+            const modeBotBtn = document.getElementById('chessModeBot');
+            const difficultySelect = document.getElementById('chessDifficulty');
+            const newGameBtn = document.getElementById('chessNewGame');
+            const closeBtn = document.getElementById('chessClose');
 
             // Параметры
             const size = 8;
             const cellSize = 400 / size;
             let board = [];
             let currentPlayer = 'white'; // white всегда ходит первым
+            let gameMode = '2p'; // '2p' или 'bot'
+            let difficulty = 'medium'; // 'easy', 'medium', 'hard'
             let selectedRow = null, selectedCol = null;
             let gameOver = false;
             let winner = null;
             let possibleMoves = [];
 
-            // Инициализация фигур
+            // Инициализация доски
             function initBoard() {
                 board = Array(size).fill().map(() => Array(size).fill(null));
                 // Пешки
@@ -8481,7 +8497,6 @@ if(p) {
                 }
             }
 
-            // Символы фигур (Юникод)
             function getPieceSymbol(piece) {
                 if (!piece) return '';
                 const symbols = {
@@ -8495,13 +8510,12 @@ if(p) {
                 return symbols[piece.type][piece.color];
             }
 
-            // Проверка, находится ли клетка под атакой врага
-            function isSquareAttacked(row, col, color) {
-                // color - цвет атакующего (тот, кто может ударить)
+            // Проверка атаки на клетку
+            function isSquareAttacked(row, col, attackerColor) {
                 for (let r = 0; r < size; r++) {
                     for (let c = 0; c < size; c++) {
                         const piece = board[r][c];
-                        if (piece && piece.color === color) {
+                        if (piece && piece.color === attackerColor) {
                             if (isValidMoveWithoutSelfCheck(r, c, row, col, piece)) {
                                 return true;
                             }
@@ -8511,7 +8525,6 @@ if(p) {
                 return false;
             }
 
-            // Проверка на шах королю данного цвета
             function isKingInCheck(color) {
                 let kingPos = null;
                 for (let i = 0; i < size; i++) {
@@ -8527,27 +8540,20 @@ if(p) {
                 return isSquareAttacked(kingPos[0], kingPos[1], color === 'white' ? 'black' : 'white');
             }
 
-            // Проверка, что ход не ставит своего короля под шах
             function isValidMoveWithoutSelfCheck(fromRow, fromCol, toRow, toCol, piece) {
-                // Сохраняем состояние
                 const targetPiece = board[toRow][toCol];
                 board[toRow][toCol] = piece;
                 board[fromRow][fromCol] = null;
-
                 const inCheck = isKingInCheck(piece.color);
-
-                // Откат
                 board[fromRow][fromCol] = piece;
                 board[toRow][toCol] = targetPiece;
                 return !inCheck;
             }
 
-            // Генерация возможных ходов для фигуры (без учёта шаха)
             function getPieceMoves(row, col, piece) {
                 const moves = [];
                 const color = piece.color;
                 const type = piece.type;
-
                 const directions = {
                     rook: [[1,0],[-1,0],[0,1],[0,-1]],
                     bishop: [[1,1],[1,-1],[-1,1],[-1,-1]],
@@ -8555,19 +8561,13 @@ if(p) {
                     king: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
                     knight: [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]
                 };
-
                 if (type === 'pawn') {
                     const dir = color === 'white' ? -1 : 1;
                     const startRow = color === 'white' ? 6 : 1;
-                    // Вперёд на 1
                     if (row+dir >= 0 && row+dir < size && !board[row+dir][col]) {
                         moves.push([row+dir, col]);
-                        // На 2 с начальной позиции
-                        if (row === startRow && !board[row+2*dir][col]) {
-                            moves.push([row+2*dir, col]);
-                        }
+                        if (row === startRow && !board[row+2*dir][col]) moves.push([row+2*dir, col]);
                     }
-                    // Взятие по диагонали
                     for (const dc of [-1, 1]) {
                         const newRow = row+dir, newCol = col+dc;
                         if (newRow>=0 && newRow<size && newCol>=0 && newCol<size) {
@@ -8599,33 +8599,27 @@ if(p) {
                         }
                     }
                 }
-
-                // Рокировка (упрощённо: только если король и ладья не двигались, между ними пусто)
-                if (type === 'king') {
+                // Рокировка (простая)
+                if (type === 'king' && !gameOver) {
                     const rowKing = row;
-                    const colKing = col;
-                    // Короткая рокировка
-                    if (!gameOver && piece.color === currentPlayer && !isKingInCheck(piece.color)) {
-                        // Ладья на h (7) или a (0)
-                        const rookShort = board[rowKing][7];
-                        if (rookShort && rookShort.type === 'rook' && rookShort.color === piece.color) {
-                            if (!board[rowKing][6] && !board[rowKing][5] && !isSquareAttacked(rowKing,5, piece.color==='white'?'black':'white') && !isSquareAttacked(rowKing,6, piece.color==='white'?'black':'white')) {
-                                moves.push([rowKing, 6]);
-                            }
+                    // Короткая
+                    const rookShort = board[rowKing][7];
+                    if (rookShort && rookShort.type === 'rook' && rookShort.color === color) {
+                        if (!board[rowKing][6] && !board[rowKing][5] && !isSquareAttacked(rowKing,5, color==='white'?'black':'white') && !isSquareAttacked(rowKing,6, color==='white'?'black':'white')) {
+                            moves.push([rowKing, 6]);
                         }
-                        // Длинная
-                        const rookLong = board[rowKing][0];
-                        if (rookLong && rookLong.type === 'rook' && rookLong.color === piece.color) {
-                            if (!board[rowKing][1] && !board[rowKing][2] && !board[rowKing][3] && !isSquareAttacked(rowKing,2, piece.color==='white'?'black':'white') && !isSquareAttacked(rowKing,3, piece.color==='white'?'black':'white')) {
-                                moves.push([rowKing, 2]);
-                            }
+                    }
+                    // Длинная
+                    const rookLong = board[rowKing][0];
+                    if (rookLong && rookLong.type === 'rook' && rookLong.color === color) {
+                        if (!board[rowKing][1] && !board[rowKing][2] && !board[rowKing][3] && !isSquareAttacked(rowKing,2, color==='white'?'black':'white') && !isSquareAttacked(rowKing,3, color==='white'?'black':'white')) {
+                            moves.push([rowKing, 2]);
                         }
                     }
                 }
                 return moves;
             }
 
-            // Валидный ход с учётом шаха
             function isValidMove(fromRow, fromCol, toRow, toCol, piece) {
                 const moves = getPieceMoves(fromRow, fromCol, piece);
                 const isValid = moves.some(([r,c]) => r === toRow && c === toCol);
@@ -8633,13 +8627,12 @@ if(p) {
                 return isValidMoveWithoutSelfCheck(fromRow, fromCol, toRow, toCol, piece);
             }
 
-            // Выполнить ход
             function makeMove(fromRow, fromCol, toRow, toCol) {
                 const piece = board[fromRow][fromCol];
                 if (!piece || piece.color !== currentPlayer) return false;
                 if (!isValidMove(fromRow, fromCol, toRow, toCol, piece)) return false;
 
-                // Спец. рокировка: перемещение ладьи
+                // Рокировка - перемещение ладьи
                 if (piece.type === 'king' && Math.abs(toCol - fromCol) === 2) {
                     const rookCol = toCol > fromCol ? 7 : 0;
                     const newRookCol = toCol > fromCol ? 5 : 3;
@@ -8650,20 +8643,17 @@ if(p) {
                     }
                 }
 
-                // Выполняем ход
                 board[toRow][toCol] = piece;
                 board[fromRow][fromCol] = null;
 
-                // Превращение пешки (в ферзя)
                 if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
                     board[toRow][toCol] = { type: 'queen', color: piece.color };
                 }
 
-                // Смена игрока
                 currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
                 turnSpan.innerText = currentPlayer === 'white' ? 'белые' : 'чёрные';
 
-                // Проверка мата/пата
+                // Проверка окончания игры
                 let nextPlayerMoves = false;
                 for (let i=0; i<size; i++) {
                     for (let j=0; j<size; j++) {
@@ -8696,40 +8686,110 @@ if(p) {
                 return true;
             }
 
-            // Отрисовка доски и фигур
+            // Ход бота
+            function botMove() {
+                if (gameOver) return;
+                if (gameMode !== 'bot') return;
+                if (currentPlayer !== 'black') return; // бот играет чёрными
+
+                // Собрать все возможные ходы чёрных
+                let allMoves = [];
+                for (let i=0; i<size; i++) {
+                    for (let j=0; j<size; j++) {
+                        const piece = board[i][j];
+                        if (piece && piece.color === 'black') {
+                            const moves = getPieceMoves(i,j,piece);
+                            for (let [r,c] of moves) {
+                                if (isValidMoveWithoutSelfCheck(i,j,r,c,piece)) {
+                                    allMoves.push({ fromRow: i, fromCol: j, toRow: r, toCol: c, piece });
+                                }
+                            }
+                        }
+                    }
+                }
+                if (allMoves.length === 0) return;
+
+                let chosen = null;
+                if (difficulty === 'easy') {
+                    // случайный ход
+                    chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+                } else if (difficulty === 'medium') {
+                    // 50% случайно, 50% предпочитаем взятие
+                    const captures = allMoves.filter(m => board[m.toRow][m.toCol] !== null);
+                    if (captures.length > 0 && Math.random() < 0.7) {
+                        chosen = captures[Math.floor(Math.random() * captures.length)];
+                    } else {
+                        chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+                    }
+                } else { // hard
+                    // приоритет: взятие фигуры > шах > случайный
+                    const captures = allMoves.filter(m => board[m.toRow][m.toCol] !== null);
+                    if (captures.length > 0) {
+                        // выбираем взятие с максимальной ценностью фигуры (упрощённо)
+                        const pieceValues = { pawn:1, knight:3, bishop:3, rook:5, queen:9, king:100 };
+                        captures.sort((a,b) => (pieceValues[board[b.toRow][b.toCol]?.type]||0) - (pieceValues[board[a.toRow][a.toCol]?.type]||0));
+                        chosen = captures[0];
+                    } else {
+                        // ищем ход, создающий шах
+                        let checkingMoves = [];
+                        for (let m of allMoves) {
+                            // пробуем сделать ход и проверить, будет ли шах белому королю
+                            const fromPiece = board[m.fromRow][m.fromCol];
+                            const targetPiece = board[m.toRow][m.toCol];
+                            board[m.toRow][m.toCol] = fromPiece;
+                            board[m.fromRow][m.fromCol] = null;
+                            const givesCheck = isKingInCheck('white');
+                            board[m.fromRow][m.fromCol] = fromPiece;
+                            board[m.toRow][m.toCol] = targetPiece;
+                            if (givesCheck) checkingMoves.push(m);
+                        }
+                        if (checkingMoves.length > 0) {
+                            chosen = checkingMoves[Math.floor(Math.random() * checkingMoves.length)];
+                        } else {
+                            chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+                        }
+                    }
+                }
+
+                if (chosen) {
+                    setTimeout(() => {
+                        if (!gameOver && currentPlayer === 'black') {
+                            makeMove(chosen.fromRow, chosen.fromCol, chosen.toRow, chosen.toCol);
+                            drawBoard();
+                            // Если игра не закончена и режим бота, и ход снова бота? Нет, после хода бота ход переходит к белым
+                            // Бот больше не ходит до следующего хода игрока.
+                        }
+                    }, 50);
+                }
+            }
+
+            // Отрисовка
             function drawBoard() {
                 for (let i = 0; i < size; i++) {
                     for (let j = 0; j < size; j++) {
                         const isDark = (i + j) % 2 === 1;
                         ctx.fillStyle = isDark ? '#b58863' : '#f0d9b5';
                         ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-
-                        // Подсветка выделенной клетки
                         if (selectedRow === i && selectedCol === j) {
                             ctx.fillStyle = 'rgba(0,255,0,0.4)';
                             ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                         }
-                        // Подсветка возможных ходов
                         for (let [r,c] of possibleMoves) {
                             if (r === i && c === j) {
                                 ctx.fillStyle = 'rgba(0,200,0,0.3)';
                                 ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
                             }
                         }
-
                         const piece = board[i][j];
                         if (piece) {
-                            const symbol = getPieceSymbol(piece);
                             ctx.font = `${cellSize * 0.7}px Arial`;
                             ctx.fillStyle = piece.color === 'white' ? '#fff' : '#222';
-                            ctx.shadowBlur = 0;
-                            ctx.fillText(symbol, j * cellSize + cellSize*0.2, i * cellSize + cellSize*0.8);
+                            ctx.fillText(getPieceSymbol(piece), j * cellSize + cellSize*0.2, i * cellSize + cellSize*0.8);
                         }
                     }
                 }
             }
 
-            // Обработка кликов/тапов
             function handleCanvasClick(e) {
                 if (gameOver) return;
                 const rect = canvas.getBoundingClientRect();
@@ -8751,25 +8811,22 @@ if(p) {
                 if (row < 0 || row >= size || col < 0 || col >= size) return;
 
                 if (selectedRow === null) {
-                    // Выбор фигуры
                     const piece = board[row][col];
                     if (piece && piece.color === currentPlayer) {
                         selectedRow = row;
                         selectedCol = col;
-                        // Генерация возможных ходов с учётом шаха
                         const moves = getPieceMoves(row, col, piece);
                         possibleMoves = moves.filter(([r,c]) => isValidMoveWithoutSelfCheck(row, col, r, c, piece));
                         drawBoard();
                     }
                 } else {
-                    // Попытка сходить
                     const success = makeMove(selectedRow, selectedCol, row, col);
                     selectedRow = null;
                     selectedCol = null;
                     possibleMoves = [];
                     drawBoard();
-                    if (!success && !gameOver) {
-                        // Неверный ход: очищаем выделение
+                    if (success && !gameOver && gameMode === 'bot' && currentPlayer === 'black') {
+                        botMove();
                         drawBoard();
                     }
                 }
@@ -8781,8 +8838,7 @@ if(p) {
                 handleCanvasClick(e);
             });
 
-            // Новая игра
-            function newGame() {
+            function resetGame() {
                 initBoard();
                 currentPlayer = 'white';
                 selectedRow = null;
@@ -8793,15 +8849,27 @@ if(p) {
                 turnSpan.innerText = 'белые';
                 statusSpan.innerText = '';
                 drawBoard();
+                if (gameMode === 'bot' && currentPlayer === 'black') {
+                    botMove(); // если вдруг бот начинает? нет, всегда белые начинают
+                }
             }
 
-            document.getElementById('chessNewGame').onclick = () => newGame();
-            document.getElementById('chessClose').onclick = () => {
+            function setMode(mode) {
+                gameMode = mode;
+                resetGame();
+            }
+
+            mode2pBtn.onclick = () => setMode('2p');
+            modeBotBtn.onclick = () => setMode('bot');
+            newGameBtn.onclick = () => resetGame();
+            closeBtn.onclick = () => {
                 window.chessGameActive.remove();
                 window.chessGameActive = null;
             };
+            difficultySelect.onchange = (e) => { difficulty = e.target.value; };
 
-            newGame();
+            initBoard();
+            drawBoard();
         }
 
         chessIcon.onclick = () => {
