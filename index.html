@@ -8135,6 +8135,259 @@ window.localDict = localDict;
         };
     });
 })();
+
+
+// ========== ДОБАВЛЕНИЕ ИГРЫ FLAPPY BIRD ==========
+(function addFlappyBird() {
+    function waitForPanel(callback) {
+        const panel = document.getElementById('unifiedGamePanel');
+        if (panel) callback(panel);
+        else setTimeout(() => waitForPanel(callback), 100);
+    }
+
+    waitForPanel((panel) => {
+        if (document.getElementById('gameFlappyIcon')) return;
+
+        const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
+        if (!gamesContainer) return;
+
+        const birdIcon = document.createElement('div');
+        birdIcon.id = 'gameFlappyIcon';
+        birdIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
+        birdIcon.innerHTML = `<div style="font-size:48px;">🐦🎮</div><div style="color:white;">Flappy Bird</div>`;
+        gamesContainer.appendChild(birdIcon);
+
+        // ---------- ИГРА ----------
+        function startFlappy() {
+            if (window.flappyActive) {
+                if (window.flappyInterval) cancelAnimationFrame(window.flappyInterval);
+                window.flappyActive.remove();
+            }
+
+            const gameDiv = document.createElement('div');
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+            gameDiv.innerHTML = `
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:450px; overflow:hidden; position:relative;">
+                    <div style="background:#e67e22; padding:8px; text-align:center; color:white;">🐦 Flappy Bird (пробел / тап / кнопка)</div>
+                    <canvas id="flappyCanvas" width="400" height="500" style="width:100%; height:auto; background:#3498db; display:block;"></canvas>
+                    <div style="display:flex; justify-content:space-between; padding:8px; color:white;">
+                        <span>🐦 Счёт: <span id="flappyScore">0</span></span>
+                        <span>🏆 Рекорд: <span id="flappyHighScore">0</span></span>
+                    </div>
+                    <button id="flappyJumpBtn" style="background:#1abc9c; border:none; width:calc(100% - 16px); margin:0 8px 8px 8px; padding:10px; border-radius:30px; font-size:18px; font-weight:bold;">ПРЫЖОК 🚀</button>
+                    <div id="flappyGameOverMsg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a2e; padding:15px; border-radius:20px; text-align:center;">
+                        GAME OVER<br><button id="flappyRestartBtn" style="background:#e67e22; border:none; padding:8px 20px; margin-top:10px;">🔄 Снова</button>
+                    </div>
+                    <button id="flappyCloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:8px;">Закрыть</button>
+                </div>
+            `;
+            document.body.appendChild(gameDiv);
+            window.flappyActive = gameDiv;
+
+            const canvas = document.getElementById('flappyCanvas');
+            const ctx = canvas.getContext('2d');
+            const scoreSpan = document.getElementById('flappyScore');
+            const highSpan = document.getElementById('flappyHighScore');
+            const gameOverDiv = document.getElementById('flappyGameOverMsg');
+            const restartBtn = document.getElementById('flappyRestartBtn');
+            const closeBtn = document.getElementById('flappyCloseBtn');
+            const jumpBtn = document.getElementById('flappyJumpBtn');
+
+            let cw = 400, ch = 500;
+            canvas.width = cw; canvas.height = ch;
+
+            // Параметры птички
+            let bird = {
+                x: 80,
+                y: ch/2,
+                radius: 12,
+                vy: 0,
+                gravity: 0.35,
+                jumpPower: -6.5
+            };
+            let pipes = [];
+            let score = 0;
+            let highScore = localStorage.getItem('flappyHigh') ? parseInt(localStorage.getItem('flappyHigh')) : 0;
+            highSpan.innerText = highScore;
+            let gameRunning = true;
+            let frame = 0;
+            let pipeGap = 120;     // расстояние между трубами
+            let pipeWidth = 50;
+            let pipeSpeed = 2.5;
+            let animId = null;
+
+            function spawnPipe() {
+                let minTop = 50;
+                let maxTop = ch - pipeGap - 50;
+                let topHeight = Math.floor(Math.random() * (maxTop - minTop + 1) + minTop);
+                pipes.push({
+                    x: cw,
+                    topHeight: topHeight,
+                    width: pipeWidth,
+                    passed: false
+                });
+            }
+
+            function update() {
+                if (!gameRunning) return;
+
+                // Физика птички
+                bird.vy += bird.gravity;
+                bird.y += bird.vy;
+
+                // Проверка границ (пол/потолок)
+                if (bird.y + bird.radius >= ch || bird.y - bird.radius <= 0) {
+                    gameRunning = false;
+                    if (animId) cancelAnimationFrame(animId);
+                    gameOverDiv.style.display = 'flex';
+                    return;
+                }
+
+                // Движение труб и проверка столкновений
+                for (let i = 0; i < pipes.length; i++) {
+                    const p = pipes[i];
+                    p.x -= pipeSpeed;
+
+                    // Коллизия с трубой
+                    if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + p.width) {
+                        if (bird.y - bird.radius < p.topHeight || bird.y + bird.radius > p.topHeight + pipeGap) {
+                            gameRunning = false;
+                            if (animId) cancelAnimationFrame(animId);
+                            gameOverDiv.style.display = 'flex';
+                            return;
+                        }
+                    }
+
+                    // Подсчёт очков при прохождении трубы
+                    if (!p.passed && p.x + p.width < bird.x - bird.radius) {
+                        p.passed = true;
+                        score++;
+                        scoreSpan.innerText = score;
+                        if (score > highScore) {
+                            highScore = score;
+                            highSpan.innerText = highScore;
+                            localStorage.setItem('flappyHigh', highScore);
+                        }
+                    }
+                }
+
+                // Удаление вышедших за экран труб
+                pipes = pipes.filter(p => p.x + p.width > 0);
+
+                // Генерация новых труб
+                if (frame % 100 === 0 || (pipes.length === 0 && frame > 30)) {
+                    spawnPipe();
+                }
+                frame++;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, cw, ch);
+                // Небо и облака (просто фон)
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(0, 0, cw, ch);
+                // Земля
+                ctx.fillStyle = '#e67e22';
+                ctx.fillRect(0, ch-15, cw, 15);
+
+                // Трубы
+                for (let p of pipes) {
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(p.x, 0, p.width, p.topHeight);
+                    ctx.fillRect(p.x, p.topHeight + pipeGap, p.width, ch - (p.topHeight + pipeGap));
+                    ctx.fillStyle = '#27ae60';
+                    ctx.fillRect(p.x - 5, p.topHeight - 20, p.width + 10, 20);
+                    ctx.fillRect(p.x - 5, p.topHeight + pipeGap, p.width + 10, 20);
+                }
+
+                // Птичка
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(bird.x + 4, bird.y - 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#e67e22';
+                ctx.beginPath();
+                ctx.moveTo(bird.x + 10, bird.y);
+                ctx.lineTo(bird.x + 18, bird.y);
+                ctx.lineTo(bird.x + 10, bird.y + 4);
+                ctx.fill();
+            }
+
+            function gameLoop() {
+                if (!gameRunning) return;
+                update();
+                draw();
+                animId = requestAnimationFrame(gameLoop);
+            }
+
+            function jump() {
+                if (!gameRunning) return;
+                bird.vy = bird.jumpPower;
+                // маленький звуковой эффект "пик" (если хотите - раскомментируйте)
+                // let beep = new Audio('data:audio/wav;base64,U3RlYWx0aCBub3Qgc3VwcG9ydGVk');
+                // beep.play().catch(e=>{});
+            }
+
+            function restart() {
+                gameRunning = true;
+                score = 0;
+                scoreSpan.innerText = '0';
+                bird.y = ch/2;
+                bird.vy = 0;
+                pipes = [];
+                frame = 0;
+                gameOverDiv.style.display = 'none';
+                if (animId) cancelAnimationFrame(animId);
+                gameLoop();
+            }
+
+            // Управление: клавиатура
+            const keyHandler = (e) => {
+                if (!window.flappyActive) return;
+                if (e.code === 'Space' || e.code === 'ArrowUp') {
+                    e.preventDefault();
+                    jump();
+                }
+            };
+            window.addEventListener('keydown', keyHandler);
+
+            // Сенсорная кнопка и тап по canvas
+            jumpBtn.onclick = () => jump();
+            canvas.addEventListener('click', (e) => { e.preventDefault(); jump(); });
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+
+            restartBtn.onclick = () => restart();
+            closeBtn.onclick = () => {
+                gameRunning = false;
+                if (animId) cancelAnimationFrame(animId);
+                window.removeEventListener('keydown', keyHandler);
+                window.flappyActive.remove();
+                window.flappyActive = null;
+            };
+
+            // Старт
+            gameLoop();
+        }
+
+        birdIcon.onclick = () => {
+            const panel = document.getElementById('unifiedGamePanel');
+            if (panel) panel.style.display = 'none';
+            startFlappy();
+        };
+    });
+})();
+
+
+
+
+
+
+
+    
    // ========== РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" – ГАРАНТИРОВАННАЯ РАБОТА ==========
 (function() {
     if (document.getElementById('languagesSectionBtn')) return;
