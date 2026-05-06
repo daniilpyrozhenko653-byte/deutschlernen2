@@ -8993,8 +8993,8 @@ if(p) {
 
 
 
-    // ========== ПИКСЕЛЬНАЯ СТУДИЯ (рисование + раскраски + обучение) ==========
-(function addPixelStudio() {
+    // ========== ПИКСЕЛЬНАЯ СТУДИЯ: раскраски, сохранение, загрузка своих картинок ==========
+(function addPixelStudioPro() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9016,38 +9016,47 @@ if(p) {
         function startPixelStudio() {
             if (window.pixelActive) {
                 window.pixelActive.remove();
-                if (window.pixelInterval) clearInterval(window.pixelInterval);
             }
 
             const gameDiv = document.createElement('div');
-            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
+            gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none; overflow-y:auto;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
-                    <div style="background:#34495e; padding:8px; text-align:center; color:white; font-size:16px;">🎨 ПИКСЕЛЬНАЯ СТУДИЯ</div>
-                    <canvas id="pixelCanvas" width="400" height="400" style="width:100%; height:auto; display:block; background:#ecf0f1; cursor:pointer;"></canvas>
-                    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; background:#1e2a2e; padding:8px;">
-                        <button id="pixelBrush" style="background:#27ae60; border:none; padding:5px 12px; border-radius:20px;">🖌️ Кисть</button>
-                        <button id="pixelEraser" style="background:#e67e22; border:none; padding:5px 12px; border-radius:20px;">🧽 Ластик</button>
-                        <button id="pixelFill" style="background:#3498db; border:none; padding:5px 12px; border-radius:20px;">🪣 Заливка</button>
-                        <button id="pixelClear" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px;">🗑️ Очистить</button>
-                        <button id="pixelLoadColoring" style="background:#9b59b6; border:none; padding:5px 12px; border-radius:20px;">🖍️ Раскраска</button>
-                        <button id="pixelRules" style="background:#f1c40f; border:none; padding:5px 12px; border-radius:20px;">📖 Правила</button>
-                        <button id="pixelClose" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">✖</button>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden; margin:10px auto;">
+                    <div style="background:#34495e; padding:8px; text-align:center; color:white; font-size:16px;">🎨 ПИКСЕЛЬНАЯ СТУДИЯ ПРО</div>
+                    <canvas id="pixelCanvas" width="400" height="400" style="width:100%; height:auto; display:block; background:#ecf0f1; cursor:pointer; touch-action:none;"></canvas>
+                    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px; background:#1e2a2e; padding:8px;">
+                        <button id="pixelBrush" style="background:#27ae60; border:none; padding:5px 10px; border-radius:20px;">🖌️ Кисть</button>
+                        <button id="pixelEraser" style="background:#e67e22; border:none; padding:5px 10px; border-radius:20px;">🧽 Ластик</button>
+                        <button id="pixelFill" style="background:#3498db; border:none; padding:5px 10px; border-radius:20px;">🪣 Заливка</button>
+                        <button id="pixelClear" style="background:#e74c3c; border:none; padding:5px 10px; border-radius:20px;">🗑️ Очистить</button>
+                        <button id="pixelSave" style="background:#2ecc71; border:none; padding:5px 10px; border-radius:20px;">💾 Сохранить</button>
+                        <input type="file" id="pixelUploadImage" accept="image/*" style="display:none;">
+                        <button id="pixelUploadBtn" style="background:#9b59b6; border:none; padding:5px 10px; border-radius:20px;">📂 Загрузить картинку</button>
+                        <select id="pixelColoringSelect" style="background:#f39c12; border:none; padding:5px; border-radius:15px;">
+                            <option value="">-- Выбрать раскраску --</option>
+                            <option value="house">🏠 Домик</option>
+                            <option value="cat">🐱 Котик</option>
+                            <option value="flower">🌸 Цветок</option>
+                            <option value="car">🚗 Машинка</option>
+                        </select>
+                        <button id="pixelLoadColoring" style="background:#f1c40f; border:none; padding:5px 10px; border-radius:20px;">🖍️ Загрузить раскраску</button>
+                        <button id="pixelRules" style="background:#1abc9c; border:none; padding:5px 10px; border-radius:20px;">📖 Правила</button>
+                        <button id="pixelClose" style="background:#7f8c8d; border:none; padding:5px 10px; border-radius:20px;">✖</button>
                     </div>
                     <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; background:#2c3e50; padding:8px;">
                         <div style="text-align:center;">
-                            <div>🎨 Цвета</div>
+                            <div>🎨 Палитра</div>
                             <div style="display:flex; gap:5px;">
-                                <div id="colorRed" class="colorPicker" style="width:30px; height:30px; background:#e74c3c; border-radius:5px; cursor:pointer;"></div>
-                                <div id="colorGreen" class="colorPicker" style="width:30px; height:30px; background:#2ecc71; border-radius:5px; cursor:pointer;"></div>
-                                <div id="colorBlue" class="colorPicker" style="width:30px; height:30px; background:#3498db; border-radius:5px; cursor:pointer;"></div>
-                                <div id="colorYellow" class="colorPicker" style="width:30px; height:30px; background:#f1c40f; border-radius:5px; cursor:pointer;"></div>
-                                <div id="colorBlack" class="colorPicker" style="width:30px; height:30px; background:#2c3e50; border-radius:5px; cursor:pointer;"></div>
-                                <div id="colorWhite" class="colorPicker" style="width:30px; height:30px; background:#ecf0f1; border:1px solid #fff; border-radius:5px; cursor:pointer;"></div>
+                                <div class="colorPicker" data-color="#e74c3c" style="width:30px; height:30px; background:#e74c3c; border-radius:5px; cursor:pointer;"></div>
+                                <div class="colorPicker" data-color="#2ecc71" style="width:30px; height:30px; background:#2ecc71; border-radius:5px; cursor:pointer;"></div>
+                                <div class="colorPicker" data-color="#3498db" style="width:30px; height:30px; background:#3498db; border-radius:5px; cursor:pointer;"></div>
+                                <div class="colorPicker" data-color="#f1c40f" style="width:30px; height:30px; background:#f1c40f; border-radius:5px; cursor:pointer;"></div>
+                                <div class="colorPicker" data-color="#2c3e50" style="width:30px; height:30px; background:#2c3e50; border-radius:5px; cursor:pointer;"></div>
+                                <div class="colorPicker" data-color="#ffffff" style="width:30px; height:30px; background:#ffffff; border:1px solid #fff; border-radius:5px; cursor:pointer;"></div>
                             </div>
                         </div>
                     </div>
-                    <div id="pixelToast" style="position:absolute; bottom:70px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none;"></div>
+                    <div id="pixelToast" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#2ecc71; color:white; padding:5px 12px; border-radius:20px; font-size:12px; opacity:0; transition:0.2s; pointer-events:none; z-index:100010;"></div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
@@ -9056,12 +9065,13 @@ if(p) {
             const canvas = document.getElementById('pixelCanvas');
             const ctx = canvas.getContext('2d');
             const toastDiv = document.getElementById('pixelToast');
+            const uploadInput = document.getElementById('pixelUploadImage');
 
-            let gridSize = 20; // 20x20 пикселей
+            let gridSize = 20;
             let cellSize = canvas.width / gridSize;
             let pixels = Array(gridSize).fill().map(() => Array(gridSize).fill('#ffffff'));
             let currentColor = '#e74c3c';
-            let tool = 'brush'; // brush, eraser, fill
+            let tool = 'brush';
 
             function showToast(msg, isErr = false) {
                 toastDiv.innerText = msg;
@@ -9070,7 +9080,6 @@ if(p) {
                 setTimeout(() => toastDiv.style.opacity = '0', 2000);
             }
 
-            // Отрисовка сетки
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < gridSize; i++) {
@@ -9083,7 +9092,6 @@ if(p) {
                 }
             }
 
-            // Заливка (простой алгоритм заливки)
             function floodFill(x, y, targetColor, replaceColor) {
                 if (targetColor === replaceColor) return;
                 if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
@@ -9095,7 +9103,6 @@ if(p) {
                 floodFill(x, y - 1, targetColor, replaceColor);
             }
 
-            // Обработка клика по холсту
             function handleCanvasClick(e) {
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
@@ -9132,9 +9139,59 @@ if(p) {
                 draw();
                 showToast("Холст очищен");
             };
-            document.getElementById('pixelLoadColoring').onclick = () => {
-                // Загружаем раскраску (контур домика)
-                const coloring = [
+            document.getElementById('pixelSave').onclick = () => {
+                // Сохраняем canvas как PNG
+                const link = document.createElement('a');
+                link.download = 'pixel_art.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                showToast("Картинка сохранена!");
+            };
+
+            // Загрузка своей картинки (преобразование в контур и подгонка под сетку)
+            document.getElementById('pixelUploadBtn').onclick = () => {
+                uploadInput.click();
+            };
+            uploadInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Рисуем картинку на временный canvas, уменьшаем до 20x20, затем преобразуем в контур (простой порог)
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = gridSize;
+                        tempCanvas.height = gridSize;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.drawImage(img, 0, 0, gridSize, gridSize);
+                        const imgData = tempCtx.getImageData(0, 0, gridSize, gridSize);
+                        // Превращаем в чёрно-белый контур: если яркость < 128, то чёрный, иначе белый (контур)
+                        for (let i = 0; i < gridSize; i++) {
+                            for (let j = 0; j < gridSize; j++) {
+                                const idx = (i * gridSize + j) * 4;
+                                const r = imgData.data[idx];
+                                const g = imgData.data[idx+1];
+                                const b = imgData.data[idx+2];
+                                const brightness = (r + g + b) / 3;
+                                if (brightness < 128) {
+                                    pixels[i][j] = '#2c3e50'; // тёмный контур
+                                } else {
+                                    pixels[i][j] = '#ffffff'; // белый фон
+                                }
+                            }
+                        }
+                        draw();
+                        showToast("Картинка загружена и преобразована в контур! Раскрасьте её.");
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Раскраски
+            const colorings = {
+                house: [
                     ['#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000'],
                     ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
                     ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
@@ -9148,25 +9205,77 @@ if(p) {
                     ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
                     ['#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000'],
                     ['#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000']
-                ];
-                for (let i=0; i<Math.min(gridSize, coloring.length); i++) {
-                    for (let j=0; j<Math.min(gridSize, coloring[i].length); j++) {
-                        pixels[i][j] = coloring[i][j];
+                ],
+                cat: [
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#000','#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000','#000','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#000','#f1c40f','#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000','#f1c40f','#000','#fff','#fff','#fff'],
+                    ['#fff','#000','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#000','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff'],
+                    ['#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff','#fff','#fff','#fff','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff'],
+                    ['#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#000','#000','#000','#000','#000','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff'],
+                    ['#fff','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff'],
+                    ['#fff','#fff','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#000','#000','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#000','#000','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff']
+                ],
+                flower: [
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#e74c3c','#e74c3c','#e74c3c','#fff','#fff','#e74c3c','#e74c3c','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#e74c3c','#fff','#e74c3c','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#e74c3c','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#f1c40f','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#e74c3c','#e74c3c','#e74c3c','#e74c3c','#e74c3c','#e74c3c','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#2ecc71','#2ecc71','#2ecc71','#2ecc71','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#2ecc71','#2ecc71','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff']
+                ],
+                car: [
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#000','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#000','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#000','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#000','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#000','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#3498db','#000','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#000','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#000','#2c3e50','#000','#fff','#fff','#fff','#fff','#fff','#000','#2c3e50','#000','#fff','#fff','#fff','#fff','#fff'],
+                    ['#fff','#fff','#fff','#fff','#000','#000','#000','#fff','#fff','#fff','#fff','#fff','#000','#000','#000','#fff','#fff','#fff','#fff','#fff']
+                ]
+            };
+
+            document.getElementById('pixelLoadColoring').onclick = () => {
+                const select = document.getElementById('pixelColoringSelect');
+                const selected = select.value;
+                if (!selected || !colorings[selected]) {
+                    showToast("Выберите раскраску из списка", true);
+                    return;
+                }
+                const coloring = colorings[selected];
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        if (i < coloring.length && j < coloring[i].length) {
+                            pixels[i][j] = coloring[i][j];
+                        } else {
+                            pixels[i][j] = '#ffffff';
+                        }
                     }
                 }
                 draw();
-                showToast("Загружена раскраска «Домик». Раскрасьте его!");
+                showToast(`Раскраска "${select.options[select.selectedIndex].text}" загружена!`);
             };
+
+            // Правила
             document.getElementById('pixelRules').onclick = () => {
                 const rulesDiv = document.createElement('div');
                 rulesDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100005; color:white; width:300px; text-align:center;';
                 rulesDiv.innerHTML = `
                     <h3>📖 Правила рисования</h3>
-                    <p>1. Выберите цвет (красный, зелёный, синий, жёлтый, чёрный, белый).</p>
-                    <p>2. Инструменты: кисть (рисует), ластик (стирает), заливка (заполняет область).</p>
-                    <p>3. Нажмите «Раскраска», чтобы загрузить готовый контур домика.</p>
-                    <p>4. Очистить холст — начать заново.</p>
-                    <p>5. Используйте холст 20x20. Можно рисовать пиксель-арт!</p>
+                    <p>1. Выберите цвет из палитры.</p>
+                    <p>2. Кисть — рисует, Ластик — стирает в белый, Заливка — закрашивает область.</p>
+                    <p>3. Сохраните рисунок кнопкой «Сохранить» (PNG).</p>
+                    <p>4. Загрузите свою картинку — она превратится в контур для раскрашивания.</p>
+                    <p>5. Готовые раскраски: домик, котик, цветок, машинка.</p>
                     <button id="closeRulesBtn" style="background:#e74c3c; border:none; padding:5px 15px; border-radius:15px;">Закрыть</button>
                 `;
                 gameDiv.appendChild(rulesDiv);
@@ -9177,22 +9286,12 @@ if(p) {
             // Выбор цвета
             document.querySelectorAll('.colorPicker').forEach(el => {
                 el.addEventListener('click', () => {
-                    currentColor = el.style.backgroundColor;
-                    // преобразуем rgb к hex для простоты
-                    const rgb = currentColor.match(/\d+/g);
-                    if (rgb) {
-                        currentColor = `#${((1 << 24) + (parseInt(rgb[0]) << 16) + (parseInt(rgb[1]) << 8) + parseInt(rgb[2])).toString(16).slice(1)}`;
-                    } else if (el.id === 'colorWhite') currentColor = '#ffffff';
-                    else if (el.id === 'colorBlack') currentColor = '#2c3e50';
-                    else if (el.id === 'colorRed') currentColor = '#e74c3c';
-                    else if (el.id === 'colorGreen') currentColor = '#2ecc71';
-                    else if (el.id === 'colorBlue') currentColor = '#3498db';
-                    else if (el.id === 'colorYellow') currentColor = '#f1c40f';
+                    currentColor = el.getAttribute('data-color');
                     showToast(`Цвет: ${currentColor}`);
                 });
             });
 
-            // Инициализация белым холстом
+            // Инициализация
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
                     pixels[i][j] = '#ffffff';
