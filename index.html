@@ -8381,7 +8381,26 @@ window.localDict = localDict;
     });
 })();
 
-
+let p = document.getElementById('unifiedGamePanel');
+if(p) {
+    p.style.maxHeight = '80vh';
+    p.style.overflowY = 'auto';
+    p.style.width = '90%';
+    p.style.padding = '15px';
+    console.log('Прокрутка добавлена! Теперь все игры видны.');
+} else {
+    console.warn('Панель не найдена — возможно, она ещё не создана. Запустите код через секунду.');
+    setTimeout(() => {
+        let p2 = document.getElementById('unifiedGamePanel');
+        if(p2) {
+            p2.style.maxHeight = '80vh';
+            p2.style.overflowY = 'auto';
+            p2.style.width = '90%';
+            p2.style.padding = '15px';
+            console.log('Прокрутка добавлена (повторно).');
+        }
+    }, 500);
+}
 
 
 
