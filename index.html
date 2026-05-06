@@ -8404,8 +8404,8 @@ if(p) {
 
 
 
-// ========== ШАХМАТЫ 2P и БОТ (с правилами) ==========
-(function addChessWithRules() {
+// ========== ШАХМАТЫ с уровнем "Новичок" и подсказками ==========
+(function addChessWithTutorial() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -8424,7 +8424,6 @@ if(p) {
         chessIcon.innerHTML = `<div style="font-size:48px;">♟️🤖</div><div style="color:white;">Шахматы</div>`;
         gamesContainer.appendChild(chessIcon);
 
-        // ---------- ИГРА ----------
         function startChess() {
             if (window.chessGameActive) {
                 window.chessGameActive.remove();
@@ -8435,7 +8434,7 @@ if(p) {
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
                 <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:520px; overflow:hidden;">
-                    <div style="background:#b58863; padding:8px; text-align:center; color:white; font-weight:bold;">♜ Шахматы ♞</div>
+                    <div style="background:#b58863; padding:8px; text-align:center; color:white; font-weight:bold;">♜ Шахматы с обучением ♞</div>
                     <canvas id="chessCanvas" width="400" height="400" style="width:100%; height:auto; display:block;"></canvas>
                     <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:12px;">
                         <span>Ход: <span id="chessTurn">белые</span></span>
@@ -8447,20 +8446,22 @@ if(p) {
                             <option value="bot">🤖 Против бота</option>
                         </select>
                         <select id="difficultySelect" style="flex:1; background:#34495e; color:white; border:none; border-radius:20px; padding:6px;">
-                            <option value="easy">Легко</option>
-                            <option value="medium">Средне</option>
-                            <option value="hard">Сложно</option>
+                            <option value="novice">🐣 Новичок</option>
+                            <option value="easy">🍃 Легко</option>
+                            <option value="medium">⚡ Средне</option>
+                            <option value="hard">🔥 Сложно</option>
                         </select>
                         <button id="chessRulesBtn" style="flex:1; background:#f39c12; border:none; padding:6px; border-radius:20px;">📖 Правила</button>
                         <button id="chessNewGame" style="flex:1; background:#27ae60; border:none; padding:6px; border-radius:20px;">🔄 Новая</button>
                         <button id="chessClose" style="flex:1; background:#c0392b; border:none; padding:6px; border-radius:20px;">✖ Закрыть</button>
                     </div>
+                    <div id="chessToast" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#f39c12; color:#2c3e50; padding:8px 16px; border-radius:30px; font-size:12px; font-weight:bold; opacity:0; transition:0.2s; pointer-events:none; z-index:100003;"></div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
             window.chessGameActive = gameDiv;
 
-            // Элементы
+            // Элементы и константы
             const canvas = document.getElementById('chessCanvas');
             const ctx = canvas.getContext('2d');
             const turnSpan = document.getElementById('chessTurn');
@@ -8470,8 +8471,17 @@ if(p) {
             const newGameBtn = document.getElementById('chessNewGame');
             const closeBtn = document.getElementById('chessClose');
             const rulesBtn = document.getElementById('chessRulesBtn');
+            const toastDiv = document.getElementById('chessToast');
 
-            // --- Модальное окно с правилами ---
+            // Утилита для показа сообщения (подсказки)
+            function showHint(text) {
+                if (difficultySelect.value !== 'novice') return;
+                toastDiv.innerHTML = text;
+                toastDiv.style.opacity = '1';
+                setTimeout(() => { toastDiv.style.opacity = '0'; }, 2500);
+            }
+
+            // Правила (модальное окно)
             function showRules() {
                 const rulesDiv = document.createElement('div');
                 rulesDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100003; display:flex; align-items:center; justify-content:center;';
@@ -8484,7 +8494,6 @@ if(p) {
                         <div style="font-size:14px; line-height:1.5;">
                             <h4>🎯 Цель игры</h4>
                             <p>Поставить мат королю противника — это значит, что король находится под атакой (шах) и нет способа её отразить.</p>
-                            
                             <h4>♟️ Движение фигур</h4>
                             <ul>
                                 <li><b>Король (♔ ♚)</b> - ходит на 1 клетку в любом направлении. Не может ходить под шах.</li>
@@ -8492,21 +8501,12 @@ if(p) {
                                 <li><b>Ладья (♖ ♜)</b> - ходит по вертикали и горизонтали.</li>
                                 <li><b>Слон (♗ ♝)</b> - ходит по диагонали.</li>
                                 <li><b>Конь (♘ ♞)</b> - ходит буквой «Г» (2 клетки в одну сторону, 1 в другую).</li>
-                                <li><b>Пешка (♙ ♟)</b> - ходит вперёд на 1 клетку (с начальной позиции на 2), бьёт по диагонали вперёд. При достижении последней горизонтали превращается в любую фигуру (обычно в ферзя).</li>
+                                <li><b>Пешка (♙ ♟)</b> - ходит вперёд на 1 клетку (с начальной позиции на 2), бьёт по диагонали вперёд.</li>
                             </ul>
-
                             <h4>🏰 Рокировка</h4>
-                            <p>Одновременный ход короля и ладьи: король перемещается на 2 клетки в сторону ладьи, ладья становится рядом с ним. Условия: король и ладья не двигались ранее, между ними нет фигур, король не находится под шахом, и клетки, через которые он проходит, не атакованы.</p>
-
-                            <h4>⚔️ Взятие на проходе</h4>
-                            <p>Если пешка противника сделала ход на 2 клетки и встала рядом с вашей пешкой, вы можете побить её «на проходе», став на поле за ней. (В этой версии упрощённо, правило не реализовано для простоты).</p>
-
+                            <p>Король и ладья не двигались, нет фигур между, король не под шахом и не проходит через атакуемые поля.</p>
                             <h4>✅ Шах, мат, пат</h4>
-                            <ul>
-                                <li><b>Шах</b> - король под атакой. Игрок обязан защититься.</li>
-                                <li><b>Мат</b> - шах, от которого нет защиты. Игра заканчивается победой атакующего.</li>
-                                <li><b>Пат</b> - у игрока нет легальных ходов, но король не в шахе. Ничья.</li>
-                            </ul>
+                            <p><b>Шах</b> — король под атакой. <b>Мат</b> — шах, от которого нет защиты, победа. <b>Пат</b> — нет ходов, но не шах, ничья.</p>
                         </div>
                     </div>
                 `;
@@ -8515,7 +8515,7 @@ if(p) {
             }
             rulesBtn.onclick = showRules;
 
-            // --- Настройка доступности сложности ---
+            // Настройка доступности сложности
             function updateDifficultyState() {
                 if (modeSelect.value === '2p') {
                     difficultySelect.disabled = true;
@@ -8528,7 +8528,7 @@ if(p) {
             modeSelect.addEventListener('change', updateDifficultyState);
             updateDifficultyState();
 
-            // --- Шахматная логика (как в предыдущем работающем коде) ---
+            // --- Шахматная логика (полная, с учётом подсказок) ---
             const size = 8;
             const cellSize = 400 / size;
             let board = [];
@@ -8539,6 +8539,7 @@ if(p) {
             let waitingForBot = false;
 
             const pieceValue = { pawn:1, knight:3, bishop:3, rook:5, queen:9, king:100 };
+            const pieceNames = { pawn:'пешка', knight:'конь', bishop:'слон', rook:'ладья', queen:'ферзь', king:'король' };
 
             function initBoard() {
                 board = Array(size).fill().map(() => Array(size).fill(null));
@@ -8599,7 +8600,6 @@ if(p) {
                             if(!t || t.color!==color) moves.push([r,c]);
                         }
                     }
-                    // рокировка
                     if(!gameOver && !isKingInCheck(color)){
                         const rowK=row;
                         const rookShort=board[rowK][7];
@@ -8667,13 +8667,37 @@ if(p) {
                 return isValidMoveWithoutSelfCheck(fromRow,fromCol,toRow,toCol,piece);
             }
 
-            function makeMove(fromRow,fromCol,toRow,toCol){
+            // Подсказка при выборе фигуры
+            function showPieceHint(row, col, piece) {
+                if (difficultySelect.value !== 'novice') return;
+                const moves = getPieceMoves(row, col, piece);
+                const validMoves = moves.filter(([r,c]) => isValidMoveWithoutSelfCheck(row, col, r, c, piece));
+                if (validMoves.length === 0) {
+                    showHint(`⚠️ ${pieceNames[piece.type]} ${piece.color==='white'?'белых':'чёрных'} не может сходить никуда (заблокирована или защищает короля от шаха).`);
+                } else {
+                    let cells = validMoves.map(([r,c]) => `${String.fromCharCode(97+c)}${8-r}`).join(', ');
+                    showHint(`✅ ${pieceNames[piece.type]} ${piece.color==='white'?'белых':'чёрных'}. Возможные ходы: ${cells}`);
+                }
+            }
+
+            // Выполнение хода с подсказкой
+            function makeMoveWithHint(fromRow,fromCol,toRow,toCol){
                 const piece = board[fromRow][fromCol];
                 if(!piece || piece.color!==currentPlayer) return false;
                 if(!isValidMove(fromRow,fromCol,toRow,toCol,piece)) return false;
 
-                // рокировка
-                if(piece.type==='king' && Math.abs(toCol-fromCol)===2){
+                // Запоминаем для подсказки
+                const pieceType = piece.type;
+                const pieceColor = piece.color;
+                const fromCoord = `${String.fromCharCode(97+fromCol)}${8-fromRow}`;
+                const toCoord = `${String.fromCharCode(97+toCol)}${8-toRow}`;
+                const targetPiece = board[toRow][toCol];
+                let isCapture = !!targetPiece;
+                let isCastle = (piece.type==='king' && Math.abs(toCol-fromCol)===2);
+                let isPromotion = (piece.type==='pawn' && (toRow===0 || toRow===7));
+
+                // Рокировка
+                if(isCastle){
                     const rookCol = toCol>fromCol ? 7 : 0;
                     const newRookCol = toCol>fromCol ? 5 : 3;
                     const rook = board[fromRow][rookCol];
@@ -8686,13 +8710,27 @@ if(p) {
                 board[toRow][toCol]=piece;
                 board[fromRow][fromCol]=null;
 
-                if(piece.type==='pawn' && (toRow===0 || toRow===7)){
+                if(isPromotion){
                     board[toRow][toCol]={type:'queen', color:piece.color};
                 }
 
+                const wasInCheck = isKingInCheck(pieceColor);
                 currentPlayer = currentPlayer==='white'?'black':'white';
                 turnSpan.innerText = currentPlayer==='white'?'белые':'чёрные';
                 checkGameOver();
+
+                // Подсказка для уровня "Новичок"
+                if(difficultySelect.value === 'novice'){
+                    let moveDesc = '';
+                    if(isCastle) moveDesc = `🏰 Рокировка! Король ${pieceColor==='white'?'белых':'чёрных'} с ${fromCoord} на ${toCoord}.`;
+                    else if(isPromotion) moveDesc = `⭐ Превращение пешки в ферзя на ${toCoord}.`;
+                    else if(isCapture) moveDesc = `⚔️ Взятие: ${pieceNames[pieceType]} ${pieceColor==='white'?'белых':'чёрных'} бьёт ${pieceNames[targetPiece.type]} ${targetPiece.color==='white'?'белых':'чёрных'} на ${toCoord}.`;
+                    else moveDesc = `➡️ Ход: ${pieceNames[pieceType]} ${pieceColor==='white'?'белых':'чёрных'} с ${fromCoord} на ${toCoord}.`;
+                    if(wasInCheck) moveDesc += ` ⚠️ Перед ходом король был под шахом! Ход отводит угрозу.`;
+                    const afterCheck = isKingInCheck(currentPlayer);
+                    if(afterCheck) moveDesc += ` 🚨 Теперь король ${currentPlayer==='white'?'белых':'чёрных'} под шахом!`;
+                    showHint(moveDesc);
+                }
                 return true;
             }
 
@@ -8715,17 +8753,20 @@ if(p) {
                     if(isKingInCheck(currentPlayer)){
                         const winner = currentPlayer==='white'?'чёрные':'белые';
                         statusSpan.innerText=`${winner} победили (мат)!`;
+                        if(difficultySelect.value === 'novice') showHint(`🏆 Мат! ${winner} выигрывают.`);
                     } else {
                         statusSpan.innerText='Пат! Ничья.';
+                        if(difficultySelect.value === 'novice') showHint(`♟️ Пат! Ничья, так как у игрока нет ходов, но король не под шахом.`);
                     }
                 } else if(isKingInCheck(currentPlayer)){
                     statusSpan.innerText=`${currentPlayer==='white'?'белые':'чёрные'} под шахом!`;
+                    if(difficultySelect.value === 'novice') showHint(`⚠️ Шах! Король ${currentPlayer==='white'?'белых':'чёрных'} под атакой. Защитите его!`);
                 } else {
                     statusSpan.innerText='';
                 }
             }
 
-            // ---- AI ----
+            // ---- AI (бота) с уровнем Novice ----
             function getAllMoves(color){
                 const moves=[];
                 for(let i=0;i<size;i++) for(let j=0;j<size;j++){
@@ -8752,7 +8793,8 @@ if(p) {
             function getBotMove(difficulty){
                 const moves = getAllMoves('black');
                 if(moves.length===0) return null;
-                if(difficulty==='easy'){
+                if(difficulty==='novice' || difficulty==='easy'){
+                    // Новичок: случайный ход (самый простой)
                     return moves[Math.floor(Math.random()*moves.length)];
                 } else if(difficulty==='medium'){
                     let bestScore=-Infinity, bestMoves=[];
@@ -8791,12 +8833,33 @@ if(p) {
                 await new Promise(r=>setTimeout(r,100));
                 const diff=difficultySelect.value;
                 const move=getBotMove(diff);
-                if(move) makeMove(move.from[0],move.from[1],move.to[0],move.to[1]);
+                if(move) {
+                    // Делаем ход бота с подсказкой (используем makeMoveWithHint)
+                    // Вызываем напрямую логику с подсказкой
+                    const from = move.from, to = move.to;
+                    const piece = board[from[0]][from[1]];
+                    if(piece && piece.color==='black'){
+                        const fromCoord = `${String.fromCharCode(97+from[1])}${8-from[0]}`;
+                        const toCoord = `${String.fromCharCode(97+to[1])}${8-to[0]}`;
+                        const targetPiece = board[to[0]][to[1]];
+                        makeMoveWithHint(from[0],from[1],to[0],to[1]);
+                        // Дополнительная подсказка для уровня новичок уже добавлена внутри makeMoveWithHint
+                    } else {
+                        // fallback
+                        makeMove(from[0],from[1],to[0],to[1]);
+                    }
+                }
                 drawBoard();
                 waitingForBot=false;
                 if(!gameOver && modeSelect.value==='bot' && currentPlayer==='black') botMoveIfNeeded();
             }
 
+            // Оригинальный makeMove (без подсказок) нужен для совместимости, но мы будем использовать makeMoveWithHint
+            function makeMove(fromRow,fromCol,toRow,toCol){
+                return makeMoveWithHint(fromRow,fromCol,toRow,toCol);
+            }
+
+            // Отрисовка
             function drawBoard(){
                 ctx.clearRect(0,0,400,400);
                 for(let i=0;i<size;i++){
@@ -8824,6 +8887,7 @@ if(p) {
                 }
             }
 
+            // Обработка кликов (с подсказкой при выборе фигуры)
             function handleCanvasClick(e){
                 if(gameOver) return;
                 if(modeSelect.value==='bot' && currentPlayer!=='white') return;
@@ -8852,9 +8916,13 @@ if(p) {
                         const moves=getPieceMoves(row,col,piece);
                         possibleMoves=moves.filter(([r,c])=>isValidMoveWithoutSelfCheck(row,col,r,c,piece));
                         drawBoard();
+                        // Показать подсказку, если уровень "Новичок"
+                        if(difficultySelect.value === 'novice'){
+                            showPieceHint(row, col, piece);
+                        }
                     }
                 } else {
-                    const success=makeMove(selectedRow,selectedCol,row,col);
+                    const success = makeMoveWithHint(selectedRow,selectedCol,row,col);
                     selectedRow=null;
                     selectedCol=null;
                     possibleMoves=[];
@@ -8879,6 +8947,7 @@ if(p) {
                 waitingForBot=false;
                 drawBoard();
                 if(modeSelect.value==='bot' && currentPlayer==='black') botMoveIfNeeded();
+                if(difficultySelect.value === 'novice') showHint('🆕 Новая игра. Вы играете белыми. Ходите первыми!');
             }
 
             canvas.addEventListener('click',handleCanvasClick);
