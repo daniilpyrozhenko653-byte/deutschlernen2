@@ -8992,8 +8992,8 @@ if(p) {
 
 
 
-    // ========== ФЕРМА 2.0: скроллинг, животные, грузовик, магазин ==========
-(function addAdvancedFarm() {
+    // ========== ФЕРМА 3.0: ПОЛНАЯ РЕАЛИСТИЧНАЯ ГРАФИКА, ЖИВОТНЫЕ, ДОМ ==========
+(function addRealisticFarmAnimals() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -9009,100 +9009,72 @@ if(p) {
         const farmIcon = document.createElement('div');
         farmIcon.id = 'gameFarmIcon';
         farmIcon.style.cssText = 'background:#1e272e; padding:15px 20px; border-radius:20px; cursor:pointer; text-align:center; width:130px;';
-        farmIcon.innerHTML = `<div style="font-size:48px;">🚜🌾</div><div style="color:white;">Ферма+</div>`;
+        farmIcon.innerHTML = `<div style="font-size:48px;">🐄🌾</div><div style="color:white;">Реал Ферма</div>`;
         gamesContainer.appendChild(farmIcon);
 
-        // ---------- ЛОГИКА ----------
-        function startFarm() {
+        function startRealisticFarm() {
             if (window.farmGameActive) {
                 window.farmGameActive.remove();
-                if (window.farmInterval) clearInterval(window.farmInterval);
-                if (window.truckInterval) clearInterval(window.truckInterval);
+                clearInterval(window.farmUpdate);
+                clearInterval(window.animalMoveInterval);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c5e2e; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
-                    <div style="background:#3c7840; padding:6px 10px; text-align:center; color:white; font-size:14px;">🚜 Ферма «Урожайная» — листай поле влево/вправо</div>
-                    <div style="position:relative;">
-                        <canvas id="farmCanvas" width="700" height="500" style="width:100%; height:auto; display:block; background:#6b8e23; cursor:grab;"></canvas>
-                    </div>
+                <div style="background:#2c5e2e; border-radius:20px; max-width:800px; width:95%; overflow:hidden;">
+                    <div style="background:#3c7840; padding:6px 10px; text-align:center; color:#ffecb3; font-size:16px;">🐄 РЕАЛЬНАЯ ФЕРМА · Дом · Животные · Грузовик</div>
+                    <canvas id="farmCanvas" width="760" height="520" style="width:100%; height:auto; display:block; cursor:grab;"></canvas>
                     <div style="display:flex; justify-content:space-between; background:#2c3e50; color:white; padding:5px 8px; font-size:12px; flex-wrap:wrap;">
-                        <span>💰 $<span id="farmMoney">500</span></span>
+                        <span>💰 $<span id="farmMoney">600</span></span>
                         <span>🌾 <span id="farmHarvest">0</span> кг</span>
-                        <span>🐔 <span id="farmEggs">0</span> 🥛 <span id="farmMilk">0</span> 🧶 <span id="farmWool">0</span></span>
+                        <span>🥚<span id="farmEggs">0</span> 🥛<span id="farmMilk">0</span> 🧶<span id="farmWool">0</span></span>
                     </div>
                     <div style="display:flex; flex-wrap:wrap; gap:4px; background:#34495e; padding:6px;">
-                        <select id="farmSeedSelect" style="background:#f39c12; padding:3px; border-radius:10px;">
+                        <select id="farmSeedSelect" style="background:#f39c12; padding:4px; border-radius:10px;">
                             <option value="wheat">🌾 Пшеница ($20)</option>
                             <option value="corn">🌽 Кукуруза ($15)</option>
                             <option value="tomato">🍅 Помидор ($25)</option>
                             <option value="pumpkin">🎃 Тыква ($40)</option>
                         </select>
-                        <button id="farmBuySeedsBtn" style="background:#27ae60; padding:3px 8px; border-radius:10px;">🛒 Купить семена</button>
-                        <button id="farmPlantBtn" style="background:#8e44ad; padding:3px 8px; border-radius:10px;">🌱 Посадить</button>
-                        <button id="farmWaterBtn" style="background:#3498db; padding:3px 8px; border-radius:10px;">💧 Полить</button>
-                        <button id="farmHarvestBtn" style="background:#e67e22; padding:3px 8px; border-radius:10px;">✂️ Собрать</button>
-                        <button id="farmSellAllBtn" style="background:#e74c3c; padding:3px 8px; border-radius:10px;">💰 Продать урожай</button>
-                        <button id="farmShopBtn" style="background:#f1c40f; color:#2c3e50; padding:3px 8px; border-radius:10px;">🐮 Магазин</button>
-                        <button id="farmCloseBtn" style="background:#7f8c8d; padding:3px 8px; border-radius:10px;">✖</button>
+                        <button id="farmBuySeedsBtn" style="background:#27ae60; padding:4px 8px; border-radius:10px;">🛒 Купить</button>
+                        <button id="farmPlantBtn" style="background:#8e44ad; padding:4px 8px; border-radius:10px;">🌱 Посадить</button>
+                        <button id="farmWaterBtn" style="background:#3498db; padding:4px 8px; border-radius:10px;">💧 Полить</button>
+                        <button id="farmHarvestBtn" style="background:#e67e22; padding:4px 8px; border-radius:10px;">✂️ Собрать</button>
+                        <button id="farmShopBtn" style="background:#f1c40f; color:#2c3e50; padding:4px 8px; border-radius:10px;">🐮 Магазин</button>
+                        <button id="farmCloseBtn" style="background:#7f8c8d; padding:4px 8px; border-radius:10px;">✖</button>
                     </div>
-                    <div style="display:flex; justify-content:center; gap:10px; background:#2c3e50; padding:5px;">
+                    <div style="display:flex; justify-content:space-between; background:#2c3e50; padding:5px;">
                         <button id="scrollLeft" style="background:#1abc9c; padding:2px 15px; border-radius:20px;">◀</button>
-                        <span style="color:white;">🚚 Грузовик: <span id="truckStatus">ждёт</span></span>
+                        <span>🚚 <span id="truckStatus">Грузовик ждёт</span></span>
                         <button id="scrollRight" style="background:#1abc9c; padding:2px 15px; border-radius:20px;">▶</button>
                     </div>
-                    <div id="farmToast" style="position:absolute; bottom:80px; left:50%; transform:translateX(-50%); background:#2ecc71; color:#fff; padding:4px 12px; border-radius:20px; font-size:11px; opacity:0; transition:0.2s; pointer-events:none; z-index:100003;"></div>
+                    <div id="farmToast" style="position:absolute; bottom:80px; left:50%; transform:translateX(-50%); background:#2ecc71; padding:4px 12px; border-radius:20px; color:white; font-size:11px; opacity:0; transition:0.2s; pointer-events:none;"></div>
                 </div>
             `;
             document.body.appendChild(gameDiv);
             window.farmGameActive = gameDiv;
 
-            // DOM элементы
-            const canvas = document.getElementById('farmCanvas');
-            const ctx = canvas.getContext('2d');
-            const moneySpan = document.getElementById('farmMoney');
-            const harvestSpan = document.getElementById('farmHarvest');
-            const eggsSpan = document.getElementById('farmEggs');
-            const milkSpan = document.getElementById('farmMilk');
-            const woolSpan = document.getElementById('farmWool');
-            const truckStatusSpan = document.getElementById('truckStatus');
-            const seedSelect = document.getElementById('farmSeedSelect');
-            const buySeedsBtn = document.getElementById('farmBuySeedsBtn');
-            const plantBtn = document.getElementById('farmPlantBtn');
-            const waterBtn = document.getElementById('farmWaterBtn');
-            const harvestBtn = document.getElementById('farmHarvestBtn');
-            const sellAllBtn = document.getElementById('farmSellAllBtn');
-            const shopBtn = document.getElementById('farmShopBtn');
-            const closeBtn = document.getElementById('farmCloseBtn');
-            const scrollLeftBtn = document.getElementById('scrollLeft');
-            const scrollRightBtn = document.getElementById('scrollRight');
-            const toastDiv = document.getElementById('farmToast');
-
-            // ---- Параметры ВСЕГО участка (широкий мир) ----
-            const WORLD_WIDTH = 24;   // клеток по горизонтали
-            const WORLD_HEIGHT = 12;  // по вертикали
-            const VISIBLE_COLS = 12;   // сколько клеток видно на экране (canvas 700px, cellSize~58)
-            let scrollX = 0;           // смещение в клетках (0..WORLD_WIDTH-VISIBLE_COLS)
+            // ---------- КОНСТАНТЫ ----------
+            const WORLD_WIDTH = 28;    // клеток по горизонтали
+            const WORLD_HEIGHT = 14;
+            const VISIBLE_COLS = 14;   // видно 14 клеток (canvas 760, cellW~54)
+            let scrollX = 0;
             
-            // Данные поля
             let plots = [];
-            let money = 500;
+            let money = 600;
             let harvestedTotal = 0;
-            let seedsCount = { wheat: 5, corn: 5, tomato: 5, pumpkin: 5 };
-            let animals = []; // каждый { type, x, y, productTimer }
+            let seedsCount = { wheat: 6, corn: 6, tomato: 6, pumpkin: 6 };
+            let animals = [];
             let animalProducts = { eggs: 0, milk: 0, wool: 0 };
             
-            // Грузовик
             let truckState = 'waiting'; // waiting, gone, returning
-            let truckArrivalTime = 0;
             let pendingMoney = 0;
             
             const cropPrices = { wheat: 20, corn: 15, tomato: 25, pumpkin: 40 };
-            const growthTimes = { wheat: 180, corn: 120, tomato: 60, pumpkin: 240 };
-            const animalPrices = { chicken: 50, cow: 150, sheep: 120 };
-            const animalProductsInterval = 30; // секунд на продукт
+            const growthTimes = { wheat: 150, corn: 120, tomato: 70, pumpkin: 200 };
+            const animalPrices = { chicken: 55, cow: 180, sheep: 140 };
+            const animalProductInterval = 25; // сек
             
             // Инициализация поля
             for (let i = 0; i < WORLD_HEIGHT; i++) {
@@ -9112,10 +9084,39 @@ if(p) {
                 }
             }
             
-            // Несколько стартовых животных (для красоты)
-            animals.push({ type: 'chicken', x: 3, y: 2, productTimer: 0 });
-            animals.push({ type: 'cow', x: 18, y: 2, productTimer: 0 });
-            animals.push({ type: 'sheep', x: 20, y: 3, productTimer: 0 });
+            // Стартовые животные (будут ходить)
+            animals.push({ type: 'chicken', x: 5, y: 3, productTimer: 0, vx: 0, vy: 0 });
+            animals.push({ type: 'cow', x: 20, y: 4, productTimer: 0, vx: 0, vy: 0 });
+            animals.push({ type: 'sheep', x: 22, y: 5, productTimer: 0, vx: 0, vy: 0 });
+            animals.push({ type: 'chicken', x: 8, y: 6, productTimer: 0, vx: 0, vy: 0 });
+            
+            // DOM
+            const canvas = document.getElementById('farmCanvas');
+            const ctx = canvas.getContext('2d');
+            const moneySpan = document.getElementById('farmMoney');
+            const harvestSpan = document.getElementById('farmHarvest');
+            const eggsSpan = document.getElementById('farmEggs');
+            const milkSpan = document.getElementById('farmMilk');
+            const woolSpan = document.getElementById('farmWool');
+            const truckSpan = document.getElementById('truckStatus');
+            const toastDiv = document.getElementById('farmToast');
+            const seedSelect = document.getElementById('farmSeedSelect');
+            const buyBtn = document.getElementById('farmBuySeedsBtn');
+            const plantBtn = document.getElementById('farmPlantBtn');
+            const waterBtn = document.getElementById('farmWaterBtn');
+            const harvestBtn = document.getElementById('farmHarvestBtn');
+            const shopBtn = document.getElementById('farmShopBtn');
+            const closeBtn = document.getElementById('farmCloseBtn');
+            const scrollLeftBtn = document.getElementById('scrollLeft');
+            const scrollRightBtn = document.getElementById('scrollRight');
+            
+            function showToast(msg, err = false) {
+                toastDiv.innerText = msg;
+                toastDiv.style.backgroundColor = err ? '#e74c3c' : '#2ecc71';
+                toastDiv.style.opacity = '1';
+                if (window.tto) clearTimeout(window.tto);
+                window.tto = setTimeout(() => toastDiv.style.opacity = '0', 1800);
+            }
             
             function updateUI() {
                 moneySpan.innerText = money;
@@ -9125,92 +9126,76 @@ if(p) {
                 woolSpan.innerText = animalProducts.wool;
             }
             
-            function showToast(msg, isError=false) {
-                toastDiv.innerText = msg;
-                toastDiv.style.backgroundColor = isError ? '#e74c3c' : '#2ecc71';
-                toastDiv.style.opacity = '1';
-                if (window.farmToastTimeout) clearTimeout(window.farmToastTimeout);
-                window.farmToastTimeout = setTimeout(() => toastDiv.style.opacity = '0', 1800);
-            }
-            
-            // ---- Магазин животных ----
-            function openAnimalShop() {
-                const shopDiv = document.createElement('div');
-                shopDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; z-index:100004; color:white; text-align:center; width:250px;';
-                shopDiv.innerHTML = `
-                    <h3>🐮 Магазин животных</h3>
-                    <button id="buyChicken" style="background:#f39c12; margin:5px; padding:5px;">🐔 Курица - $50</button><br>
-                    <button id="buyCow" style="background:#e67e22; margin:5px; padding:5px;">🐮 Корова - $150</button><br>
-                    <button id="buySheep" style="background:#3498db; margin:5px; padding:5px;">🐑 Овца - $120</button><br>
+            // ---- Магазин животных (реалистичные цены) ----
+            function openShop() {
+                const win = document.createElement('div');
+                win.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; padding:20px; border-radius:20px; color:white; text-align:center; z-index:100004; width:260px;';
+                win.innerHTML = `
+                    <h3>🐄 ФЕРМЕРСКИЙ МАГАЗИН</h3>
+                    <button id="buyChick" style="background:#e67e22; margin:5px; padding:8px;">🐔 Курица - $55</button><br>
+                    <button id="buyCow" style="background:#e67e22; margin:5px; padding:8px;">🐮 Корова - $180</button><br>
+                    <button id="buySheep" style="background:#e67e22; margin:5px; padding:8px;">🐑 Овца - $140</button><br>
                     <button id="closeShop" style="background:#c0392b; margin-top:10px;">Закрыть</button>
                 `;
-                document.body.appendChild(shopDiv);
-                const buyChicken = () => {
-                    if (money >= 50) { money -= 50; animals.push({ type: 'chicken', x: Math.floor(Math.random()*WORLD_WIDTH), y: Math.floor(Math.random()*WORLD_HEIGHT), productTimer: 0 }); updateUI(); showToast('Курица куплена!'); shopDiv.remove(); }
-                    else showToast('Не хватает денег', true);
+                document.body.appendChild(win);
+                const buy = (type, price) => {
+                    if (money >= price) {
+                        money -= price;
+                        animals.push({ type, x: Math.floor(Math.random()*(WORLD_WIDTH-2))+1, y: Math.floor(Math.random()*(WORLD_HEIGHT-2))+1, productTimer: 0, vx: 0, vy: 0 });
+                        updateUI();
+                        showToast(`Куплена ${type === 'chicken' ? 'курица' : type === 'cow' ? 'корова' : 'овца'}`, false);
+                        win.remove();
+                    } else showToast('Не хватает денег', true);
                 };
-                const buyCow = () => {
-                    if (money >= 150) { money -= 150; animals.push({ type: 'cow', x: Math.floor(Math.random()*WORLD_WIDTH), y: Math.floor(Math.random()*WORLD_HEIGHT), productTimer: 0 }); updateUI(); showToast('Корова куплена!'); shopDiv.remove(); }
-                    else showToast('Не хватает денег', true);
-                };
-                const buySheep = () => {
-                    if (money >= 120) { money -= 120; animals.push({ type: 'sheep', x: Math.floor(Math.random()*WORLD_WIDTH), y: Math.floor(Math.random()*WORLD_HEIGHT), productTimer: 0 }); updateUI(); showToast('Овца куплена!'); shopDiv.remove(); }
-                    else showToast('Не хватает денег', true);
-                };
-                shopDiv.querySelector('#buyChicken').onclick = buyChicken;
-                shopDiv.querySelector('#buyCow').onclick = buyCow;
-                shopDiv.querySelector('#buySheep').onclick = buySheep;
-                shopDiv.querySelector('#closeShop').onclick = () => shopDiv.remove();
+                win.querySelector('#buyChick').onclick = () => buy('chicken', 55);
+                win.querySelector('#buyCow').onclick = () => buy('cow', 180);
+                win.querySelector('#buySheep').onclick = () => buy('sheep', 140);
+                win.querySelector('#closeShop').onclick = () => win.remove();
             }
             
-            // ---- Грузовик: вызвать продажу ----
+            // ---- Грузовик ----
             function callTruck() {
-                if (truckState !== 'waiting') { showToast('Грузовик уже в пути или уехал', true); return; }
-                // Собираем созревшие культуры
-                let totalHarvest = 0;
+                if (truckState !== 'waiting') { showToast('Грузовик уже в пути', true); return; }
+                let total = 0;
                 for (let i=0; i<WORLD_HEIGHT; i++) {
                     for (let j=0; j<WORLD_WIDTH; j++) {
                         const p = plots[i][j];
                         if (p.crop && (Date.now()/1000 - p.plantedAt) >= growthTimes[p.crop]) {
-                            const amount = 10 * (p.watered ? 1.5 : 1);
-                            totalHarvest += cropPrices[p.crop] * amount;
-                            // Сбрасываем грядку
+                            total += cropPrices[p.crop] * 10 * (p.watered ? 1.5 : 1);
                             plots[i][j] = { crop: null, plantedAt: 0, stage: 0, watered: false };
                         }
                     }
                 }
-                if (totalHarvest === 0) { showToast('Нет готового урожая для продажи!', true); return; }
-                pendingMoney = totalHarvest;
+                if (total === 0) { showToast('Нет спелого урожая', true); return; }
+                pendingMoney = total;
                 truckState = 'gone';
-                truckStatusSpan.innerText = 'уехал (вернётся через 10 сек)';
+                truckSpan.innerText = 'Грузовик уехал';
                 drawFarm();
-                showToast(`Грузовик увёз урожай на $${totalHarvest}`, false);
                 setTimeout(() => {
                     if (truckState === 'gone') {
                         truckState = 'returning';
-                        truckStatusSpan.innerText = 'вернулся! Нажми на него';
+                        truckSpan.innerText = 'Вернулся! Нажми на него';
                         drawFarm();
                     }
                 }, 10000);
             }
             
-            function collectMoneyFromTruck() {
+            function collectFromTruck() {
                 if (truckState !== 'returning') { showToast('Грузовик ещё не вернулся', true); return; }
                 money += pendingMoney;
-                harvestedTotal += pendingMoney / 20; // примерно
+                harvestedTotal += pendingMoney / 20;
                 pendingMoney = 0;
                 truckState = 'waiting';
-                truckStatusSpan.innerText = 'ждёт';
+                truckSpan.innerText = 'Грузовик ждёт';
                 updateUI();
                 drawFarm();
                 showToast(`Получено $${money}`, false);
             }
             
-            // ---- Действия с растениями ----
-            function plantCrop(row, col, crop) {
-                if (row<0 || row>=WORLD_HEIGHT || col<0 || col>=WORLD_WIDTH) return false;
+            // ---- Растения ----
+            function plant(row, col, crop) {
                 if (seedsCount[crop] <= 0) { showToast(`Нет семян ${crop}`, true); return false; }
-                if (plots[row][col].crop !== null) { showToast('Здесь уже что-то растёт', true); return false; }
+                if (plots[row][col].crop) { showToast('Занято', true); return false; }
                 plots[row][col] = { crop, plantedAt: Date.now()/1000, stage: 0, watered: false };
                 seedsCount[crop]--;
                 updateUI();
@@ -9219,8 +9204,8 @@ if(p) {
                 return true;
             }
             
-            function waterCrop(row, col) {
-                if (plots[row][col].crop === null) { showToast('Пустая грядка', true); return false; }
+            function water(row, col) {
+                if (!plots[row][col].crop) { showToast('Пусто', true); return false; }
                 if (plots[row][col].watered) { showToast('Уже полито', true); return false; }
                 plots[row][col].watered = true;
                 drawFarm();
@@ -9228,90 +9213,106 @@ if(p) {
                 return true;
             }
             
-            function harvestCrop(row, col) {
+            function harvest(row, col) {
                 const p = plots[row][col];
                 if (!p.crop) { showToast('Ничего нет', true); return false; }
                 const age = Date.now()/1000 - p.plantedAt;
-                if (age < growthTimes[p.crop]) { showToast('Ещё не созрело', true); return false; }
+                if (age < growthTimes[p.crop]) { showToast('Не созрело', true); return false; }
                 const amount = 10 * (p.watered ? 1.5 : 1);
                 money += cropPrices[p.crop] * amount;
                 harvestedTotal += amount;
                 plots[row][col] = { crop: null, plantedAt: 0, stage: 0, watered: false };
                 updateUI();
                 drawFarm();
-                showToast(`Собрано ${amount} кг ${p.crop} за $${cropPrices[p.crop]*amount}`, false);
+                showToast(`Собрано +$${cropPrices[p.crop]*amount}`, false);
                 return true;
             }
             
-            // ---- Обновление роста и животных ----
-            function updateGrowthAndAnimals() {
+            // ---- Движение животных ----
+            function moveAnimals() {
+                for (let a of animals) {
+                    // случайное блуждание
+                    if (Math.random() < 0.05) {
+                        a.vx = (Math.random() - 0.5) * 0.8;
+                        a.vy = (Math.random() - 0.5) * 0.8;
+                    }
+                    a.x += a.vx;
+                    a.y += a.vy;
+                    a.x = Math.min(Math.max(a.x, 1), WORLD_WIDTH - 2);
+                    a.y = Math.min(Math.max(a.y, 1), WORLD_HEIGHT - 2);
+                    // продукция
+                    a.productTimer = (a.productTimer || 0) + 1;
+                    if (a.productTimer >= animalProductInterval) {
+                        a.productTimer = 0;
+                        if (a.type === 'chicken') animalProducts.eggs++;
+                        else if (a.type === 'cow') animalProducts.milk++;
+                        else if (a.type === 'sheep') animalProducts.wool++;
+                        updateUI();
+                    }
+                }
+                drawFarm();
+            }
+            
+            // ---- Рост культур ----
+            function updateGrowth() {
                 const now = Date.now()/1000;
                 let changed = false;
                 for (let i=0; i<WORLD_HEIGHT; i++) {
                     for (let j=0; j<WORLD_WIDTH; j++) {
                         const p = plots[i][j];
                         if (p.crop) {
-                            const stageFloat = (now - p.plantedAt) / growthTimes[p.crop] * 4;
-                            let newStage = Math.min(3, Math.floor(stageFloat));
+                            let newStage = Math.min(3, Math.floor((now - p.plantedAt) / growthTimes[p.crop] * 4));
                             if (newStage !== p.stage) { p.stage = newStage; changed = true; }
                         }
-                    }
-                }
-                for (let a of animals) {
-                    a.productTimer = (a.productTimer || 0) + 1;
-                    if (a.productTimer >= animalProductsInterval) {
-                        a.productTimer = 0;
-                        if (a.type === 'chicken') animalProducts.eggs += 1;
-                        else if (a.type === 'cow') animalProducts.milk += 1;
-                        else if (a.type === 'sheep') animalProducts.wool += 1;
-                        updateUI();
-                        changed = true;
                     }
                 }
                 if (changed) drawFarm();
             }
             
-            // ---- Отрисовка всего мира с камерой ----
+            // ---- ПОЛНАЯ РЕАЛИСТИЧНАЯ ОТРИСОВКА (дом, животные, растения) ----
             function drawFarm() {
-                canvas.width = 700; canvas.height = 500;
+                canvas.width = 760; canvas.height = 520;
                 const cellW = canvas.width / VISIBLE_COLS;
                 const cellH = canvas.height / WORLD_HEIGHT;
-                // Фон
+                
+                // Фон земли
                 ctx.fillStyle = '#6b8e23';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // Дом (в левой части, не скроллится)
-                ctx.fillStyle = '#b87c4f';
-                ctx.fillRect(20, 20, 100, 80);
-                ctx.fillStyle = '#c0392b';
-                ctx.fillRect(55, 50, 30, 40);
-                ctx.fillStyle = '#f1c40f';
-                ctx.beginPath();
-                ctx.moveTo(10,20);
-                ctx.lineTo(130,20);
-                ctx.lineTo(70,0);
-                ctx.fill();
-                // Животные (отрисовка относительно их координат с учётом скролла)
-                for (let a of animals) {
-                    const screenX = (a.x - scrollX) * cellW;
-                    if (screenX + cellW < 0 || screenX > canvas.width) continue;
-                    const y = a.y * cellH;
-                    if (a.type === 'chicken') {
-                        ctx.fillStyle = '#e67e22';
-                        ctx.beginPath(); ctx.ellipse(screenX+cellW/2, y+cellH/2, 12, 10, 0, 0, 2*Math.PI); ctx.fill();
-                        ctx.fillStyle = '#d35400';
-                        ctx.fillRect(screenX+cellW/2+2, y+cellH/2-6, 4, 6);
-                    } else if (a.type === 'cow') {
-                        ctx.fillStyle = '#fff';
-                        ctx.fillRect(screenX+5, y+5, 30, 25);
-                        ctx.fillStyle = '#000';
-                        ctx.fillRect(screenX+10, y+25, 5, 5);
-                        ctx.fillRect(screenX+25, y+25, 5, 5);
-                    } else if (a.type === 'sheep') {
-                        ctx.fillStyle = '#ddd';
-                        ctx.beginPath(); ctx.ellipse(screenX+cellW/2, y+cellH/2, 15, 12, 0, 0, 2*Math.PI); ctx.fill();
-                    }
+                // Трава с бликами
+                for (let i=0;i<300;i++) {
+                    ctx.fillStyle = `rgba(80,120,40,${Math.random()*0.5})`;
+                    ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
                 }
-                // Грядки (только видимые)
+                
+                // ----- ДОМ (реалистичный, всегда виден слева, не скроллится) -----
+                ctx.fillStyle = '#bc9a6c';
+                ctx.fillRect(15, canvas.height-180, 100, 120);
+                ctx.fillStyle = '#a0522d';
+                ctx.fillRect(45, canvas.height-130, 40, 70);
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.moveTo(5, canvas.height-180);
+                ctx.lineTo(125, canvas.height-180);
+                ctx.lineTo(65, canvas.height-220);
+                ctx.fill();
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(25, canvas.height-150, 12, 12);
+                ctx.fillRect(80, canvas.height-150, 12, 12);
+                ctx.fillStyle = '#c0392b';
+                ctx.fillRect(60, canvas.height-100, 10, 20);
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fillRect(50, canvas.height-190, 30, 10);
+                // Дым из трубы
+                ctx.fillStyle = 'rgba(200,200,200,0.6)';
+                ctx.beginPath(); ctx.ellipse(55, canvas.height-205, 8, 6, 0, 0, 2*Math.PI); ctx.fill();
+                
+                // ----- ЗАБОР (декоративный) -----
+                ctx.fillStyle = '#8B5A2B';
+                for (let i=0;i<6;i++) {
+                    ctx.fillRect(130 + i*15, canvas.height-70, 4, 25);
+                }
+                
+                // ----- ГРЯДКИ (отрисовка только видимой области) -----
                 for (let i=0; i<WORLD_HEIGHT; i++) {
                     for (let j=scrollX; j<Math.min(WORLD_WIDTH, scrollX+VISIBLE_COLS); j++) {
                         const x = (j - scrollX) * cellW;
@@ -9323,56 +9324,93 @@ if(p) {
                         const p = plots[i][j];
                         if (p.crop) {
                             const cx = x + cellW/2;
-                            const baseY = y + cellH - 10;
+                            const baseY = y + cellH - 8;
+                            // Реалистичные растения по стадиям
                             if (p.crop === 'wheat') {
-                                ctx.fillStyle = '#f4d03f';
-                                for (let k=0; k<p.stage+1; k++) ctx.fillRect(cx-3, baseY - k*7, 6, 5);
-                                ctx.fillStyle = '#b8860b';
-                                ctx.fillRect(cx-1, baseY, 2, 12);
+                                ctx.fillStyle = '#c5a059';
+                                ctx.fillRect(cx-2, baseY-5, 4, 12);
+                                for (let k=0; k<p.stage+1; k++) {
+                                    ctx.fillStyle = '#f4d03f';
+                                    ctx.fillRect(cx-3, baseY-8 - k*6, 6, 4);
+                                }
                             } else if (p.crop === 'corn') {
+                                ctx.fillStyle = '#8B5A2B';
+                                ctx.fillRect(cx-3, baseY-14, 6, 18);
                                 ctx.fillStyle = '#f39c12';
-                                ctx.fillRect(cx-4, baseY-12, 8, 18);
-                                for (let k=0; k<p.stage; k++) ctx.fillRect(cx-2, baseY-4 - k*5, 4, 4);
+                                for (let k=0; k<=p.stage; k++) ctx.fillRect(cx-4, baseY-6 - k*5, 8, 3);
                             } else if (p.crop === 'tomato') {
-                                ctx.fillStyle = '#e74c3c';
-                                ctx.beginPath(); ctx.arc(cx, baseY-6, 6, 0, 2*Math.PI); ctx.fill();
                                 ctx.fillStyle = '#27ae60';
-                                ctx.fillRect(cx-1, baseY-10, 2, 10);
+                                ctx.fillRect(cx-2, baseY-10, 4, 14);
+                                ctx.fillStyle = '#e74c3c';
+                                ctx.beginPath(); ctx.arc(cx, baseY-6, 5, 0, 2*Math.PI); ctx.fill();
                             } else if (p.crop === 'pumpkin') {
                                 ctx.fillStyle = '#e67e22';
-                                ctx.beginPath(); ctx.ellipse(cx, baseY-5, 8, 6, 0, 0, 2*Math.PI); ctx.fill();
+                                ctx.beginPath(); ctx.ellipse(cx, baseY-5, 7, 5, 0, 0, 2*Math.PI); ctx.fill();
                             }
                             if (p.watered) {
-                                ctx.fillStyle = 'rgba(100,200,255,0.3)';
+                                ctx.fillStyle = 'rgba(100,200,255,0.25)';
                                 ctx.fillRect(x+2, y+2, cellW-4, cellH-4);
                             }
                             if (p.stage === 3) {
                                 ctx.fillStyle = '#ffd700';
-                                ctx.beginPath(); ctx.arc(cx, baseY-8, 5, 0, 2*Math.PI); ctx.fill();
+                                ctx.beginPath(); ctx.arc(cx, baseY-10, 5, 0, 2*Math.PI); ctx.fill();
                             }
                         } else {
                             ctx.fillStyle = '#5d3a1a';
-                            ctx.fillRect(x+5, y+cellH/2-3, cellW-10, 3);
+                            ctx.fillRect(x+5, y+cellH/2-2, cellW-10, 3);
                         }
                     }
                 }
-                // Грузовик (в правом нижнем углу всегда)
+                
+                // ----- ЖИВОТНЫЕ (реалистичные, с анимацией положения) -----
+                for (let a of animals) {
+                    const screenX = (a.x - scrollX) * cellW;
+                    if (screenX + cellW < 0 || screenX > canvas.width) continue;
+                    const yPos = a.y * cellH;
+                    if (a.type === 'chicken') {
+                        ctx.fillStyle = '#e67e22';
+                        ctx.beginPath(); ctx.ellipse(screenX+cellW/2, yPos+cellH/2, 9, 8, 0, 0, 2*Math.PI); ctx.fill();
+                        ctx.fillStyle = '#d35400';
+                        ctx.beginPath(); ctx.moveTo(screenX+cellW/2+5, yPos+cellH/2-4); ctx.lineTo(screenX+cellW/2+10, yPos+cellH/2-6); ctx.lineTo(screenX+cellW/2+5, yPos+cellH/2-2); ctx.fill();
+                        ctx.fillStyle = '#000'; ctx.fillRect(screenX+cellW/2-3, yPos+cellH/2-2, 2, 2);
+                    } else if (a.type === 'cow') {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(screenX+5, yPos+5, 30, 22);
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(screenX+10, yPos+20, 4, 4);
+                        ctx.fillRect(screenX+24, yPos+20, 4, 4);
+                        ctx.fillStyle = '#a55';
+                        ctx.fillRect(screenX+15, yPos+10, 5, 8);
+                    } else if (a.type === 'sheep') {
+                        ctx.fillStyle = '#f0f0f0';
+                        ctx.beginPath(); ctx.ellipse(screenX+cellW/2, yPos+cellH/2, 12, 9, 0, 0, 2*Math.PI); ctx.fill();
+                        ctx.fillStyle = '#888';
+                        ctx.fillRect(screenX+cellW/2-4, yPos+cellH/2-3, 2, 5);
+                        ctx.fillRect(screenX+cellW/2+2, yPos+cellH/2-3, 2, 5);
+                    }
+                }
+                
+                // ----- ГРУЗОВИК (внизу справа) -----
                 if (truckState === 'returning') {
                     ctx.fillStyle = '#2ecc71';
-                    ctx.fillRect(canvas.width-90, canvas.height-50, 80, 40);
+                    ctx.fillRect(canvas.width-100, canvas.height-55, 90, 40);
                     ctx.fillStyle = '#27ae60';
-                    ctx.fillRect(canvas.width-80, canvas.height-60, 20, 20);
+                    ctx.fillRect(canvas.width-85, canvas.height-70, 25, 20);
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(canvas.width-95, canvas.height-45, 80, 5);
                 } else {
                     ctx.fillStyle = '#e67e22';
-                    ctx.fillRect(canvas.width-90, canvas.height-50, 80, 40);
+                    ctx.fillRect(canvas.width-100, canvas.height-55, 90, 40);
                     ctx.fillStyle = '#d35400';
-                    ctx.fillRect(canvas.width-80, canvas.height-60, 20, 20);
+                    ctx.fillRect(canvas.width-85, canvas.height-70, 25, 20);
+                    ctx.fillStyle = '#555';
+                    ctx.fillRect(canvas.width-95, canvas.height-45, 80, 5);
                 }
                 ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(canvas.width-95, canvas.height-45, 10, 30);
+                ctx.fillRect(canvas.width-105, canvas.height-48, 10, 25);
             }
             
-            // ---- Обработка кликов по грядкам или грузовику ----
+            // ---- Взаимодействие с грядками и грузовиком ----
             let selectedTool = 'plant';
             function handleCanvasClick(e) {
                 const rect = canvas.getBoundingClientRect();
@@ -9383,11 +9421,11 @@ if(p) {
                 else { cx = e.clientX; cy = e.clientY; }
                 const canvasX = (cx - rect.left) * scaleX;
                 const canvasY = (cy - rect.top) * scaleY;
-                // Проверка клика по грузовику
-                if (canvasX > canvas.width-100 && canvasY > canvas.height-60) {
-                    if (truckState === 'returning') collectMoneyFromTruck();
+                // клик по грузовику
+                if (canvasX > canvas.width-110 && canvasY > canvas.height-70) {
+                    if (truckState === 'returning') collectFromTruck();
                     else if (truckState === 'waiting') callTruck();
-                    else showToast('Грузовик в пути', true);
+                    else showToast('Грузовик в дороге', true);
                     return;
                 }
                 const cellW = canvas.width / VISIBLE_COLS;
@@ -9395,27 +9433,26 @@ if(p) {
                 const col = Math.floor(canvasX / cellW) + scrollX;
                 const row = Math.floor(canvasY / cellH);
                 if (row>=0 && row<WORLD_HEIGHT && col>=0 && col<WORLD_WIDTH) {
-                    if (selectedTool === 'plant') plantCrop(row, col, seedSelect.value);
-                    else if (selectedTool === 'water') waterCrop(row, col);
-                    else if (selectedTool === 'harvest') harvestCrop(row, col);
+                    if (selectedTool === 'plant') plant(row, col, seedSelect.value);
+                    else if (selectedTool === 'water') water(row, col);
+                    else if (selectedTool === 'harvest') harvest(row, col);
                 }
             }
             
-            // ---- Скроллинг ----
+            // ----- СКРОЛЛИНГ -----
             function scroll(delta) {
-                let newScroll = scrollX + delta;
-                newScroll = Math.min(Math.max(newScroll, 0), WORLD_WIDTH - VISIBLE_COLS);
-                if (newScroll !== scrollX) { scrollX = newScroll; drawFarm(); }
+                let ns = scrollX + delta;
+                ns = Math.min(Math.max(ns, 0), WORLD_WIDTH - VISIBLE_COLS);
+                if (ns !== scrollX) { scrollX = ns; drawFarm(); }
             }
             
             scrollLeftBtn.onclick = () => scroll(-3);
             scrollRightBtn.onclick = () => scroll(3);
-            // Свайп (простой для мыши/тач)
             let startX = 0;
-            canvas.addEventListener('mousedown', (e) => { startX = e.clientX; });
-            canvas.addEventListener('mouseup', (e) => { if (startX - e.clientX > 50) scroll(3); else if (e.clientX - startX > 50) scroll(-3); });
-            canvas.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; });
-            canvas.addEventListener('touchend', (e) => { if (startX - e.changedTouches[0].clientX > 50) scroll(3); else if (e.changedTouches[0].clientX - startX > 50) scroll(-3); });
+            canvas.addEventListener('mousedown', e => startX = e.clientX);
+            canvas.addEventListener('mouseup', e => { if (startX - e.clientX > 50) scroll(3); else if (e.clientX - startX > 50) scroll(-3); });
+            canvas.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+            canvas.addEventListener('touchend', e => { if (startX - e.changedTouches[0].clientX > 50) scroll(3); else if (e.changedTouches[0].clientX - startX > 50) scroll(-3); });
             
             canvas.addEventListener('click', handleCanvasClick);
             canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasClick(e); });
@@ -9423,22 +9460,21 @@ if(p) {
             plantBtn.onclick = () => { selectedTool = 'plant'; showToast('Режим посадки'); };
             waterBtn.onclick = () => { selectedTool = 'water'; showToast('Режим полива'); };
             harvestBtn.onclick = () => { selectedTool = 'harvest'; showToast('Режим сбора'); };
-            buySeedsBtn.onclick = () => {
+            buyBtn.onclick = () => {
                 const crop = seedSelect.value;
                 const price = cropPrices[crop];
                 if (money >= price) { money -= price; seedsCount[crop]++; updateUI(); showToast(`Куплены семена ${crop}`); }
                 else showToast('Не хватает денег', true);
             };
-            sellAllBtn.onclick = callTruck; // упрощённо: продажа через грузовик
-            shopBtn.onclick = openAnimalShop;
-            closeBtn.onclick = () => { if (window.farmInterval) clearInterval(window.farmInterval); window.farmGameActive.remove(); window.farmGameActive = null; };
+            shopBtn.onclick = openShop;
+            closeBtn.onclick = () => { clearInterval(window.farmUpdate); clearInterval(window.animalMoveInterval); window.farmGameActive.remove(); window.farmGameActive = null; };
             
-            // Таймеры
-            window.farmInterval = setInterval(() => { if (window.farmGameActive) updateGrowthAndAnimals(); }, 1000);
+            window.farmUpdate = setInterval(() => { if (window.farmGameActive) updateGrowth(); }, 1000);
+            window.animalMoveInterval = setInterval(() => { if (window.farmGameActive) moveAnimals(); }, 800);
             updateUI();
             drawFarm();
         }
-        farmIcon.onclick = () => { document.getElementById('unifiedGamePanel').style.display='none'; startFarm(); };
+        farmIcon.onclick = () => { document.getElementById('unifiedGamePanel').style.display='none'; startRealisticFarm(); };
     });
 })();
     
