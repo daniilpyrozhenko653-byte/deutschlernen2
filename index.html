@@ -8988,8 +8988,8 @@ if(p) {
 
 
 
-    // ========== MINECRAFT LITE 2D: ГОТОВАЯ КАРТА, МЕЧ, МОНСТРЫ, ДОМА ==========
-(function addMinecraftFixed() {
+    // ========== ФЕРМА: симулятор фермы без игрока ==========
+(function addFarmGame() {
     function waitForPanel(callback) {
         const panel = document.getElementById('unifiedGamePanel');
         if (panel) callback(panel);
@@ -8997,482 +8997,271 @@ if(p) {
     }
 
     waitForPanel((panel) => {
-        if (document.getElementById('gameMinecraftIcon')) return;
+        if (document.getElementById('gameFarmIcon')) return;
 
         const gamesContainer = panel.querySelector('div[style*="flex-wrap"]');
         if (!gamesContainer) return;
 
-        const minecraftIcon = document.createElement('div');
-        minecraftIcon.id = 'gameMinecraftIcon';
-        minecraftIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
-        minecraftIcon.innerHTML = `<div style="font-size:48px;">⚔️🏠</div><div style="color:white;">Minecraft 2D</div>`;
-        gamesContainer.appendChild(minecraftIcon);
+        const farmIcon = document.createElement('div');
+        farmIcon.id = 'gameFarmIcon';
+        farmIcon.style.cssText = 'background:#1e272e; padding:12px; border-radius:20px; cursor:pointer; text-align:center; width:120px;';
+        farmIcon.innerHTML = `<div style="font-size:48px;">🌾🐄</div><div style="color:white;">Ферма</div>`;
+        gamesContainer.appendChild(farmIcon);
 
-        function startGame() {
-            if (window.mcGameActive) {
-                window.mcGameActive.remove();
-                if (window.mcAnimFrame) cancelAnimationFrame(window.mcAnimFrame);
+        function startFarm() {
+            if (window.farmGameActive) {
+                window.farmGameActive.remove();
+                if (window.farmInterval) clearInterval(window.farmInterval);
             }
 
             const gameDiv = document.createElement('div');
             gameDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100002; display:flex; align-items:center; justify-content:center; touch-action:none;';
             gameDiv.innerHTML = `
-                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:750px; overflow:hidden;">
-                    <div style="background:#5d3a1a; padding:6px; text-align:center; color:white; font-weight:bold;">⚔️ MINECRAFT 2D — готовая карта, меч, монстры</div>
-                    <canvas id="mcCanvas" width="640" height="480" style="width:100%; height:auto; display:block; background:#87CEEB;"></canvas>
-                    <div style="display:flex; justify-content:space-between; padding:6px; background:#2c3e50; color:white; font-size:11px; flex-wrap:wrap;">
-                        <span>🪓 Режим: <span id="mcMode">копать/строить</span></span>
-                        <span>⚔️ Оружие: <span id="mcWeapon">меч (убивает)</span></span>
-                        <span>📦 Дерево: <span id="mcWood">0</span> | 🪨 Камень: <span id="mcStone">0</span></span>
-                        <span>🌙 <span id="mcTime">день</span></span>
+                <div style="background:#2c3e50; border-radius:20px; width:95%; max-width:500px; overflow:hidden;">
+                    <div style="background:#27ae60; padding:12px; text-align:center; color:white; font-weight:bold;">🌾 Моя ферма 🌽</div>
+                    <div style="padding:12px; background:#34495e; color:white;">
+                        <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                            <span>💰 Монеты: <span id="farmCoins">100</span></span>
+                            <span>🌾 Пшеница: <span id="farmWheat">0</span></span>
+                            <span>🥛 Молоко: <span id="farmMilk">0</span></span>
+                            <span>🐣 Яйца: <span id="farmEggs">0</span></span>
+                        </div>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:6px; padding:6px;">
-                        <button id="mcModeBtn" style="background:#f39c12; border:none; padding:4px 10px; border-radius:15px;">🔨 Режим</button>
-                        <button id="mcSwordBtn" style="background:#e74c3c; border:none; padding:4px 10px; border-radius:15px;">⚔️ Меч</button>
-                        <button id="mcBlockWoodBtn" style="background:#8B5A2B; border:none; padding:4px 10px; border-radius:15px;">🌲 Дерево</button>
-                        <button id="mcBlockStoneBtn" style="background:#7f8c8d; border:none; padding:4px 10px; border-radius:15px;">🪨 Камень</button>
-                        <button id="mcNewGameBtn" style="background:#27ae60; border:none; padding:4px 10px; border-radius:15px;">🔄 Новая</button>
-                        <button id="mcCloseBtn" style="background:#c0392b; border:none; padding:4px 10px; border-radius:15px;">✖</button>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px;">
+                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
+                            <div style="font-size:32px;">🌾</div>
+                            <div>Поле</div>
+                            <button id="plantWheatBtn" style="margin-top:5px; background:#f39c12;">Посадить (10💰)</button>
+                            <button id="harvestWheatBtn" style="margin-top:5px; background:#e67e22;">Собрать (+5🌾)</button>
+                            <div>Продать: <button id="sellWheatBtn" style="background:#3498db;">1🌾 = 2💰</button></div>
+                        </div>
+                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
+                            <div style="font-size:32px;">🐄</div>
+                            <div>Корова</div>
+                            <button id="buyCowBtn" style="margin-top:5px; background:#f39c12;">Купить (50💰)</button>
+                            <button id="collectMilkBtn" style="margin-top:5px; background:#e67e22;">Доить (+1🥛)</button>
+                            <div>Продать: <button id="sellMilkBtn" style="background:#3498db;">1🥛 = 3💰</button></div>
+                        </div>
+                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
+                            <div style="font-size:32px;">🐔</div>
+                            <div>Курица</div>
+                            <button id="buyChickenBtn" style="margin-top:5px; background:#f39c12;">Купить (30💰)</button>
+                            <button id="collectEggsBtn" style="margin-top:5px; background:#e67e22;">Собрать яйца (+1🐣)</button>
+                            <div>Продать: <button id="sellEggsBtn" style="background:#3498db;">1🐣 = 2💰</button></div>
+                        </div>
+                        <div style="background:#1e272e; border-radius:15px; padding:10px; text-align:center;">
+                            <div style="font-size:32px;">📦</div>
+                            <div>Склад</div>
+                            <div>Улучшения:</div>
+                            <button id="upgradeFieldBtn" style="background:#f39c12;">Поле +урожай (100💰)</button>
+                            <button id="autoCollectBtn" style="background:#f39c12;">Автосбор (200💰)</button>
+                        </div>
                     </div>
-                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; padding:0 8px 8px 8px;">
-                        <button id="mcUp" style="background:#1abc9c; border:none; padding:8px;">▲</button>
-                        <button id="mcLeft" style="background:#1abc9c; border:none; padding:8px;">◀</button>
-                        <button id="mcDown" style="background:#1abc9c; border:none; padding:8px;">▼</button>
-                        <button id="mcRight" style="background:#1abc9c; border:none; padding:8px;">▶</button>
+                    <div style="padding:10px; text-align:center; background:#1e272e;">
+                        <span id="farmStatus" style="color:#f1c40f;">Добро пожаловать на ферму!</span>
                     </div>
+                    <button id="farmCloseBtn" style="background:#c0392b; border:none; color:white; width:100%; padding:10px;">Закрыть</button>
                 </div>
             `;
             document.body.appendChild(gameDiv);
-            window.mcGameActive = gameDiv;
+            window.farmGameActive = gameDiv;
 
-            // ----- Элементы -----
-            const canvas = document.getElementById('mcCanvas');
-            const ctx = canvas.getContext('2d');
-            const modeSpan = document.getElementById('mcMode');
-            const weaponSpan = document.getElementById('mcWeapon');
-            const woodSpan = document.getElementById('mcWood');
-            const stoneSpan = document.getElementById('mcStone');
-            const timeSpan = document.getElementById('mcTime');
-            const modeBtn = document.getElementById('mcModeBtn');
-            const swordBtn = document.getElementById('mcSwordBtn');
-            const woodBlockBtn = document.getElementById('mcBlockWoodBtn');
-            const stoneBlockBtn = document.getElementById('mcBlockStoneBtn');
-            const newGameBtn = document.getElementById('mcNewGameBtn');
-            const closeBtn = document.getElementById('mcCloseBtn');
-            const upBtn = document.getElementById('mcUp');
-            const downBtn = document.getElementById('mcDown');
-            const leftBtn = document.getElementById('mcLeft');
-            const rightBtn = document.getElementById('mcRight');
+            // Элементы UI
+            const coinsSpan = document.getElementById('farmCoins');
+            const wheatSpan = document.getElementById('farmWheat');
+            const milkSpan = document.getElementById('farmMilk');
+            const eggsSpan = document.getElementById('farmEggs');
+            const statusSpan = document.getElementById('farmStatus');
 
-            // ----- Константы карты -----
-            const MAP_W = 100;    // ширина мира в блоках
-            const MAP_H = 50;     // высота мира
-            const VIEW_W = 24;    // видимых блоков по ширине
-            const VIEW_H = 18;    // видимых блоков по высоте
-            let world = Array(MAP_W).fill().map(() => Array(MAP_H).fill(0));
-            let player = { x: 50, y: 40 };
-            let inventory = { wood: 5, stone: 3 };
-            let monsters = [];
-            let animals = [];
-            let mode = 'build';      // 'build' или 'dig'
-            let weaponMode = 'sword'; // 'sword' или 'hand'
-            let currentBlock = 'wood'; // wood или stone
-            let timeOfDay = 0.25;    // день
-            let lastFrameTime = 0;
-            let animationId = null;
+            // Состояние фермы
+            let coins = 100;
+            let wheat = 0;
+            let milk = 0;
+            let eggs = 0;
+            let hasCow = false;
+            let hasChicken = false;
+            let fieldLevel = 1; // 1 = 5 пшеницы за сбор, 2 = 10, 3 = 15
+            let autoCollect = false;
+            let autoInterval = null;
 
-            // ----- Типы блоков (только дерево и камень + фон) -----
-            const blocks = {
-                0: { name:'земля', color:'#5d8c48', solid:true, diggable:true, drops:null },
-                1: { name:'дерево (доски)', color:'#c19a6b', solid:true, diggable:true, drops:{wood:1} },
-                2: { name:'камень', color:'#7f8c8d', solid:true, diggable:true, drops:{stone:1} },
-                3: { name:'дом деревянный', color:'#b8860b', solid:true, diggable:true, drops:{wood:2} },
-                4: { name:'дом каменный', color:'#5d6e7e', solid:true, diggable:true, drops:{stone:2} },
-                5: { name:'вода', color:'#3498db', solid:false, diggable:false, drops:null },
-                6: { name:'трава', color:'#5d8c48', solid:false, diggable:true, drops:null }, // декоративный слой
-            };
-
-            // ----- Генерация готовой карты с домами, деревьями, озёрами -----
-            function generateMap() {
-                // Сначала всё земля (тип 0)
-                for (let x=0; x<MAP_W; x++) {
-                    for (let y=0; y<MAP_H; y++) {
-                        if (y < MAP_H-10) world[x][y] = 6; // трава
-                        else world[x][y] = 0; // земля
-                    }
-                }
-                // Озеро в центре
-                for (let ox=-6; ox<=6; ox++) {
-                    for (let oy=-4; oy<=4; oy++) {
-                        let x = 50+ox, y = 38+oy;
-                        if (x>=0 && x<MAP_W && y>=0 && y<MAP_H && (ox*ox+oy*oy)<25) {
-                            world[x][y] = 5;
-                        }
-                    }
-                }
-                // Деревья (купы)
-                for (let t=0; t<40; t++) {
-                    let x = 10 + Math.floor(Math.random() * 80);
-                    let y = MAP_H-11;
-                    if (world[x][y] !== 5) {
-                        world[x][y] = 1;
-                        if (y-1 >=0 && world[x][y-1] !==5) world[x][y-1] = 1;
-                        if (y-2 >=0 && world[x][y-2] !==5) world[x][y-2] = 1;
-                    }
-                }
-                // Дома
-                // Дом 1 (деревянный)
-                for (let dx=0; dx<5; dx++) for (let dy=0; dy<4; dy++) { world[15+dx][MAP_H-13+dy] = 3; }
-                for (let dx=1; dx<4; dx++) world[15+dx][MAP_H-14] = 3; // крыша
-                // Дом 2 (каменный)
-                for (let dx=0; dx<6; dx++) for (let dy=0; dy<4; dy++) { world[70+dx][MAP_H-12+dy] = 4; }
-                for (let dx=1; dx<5; dx++) world[70+dx][MAP_H-13] = 4;
-                // Дом 3 (деревянный) на возвышении
-                for (let dx=0; dx<4; dx++) for (let dy=0; dy<3; dy++) { world[35+dx][MAP_H-10+dy] = 3; }
-                // Дорожки (камень)
-                for (let x=20; x<70; x++) world[x][MAP_H-5] = 2;
-                // Камни разбросанные
-                for (let r=0; r<30; r++) {
-                    let x = 5+Math.floor(Math.random()*90);
-                    let y = MAP_H-7;
-                    if (world[x][y] !==5 && world[x][y]!==3 && world[x][y]!==4) world[x][y]=2;
-                }
-                // Грибы/цветы (декор)
-                for (let r=0; r<80; r++) {
-                    let x = 2+Math.floor(Math.random()*96);
-                    let y = MAP_H-8;
-                    if (world[x][y]===6) world[x][y]=6; // оставляем траву
-                }
-            }
-
-            // ----- Вспомогательные функции -----
             function updateUI() {
-                woodSpan.innerText = inventory.wood;
-                stoneSpan.innerText = inventory.stone;
-                modeSpan.innerText = mode === 'build' ? `строить (${currentBlock==='wood'?'🌲':'🪨'})` : 'копать';
-                weaponSpan.innerText = weaponMode === 'sword' ? '⚔️ меч (убивает)' : '✋ рука';
-                timeSpan.innerText = (timeOfDay>0.7 && timeOfDay<0.85) ? '🌙 ночь' : '☀️ день';
+                coinsSpan.innerText = coins;
+                wheatSpan.innerText = wheat;
+                milkSpan.innerText = milk;
+                eggsSpan.innerText = eggs;
             }
 
-            // Добавить ресурсы
-            function addResources(drops) {
-                if (drops.wood) inventory.wood += drops.wood;
-                if (drops.stone) inventory.stone += drops.stone;
-                updateUI();
+            function showMessage(msg) {
+                statusSpan.innerText = msg;
+                setTimeout(() => { if (statusSpan.innerText === msg) statusSpan.innerText = 'Готово!'; }, 2000);
             }
 
-            // Действие: копать или строить
-            function actionAt(wx, wy) {
-                if (wx<0 || wx>=MAP_W || wy<0 || wy>=MAP_H) return;
-                if (mode === 'dig') {
-                    let bid = world[wx][wy];
-                    let block = blocks[bid];
-                    if (block && block.diggable) {
-                        if (block.drops) addResources(block.drops);
-                        world[wx][wy] = 6; // после копки остаётся трава
-                    }
-                } else { // строить
-                    if (world[wx][wy] !== 0 && world[wx][wy] !== 6) return; // только на землю или траву
-                    let blockId = (currentBlock === 'wood') ? 1 : 2;
-                    let cost = (currentBlock === 'wood') ? { wood:1 } : { stone:1 };
-                    if (cost.wood && inventory.wood >= 1) inventory.wood -= cost.wood;
-                    else if (cost.stone && inventory.stone >= 1) inventory.stone -= cost.stone;
-                    else return;
-                    world[wx][wy] = blockId;
-                    updateUI();
-                }
-            }
-
-            // Атака мечом (убить монстра в радиусе 1.5 блоков)
-            function attackWithSword() {
-                let killedAny = false;
-                for (let i=0; i<monsters.length; i++) {
-                    let m = monsters[i];
-                    let dx = Math.abs(m.x - player.x);
-                    let dy = Math.abs(m.y - player.y);
-                    if (dx < 1.5 && dy < 1.5) {
-                        monsters.splice(i,1);
-                        killedAny = true;
-                        break;
-                    }
-                }
-                if (killedAny) {
-                    // эффект удара
-                }
-            }
-
-            // Движение игрока
-            function movePlayer(dx, dy) {
-                let nx = player.x + dx;
-                let ny = player.y + dy;
-                if (nx<0 || nx>=MAP_W || ny<0 || ny>=MAP_H) return;
-                let block = blocks[world[nx][ny]];
-                if (block && block.solid) return;
-                player.x = nx;
-                player.y = ny;
-            }
-
-            // ----- Генерация монстров и животных -----
-            function spawnMonster() {
-                if (monsters.length > 6) return;
-                let angle = Math.random() * 2 * Math.PI;
-                let dist = 8 + Math.random() * 5;
-                let mx = player.x + Math.cos(angle) * dist;
-                let my = player.y + Math.sin(angle) * dist;
-                mx = Math.min(Math.max(mx, 2), MAP_W-2);
-                my = Math.min(Math.max(my, 2), MAP_H-2);
-                monsters.push({ x: mx, y: my, type: 'skeleton', hp: 2 });
-            }
-
-            function spawnAnimal() {
-                if (animals.length > 12) return;
-                let x = 5 + Math.random() * (MAP_W-10);
-                let y = MAP_H - 9 + Math.random() * 5;
-                animals.push({ x: x, y: y, type: Math.random()<0.5?'chicken':'sheep' });
-            }
-
-            function updateMonsters(deltaSec) {
-                let isNight = (timeOfDay > 0.7 && timeOfDay < 0.85);
-                if (!isNight) {
-                    monsters = [];
-                    return;
-                }
-                // Движение монстров к игроку
-                for (let i=0; i<monsters.length; i++) {
-                    let m = monsters[i];
-                    let dx = player.x - m.x;
-                    let dy = player.y - m.y;
-                    let len = Math.hypot(dx, dy);
-                    if (len > 0.3) {
-                        let step = 1.2 * deltaSec;
-                        m.x += (dx / len) * step;
-                        m.y += (dy / len) * step;
-                    }
-                    if (Math.abs(m.x - player.x) < 0.8 && Math.abs(m.y - player.y) < 0.8) {
-                        // Атака монстра: теряем половину ресурсов
-                        inventory.wood = Math.floor(inventory.wood / 2);
-                        inventory.stone = Math.floor(inventory.stone / 2);
-                        updateUI();
-                        monsters.splice(i,1);
-                        i--;
-                    }
-                }
-                // Спавн новых
-                if (Math.random() < 0.03 * deltaSec) spawnMonster();
-            }
-
-            function updateAnimals(deltaSec) {
-                for (let a of animals) {
-                    a.x += (Math.random() - 0.5) * deltaSec * 2;
-                    a.y += (Math.random() - 0.5) * deltaSec * 2;
-                    a.x = Math.min(Math.max(a.x, 1), MAP_W-2);
-                    a.y = Math.min(Math.max(a.y, 1), MAP_H-2);
-                }
-                if (Math.random() < 0.01 * deltaSec && animals.length < 15) spawnAnimal();
-            }
-
-            // ----- Цикл дня/ночи -----
-            let lastTimestamp = 0;
-            function updateTime(deltaSec) {
-                timeOfDay += deltaSec / 50; // полный цикл 50 секунд
-                if (timeOfDay > 1) timeOfDay -= 1;
-                updateUI();
-            }
-
-            // ----- Отрисовка -----
-            function draw() {
-                const cellW = canvas.width / VIEW_W;
-                const cellH = canvas.height / VIEW_H;
-                const startX = Math.max(0, Math.min(MAP_W - VIEW_W, player.x - Math.floor(VIEW_W/2)));
-                const startY = Math.max(0, Math.min(MAP_H - VIEW_H, player.y - Math.floor(VIEW_H/2)));
-                // Небо (градиент)
-                let grad = ctx.createLinearGradient(0,0,0,canvas.height);
-                let r,g,b;
-                if (timeOfDay<0.25) { let t=timeOfDay/0.25; r=135+165*t; g=206+49*t; b=235; }
-                else if (timeOfDay<0.5) { r=300; g=255; b=235; }
-                else if (timeOfDay<0.75) { let t=(timeOfDay-0.5)/0.25; r=300-100*t; g=255-155*t; b=235-155*t; }
-                else { let t=(timeOfDay-0.75)/0.25; r=200-135*t; g=100-34*t; b=80-20*t; }
-                grad.addColorStop(0, `rgb(${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)})`);
-                grad.addColorStop(1, `rgb(${Math.min(200,r-40)},${Math.min(100,g-40)},${Math.min(80,b-20)})`);
-                ctx.fillStyle = grad;
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-                // Солнце/луна
-                let angle = timeOfDay * 2 * Math.PI;
-                let sx = canvas.width - 60 + Math.sin(angle)*40;
-                let sy = 40 + Math.cos(angle)*30;
-                ctx.fillStyle = (timeOfDay>0.7||timeOfDay<0.3)?'#ffeaa7':'#f1c40f';
-                ctx.beginPath(); ctx.arc(sx,sy,20,0,2*Math.PI); ctx.fill();
-
-                // Рисуем блоки
-                for (let i=0; i<VIEW_W; i++) {
-                    for (let j=0; j<VIEW_H; j++) {
-                        let wx = startX + i;
-                        let wy = startY + j;
-                        if (wx>=0 && wx<MAP_W && wy>=0 && wy<MAP_H) {
-                            let bid = world[wx][wy];
-                            let col = blocks[bid] ? blocks[bid].color : '#5d8c48';
-                            ctx.fillStyle = col;
-                            ctx.fillRect(i*cellW, j*cellH, cellW-0.5, cellH-0.5);
-                            // текстура для дерева/камня
-                            if (bid===1) { ctx.fillStyle='#8B5A2B'; ctx.fillRect(i*cellW+2, j*cellH+2, cellW-4, cellH-4); }
-                            if (bid===2) { ctx.fillStyle='#5d6e7e'; ctx.fillRect(i*cellW+3, j*cellH+3, cellW-6, cellH-6); }
-                            if (bid===3) { ctx.fillStyle='#cd853f'; ctx.fillRect(i*cellW+2, j*cellH+2, cellW-4, cellH-4); }
-                            if (bid===4) { ctx.fillStyle='#4a5b66'; ctx.fillRect(i*cellW+2, j*cellH+2, cellW-4, cellH-4); }
+            // Действия
+            function plantWheat() {
+                if (coins >= 10) {
+                    coins -= 10;
+                    // Через 5 секунд пшеница вырастет (упростим: просто дадим возможность собрать)
+                    showMessage('🌱 Пшеница посажена! Через 5 сек можно собрать.');
+                    setTimeout(() => {
+                        if (window.farmGameActive) {
+                            showMessage('🌾 Пшеница созрела! Нажмите "Собрать"');
+                            // Можно установить флаг, но для простоты оставим так
                         }
-                    }
+                    }, 5000);
+                } else {
+                    showMessage('Не хватает монет!');
                 }
-                // Животные
-                for (let a of animals) {
-                    let ix = a.x - startX;
-                    let iy = a.y - startY;
-                    if (ix>=0 && ix<VIEW_W && iy>=0 && iy<VIEW_H) {
-                        ctx.fillStyle = a.type==='chicken'?'#f1c40f':'#ecf0f1';
-                        ctx.beginPath(); ctx.arc(ix*cellW+cellW/2, iy*cellH+cellH/2, cellW*0.2,0,2*Math.PI); ctx.fill();
-                        ctx.fillStyle='#000'; ctx.font=`${Math.floor(cellW*0.5)}px Arial`;
-                        ctx.fillText(a.type==='chicken'?'🐔':'🐑', ix*cellW+cellW*0.2, iy*cellH+cellH*0.7);
-                    }
-                }
-                // Монстры
-                for (let m of monsters) {
-                    let ix = m.x - startX;
-                    let iy = m.y - startY;
-                    if (ix>=0 && ix<VIEW_W && iy>=0 && iy<VIEW_H) {
-                        ctx.fillStyle = '#a55';
-                        ctx.beginPath(); ctx.arc(ix*cellW+cellW/2, iy*cellH+cellH/2, cellW*0.25,0,2*Math.PI); ctx.fill();
-                        ctx.fillStyle='#fff'; ctx.font=`${Math.floor(cellW*0.5)}px Arial`;
-                        ctx.fillText('💀', ix*cellW+cellW*0.3, iy*cellH+cellH*0.7);
-                    }
-                }
-                // Игрок
-                let px = (player.x - startX) * cellW;
-                let py = (player.y - startY) * cellH;
-                ctx.fillStyle = '#f1c40f';
-                ctx.beginPath();
-                ctx.ellipse(px+cellW/2, py+cellH/2, cellW*0.3, cellH*0.35, 0, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.fillStyle='#000';
-                ctx.beginPath();
-                ctx.arc(px+cellW*0.35, py+cellH*0.35, cellW*0.07, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(px+cellW*0.65, py+cellH*0.35, cellW*0.07, 0, 2*Math.PI);
-                ctx.fill();
-                // индикатор режима
-                ctx.strokeStyle = mode==='dig'?'#e74c3c':'#2ecc71';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(px, py, cellW, cellH);
-                if (weaponMode==='sword') {
-                    ctx.fillStyle='rgba(255,0,0,0.3)';
-                    ctx.beginPath(); ctx.moveTo(px+cellW*0.8, py+cellH*0.2); ctx.lineTo(px+cellW*0.9, py+cellH*0.5); ctx.lineTo(px+cellW*0.7, py+cellH*0.5); ctx.fill();
-                }
-            }
-
-            // ----- Game loop -----
-            let lastUpdate = 0;
-            function gameLoop(now) {
-                if (!window.mcGameActive) return;
-                let delta = Math.min(0.033, (now - lastUpdate) / 1000);
-                if (delta > 0.01) {
-                    updateTime(delta);
-                    updateMonsters(delta);
-                    updateAnimals(delta);
-                    lastUpdate = now;
-                }
-                draw();
-                animationId = requestAnimationFrame(gameLoop);
-            }
-
-            // ----- Обработчики -----
-            function toggleMode() {
-                mode = (mode === 'build') ? 'dig' : 'build';
                 updateUI();
             }
-            function setWoodBlock() { currentBlock = 'wood'; if (mode==='build') updateUI(); }
-            function setStoneBlock() { currentBlock = 'stone'; if (mode==='build') updateUI(); }
-            function setSwordMode() { weaponMode = 'sword'; updateUI(); }
-            function newGame() {
-                generateMap();
-                player = { x: 50, y: 40 };
-                inventory = { wood: 5, stone: 3 };
-                monsters = [];
-                animals = [];
-                timeOfDay = 0.25;
-                mode = 'build';
-                weaponMode = 'sword';
-                currentBlock = 'wood';
-                for (let i=0;i<6;i++) spawnAnimal();
+
+            function harvestWheat() {
+                let gain = 5 * fieldLevel;
+                wheat += gain;
+                showMessage(`+${gain} пшеницы!`);
                 updateUI();
             }
-            // Обработка кликов для ломания/строительства/атаки
-            function handleCanvasClick(e) {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                let cx, cy;
-                if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; e.preventDefault(); }
-                else { cx = e.clientX; cy = e.clientY; }
-                const canvasX = (cx - rect.left) * scaleX;
-                const canvasY = (cy - rect.top) * scaleY;
-                const cellW = canvas.width / VIEW_W;
-                const cellH = canvas.height / VIEW_H;
-                const gridX = Math.floor(canvasX / cellW);
-                const gridY = Math.floor(canvasY / cellH);
-                const startX = Math.max(0, Math.min(MAP_W - VIEW_W, player.x - Math.floor(VIEW_W/2)));
-                const startY = Math.max(0, Math.min(MAP_H - VIEW_H, player.y - Math.floor(VIEW_H/2)));
-                const wx = startX + gridX;
-                const wy = startY + gridY;
-                if (wx>=0 && wx<MAP_W && wy>=0 && wy<MAP_H) {
-                    if (weaponMode === 'sword') {
-                        attackWithSword();
-                    } else {
-                        actionAt(wx, wy);
-                    }
+
+            function sellWheat() {
+                if (wheat >= 1) {
+                    wheat--;
+                    coins += 2;
+                    showMessage('Продана пшеница +2💰');
+                } else {
+                    showMessage('Нет пшеницы!');
                 }
+                updateUI();
             }
-            // Управление с клавиатуры
-            function handleKey(e) {
-                if (!window.mcGameActive) return;
-                const key = e.key;
-                e.preventDefault();
-                if (key === 'ArrowUp') movePlayer(0,-1);
-                else if (key === 'ArrowDown') movePlayer(0,1);
-                else if (key === 'ArrowLeft') movePlayer(-1,0);
-                else if (key === 'ArrowRight') movePlayer(1,0);
-                else if (key === ' ') actionAt(player.x, player.y);
-                else if (key === 'm') toggleMode();
-                else if (key === '1') { setWoodBlock(); }
-                else if (key === '2') { setStoneBlock(); }
-                else if (key === '3') { setSwordMode(); }
-                else if (key === 'a') attackWithSword();
+
+            function buyCow() {
+                if (coins >= 50 && !hasCow) {
+                    coins -= 50;
+                    hasCow = true;
+                    showMessage('Куплена корова! 🐄');
+                } else if (hasCow) {
+                    showMessage('У вас уже есть корова!');
+                } else {
+                    showMessage('Не хватает монет!');
+                }
+                updateUI();
             }
-            window.addEventListener('keydown', handleKey);
-            upBtn.onclick = ()=>movePlayer(0,-1);
-            downBtn.onclick = ()=>movePlayer(0,1);
-            leftBtn.onclick = ()=>movePlayer(-1,0);
-            rightBtn.onclick = ()=>movePlayer(1,0);
-            modeBtn.onclick = toggleMode;
-            woodBlockBtn.onclick = setWoodBlock;
-            stoneBlockBtn.onclick = setStoneBlock;
-            swordBtn.onclick = setSwordMode;
-            newGameBtn.onclick = newGame;
-            closeBtn.onclick = () => {
-                window.removeEventListener('keydown', handleKey);
-                cancelAnimationFrame(animationId);
-                window.mcGameActive.remove();
-                window.mcGameActive = null;
+
+            function collectMilk() {
+                if (hasCow) {
+                    milk++;
+                    showMessage('+1 молоко 🥛');
+                } else {
+                    showMessage('Купите корову сначала!');
+                }
+                updateUI();
+            }
+
+            function sellMilk() {
+                if (milk >= 1) {
+                    milk--;
+                    coins += 3;
+                    showMessage('Продано молоко +3💰');
+                } else {
+                    showMessage('Нет молока!');
+                }
+                updateUI();
+            }
+
+            function buyChicken() {
+                if (coins >= 30 && !hasChicken) {
+                    coins -= 30;
+                    hasChicken = true;
+                    showMessage('Куплена курица! 🐔');
+                } else if (hasChicken) {
+                    showMessage('У вас уже есть курица!');
+                } else {
+                    showMessage('Не хватает монет!');
+                }
+                updateUI();
+            }
+
+            function collectEggs() {
+                if (hasChicken) {
+                    eggs++;
+                    showMessage('+1 яйцо 🥚');
+                } else {
+                    showMessage('Купите курицу!');
+                }
+                updateUI();
+            }
+
+            function sellEggs() {
+                if (eggs >= 1) {
+                    eggs--;
+                    coins += 2;
+                    showMessage('Проданы яйца +2💰');
+                } else {
+                    showMessage('Нет яиц!');
+                }
+                updateUI();
+            }
+
+            function upgradeField() {
+                if (coins >= 100 && fieldLevel < 3) {
+                    coins -= 100;
+                    fieldLevel++;
+                    showMessage(`Поле улучшено до уровня ${fieldLevel}! Сбор даёт ${5*fieldLevel} пшеницы.`);
+                } else if (fieldLevel >= 3) {
+                    showMessage('Максимальный уровень поля!');
+                } else {
+                    showMessage('Не хватает монет!');
+                }
+                updateUI();
+            }
+
+            function toggleAutoCollect() {
+                if (!autoCollect && coins >= 200) {
+                    coins -= 200;
+                    autoCollect = true;
+                    showMessage('Автосбор включён! Каждые 10 сек ресурсы собираются автоматически.');
+                    if (autoInterval) clearInterval(autoInterval);
+                    autoInterval = setInterval(() => {
+                        if (window.farmGameActive && autoCollect) {
+                            if (hasCow) milk++;
+                            if (hasChicken) eggs++;
+                            wheat += 3 * fieldLevel; // автоурожай поля
+                            updateUI();
+                            showMessage('🚜 Автосбор: + ресурсы');
+                        }
+                    }, 10000);
+                } else if (autoCollect) {
+                    showMessage('Автосбор уже включён!');
+                } else {
+                    showMessage('Не хватает монет для автосбора (200💰)');
+                }
+                updateUI();
+            }
+
+            // Назначение кнопок
+            document.getElementById('plantWheatBtn').onclick = plantWheat;
+            document.getElementById('harvestWheatBtn').onclick = harvestWheat;
+            document.getElementById('sellWheatBtn').onclick = sellWheat;
+            document.getElementById('buyCowBtn').onclick = buyCow;
+            document.getElementById('collectMilkBtn').onclick = collectMilk;
+            document.getElementById('sellMilkBtn').onclick = sellMilk;
+            document.getElementById('buyChickenBtn').onclick = buyChicken;
+            document.getElementById('collectEggsBtn').onclick = collectEggs;
+            document.getElementById('sellEggsBtn').onclick = sellEggs;
+            document.getElementById('upgradeFieldBtn').onclick = upgradeField;
+            document.getElementById('autoCollectBtn').onclick = toggleAutoCollect;
+
+            // Закрытие
+            document.getElementById('farmCloseBtn').onclick = () => {
+                if (autoInterval) clearInterval(autoInterval);
+                window.farmGameActive.remove();
+                window.farmGameActive = null;
             };
-            canvas.addEventListener('click', handleCanvasClick);
-            canvas.addEventListener('touchstart', (e)=>{ e.preventDefault(); handleCanvasClick(e); });
 
-            newGame();
-            lastUpdate = performance.now();
-            animationId = requestAnimationFrame(gameLoop);
+            updateUI();
         }
 
-        minecraftIcon.onclick = () => {
-            const pnl = document.getElementById('unifiedGamePanel');
-            if (pnl) pnl.style.display = 'none';
-            startGame();
+        farmIcon.onclick = () => {
+            document.getElementById('unifiedGamePanel').style.display = 'none';
+            startFarm();
         };
     });
 })();
