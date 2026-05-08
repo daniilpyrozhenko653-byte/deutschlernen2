@@ -9774,7 +9774,7 @@ if(p) {
 
 
 
-// ========== РАЗДЕЛ "ПРЕДМЕТЫ" – ТЕТРАДЬ + МНОГО ТЕМ + РЕШАТЕЛЬ УРАВНЕНИЙ ==========
+// ========== РАЗДЕЛ "ПРЕДМЕТЫ" – СТАБИЛЬНАЯ ВЕРСИЯ (ТЕТРАДЬ + ТЕСТЫ) ==========
 (function() {
     if (document.getElementById('subjectsSectionBtn')) return;
 
@@ -9807,270 +9807,74 @@ if(p) {
     `;
     document.body.appendChild(modal);
 
-    // -------------------- УНИВЕРСАЛЬНЫЙ РЕШАТЕЛЬ ЛИНЕЙНЫХ УРАВНЕНИЙ --------------------
-    function solveLinearEquation(equationStr) {
-        let eq = equationStr.replace(/\s/g, '');
-        let parts = eq.split('=');
-        if (parts.length !== 2) throw new Error('Уравнение должно содержать один знак "="');
-        let leftExpr = parts[0];
-        let rightExpr = parts[1];
-
-        // Функция для численного подсчёта коэффициента и свободного члена
-        function evaluateLinear(expr) {
-            expr = expr.replace(/X/g, 'x');
-            // Вычисляем значение при x=0 и x=1
-            function evalAt(xVal) {
-                let subExpr = expr.replace(/x/gi, xVal.toString());
-                try {
-                    return Function('"use strict"; return (' + subExpr + ')')();
-                } catch(e) {
-                    throw new Error('Не удалось вычислить выражение: ' + expr);
-                }
-            }
-            let val0 = evalAt(0);
-            let val1 = evalAt(1);
-            let coeff = val1 - val0;
-            let constant = val0;
-            return { coeff, constant };
-        }
-
-        let left = evaluateLinear(leftExpr);
-        let right = evaluateLinear(rightExpr);
-
-        let xCoeff = left.coeff - right.coeff;
-        let constant = right.constant - left.constant;
-
-        let steps = `📐 Решение уравнения <strong>${equationStr}</strong><br><br>`;
-        steps += `1️⃣ Раскрываем скобки и приводим подобные:<br>   Левая часть: ${left.coeff}x + ${left.constant}<br>   Правая часть: ${right.coeff}x + ${right.constant}<br>`;
-        steps += `2️⃣ Переносим члены с x влево, числа вправо:<br>   ${left.coeff}x - ${right.coeff}x = ${right.constant} - ${left.constant}<br>   <strong>${xCoeff}x = ${constant}</strong><br>`;
-        if (xCoeff === 0) {
-            if (Math.abs(constant) < 1e-9) return steps + `<br>✅ Уравнение имеет бесконечно много решений (тождество).`;
-            else return steps + `<br>❌ Уравнение не имеет решений (противоречие).`;
-        }
-        let x = constant / xCoeff;
-        let xDisplay = Number.isInteger(x) ? x : x.toFixed(4).replace(/\.?0+$/, '');
-        steps += `3️⃣ Разделим обе части на ${xCoeff}:<br>   x = ${constant} / ${xCoeff} = <strong>${xDisplay}</strong>`;
-        return steps;
+    // --- Тетрадь для предмета (общая для всех тем) ---
+    function getNotebookKey(subj) { return `subject_notebook_${subj}`; }
+    function loadNotebook(subj) { return localStorage.getItem(getNotebookKey(subj)) || ''; }
+    function saveNotebook(subj, text) { localStorage.setItem(getNotebookKey(subj), text); }
+    function showNotebookEditor(subjKey, subjName) {
+        const editor = document.createElement('div');
+        editor.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; border-radius:20px; width:80%; max-width:600px; z-index:100005; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.9);';
+        const currentText = loadNotebook(subjKey);
+        editor.innerHTML = `
+            <div style="background:#e67e22; padding:10px; display:flex; justify-content:space-between;"><span style="color:white;">📓 Тетрадь: ${subjName}</span><button id="closeNotebook" style="background:none; border:none; color:white; font-size:24px;">✖</button></div>
+            <textarea id="notebookText" style="width:100%; height:300px; background:#34495e; color:white; padding:10px; border:none;">${currentText.replace(/</g, '&lt;')}</textarea>
+            <button id="saveNotebookBtn" style="background:#27ae60; padding:8px; margin:10px;">💾 Сохранить</button>
+        `;
+        document.body.appendChild(editor);
+        document.getElementById('closeNotebook').onclick = () => editor.remove();
+        document.getElementById('saveNotebookBtn').onclick = () => {
+            saveNotebook(subjKey, document.getElementById('notebookText').value);
+            alert('Тетрадь сохранена');
+            editor.remove();
+        };
     }
 
-    // -------------------- ДАННЫЕ ПРЕДМЕТОВ (МАКСИМУМ ТЕМ) --------------------
+    // --- Данные предметов (много тем по математике) ---
     const subjectsData = {
         math: {
             name: 'Математика', icon: '📐',
             themes: {
-                fractions: {
-                    name: 'Дроби и действия с ними',
-                    explanation: `<h3>📖 Дроби</h3>
-                        <p>Обыкновенная дробь — это число вида a/b, где a — числитель, b — знаменатель.</p>
-                        <p><strong>Сложение:</strong> a/b + c/d = (ad + bc)/bd</p>
-                        <p><strong>Вычитание:</strong> a/b - c/d = (ad - bc)/bd</p>
-                        <p><strong>Умножение:</strong> a/b * c/d = ac/(bd)</p>
-                        <p><strong>Деление:</strong> a/b : c/d = (a*d)/(b*c)</p>
-                        <p><strong>Примеры:</strong><br>1/2 + 1/3 = 5/6<br>3/4 * 2/5 = 6/20 = 3/10</p>`,
-                    questions: [
-                        { text: '1/4 + 1/2 = ?', options: ['2/4', '3/4', '1/4', '1'], correct: 1, explanation: '1/4+2/4=3/4' },
-                        { text: '2/3 * 3/4 = ?', options: ['6/12', '1/2', '3/4', '5/7'], correct: 1, explanation: '6/12 = 1/2' }
-                    ]
-                },
-                percents: {
-                    name: 'Проценты',
-                    explanation: `<h3>📈 Проценты</h3><p>Процент — сотая часть числа. 1% = 0,01.</p><p><strong>Найти процент от числа:</strong> число * процент / 100.</p><p><strong>Найти число по его проценту:</strong> число / процент * 100.</p><p><strong>Скидки, налоги:</strong> цена со скидкой = цена * (100 - скидка%)/100.</p><p>Пример: 20% от 80 = 16. Цена 200 со скидкой 10% = 180.</p>`,
-                    questions: [
-                        { text: '30% от 150 = ?', options: ['30', '45', '50', '60'], correct: 1, explanation: '150·30/100=45' },
-                        { text: 'Цена 250, скидка 20%. Сколько стоит?', options: ['200', '210', '230', '240'], correct: 0, explanation: '250·0,8=200' }
-                    ]
-                },
-                linearEq: {
-                    name: 'Линейные уравнения',
-                    explanation: `<h3>📐 Линейные уравнения</h3><p>Введите любое линейное уравнение с одной переменной. Поддерживаются скобки, дроби, десятичные числа.</p>
-                        <input type="text" id="userEquation" style="width:80%; background:#2c3e50; color:white; padding:6px; border-radius:20px;" placeholder="(8x-3)/2 - (3x+1)/4 = (x-7)/3 + (5x+1)/6 + 19">
-                        <button id="solveEquationBtn" style="background:#e67e22;">Решить</button>
-                        <div id="stepByStepSolution" style="background:#1e2a36; border-radius:15px; padding:10px; margin-top:10px; display:none;"></div>
-                        <p><strong>Примеры:</strong> 2x+5=13, (x+2)/3 = 5, 0.5x - 3 = 2x + 1</p>`,
-                    questions: [
-                        { text: '3x + 4 = 19', options: ['3', '5', '7', '9'], correct: 1, explanation: 'x=5' },
-                        { text: '5x - 8 = 22', options: ['4', '5', '6', '7'], correct: 2, explanation: 'x=6' }
-                    ]
-                },
-                quadraticEq: {
-                    name: 'Квадратные уравнения',
-                    explanation: `<h3>ax² + bx + c = 0</h3>
-                        <p>Дискриминант: D = b² - 4ac</p>
-                        <ul><li>Если D > 0: два корня x₁₂ = (-b ± √D)/(2a)</li><li>Если D = 0: один корень x = -b/(2a)</li><li>Если D < 0: нет действительных корней</li></ul>
-                        <p><strong>Пример:</strong> x² - 5x + 6 = 0 → D = 25-24=1 → x₁ = 3, x₂ = 2</p>
-                        <p><strong>Теорема Виета:</strong> x₁ + x₂ = -b/a, x₁·x₂ = c/a</p>`,
-                    questions: [
-                        { text: 'x² - 3x + 2 = 0', options: ['1 и 2', '-1 и -2', '1 и -2', '-1 и 2'], correct: 0, explanation: 'D=9-8=1 → (3±1)/2=2;1' },
-                        { text: 'x² + 4x + 4 = 0', options: ['-2', '2', '0', 'корней нет'], correct: 0, explanation: 'D=16-16=0 → x=-2' }
-                    ]
-                },
-                systems: {
-                    name: 'Системы уравнений',
-                    explanation: `<h3>Системы линейных уравнений</h3>
-                        <p>Метод подстановки: выражаем одну переменную через другую.</p>
-                        <p>Метод сложения: умножаем уравнения так, чтобы коэффициенты при одной переменной стали противоположными.</p>
-                        <p>Пример: { x + y = 10, x - y = 2 } → сложение: 2x = 12 → x=6, y=4.</p>`,
-                    questions: [
-                        { text: 'Решите систему: x + y = 7, x - y = 3', options: ['x=5,y=2', 'x=4,y=3', 'x=6,y=1', 'x=3,y=4'], correct: 0, explanation: '2x=10 → x=5, y=2' }
-                    ]
-                },
-                exponents: {
-                    name: 'Свойства степеней',
-                    explanation: `<h3>Степени</h3>
-                        <ul><li>a^m * a^n = a^(m+n)</li><li>(a^m)^n = a^(m·n)</li><li>a^0 = 1 (a≠0)</li><li>a^(-n) = 1/a^n</li><li>a^(m/n) = корень n-й степени из a^m</li></ul>
-                        <p>Пример: 2^3 · 2^4 = 2^7 = 128</p>`,
-                    questions: [
-                        { text: '2^3 * 2^5 = ?', options: ['2^8', '2^15', '4^8', '2^2'], correct: 0, explanation: '2^(3+5)=2^8' }
-                    ]
-                },
-                logarithms: {
-                    name: 'Логарифмы',
-                    explanation: `<h3>Логарифмы</h3>
-                        <p>logₐb = c ⇔ a^c = b (a>0, a≠1, b>0)</p>
-                        <p>Свойства: logₐ(xy)=logₐx+logₐy, logₐ(x/y)=logₐx−logₐy, logₐ(x^k)=k·logₐx, logₐb = ln b/ln a</p>
-                        <p>Пример: log₂8 = 3 (так как 2³=8)</p>`,
-                    questions: [
-                        { text: 'log₃27 = ?', options: ['2', '3', '4', '5'], correct: 1, explanation: '3³=27' }
-                    ]
-                },
-                trigonometry: {
-                    name: 'Тригонометрия',
-                    explanation: `<h3>Основные тригонометрические формулы</h3>
-                        <p>sin²α + cos²α = 1</p>
-                        <p>sin(α±β) = sinα·cosβ ± cosα·sinβ</p>
-                        <p>cos(α±β) = cosα·cosβ ∓ sinα·sinβ</p>
-                        <p>sin2α = 2sinα·cosα, cos2α = cos²α - sin²α = 2cos²α -1 = 1 - 2sin²α</p>
-                        <p>Значения: sin0°=0, sin30°=1/2, sin45°=√2/2, sin60°=√3/2, sin90°=1</p>`,
-                    questions: [
-                        { text: 'sin²α + cos²α = ?', options: ['0', '1', '2', '-1'], correct: 1, explanation: 'Основное тригонометрическое тождество' }
-                    ]
-                },
-                derivatives: {
-                    name: 'Производная',
-                    explanation: `<h3>Производная функции</h3>
-                        <p>Производная — скорость изменения функции.</p>
-                        <p>(x^n)' = n·x^(n-1)</p>
-                        <p>(sinx)' = cosx, (cosx)' = -sinx, (lnx)' = 1/x, (e^x)' = e^x</p>
-                        <p>Правила: (u+v)' = u'+v', (u·v)' = u'v+uv', (u/v)' = (u'v-uv')/v²</p>
-                        <p>Пример: (x²+3x)' = 2x+3</p>`,
-                    questions: [
-                        { text: '(x³)' = ?', options: ['3x²', 'x²', '2x', '3x'], correct: 0, explanation: 'По правилу: 3·x²' }
-                    ]
-                },
-                integrals: {
-                    name: 'Интегралы',
-                    explanation: `<h3>Неопределённый интеграл</h3>
-                        <p>∫ f(x)dx — первообразная.</p>
-                        <p>∫ x^n dx = x^(n+1)/(n+1) + C (n≠-1)</p>
-                        <p>∫ sinx dx = -cosx + C, ∫ cosx dx = sinx + C</p>
-                        <p>Пример: ∫ x² dx = x³/3 + C</p>`,
-                    questions: [
-                        { text: '∫ x dx = ?', options: ['x²/2 + C', 'x² + C', 'x + C', '2x + C'], correct: 0, explanation: 'Интеграл от x равен x²/2' }
-                    ]
-                }
+                arithmetic: { name: 'Арифметика', explanation: `<h3>Основные действия</h3><p>Сложение (+), вычитание (-), умножение (*), деление (/).<br>Порядок действий: скобки, затем умножение/деление, потом сложение/вычитание.</p>`, questions: [{ text: 'Сколько будет (2+3)*4?', options: ['20', '14', '24', '12'], correct: 0, explanation: '(5)*4=20' }] },
+                fractions: { name: 'Дроби', explanation: `<h3>Дроби</h3><p>Чтобы сложить дроби, приведите к общему знаменателю. Пример: 1/2 + 1/3 = 3/6+2/6=5/6</p>`, questions: [{ text: '1/4 + 1/2 = ?', options: ['2/4', '3/4', '1/4', '1'], correct: 1, explanation: '1/4+2/4=3/4' }] },
+                percents: { name: 'Проценты', explanation: `<p>1% = 1/100 = 0.01. Пример: 20% от 150 = 150*0.2=30</p>`, questions: [{ text: '30% от 200?', options: ['30', '40', '50', '60'], correct: 2, explanation: '200*0.3=60' }] },
+                linearEq: { name: 'Линейные уравнения', explanation: `<p>Уравнения вида ax + b = c. Решение: x = (c - b)/a.<br>Пример: 2x+5=13 → 2x=8 → x=4</p>`, questions: [{ text: '3x + 4 = 19', options: ['3', '5', '7', '9'], correct: 1, explanation: '3x=15 → x=5' }] },
+                systemsEq: { name: 'Системы уравнений', explanation: `<h3>Системы двух уравнений</h3><p>Решаются методом подстановки или сложения. Пример: { x+y=5, x-y=1 } → сложим: 2x=6 → x=3, y=2.</p>`, questions: [{ text: 'Решите систему: x+y=7, x-y=3', options: ['(5,2)', '(2,5)', '(4,3)', '(3,4)'], correct: 0, explanation: 'сложение: 2x=10 → x=5, y=2' }] },
+                quadraticEq: { name: 'Квадратные уравнения', explanation: `<h3>ax²+bx+c=0</h3><p>Дискриминант D=b²-4ac. Корни: x₁₂ = (-b ± √D)/(2a).<br>Пример: x²-5x+6=0 → D=25-24=1 → x₁=3, x₂=2</p>`, questions: [{ text: 'x² - 3x + 2 = 0', options: ['1 и 2', '-1 и -2', '1 и -2', '-1 и 2'], correct: 0, explanation: 'D=9-8=1 → (3±1)/2=2;1' }] },
+                inequalities: { name: 'Неравенства', explanation: `<p>Линейные неравенства решаются как уравнения, но при умножении на отрицательное число знак меняется. Пример: 3x - 5 > 7 → 3x > 12 → x > 4</p>`, questions: [{ text: 'Решите 2x + 3 ≤ 11', options: ['x ≤ 4', 'x ≥ 4', 'x ≤ 7', 'x ≥ 7'], correct: 0, explanation: '2x ≤ 8 → x ≤ 4' }] },
+                geometry: { name: 'Геометрия: площади', explanation: `<p>Площадь прямоугольника: S = a·b. Треугольника: S = (a·h)/2. Круга: S = πR².</p>`, questions: [{ text: 'Площадь квадрата со стороной 5?', options: ['10', '15', '20', '25'], correct: 3, explanation: '5·5=25' }] },
+                logarithms: { name: 'Логарифмы', explanation: `<p>logₐ(b) = c ⇔ aᶜ = b. Основные свойства: log(ab)=log a+log b, log(a/b)=log a-log b.</p>`, questions: [{ text: 'log₂(8) = ?', options: ['2', '3', '4', '8'], correct: 1, explanation: '2³=8' }] },
+                combinatorics: { name: 'Комбинаторика', explanation: `<p>Факториал n! = 1·2·...·n. Перестановки: n!; сочетания: Cₙᵏ = n!/(k!(n−k)!).</p>`, questions: [{ text: 'Сколько перестановок из 3 букв?', options: ['3', '6', '9', '12'], correct: 1, explanation: '3! = 6' }] },
+                derivative: { name: 'Производные', explanation: `<p>Производная функции f(x) – скорость изменения. f(x)=xⁿ → f'(x)=n·xⁿ⁻¹. Пример: x³ → 3x².</p>`, questions: [{ text: 'Производная x⁵?', options: ['5x⁴', '4x⁵', '5x⁶', 'x⁴'], correct: 0, explanation: '5·x⁴' }] }
             }
         },
         russian: {
             name: 'Русский язык', icon: '📖',
             themes: {
-                parts_of_speech: {
-                    name: 'Части речи',
-                    explanation: `<p><strong>Части речи</strong> – классы слов: существительное (кто? что?), прилагательное (какой?), глагол (что делать?), местоимение, числительное, наречие, предлог, союз, частица, междометие.</p>`,
-                    questions: [{ text: 'Какая часть речи обозначает действие?', options: ['Существительное', 'Прилагательное', 'Глагол', 'Наречие'], correct: 2, explanation: 'Глагол' }]
-                },
-                syntax: {
-                    name: 'Синтаксис',
-                    explanation: `<p>Синтаксис — строение предложений. Главные члены: подлежащее (кто? что?) и сказуемое (что делает?). Второстепенные: дополнение, определение, обстоятельство.</p>`,
-                    questions: [{ text: 'Что такое подлежащее?', options: ['Действие', 'Предмет речи', 'Признак', 'Обстоятельство'], correct: 1, explanation: 'Подлежащее – то, о ком/чём говорится' }]
-                }
+                parts_of_speech: { name: 'Части речи', explanation: `<p>Существительное, прилагательное, глагол, местоимение, числительное, наречие, предлог, союз, частица, междометие.</p>`, questions: [{ text: 'Какая часть речи обозначает предмет?', options: ['Глагол', 'Прилагательное', 'Существительное', 'Наречие'], correct: 2, explanation: 'Существительное' }] },
+                syntax: { name: 'Синтаксис', explanation: `<p>Подлежащее и сказуемое – главные члены. Предложения бывают простые и сложные.</p>`, questions: [{ text: 'Что такое подлежащее?', options: ['Действие', 'Предмет речи', 'Признак', 'Время'], correct: 1, explanation: 'Кто? Что?' }] }
             }
         },
         physics: {
             name: 'Физика', icon: '⚛️',
             themes: {
-                newton: {
-                    name: 'Законы Ньютона',
-                    explanation: `<p><strong>I закон (инерции):</strong> тело сохраняет скорость, если на него не действуют силы.</p>
-                        <p><strong>II закон:</strong> F = m·a (сила = масса × ускорение).</p>
-                        <p><strong>III закон:</strong> действие равно противодействию.</p>`,
-                    questions: [{ text: 'Формула F = m·a — это ... закон', options: ['I', 'II', 'III'], correct: 1, explanation: 'Второй закон' }]
-                },
-                kinematics: {
-                    name: 'Кинематика',
-                    explanation: `<p>Механическое движение. Скорость v = S/t. Ускорение a = (v - v₀)/t.</p><p>Перемещение при равноускоренном движении: S = v₀t + at²/2.</p>`,
-                    questions: [{ text: 'Формула скорости при равномерном движении?', options: ['v = at', 'v = S/t', 'v = S·t', 'v = a/t'], correct: 1, explanation: 'v = S/t' }]
-                }
+                newton: { name: 'Законы Ньютона', explanation: `<p>I – инерция, II – F=ma, III – действие равно противодействию.</p>`, questions: [{ text: 'F=ma – это ...', options: ['I', 'II', 'III'], correct: 1, explanation: 'Второй закон' }] },
             }
         },
         biology: {
             name: 'Биология', icon: '🧬',
             themes: {
-                cell: {
-                    name: 'Строение клетки',
-                    explanation: `<p>Основные органоиды: ядро (ДНК), митохондрии (энергия), рибосомы (белок), ЭПС, комплекс Гольджи.</p>`,
-                    questions: [{ text: 'Энергетическая станция клетки?', options: ['Ядро', 'Митохондрия', 'Рибосома'], correct: 1, explanation: 'Митохондрии' }]
-                },
-                genetics: {
-                    name: 'Генетика',
-                    explanation: `<p>ДНК – носитель наследственности. Ген – участок ДНК. Законы Менделя о наследовании признаков.</p>`,
-                    questions: [{ text: 'Что такое ген?', options: ['Участок белка', 'Участок ДНК', 'Клетка', 'Органоид'], correct: 1, explanation: 'Ген – участок ДНК' }]
-                }
+                cell: { name: 'Строение клетки', explanation: `<p>Ядро, митохондрии, рибосомы, мембрана.</p>`, questions: [{ text: 'Энергетическая станция клетки?', options: ['Ядро', 'Митохондрия', 'Рибосома'], correct: 1, explanation: 'Митохондрии' }] },
             }
         },
         chemistry: {
             name: 'Химия', icon: '🧪',
             themes: {
-                valence: {
-                    name: 'Валентность',
-                    explanation: `<p>Валентность – способность образовывать связи. У H – I, O – II, Na – I, Mg – II, Al – III.</p>`,
-                    questions: [{ text: 'Валентность кислорода?', options: ['I', 'II', 'III', 'IV'], correct: 1, explanation: 'Кислород двухвалентен' }]
-                },
-                reactions: {
-                    name: 'Химические реакции',
-                    explanation: `<p>Типы: соединения (A+B→AB), разложения (AB→A+B), замещения (A+BC→AC+B), обмена (AB+CD→AD+CB).</p>`,
-                    questions: [{ text: 'Из двух веществ образуется одно – это?', options: ['Разложение', 'Соединение', 'Замещение', 'Обмен'], correct: 1, explanation: 'Реакция соединения' }]
-                }
+                valence: { name: 'Валентность', explanation: `<p>Валентность – способность атомов образовывать связи. У кислорода II, у водорода I.</p>`, questions: [{ text: 'Валентность кислорода чаще?', options: ['I', 'II', 'III', 'IV'], correct: 1, explanation: 'Кислород двухвалентен' }] },
             }
         }
     };
 
-    // -------------------- ТЕТРАДЬ ДЛЯ ПРЕДМЕТА --------------------
-    function getNotebookKey(subj) { return `notebook_subj_${subj}`; }
-    function saveNotebook(subj, content) { localStorage.setItem(getNotebookKey(subj), content); }
-    function loadNotebook(subj) { return localStorage.getItem(getNotebookKey(subj)) || ''; }
-
-    function showNotebookEditor(subjKey) {
-        const subj = subjectsData[subjKey];
-        let currentText = loadNotebook(subjKey);
-        let notebookDiv = document.createElement('div');
-        notebookDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; border-radius:20px; width:90%; max-width:700px; height:70%; z-index:100005; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.9);';
-        notebookDiv.innerHTML = `
-            <div style="background:#e67e22; padding:10px; display:flex; justify-content:space-between;">
-                <span style="color:white;">📓 Тетрадь: ${subj.name}</span>
-                <button id="closeNotebook" style="background:none; border:none; color:white; font-size:24px;">✖</button>
-            </div>
-            <textarea id="notebookText" style="flex:1; margin:10px; background:#1e2a36; color:white; border:none; border-radius:10px; padding:10px; font-size:14px;">${currentText}</textarea>
-            <div style="padding:10px; display:flex; gap:10px;">
-                <button id="saveNotebookBtn" style="background:#27ae60;">💾 Сохранить</button>
-                <button id="clearNotebookBtn" style="background:#e74c3c;">🗑 Очистить</button>
-            </div>
-        `;
-        document.body.appendChild(notebookDiv);
-        document.getElementById('closeNotebook').onclick = () => notebookDiv.remove();
-        document.getElementById('saveNotebookBtn').onclick = () => {
-            let text = document.getElementById('notebookText').value;
-            saveNotebook(subjKey, text);
-            alert('Тетрадь сохранена!');
-            notebookDiv.remove();
-        };
-        document.getElementById('clearNotebookBtn').onclick = () => {
-            document.getElementById('notebookText').value = '';
-            saveNotebook(subjKey, '');
-            alert('Тетрадь очищена');
-        };
-    }
-
-    // -------------------- НАВИГАЦИЯ --------------------
+    // ----- Навигация -----
     function renderSubjectList() {
         let html = `<div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">`;
         for (let [key, subj] of Object.entries(subjectsData)) {
@@ -10079,63 +9883,46 @@ if(p) {
         html += `</div>`;
         document.getElementById('subjectsContent').innerHTML = html;
         document.querySelectorAll('.subject-card').forEach(c => {
-            c.onclick = () => showThemesList(c.dataset.subject);
+            c.onclick = () => showSubjectPanel(c.dataset.subject);
         });
     }
 
-    function showThemesList(subjKey) {
+    function showSubjectPanel(subjKey) {
         const subj = subjectsData[subjKey];
-        let html = `<div style="display:flex; justify-content:space-between; align-items:center;"><button id="backToSubjectsBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">← Назад</button><button id="openNotebookBtn" style="background:#9b59b6; padding:5px 12px; border-radius:20px;">📓 Тетрадь</button></div>
-                    <h3 style="color:white;">${subj.icon} ${subj.name}</h3>
-                    <div style="display:flex; gap:15px; flex-wrap:wrap;">`;
+        let html = `
+            <div><button id="backToSubjectsBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">← Назад</button></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="color:white;">${subj.icon} ${subj.name}</h2>
+                <button id="openNotebookBtn" style="background:#9b59b6; padding:6px 12px; border-radius:20px;">📓 Тетрадь предмета</button>
+            </div>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:10px;">`;
         for (let [key, theme] of Object.entries(subj.themes)) {
             html += `<div data-theme="${key}" class="theme-card" style="background:#34495e; border-radius:15px; padding:15px; width:200px; cursor:pointer; text-align:center;">📘 ${theme.name}</div>`;
         }
         html += `</div>`;
         document.getElementById('subjectsContent').innerHTML = html;
+        document.getElementById('backToSubjectsBtn').onclick = renderSubjectList;
+        document.getElementById('openNotebookBtn').onclick = () => showNotebookEditor(subjKey, subj.name);
         document.querySelectorAll('.theme-card').forEach(c => {
             c.onclick = () => showThemeDetail(subjKey, c.dataset.theme);
         });
-        document.getElementById('backToSubjectsBtn').onclick = renderSubjectList;
-        document.getElementById('openNotebookBtn').onclick = () => showNotebookEditor(subjKey);
     }
 
     function showThemeDetail(subjKey, themeKey) {
         const theme = subjectsData[subjKey].themes[themeKey];
         let html = `
-            <div><button id="backToThemesBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">← Назад</button></div>
+            <div><button id="backToSubjectBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">← Назад к предмету</button></div>
             <div style="display:flex; gap:20px; flex-wrap:wrap;">
-                <div style="flex:1.5; background:#2c3e50; border-radius:20px; padding:15px; color:#eee; max-height:400px; overflow:auto;">
-                    ${theme.explanation}
-                </div>
+                <div style="flex:1.5; background:#2c3e50; border-radius:20px; padding:15px; color:#eee;">${theme.explanation}</div>
                 <div style="flex:1; background:#1e2a36; border-radius:20px; padding:15px;">
                     <h3 style="color:white;">📝 Тест: ${theme.name}</h3>
-                    <div id="quizContainer"></div>
-                    <div id="quizResult" style="margin-top:15px; display:none;"></div>
+                    <div id="quizContainer"></div><div id="quizResult" style="margin-top:15px; display:none;"></div>
                 </div>
             </div>
         `;
         document.getElementById('subjectsContent').innerHTML = html;
-        document.getElementById('backToThemesBtn').onclick = () => showThemesList(subjKey);
+        document.getElementById('backToSubjectBtn').onclick = () => showSubjectPanel(subjKey);
         if (theme.questions && theme.questions.length) initQuiz(theme.questions);
-        if (subjKey === 'math' && themeKey === 'linearEq') {
-            setTimeout(() => {
-                const solveBtn = document.getElementById('solveEquationBtn');
-                if (solveBtn) {
-                    solveBtn.onclick = () => {
-                        let eq = document.getElementById('userEquation').value.trim();
-                        let solDiv = document.getElementById('stepByStepSolution');
-                        try {
-                            solDiv.innerHTML = solveLinearEquation(eq).replace(/\n/g, '<br>');
-                            solDiv.style.display = 'block';
-                        } catch(e) {
-                            solDiv.innerHTML = `<strong>Ошибка:</strong> ${e.message}`;
-                            solDiv.style.display = 'block';
-                        }
-                    };
-                }
-            }, 50);
-        }
     }
 
     function initQuiz(questions) {
@@ -10161,15 +9948,13 @@ if(p) {
                     resHtml += `<div style="border-left:4px solid ${correct ? '#2ecc71' : '#e74c3c'}; margin:8px 0; padding:8px; background:#1e2a36;">
                         ${state.qs[i].text}<br>Ваш: ${state.answers[i]!==-1 ? state.qs[i].options[state.answers[i]] : '—'} | Правильно: ${state.qs[i].options[state.qs[i].correct]}<br>${state.qs[i].explanation}</div>`;
                 }
-                resHtml += `<div style="text-align:center;">Правильных: ${score} из ${state.total}</div><button id="restartQuiz" style="background:#e67e22; margin-top:10px;">🔄 Пройти заново</button>`;
-                const resultDiv = document.getElementById('quizResult');
-                const containerDiv = document.getElementById('quizContainer');
-                resultDiv.innerHTML = resHtml;
-                resultDiv.style.display = 'block';
-                containerDiv.style.display = 'none';
+                resHtml += `<div>Правильных: ${score} из ${state.total}</div><button id="restartQuiz">🔄 Пройти заново</button>`;
+                document.getElementById('quizResult').innerHTML = resHtml;
+                document.getElementById('quizResult').style.display = 'block';
+                container.style.display = 'none';
                 document.getElementById('restartQuiz')?.addEventListener('click', () => {
-                    resultDiv.style.display = 'none';
-                    containerDiv.style.display = 'block';
+                    document.getElementById('quizResult').style.display = 'none';
+                    container.style.display = 'block';
                     state.answers.fill(-1); state.idx=0; render();
                 });
             });
@@ -10180,7 +9965,6 @@ if(p) {
     subjBtn.onclick = () => { modal.style.display = 'flex'; renderSubjectList(); };
     document.getElementById('closeSubjectsModal').onclick = () => modal.style.display = 'none';
 })();
-
 </script>
 </body>
 </html>
