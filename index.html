@@ -9774,7 +9774,7 @@ if(p) {
 
 
 
-// ========== РАЗДЕЛ "ПРЕДМЕТЫ" – СТАБИЛЬНАЯ ВЕРСИЯ (ТЕТРАДЬ + ТЕСТЫ) ==========
+// ========== РАЗДЕЛ "ПРЕДМЕТЫ" – РАСШИРЕННЫЙ (АВТОСОХРАНЕНИЕ, БОЛЬШИЕ ТЕСТЫ, РЕШАТЕЛЬ УРАВНЕНИЙ) ==========
 (function() {
     if (document.getElementById('subjectsSectionBtn')) return;
 
@@ -9797,7 +9797,7 @@ if(p) {
 
     const modal = document.createElement('div');
     modal.id = 'subjectsModal';
-    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:1000px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:1100px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
     modal.innerHTML = `
         <div style="background:#e67e22; padding:10px; display:flex; justify-content:space-between;">
             <span style="color:white; font-weight:bold;">📚 Школьные предметы</span>
@@ -9807,7 +9807,7 @@ if(p) {
     `;
     document.body.appendChild(modal);
 
-    // --- Тетрадь для предмета (общая для всех тем) ---
+    // ----- АВТОСОХРАНЕНИЕ ТЕТРАДИ -----
     function getNotebookKey(subj) { return `subject_notebook_${subj}`; }
     function loadNotebook(subj) { return localStorage.getItem(getNotebookKey(subj)) || ''; }
     function saveNotebook(subj, text) { localStorage.setItem(getNotebookKey(subj), text); }
@@ -9818,63 +9818,244 @@ if(p) {
         editor.innerHTML = `
             <div style="background:#e67e22; padding:10px; display:flex; justify-content:space-between;"><span style="color:white;">📓 Тетрадь: ${subjName}</span><button id="closeNotebook" style="background:none; border:none; color:white; font-size:24px;">✖</button></div>
             <textarea id="notebookText" style="width:100%; height:300px; background:#34495e; color:white; padding:10px; border:none;">${currentText.replace(/</g, '&lt;')}</textarea>
-            <button id="saveNotebookBtn" style="background:#27ae60; padding:8px; margin:10px;">💾 Сохранить</button>
         `;
         document.body.appendChild(editor);
+        const textarea = editor.querySelector('#notebookText');
+        let saveTimer = null;
+        textarea.addEventListener('input', () => {
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                saveNotebook(subjKey, textarea.value);
+                // кратковременная индикация сохранения
+                const status = document.createElement('div');
+                status.textContent = '💾 Автосохранение...';
+                status.style.cssText = 'position:absolute; bottom:5px; right:10px; background:#27ae60; padding:2px 8px; border-radius:10px; font-size:12px;';
+                editor.appendChild(status);
+                setTimeout(() => status.remove(), 800);
+            }, 400);
+        });
         document.getElementById('closeNotebook').onclick = () => editor.remove();
-        document.getElementById('saveNotebookBtn').onclick = () => {
-            saveNotebook(subjKey, document.getElementById('notebookText').value);
-            alert('Тетрадь сохранена');
-            editor.remove();
-        };
     }
 
-    // --- Данные предметов (много тем по математике) ---
+    // ----- РЕШАТЕЛЬ УРАВНЕНИЙ С ПОШАГОВЫМ ОБЪЯСНЕНИЕМ -----
+    function solveEquationDetailed(equation) {
+        let eq = equation.replace(/\s/g, '');
+        // ===== КВАДРАТНОЕ УРАВНЕНИЕ (ax^2+bx+c=0) =====
+        let quadMatch = eq.match(/^([+-]?\d*\.?\d*)?x\^2([+-]\d*\.?\d*)x?([+-]\d*\.?\d*)?=0$/i);
+        if (quadMatch) {
+            let a = parseFloat(quadMatch[1] || 1);
+            let b = parseFloat(quadMatch[2] || 0);
+            let c = parseFloat(quadMatch[3] || 0);
+            let steps = `📐 <strong>Квадратное уравнение:</strong> ${a}x² + ${b}x + ${c} = 0<br>`;
+            steps += `Шаг 1: Находим дискриминант D = b² - 4ac<br>`;
+            steps += `D = ${b}² - 4·${a}·${c} = ${b*b} - ${4*a*c} = ${b*b - 4*a*c}<br>`;
+            let D = b*b - 4*a*c;
+            if (D < 0) {
+                steps += `D < 0 → уравнение не имеет действительных корней.`;
+            } else if (D === 0) {
+                let x = -b/(2*a);
+                steps += `D = 0 → один корень: x = -b/(2a) = -${b}/(2·${a}) = ${x}`;
+            } else {
+                let sqrtD = Math.sqrt(D);
+                let x1 = (-b + sqrtD)/(2*a);
+                let x2 = (-b - sqrtD)/(2*a);
+                steps += `√D = ${sqrtD}<br>`;
+                steps += `x₁ = (-b + √D)/(2a) = (-${b} + ${sqrtD})/(2·${a}) = ${x1}<br>`;
+                steps += `x₂ = (-b - √D)/(2a) = (-${b} - ${sqrtD})/(2·${a}) = ${x2}`;
+            }
+            return steps;
+        }
+
+        // ===== ЛИНЕЙНОЕ УРАВНЕНИЕ =====  
+        // Преобразуем уравнение к виду f(x)=0 через подстановку двух точек
+        try {
+            let expr = eq.replace(/=/g, '-(') + ')';
+            let f = new Function('x', 'return (' + expr + ')');
+            let x1 = 0, x2 = 1;
+            let y1 = f(x1), y2 = f(x2);
+            let a = y2 - y1;
+            let b = y1;
+            if (Math.abs(a) < 1e-9) {
+                if (Math.abs(b) < 1e-9) return 'Уравнение имеет бесконечно много решений (тождество)';
+                else return 'Уравнение не имеет решений (противоречие)';
+            }
+            let x = -b / a;
+            return `<strong>Решение уравнения ${equation}</strong><br>⇒ x = ${x}`;
+        } catch(e) {
+            return 'Ошибка: неверный формат уравнения. Примеры: 2x+3=7, x^2-5x+6=0, (8x-3)/2 - (3x+1)/4 = (x-7)/3 + (5x+1)/6 + 19';
+        }
+    }
+
+    // ========== ДАННЫЕ ПРЕДМЕТОВ (РАЗВЁРНУТЫЕ ТЕОРИИ, МНОГО ТЕМ, ДЛИННЫЕ ТЕСТЫ) ==========
     const subjectsData = {
         math: {
             name: 'Математика', icon: '📐',
             themes: {
-                arithmetic: { name: 'Арифметика', explanation: `<h3>Основные действия</h3><p>Сложение (+), вычитание (-), умножение (*), деление (/).<br>Порядок действий: скобки, затем умножение/деление, потом сложение/вычитание.</p>`, questions: [{ text: 'Сколько будет (2+3)*4?', options: ['20', '14', '24', '12'], correct: 0, explanation: '(5)*4=20' }] },
-                fractions: { name: 'Дроби', explanation: `<h3>Дроби</h3><p>Чтобы сложить дроби, приведите к общему знаменателю. Пример: 1/2 + 1/3 = 3/6+2/6=5/6</p>`, questions: [{ text: '1/4 + 1/2 = ?', options: ['2/4', '3/4', '1/4', '1'], correct: 1, explanation: '1/4+2/4=3/4' }] },
-                percents: { name: 'Проценты', explanation: `<p>1% = 1/100 = 0.01. Пример: 20% от 150 = 150*0.2=30</p>`, questions: [{ text: '30% от 200?', options: ['30', '40', '50', '60'], correct: 2, explanation: '200*0.3=60' }] },
-                linearEq: { name: 'Линейные уравнения', explanation: `<p>Уравнения вида ax + b = c. Решение: x = (c - b)/a.<br>Пример: 2x+5=13 → 2x=8 → x=4</p>`, questions: [{ text: '3x + 4 = 19', options: ['3', '5', '7', '9'], correct: 1, explanation: '3x=15 → x=5' }] },
-                systemsEq: { name: 'Системы уравнений', explanation: `<h3>Системы двух уравнений</h3><p>Решаются методом подстановки или сложения. Пример: { x+y=5, x-y=1 } → сложим: 2x=6 → x=3, y=2.</p>`, questions: [{ text: 'Решите систему: x+y=7, x-y=3', options: ['(5,2)', '(2,5)', '(4,3)', '(3,4)'], correct: 0, explanation: 'сложение: 2x=10 → x=5, y=2' }] },
-                quadraticEq: { name: 'Квадратные уравнения', explanation: `<h3>ax²+bx+c=0</h3><p>Дискриминант D=b²-4ac. Корни: x₁₂ = (-b ± √D)/(2a).<br>Пример: x²-5x+6=0 → D=25-24=1 → x₁=3, x₂=2</p>`, questions: [{ text: 'x² - 3x + 2 = 0', options: ['1 и 2', '-1 и -2', '1 и -2', '-1 и 2'], correct: 0, explanation: 'D=9-8=1 → (3±1)/2=2;1' }] },
-                inequalities: { name: 'Неравенства', explanation: `<p>Линейные неравенства решаются как уравнения, но при умножении на отрицательное число знак меняется. Пример: 3x - 5 > 7 → 3x > 12 → x > 4</p>`, questions: [{ text: 'Решите 2x + 3 ≤ 11', options: ['x ≤ 4', 'x ≥ 4', 'x ≤ 7', 'x ≥ 7'], correct: 0, explanation: '2x ≤ 8 → x ≤ 4' }] },
-                geometry: { name: 'Геометрия: площади', explanation: `<p>Площадь прямоугольника: S = a·b. Треугольника: S = (a·h)/2. Круга: S = πR².</p>`, questions: [{ text: 'Площадь квадрата со стороной 5?', options: ['10', '15', '20', '25'], correct: 3, explanation: '5·5=25' }] },
-                logarithms: { name: 'Логарифмы', explanation: `<p>logₐ(b) = c ⇔ aᶜ = b. Основные свойства: log(ab)=log a+log b, log(a/b)=log a-log b.</p>`, questions: [{ text: 'log₂(8) = ?', options: ['2', '3', '4', '8'], correct: 1, explanation: '2³=8' }] },
-                combinatorics: { name: 'Комбинаторика', explanation: `<p>Факториал n! = 1·2·...·n. Перестановки: n!; сочетания: Cₙᵏ = n!/(k!(n−k)!).</p>`, questions: [{ text: 'Сколько перестановок из 3 букв?', options: ['3', '6', '9', '12'], correct: 1, explanation: '3! = 6' }] },
-                derivative: { name: 'Производные', explanation: `<p>Производная функции f(x) – скорость изменения. f(x)=xⁿ → f'(x)=n·xⁿ⁻¹. Пример: x³ → 3x².</p>`, questions: [{ text: 'Производная x⁵?', options: ['5x⁴', '4x⁵', '5x⁶', 'x⁴'], correct: 0, explanation: '5·x⁴' }] }
+                arithmetic: {
+                    name: 'Арифметика', 
+                    theory: `<h3>Порядок действий</h3><p>В математике действия выполняются в следующем порядке: скобки, затем умножение и деление (слева направо), потом сложение и вычитание. Пример: (2+3)*4 = 5*4 = 20.</p><p>Важно: умножение и деление имеют одинаковый приоритет, выполняются по порядку. Например, 8:4*2 = 2*2 = 4.</p>`,
+                    questions: [
+                        { text: 'Сколько будет (2+3)*4?', options: ['20', '14', '24', '12'], correct: 0, explanation: 'Сначала скобки: 2+3=5, потом 5*4=20' },
+                        { text: 'Вычислите: 12 - 4 + 3', options: ['5', '11', '13', '7'], correct: 1, explanation: '12-4=8, 8+3=11' },
+                        { text: '8 : 4 * 2 = ?', options: ['4', '1', '2', '8'], correct: 0, explanation: '8:4=2, 2*2=4' },
+                        { text: '(9 - 3) * 2 : 4 = ?', options: ['3', '6', '12', '2'], correct: 0, explanation: '6*2=12, 12:4=3' },
+                        { text: 'Найдите 20% от 150', options: ['20', '30', '40', '50'], correct: 1, explanation: '150*0.2=30' }
+                    ]
+                },
+                fractions: {
+                    name: 'Дроби', 
+                    theory: `<h3>Сложение дробей</h3><p>Чтобы сложить две дроби, нужно привести их к общему знаменателю. Пример: 1/2 + 1/3 = 3/6 + 2/6 = 5/6.</p>`,
+                    questions: [
+                        { text: '1/4 + 1/2 = ?', options: ['2/4', '3/4', '1/4', '1'], correct: 1, explanation: '1/4 + 2/4 = 3/4' },
+                        { text: '2/3 + 1/6 = ?', options: ['5/6', '3/6', '1/2', '2/9'], correct: 0, explanation: '4/6 + 1/6 = 5/6' },
+                        { text: '1 1/3 + 2/3 = ?', options: ['1 2/3', '2', '2 1/3', '1'], correct: 1, explanation: '4/3+2/3=6/3=2' }
+                    ]
+                },
+                linearEq: {
+                    name: 'Линейные уравнения',
+                    theory: `<h3>Решение линейных уравнений</h3><p>Уравнение вида ax + b = c решается переносом b в правую часть и делением на a. Пример: 2x+5=13 → 2x=8 → x=4.</p>
+                            <p><strong>Попробуйте решить своё уравнение:</strong> <input type="text" id="userEq" style="background:#34495e; color:white; width:60%;"><button id="solveEqBtn">Решить</button></p>
+                            <div id="eqSolution" style="background:#1e2a36; border-radius:10px; padding:8px; margin-top:10px; display:none;"></div>`,
+                    questions: [
+                        { text: '3x + 4 = 19', options: ['3', '5', '7', '9'], correct: 1, explanation: '3x=15 → x=5' },
+                        { text: '5x - 8 = 22', options: ['4', '5', '6', '7'], correct: 2, explanation: '5x=30 → x=6' }
+                    ]
+                },
+                quadraticEq: {
+                    name: 'Квадратные уравнения',
+                    theory: `<h3>ax²+bx+c=0</h3><p>Решение через дискриминант D=b²-4ac. Если D>0 – два корня, D=0 – один, D<0 – нет.</p>
+                            <p><input type="text" id="userQuad" placeholder="x^2-5x+6=0" style="background:#34495e; color:white;"><button id="solveQuadBtn">Решить</button></p>
+                            <div id="quadSolution" style="background:#1e2a36; border-radius:10px; padding:8px; margin-top:10px; display:none;"></div>`,
+                    questions: [
+                        { text: 'x² - 3x + 2 = 0', options: ['1 и 2', '-1 и -2', '1 и -2', '-1 и 2'], correct: 0, explanation: 'D=9-8=1 → x=2;1' },
+                        { text: 'x² - 4x + 4 = 0', options: ['2', '-2', '2 (два одинаковых)', 'корней нет'], correct: 2, explanation: 'D=16-16=0 → x=2' }
+                    ]
+                }
             }
         },
         russian: {
             name: 'Русский язык', icon: '📖',
             themes: {
-                parts_of_speech: { name: 'Части речи', explanation: `<p>Существительное, прилагательное, глагол, местоимение, числительное, наречие, предлог, союз, частица, междометие.</p>`, questions: [{ text: 'Какая часть речи обозначает предмет?', options: ['Глагол', 'Прилагательное', 'Существительное', 'Наречие'], correct: 2, explanation: 'Существительное' }] },
-                syntax: { name: 'Синтаксис', explanation: `<p>Подлежащее и сказуемое – главные члены. Предложения бывают простые и сложные.</p>`, questions: [{ text: 'Что такое подлежащее?', options: ['Действие', 'Предмет речи', 'Признак', 'Время'], correct: 1, explanation: 'Кто? Что?' }] }
+                parts_of_speech: {
+                    name: 'Части речи',
+                    theory: `<h3>Самостоятельные и служебные части речи</h3><p>Самостоятельные: существительное, прилагательное, глагол, местоимение, числительное, наречие. Служебные: предлог, союз, частица. Междометия стоят особняком.</p>`,
+                    questions: [
+                        { text: 'Какая часть речи обозначает предмет?', options: ['Глагол', 'Прилагательное', 'Существительное', 'Наречие'], correct: 2, explanation: 'Существительное (кто? что?)' },
+                        { text: 'Укажите глагол', options: ['Белый', 'Бежать', 'Красота', 'Быстро'], correct: 1, explanation: 'Бежать – действие, глагол' },
+                        { text: 'Какая часть речи обозначает признак предмета?', options: ['Существительное', 'Глагол', 'Прилагательное', 'Местоимение'], correct: 2, explanation: 'Прилагательное (какой?)' },
+                        { text: 'Найдите предлог', options: ['И', 'Но', 'На', 'Очень'], correct: 2, explanation: 'На – предлог' },
+                        { text: 'Какая часть речи указывает на предмет, но не называет его?', options: ['Существительное', 'Прилагательное', 'Глагол', 'Местоимение'], correct: 3, explanation: 'Местоимение (я, ты, он и т.д.)' }
+                    ]
+                },
+                syntax: {
+                    name: 'Синтаксис',
+                    theory: `<h3>Главные и второстепенные члены предложения</h3><p>Подлежащее (кто? что?), сказуемое (что делает? каков?), определение (какой?), дополнение (кого? чего?), обстоятельство (где? когда? как?).</p>`,
+                    questions: [
+                        { text: 'Что такое подлежащее?', options: ['Действие', 'Предмет речи', 'Признак', 'Время'], correct: 1, explanation: 'Подлежащее – главный член, отвечающий на вопрос кто? что?' },
+                        { text: 'Найдите сказуемое в предложении: "Солнце светит ярко".', options: ['Солнце', 'Светит', 'Ярко', 'Солнце светит'], correct: 1, explanation: 'Светит – действие предмета, сказуемое' },
+                        { text: 'Каким членом предложения является слово "красивый" в предложении "Красивый цветок растёт"?', options: ['Подлежащее', 'Сказуемое', 'Определение', 'Дополнение'], correct: 2, explanation: 'Красивый – признак цветка, определение' }
+                    ]
+                },
+                orthography: {
+                    name: 'Орфография',
+                    theory: `<h3>Правописание приставок пре- и при-</h3><p>При- пишется в значении приближения, присоединения, неполноты действия. Пре- = "очень" или приставке "пере-".</p>`,
+                    questions: [
+                        { text: 'В каком слове пишется приставка пре-?', options: ['Пр_клеить', 'Пр_бить', 'Пр_мудрый', 'Пр_сесть'], correct: 2, explanation: 'Премудрый = очень мудрый' },
+                        { text: 'Вставьте букву: "Пр_школьный участок"', options: ['е', 'и'], correct: 1, explanation: 'Пришкольный – присоединение' }
+                    ]
+                }
             }
         },
         physics: {
             name: 'Физика', icon: '⚛️',
             themes: {
-                newton: { name: 'Законы Ньютона', explanation: `<p>I – инерция, II – F=ma, III – действие равно противодействию.</p>`, questions: [{ text: 'F=ma – это ...', options: ['I', 'II', 'III'], correct: 1, explanation: 'Второй закон' }] },
+                newton: {
+                    name: 'Законы Ньютона',
+                    theory: `<h3>Динамика</h3><p>I закон: тело сохраняет скорость при отсутствии сил. II закон: F=ma. III закон: действие равно противодействию.</p>`,
+                    questions: [
+                        { text: 'F=ma – это ... закон Ньютона', options: ['Первый', 'Второй', 'Третий'], correct: 1, explanation: 'Второй закон' },
+                        { text: 'Какая единица измерения силы?', options: ['кг', 'м/с²', 'Ньютон', 'Джоуль'], correct: 2, explanation: 'Сила измеряется в ньютонах (Н)' }
+                    ]
+                },
+                kinematics: {
+                    name: 'Кинематика',
+                    theory: `<h3>Равномерное движение</h3><p>Скорость v = S/t, ускорение a = (v - v₀)/t.</p>`,
+                    questions: [
+                        { text: 'Скорость пешехода 5 км/ч. За 2 часа он пройдёт?', options: ['5 км', '10 км', '15 км', '20 км'], correct: 1, explanation: '5·2=10 км' },
+                        { text: 'Автомобиль разгоняется от 0 до 20 м/с за 5 с. Какое ускорение?', options: ['2 м/с²', '4 м/с²', '5 м/с²', '10 м/с²'], correct: 1, explanation: 'a = (20-0)/5 = 4 м/с²' }
+                    ]
+                },
+                energy: {
+                    name: 'Энергия',
+                    theory: `<h3>Кинетическая и потенциальная энергия</h3><p>Кинетическая E_k = mv²/2. Потенциальная E_p = mgh.</p>`,
+                    questions: [
+                        { text: 'Формула кинетической энергии', options: ['mgh', 'mv²/2', 'F·s', 'mv'], correct: 1, explanation: 'E_k = mv²/2' },
+                        { text: 'Если масса тела увеличится в 2 раза, кинетическая энергия (при той же скорости) ...', options: ['Увеличится в 2 раза', 'Уменьшится в 2 раза', 'Не изменится', 'Увеличится в 4 раза'], correct: 0, explanation: 'E_k ~ m' }
+                    ]
+                }
             }
         },
         biology: {
             name: 'Биология', icon: '🧬',
             themes: {
-                cell: { name: 'Строение клетки', explanation: `<p>Ядро, митохондрии, рибосомы, мембрана.</p>`, questions: [{ text: 'Энергетическая станция клетки?', options: ['Ядро', 'Митохондрия', 'Рибосома'], correct: 1, explanation: 'Митохондрии' }] },
+                cell: {
+                    name: 'Строение клетки',
+                    theory: `<h3>Органоиды клетки</h3><p>Ядро (хранит ДНК), митохондрии (энергия), рибосомы (синтез белка), ЭПС, комплекс Гольджи.</p>`,
+                    questions: [
+                        { text: 'Энергетическая станция клетки?', options: ['Ядро', 'Митохондрия', 'Рибосома', 'Лизосома'], correct: 1, explanation: 'Митохондрии производят АТФ' },
+                        { text: 'Где находится ДНК в эукариотической клетке?', options: ['В цитоплазме', 'В ядре', 'В рибосомах', 'В мембране'], correct: 1, explanation: 'В ядре' }
+                    ]
+                },
+                genetics: {
+                    name: 'Генетика',
+                    theory: `<h3>Законы Менделя</h3><p>Доминантные и рецессивные признаки. Гомозигота и гетерозигота.</p>`,
+                    questions: [
+                        { text: 'Что такое ген?', options: ['Белок', 'Участок ДНК', 'Клетка', 'Органоид'], correct: 1, explanation: 'Ген – участок ДНК, кодирующий белок' },
+                        { text: 'При скрещивании Аа × Аа какова вероятность рецессивной гомозиготы (аа)?', options: ['0%', '25%', '50%', '75%'], correct: 1, explanation: 'Расщепление 1:2:1 → 25%' }
+                    ]
+                },
+                evolution: {
+                    name: 'Эволюция',
+                    theory: `<h3>Дарвинизм</h3><p>Естественный отбор, изменчивость, наследственность. Виды изменяются в результате приспособления к среде.</p>`,
+                    questions: [
+                        { text: 'Кто автор теории эволюции?', options: ['Линней', 'Ламарк', 'Дарвин', 'Мендель'], correct: 2, explanation: 'Чарльз Дарвин' },
+                        { text: 'Что такое естественный отбор?', options: ['Выживание слабых', 'Выживание сильных', 'Выживание наиболее приспособленных', 'Случайная гибель'], correct: 2, explanation: 'Выживание приспособленных' }
+                    ]
+                }
             }
         },
         chemistry: {
             name: 'Химия', icon: '🧪',
             themes: {
-                valence: { name: 'Валентность', explanation: `<p>Валентность – способность атомов образовывать связи. У кислорода II, у водорода I.</p>`, questions: [{ text: 'Валентность кислорода чаще?', options: ['I', 'II', 'III', 'IV'], correct: 1, explanation: 'Кислород двухвалентен' }] },
+                valence: {
+                    name: 'Валентность',
+                    theory: `<h3>Валентность элементов</h3><p>Валентность – способность атомов образовывать химические связи. У водорода – I, кислорода – II.</p>`,
+                    questions: [
+                        { text: 'Валентность кислорода чаще всего?', options: ['I', 'II', 'III', 'IV'], correct: 1, explanation: 'Кислород двухвалентен (H₂O)' },
+                        { text: 'Валентность водорода всегда?', options: ['I', 'II', 'III', 'IV'], correct: 0, explanation: 'Водород одновалентен' }
+                    ]
+                },
+                reactions: {
+                    name: 'Типы реакций',
+                    theory: `<h3>Соединение, разложение, замещение, обмен</h3><p>Пример соединения: 2H₂ + O₂ = 2H₂O.</p>`,
+                    questions: [
+                        { text: 'Из двух веществ образуется одно – это реакция', options: ['Разложения', 'Соединения', 'Замещения', 'Обмена'], correct: 1, explanation: 'Реакция соединения' },
+                        { text: 'Реакция Zn + 2HCl = ZnCl₂ + H₂ относится к типу', options: ['Соединение', 'Разложение', 'Замещение', 'Обмен'], correct: 2, explanation: 'Цинк замещает водород' }
+                    ]
+                },
+                periodic_law: {
+                    name: 'Периодический закон',
+                    theory: `<h3>Таблица Менделеева</h3><p>Свойства элементов периодически зависят от заряда ядра.</p>`,
+                    questions: [
+                        { text: 'Кто открыл периодический закон?', options: ['Ломоносов', 'Менделеев', 'Бутлеров', 'Лавуазье'], correct: 1, explanation: 'Дмитрий Менделеев' },
+                        { text: 'В каком порядке расположены элементы в современной таблице?', options: ['По массе', 'По заряду ядра', 'По числу нейтронов', 'По электроотрицательности'], correct: 1, explanation: 'По возрастанию заряда ядра' }
+                    ]
+                }
             }
         }
     };
 
-    // ----- Навигация -----
+    // ========== НАВИГАЦИЯ И ОТРИСОВКА С РАСШИРЕННОЙ ТЕОРИЕЙ ==========
     function renderSubjectList() {
         let html = `<div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">`;
         for (let [key, subj] of Object.entries(subjectsData)) {
@@ -9913,7 +10094,7 @@ if(p) {
         let html = `
             <div><button id="backToSubjectBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px;">← Назад к предмету</button></div>
             <div style="display:flex; gap:20px; flex-wrap:wrap;">
-                <div style="flex:1.5; background:#2c3e50; border-radius:20px; padding:15px; color:#eee;">${theme.explanation}</div>
+                <div style="flex:1.5; background:#2c3e50; border-radius:20px; padding:15px; color:#eee; overflow:auto;">${theme.theory}</div>
                 <div style="flex:1; background:#1e2a36; border-radius:20px; padding:15px;">
                     <h3 style="color:white;">📝 Тест: ${theme.name}</h3>
                     <div id="quizContainer"></div><div id="quizResult" style="margin-top:15px; display:none;"></div>
@@ -9922,6 +10103,40 @@ if(p) {
         `;
         document.getElementById('subjectsContent').innerHTML = html;
         document.getElementById('backToSubjectBtn').onclick = () => showSubjectPanel(subjKey);
+
+        // Если это тема линейных уравнений – привязываем решатель
+        if (subjKey === 'math' && themeKey === 'linearEq') {
+            setTimeout(() => {
+                const solveBtn = document.getElementById('solveEqBtn');
+                if (solveBtn) {
+                    solveBtn.onclick = () => {
+                        const eq = document.getElementById('userEq').value;
+                        const solDiv = document.getElementById('eqSolution');
+                        if (!eq) return;
+                        const result = solveEquationDetailed(eq);
+                        solDiv.innerHTML = result;
+                        solDiv.style.display = 'block';
+                    };
+                }
+            }, 50);
+        }
+        // Квадратные уравнения
+        if (subjKey === 'math' && themeKey === 'quadraticEq') {
+            setTimeout(() => {
+                const solveBtn = document.getElementById('solveQuadBtn');
+                if (solveBtn) {
+                    solveBtn.onclick = () => {
+                        const eq = document.getElementById('userQuad').value;
+                        const solDiv = document.getElementById('quadSolution');
+                        if (!eq) return;
+                        const result = solveEquationDetailed(eq);
+                        solDiv.innerHTML = result;
+                        solDiv.style.display = 'block';
+                    };
+                }
+            }, 50);
+        }
+
         if (theme.questions && theme.questions.length) initQuiz(theme.questions);
     }
 
@@ -9941,14 +10156,15 @@ if(p) {
             document.getElementById('nextQ')?.addEventListener('click', () => { if(state.idx<state.total-1) { state.idx++; render(); } });
             document.getElementById('submitQuiz')?.addEventListener('click', () => {
                 let score = 0;
-                let resHtml = `<h4>Результаты</h4>`;
+                let resHtml = `<h4>📊 Результаты</h4>`;
                 for (let i=0; i<state.total; i++) {
                     let correct = (state.answers[i] === state.qs[i].correct);
                     if(correct) score++;
                     resHtml += `<div style="border-left:4px solid ${correct ? '#2ecc71' : '#e74c3c'}; margin:8px 0; padding:8px; background:#1e2a36;">
                         ${state.qs[i].text}<br>Ваш: ${state.answers[i]!==-1 ? state.qs[i].options[state.answers[i]] : '—'} | Правильно: ${state.qs[i].options[state.qs[i].correct]}<br>${state.qs[i].explanation}</div>`;
                 }
-                resHtml += `<div>Правильных: ${score} из ${state.total}</div><button id="restartQuiz">🔄 Пройти заново</button>`;
+                resHtml += `<div style="margin:15px 0;">✅ Правильных ответов: <strong>${score}</strong> из ${state.total}</div>`;
+                resHtml += `<button id="restartQuiz" style="background:#e67e22;">🔄 Пройти заново</button>`;
                 document.getElementById('quizResult').innerHTML = resHtml;
                 document.getElementById('quizResult').style.display = 'block';
                 container.style.display = 'none';
