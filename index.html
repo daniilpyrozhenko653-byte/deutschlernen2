@@ -9777,20 +9777,20 @@ if(p) {
 
 
 
-    // ========== НОВЫЙ РАЗДЕЛ: ШКОЛЬНЫЕ ПРЕДМЕТЫ (ТЕСТЫ + ОБЪЯСНЕНИЯ) ==========
+    // ========== РАЗДЕЛ "ПРЕДМЕТЫ" – ИСПРАВЛЕННЫЕ ТЕСТЫ И РАСШИРЕННЫЙ СПИСОК ==========
 (function() {
     if (document.getElementById('subjectsSectionBtn')) return;
 
-    // Позиционирование кнопки рядом с другими
+    // Позиционирование кнопки
     const spanishBtn = document.getElementById('languagesSectionBtn');
     const gamesBtn = document.getElementById('unifiedGamesBtn');
     let rightPos = '20px';
     if (spanishBtn) {
         const spRight = parseInt(spanishBtn.style.right);
-        if (!isNaN(spRight)) rightPos = (spRight + 90) + 'px';
+        if (!isNaN(spRight)) rightPos = (spRight + 70) + 'px';
     } else if (gamesBtn) {
         const gRight = parseInt(gamesBtn.style.right);
-        if (!isNaN(gRight)) rightPos = (gRight + 90) + 'px';
+        if (!isNaN(gRight)) rightPos = (gRight + 70) + 'px';
     }
 
     const subjBtn = document.createElement('div');
@@ -9809,277 +9809,294 @@ if(p) {
             <button id="closeSubjectsModal" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
         </div>
         <div id="subjectsContent" style="flex:1; padding:15px; overflow:auto; display:flex; flex-direction:column; gap:15px;">
-            <!-- Контент будет загружаться динамически -->
+            <!-- Динамический контент -->
         </div>
     `;
     document.body.appendChild(modal);
 
-    // ---------- ДАННЫЕ ПРЕДМЕТОВ И ТЕМ ----------
+    // ----- БАЗА ДАННЫХ: ПРЕДМЕТЫ, ТЕМЫ, ОБЪЯСНЕНИЯ, ТЕСТЫ -----
     const subjectsData = {
         math: {
-            name: 'Математика',
-            icon: '📐',
+            name: 'Математика', icon: '📐',
             themes: {
                 fractions: {
                     name: 'Сложение дробей',
-                    explanation: `
-                        <h3>📖 Сложение дробей</h3>
-                        <p>Чтобы сложить две дроби, нужно привести их к общему знаменателю, затем сложить числители, а знаменатель оставить общим.</p>
-                        <p><strong>Алгоритм:</strong></p>
-                        <ol>
-                            <li>Найти наименьшее общее кратное (НОК) знаменателей.</li>
-                            <li>Умножить числитель и знаменатель каждой дроби на недостающий множитель.</li>
-                            <li>Сложить числители, знаменатель оставить без изменений.</li>
-                            <li>При необходимости сократить дробь.</li>
-                        </ol>
-                        <h4>Пример 1:</h4>
-                        <p>1/3 + 1/6 = (1*2)/(3*2) + 1/6 = 2/6 + 1/6 = 3/6 = 1/2</p>
-                        <h4>Пример 2 (с разными знаменателями):</h4>
-                        <p>2/5 + 1/3 = (2*3)/(5*3) + (1*5)/(3*5) = 6/15 + 5/15 = 11/15</p>
-                        <h4>Пример 3 (смешанные числа):</h4>
-                        <p>1 1/2 + 2 1/3 = (3/2) + (7/3) = (9/6)+(14/6)=23/6 = 3 5/6</p>
-                    `,
+                    explanation: `<h3>📖 Сложение дробей</h3><p>Чтобы сложить дроби, нужно привести их к общему знаменателю, затем сложить числители.</p><p><strong>Алгоритм:</strong></p><ol><li>Найти НОК знаменателей.</li><li>Привести дроби к общему знаменателю.</li><li>Сложить числители, знаменатель оставить.</li><li>Сократить, если возможно.</li></ol><h4>Пример:</h4><p>1/3 + 1/6 = 2/6 + 1/6 = 3/6 = 1/2</p>`,
                     questions: [
-                        {
-                            text: '1/4 + 1/2 = ?',
-                            options: ['2/4', '3/4', '1/4', '1'],
-                            correct: 1, // индекс (0-based)
-                            explanation: 'Приводим к общему знаменателю 4: 1/4 + 2/4 = 3/4'
-                        },
-                        {
-                            text: '2/3 + 1/6 = ?',
-                            options: ['5/6', '3/6', '1/2', '2/9'],
-                            correct: 0,
-                            explanation: 'Общий знаменатель 6: 4/6 + 1/6 = 5/6'
-                        },
-                        {
-                            text: '1 1/3 + 2/3 = ?',
-                            options: ['1 2/3', '2', '2 1/3', '1'],
-                            correct: 1,
-                            explanation: '1 1/3 = 4/3, 4/3+2/3=6/3=2'
-                        },
-                        {
-                            text: '3/8 + 1/4 = ?',
-                            options: ['4/8', '5/8', '3/8', '1/2'],
-                            correct: 1,
-                            explanation: 'Общий знаменатель 8: 3/8 + 2/8 = 5/8'
-                        },
-                        {
-                            text: '7/10 + 2/5 = ?',
-                            options: ['9/10', '11/10', '9/15', '1 1/10'],
-                            correct: 3,
-                            explanation: '2/5 = 4/10, 7/10+4/10=11/10 = 1 1/10'
-                        }
+                        { text: '1/4 + 1/2 = ?', options: ['2/4','3/4','1/4','1'], correct:1, explanation:'1/4 + 2/4 = 3/4' },
+                        { text: '2/3 + 1/6 = ?', options: ['5/6','3/6','1/2','2/9'], correct:0, explanation:'4/6 + 1/6 = 5/6' },
+                        { text: '1 1/3 + 2/3 = ?', options: ['1 2/3','2','2 1/3','1'], correct:1, explanation:'4/3 + 2/3 = 6/3 = 2' },
+                        { text: '3/8 + 1/4 = ?', options: ['4/8','5/8','3/8','1/2'], correct:1, explanation:'3/8 + 2/8 = 5/8' },
+                        { text: '7/10 + 2/5 = ?', options: ['9/10','11/10','9/15','1 1/10'], correct:3, explanation:'7/10 + 4/10 = 11/10 = 1 1/10' }
                     ]
                 },
                 percents: {
                     name: 'Проценты',
-                    explanation: '<p>Проценты — сотая часть числа. Для нахождения процента от числа нужно число умножить на процент и разделить на 100.</p><p>Пример: 20% от 80 = 80*20/100 = 16.</p><p>Чтобы выразить число в процентах, нужно число разделить на целое и умножить на 100%.</p>',
-                    questions: []
+                    explanation: `<h3>📖 Проценты</h3><p>Процент – сотая часть числа. Чтобы найти процент от числа, умножаем число на процент и делим на 100.</p><p>Пример: 20% от 80 = 80·20/100 = 16.</p><p>Чтобы выразить число в процентах от другого, делим его на целое и умножаем на 100%.</p>`,
+                    questions: [
+                        { text: '10% от 200 = ?', options: ['10','20','30','40'], correct:1, explanation:'200·10/100 = 20' },
+                        { text: 'Сколько процентов от 50 составляет 12,5?', options: ['20%','25%','30%','35%'], correct:1, explanation:'12,5/50·100% = 25%' },
+                        { text: 'Цена товара 400 рублей, скидка 15%. Сколько стоит товар?', options: ['340','360','380','300'], correct:0, explanation:'400 - 400·15/100 = 340' },
+                        { text: 'Вклад 10000 рублей под 8% годовых. Сколько будет через год?', options: ['10800','800','10080','1080'], correct:0, explanation:'10000 + 10000·0,08 = 10800' }
+                    ]
                 }
             }
         },
         russian: {
-            name: 'Русский язык',
-            icon: '📖',
+            name: 'Русский язык', icon: '📖',
             themes: {
                 parts_of_speech: {
                     name: 'Части речи',
-                    explanation: '<p>В русском языке 10 частей речи: имя существительное, имя прилагательное, глагол, местоимение, числительное, наречие, предлог, союз, частица, междометие.</p><p>Примеры: стол (сущ.), красивый (прил.), бежать (глаг.).</p>',
-                    questions: []
+                    explanation: `<h3>📖 Части речи</h3><p>В русском языке 10 частей речи: имя существительное, прилагательное, глагол, местоимение, числительное, наречие, предлог, союз, частица, междометие.</p><p><strong>Примеры:</strong> стол (сущ.), красивый (прил.), бежать (глаг.).</p>`,
+                    questions: [
+                        { text: 'Какая часть речи обозначает предмет?', options: ['глагол','прилагательное','существительное','наречие'], correct:2, explanation:'Имя существительное – предмет' },
+                        { text: 'Укажите глагол:', options: ['быстрый','бег','бежать','быстро'], correct:2, explanation:'бежать – действие' },
+                        { text: 'Какая часть речи указывает на предмет, но не называет его?', options: ['числительное','местоимение','причастие','деепричастие'], correct:1, explanation:'Местоимение (я, ты, он)' },
+                        { text: 'Выберите предлог:', options: ['но','и','под','да'], correct:2, explanation:'под – предлог' }
+                    ]
+                },
+                cases: {
+                    name: 'Падежи',
+                    explanation: `<h3>📖 Падежи имён существительных</h3><p>В русском языке 6 падежей: именительный (кто? что?), родительный (кого? чего?), дательный (кому? чему?), винительный (кого? что?), творительный (кем? чем?), предложный (о ком? о чём?).</p>`,
+                    questions: [
+                        { text: 'В каком падеже слово "стол" в предложении "Я вижу стол"?', options: ['И.п.','Р.п.','В.п.','Д.п.'], correct:2, explanation:'Вижу (кого? что?) – винительный падеж' },
+                        { text: 'Какой падеж требует предлога "о"?', options: ['И.п.','В.п.','П.п.','Т.п.'], correct:2, explanation:'Предложный падеж – о ком? о чём?' }
+                    ]
                 }
             }
         },
         physics: {
-            name: 'Физика',
-            icon: '⚛️',
+            name: 'Физика', icon: '⚛️',
             themes: {
                 newton_laws: {
                     name: 'Законы Ньютона',
-                    explanation: '<p>Первый закон: тело сохраняет состояние покоя или равномерного движения, если на него не действуют силы.</p><p>Второй закон: F = m·a.</p><p>Третий закон: действие равно противодействию.</p>',
-                    questions: []
+                    explanation: `<h3>📖 Законы Ньютона</h3><p>I закон: тело сохраняет скорость неизменной, если на него не действуют другие тела.</p><p>II закон: F = m·a.</p><p>III закон: действие равно противодействию.</p>`,
+                    questions: [
+                        { text: 'Как формулируется второй закон Ньютона?', options: ['F = m·a','F = m/a','F = a/m','F = m·v'], correct:0, explanation:'Сила = масса × ускорение' },
+                        { text: 'Единица измерения силы:', options: ['Джоуль','Ватт','Ньютон','Паскаль'], correct:2, explanation:'Ньютон (Н)' },
+                        { text: 'Если на тело не действуют силы, оно будет:', options: ['двигаться ускоренно','оставаться в покое или двигаться равномерно','обязательно покоиться','вращаться'], correct:1, explanation:'I закон Ньютона' }
+                    ]
+                },
+                ohm_law: {
+                    name: 'Закон Ома',
+                    explanation: `<h3>📖 Закон Ома</h3><p>Сила тока в проводнике прямо пропорциональна напряжению и обратно пропорциональна сопротивлению: I = U / R.</p>`,
+                    questions: [
+                        { text: 'Какая формула выражает закон Ома?', options: ['R = U/I','I = U/R','U = I·R','все верны'], correct:3, explanation:'Все три варианта эквивалентны' },
+                        { text: 'Если напряжение 12 В, а сопротивление 4 Ом, ток равен:', options: ['3 А','48 А','0,33 А','16 А'], correct:0, explanation:'I=12/4=3А' }
+                    ]
+                }
+            }
+        },
+        biology: {
+            name: 'Биология', icon: '🔬',
+            themes: {
+                cell: {
+                    name: 'Строение клетки',
+                    explanation: `<h3>📖 Клетка – единица жизни</h3><p>Клетка имеет ядро, цитоплазму, мембрану. Растительные клетки содержат хлоропласты и клеточную стенку.</p>`,
+                    questions: [
+                        { text: 'Какой органоид отвечает за синтез белка?', options: ['митохондрии','рибосомы','лизосомы','аппарат Гольджи'], correct:1, explanation:'Рибосомы – синтез белка' },
+                        { text: 'Какая структура есть только у растительных клеток?', options: ['ядро','митохондрии','клеточная стенка','цитоплазма'], correct:2, explanation:'Клеточная стенка (целлюлоза)' }
+                    ]
+                },
+                photosynthesis: {
+                    name: 'Фотосинтез',
+                    explanation: `<h3>📖 Фотосинтез</h3><p>Процесс образования органических веществ из углекислого газа и воды на свету.</p><p>Уравнение: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂.</p>`,
+                    questions: [
+                        { text: 'Какой газ выделяется при фотосинтезе?', options: ['кислород','углекислый газ','азот','водород'], correct:0, explanation:'Выделяется кислород' },
+                        { text: 'Где происходит фотосинтез?', options: ['в митохондриях','в хлоропластах','в ядре','в вакуолях'], correct:1, explanation:'В хлоропластах' }
+                    ]
+                }
+            }
+        },
+        chemistry: {
+            name: 'Химия', icon: '⚗️',
+            themes: {
+                periodic_table: {
+                    name: 'Периодическая таблица',
+                    explanation: `<h3>📖 Периодический закон Менделеева</h3><p>Свойства элементов периодически зависят от заряда ядра. Группы – вертикальные столбцы, периоды – горизонтальные строки.</p>`,
+                    questions: [
+                        { text: 'Какой элемент имеет атомный номер 1?', options: ['Гелий','Водород','Литий','Кислород'], correct:1, explanation:'Водород – №1' },
+                        { text: 'В какой группе находятся щелочные металлы?', options: ['1','2','7','8'], correct:0, explanation:'Первая группа' }
+                    ]
+                },
+                chemical_bonds: {
+                    name: 'Химические связи',
+                    explanation: `<h3>📖 Виды связей</h3><p>Ионная, ковалентная, металлическая, водородная. Ковалентная может быть полярной и неполярной.</p>`,
+                    questions: [
+                        { text: 'Связь в NaCl:', options: ['ковалентная','ионная','металлическая','водородная'], correct:1, explanation:'NaCl – ионное соединение' },
+                        { text: 'Какой вид связи в молекуле O₂?', options: ['ионная','ковалентная неполярная','ковалентная полярная','металлическая'], correct:1, explanation:'Одинаковые атомы – ковалентная неполярная' }
+                    ]
+                }
+            }
+        },
+        history: {
+            name: 'История', icon: '🏛️',
+            themes: {
+                ancient_rome: {
+                    name: 'Древний Рим',
+                    explanation: `<h3>📖 Древний Рим</h3><p>Основан в 753 г. до н.э. Был республикой, затем империей. Известные личности: Юлий Цезарь, Октавиан Август.</p>`,
+                    questions: [
+                        { text: 'Кто был первым римским императором?', options: ['Юлий Цезарь','Октавиан Август','Нерон','Траян'], correct:1, explanation:'Октавиан Август (27 г. до н.э.)' },
+                        { text: 'Как назывался главный римский форум?', options: ['Агора','Римский форум','Капитолий','Пантеон'], correct:1, explanation:'Римский форум – центр общественной жизни' }
+                    ]
+                }
+            }
+        },
+        geography: {
+            name: 'География', icon: '🌍',
+            themes: {
+                capitals: {
+                    name: 'Столицы мира',
+                    explanation: `<h3>📖 Столицы государств</h3><p>Знание столиц помогает понимать политическую карту мира.</p>`,
+                    questions: [
+                        { text: 'Столица Франции:', options: ['Берлин','Лондон','Париж','Мадрид'], correct:2, explanation:'Париж' },
+                        { text: 'Какая страна имеет столицу Токио?', options: ['Китай','Корея','Япония','Таиланд'], correct:2, explanation:'Япония' }
+                    ]
                 }
             }
         }
     };
 
-    // Текущее состояние
     let currentSubject = 'math';
     let currentTheme = 'fractions';
-    let quizState = {
-        currentQuestionIndex: 0,
-        userAnswers: [],      // индексы выбранных ответов (-1 если не отвечен)
-        totalQuestions: 0,
-        quizActive: false
-    };
-    let quizResults = null;
+    let quizState = { currentIndex: 0, answers: [], questions: [] };
 
     function renderSubjectList() {
         let html = `<div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">`;
         for (let [key, subj] of Object.entries(subjectsData)) {
-            html += `<div data-subject="${key}" class="subject-card" style="background:#2c3e50; border-radius:20px; padding:20px; width:180px; cursor:pointer; text-align:center; transition:0.2s;">
-                <div style="font-size:48px;">${subj.icon}</div>
-                <div style="color:white; font-weight:bold;">${subj.name}</div>
-            </div>`;
+            html += `<div data-subject="${key}" class="subject-card" style="background:#2c3e50; border-radius:20px; padding:20px; width:180px; cursor:pointer; text-align:center;">${subj.icon}<br><span style="color:white;">${subj.name}</span></div>`;
         }
         html += `</div>`;
         document.getElementById('subjectsContent').innerHTML = html;
         document.querySelectorAll('.subject-card').forEach(card => {
-            card.addEventListener('click', () => {
-                currentSubject = card.dataset.subject;
-                showThemesList();
-            });
-            card.addEventListener('mouseenter', () => card.style.transform = 'scale(1.02)');
-            card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
+            card.onclick = () => { currentSubject = card.dataset.subject; showThemesList(); };
         });
     }
 
     function showThemesList() {
         const subj = subjectsData[currentSubject];
         let html = `<div style="margin-bottom:10px;"><button id="backToSubjectsBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px; color:white;">← Назад</button></div>
-                    <h3 style="color:white; margin-bottom:15px;">${subj.icon} ${subj.name}</h3>
+                    <h3 style="color:white;">${subj.icon} ${subj.name}</h3>
                     <div style="display:flex; gap:15px; flex-wrap:wrap;">`;
         for (let [key, theme] of Object.entries(subj.themes)) {
-            html += `<div data-theme="${key}" class="theme-card" style="background:#34495e; border-radius:15px; padding:15px; width:200px; cursor:pointer; text-align:center;">
-                        <div style="font-size:24px;">📘</div>
-                        <div style="color:white; margin-top:10px;">${theme.name}</div>
-                    </div>`;
+            html += `<div data-theme="${key}" class="theme-card" style="background:#34495e; border-radius:15px; padding:15px; width:180px; cursor:pointer;"><div style="font-size:24px;">📘</div><div style="color:white;">${theme.name}</div></div>`;
         }
         html += `</div>`;
         document.getElementById('subjectsContent').innerHTML = html;
         document.querySelectorAll('.theme-card').forEach(card => {
-            card.addEventListener('click', () => {
-                currentTheme = card.dataset.theme;
-                showThemeDetail();
-            });
+            card.onclick = () => { currentTheme = card.dataset.theme; showThemeDetail(); };
         });
-        document.getElementById('backToSubjectsBtn')?.addEventListener('click', renderSubjectList);
+        document.getElementById('backToSubjectsBtn').onclick = renderSubjectList;
     }
 
     function showThemeDetail() {
-        const subj = subjectsData[currentSubject];
-        const theme = subj.themes[currentTheme];
+        const theme = subjectsData[currentSubject].themes[currentTheme];
         if (!theme) return;
-
         let html = `
-            <div style="margin-bottom:10px;">
-                <button id="backToThemesBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px; color:white;">← Назад к темам</button>
-            </div>
-            <div style="display:flex; gap:20px; flex-wrap:wrap;">
-                <div style="flex:1.5; background:#2c3e50; border-radius:20px; padding:15px; color:#ddd; line-height:1.6;">
-                    ${theme.explanation}
-                </div>
+            <div><button id="backToThemesBtn" style="background:#7f8c8d; border:none; padding:5px 12px; border-radius:20px; color:white;">← Назад</button></div>
+            <div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:10px;">
+                <div style="flex:1.5; background:#2c3e50; border-radius:20px; padding:15px; color:#ddd;">${theme.explanation}</div>
                 <div style="flex:1; background:#1e2a36; border-radius:20px; padding:15px;">
                     <h3 style="color:white;">🧪 Тест: ${theme.name}</h3>
-                    ${theme.questions.length > 0 ? `
-                        <div id="quizContainer"></div>
-                        <div id="quizResult" style="margin-top:15px; background:#0f172a; border-radius:15px; padding:10px; display:none;"></div>
-                    ` : `<p style="color:white;">Для этой темы тест пока не добавлен. Вы можете добавить вопросы в код.</p>`}
+                    <div id="quizContainer"></div>
+                    <div id="quizResult" style="margin-top:15px; background:#0f172a; border-radius:15px; padding:10px; display:none;"></div>
                 </div>
             </div>
         `;
         document.getElementById('subjectsContent').innerHTML = html;
-        document.getElementById('backToThemesBtn')?.addEventListener('click', showThemesList);
-
-        // Инициализируем тест, если есть вопросы
-        if (theme.questions.length > 0) {
+        document.getElementById('backToThemesBtn').onclick = showThemesList;
+        if (theme.questions && theme.questions.length) {
             initQuiz(theme.questions);
+        } else {
+            document.getElementById('quizContainer').innerHTML = '<p style="color:white;">Вопросы ещё не добавлены.</p>';
         }
     }
 
     function initQuiz(questions) {
-        quizState.totalQuestions = questions.length;
-        quizState.userAnswers = new Array(questions.length).fill(-1);
-        quizState.currentQuestionIndex = 0;
-        quizState.quizActive = true;
-        renderQuestion(questions);
+        quizState.questions = questions;
+        quizState.answers = new Array(questions.length).fill(-1);
+        quizState.currentIndex = 0;
+        renderQuizQuestion();
     }
 
-    function renderQuestion(questions) {
-        const qIndex = quizState.currentQuestionIndex;
-        const question = questions[qIndex];
+    function renderQuizQuestion() {
+        const q = quizState.questions[quizState.currentIndex];
         const container = document.getElementById('quizContainer');
         if (!container) return;
         let html = `
-            <div style="margin-top:10px;">
-                <div style="background:#2c3e50; padding:10px; border-radius:15px; color:white;">${question.text}</div>
-                <div style="margin-top:15px;">
-                    ${question.options.map((opt, idx) => `
-                        <label style="display:block; background:#34495e; margin:8px 0; padding:8px 12px; border-radius:30px; cursor:pointer;">
-                            <input type="radio" name="quizOption" value="${idx}" ${quizState.userAnswers[qIndex] === idx ? 'checked' : ''}> 
-                            <span style="color:white;">${opt}</span>
-                        </label>
-                    `).join('')}
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-top:20px;">
-                    <button id="prevQuizBtn" ${qIndex === 0 ? 'disabled' : ''} style="background:#7f8c8d; border:none; padding:6px 15px; border-radius:30px; color:white;">◀ Назад</button>
-                    <span style="color:white;">${qIndex+1} / ${questions.length}</span>
-                    <button id="nextQuizBtn" style="background:#e67e22; border:none; padding:6px 15px; border-radius:30px; color:white;">Далее ▶</button>
-                </div>
-                <button id="submitQuizBtn" style="width:100%; margin-top:15px; background:#27ae60; border:none; padding:8px; border-radius:30px; color:white;">✅ Завершить тест</button>
+            <div style="background:#2c3e50; padding:10px; border-radius:15px; color:white;">${q.text}</div>
+            <div style="margin-top:15px;">
+                ${q.options.map((opt, i) => `<label style="display:block; background:#34495e; margin:8px 0; padding:8px 12px; border-radius:30px; cursor:pointer;">
+                    <input type="radio" name="quizOpt" value="${i}" ${quizState.answers[quizState.currentIndex] === i ? 'checked' : ''}>
+                    <span style="color:white;">${opt}</span>
+                </label>`).join('')}
             </div>
+            <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                <button id="prevQBtn" ${quizState.currentIndex === 0 ? 'disabled' : ''} style="background:#7f8c8d; border:none; padding:6px 15px; border-radius:30px; color:white;">◀ Назад</button>
+                <span style="color:white;">${quizState.currentIndex+1} / ${quizState.questions.length}</span>
+                <button id="nextQBtn" style="background:#e67e22; border:none; padding:6px 15px; border-radius:30px; color:white;">Далее ▶</button>
+            </div>
+            <button id="submitQuizBtn" style="width:100%; margin-top:15px; background:#27ae60; border:none; padding:8px; border-radius:30px; color:white;">✅ Завершить тест</button>
         `;
         container.innerHTML = html;
 
-        // Обработчики
-        document.querySelectorAll('input[name="quizOption"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                quizState.userAnswers[qIndex] = parseInt(e.target.value);
-            });
+        // Сохраняем выбранный ответ
+        document.querySelectorAll('input[name="quizOpt"]').forEach(radio => {
+            radio.onchange = (e) => { quizState.answers[quizState.currentIndex] = parseInt(e.target.value); };
         });
-        document.getElementById('prevQuizBtn')?.addEventListener('click', () => {
-            if (quizState.currentQuestionIndex > 0) {
-                quizState.currentQuestionIndex--;
-                renderQuestion(questions);
+        // Кнопка "Назад"
+        document.getElementById('prevQBtn')?.onclick = () => {
+            if (quizState.currentIndex > 0) {
+                quizState.currentIndex--;
+                renderQuizQuestion();
             }
-        });
-        document.getElementById('nextQuizBtn')?.addEventListener('click', () => {
-            if (quizState.currentQuestionIndex < questions.length - 1) {
-                quizState.currentQuestionIndex++;
-                renderQuestion(questions);
+        };
+        // Кнопка "Далее"
+        document.getElementById('nextQBtn')?.onclick = () => {
+            if (quizState.currentIndex + 1 < quizState.questions.length) {
+                quizState.currentIndex++;
+                renderQuizQuestion();
             }
-        });
-        document.getElementById('submitQuizBtn')?.addEventListener('click', () => showQuizResults(questions));
+        };
+        // Завершить тест
+        document.getElementById('submitQuizBtn')?.onclick = () => showQuizResults();
     }
 
-    function showQuizResults(questions) {
+    function showQuizResults() {
         let score = 0;
-        let resultsHtml = `<h4 style="color:white;">📊 Результаты теста:</h4>`;
-        for (let i = 0; i < questions.length; i++) {
-            const isCorrect = (quizState.userAnswers[i] === questions[i].correct);
+        let resultsHtml = `<h4 style="color:white;">📊 Результаты:</h4>`;
+        for (let i = 0; i < quizState.questions.length; i++) {
+            const q = quizState.questions[i];
+            const userAnswer = quizState.answers[i];
+            const isCorrect = (userAnswer === q.correct);
             if (isCorrect) score++;
-            const userAnswerText = quizState.userAnswers[i] !== -1 ? questions[i].options[quizState.userAnswers[i]] : 'Не выбран';
-            const correctAnswerText = questions[i].options[questions[i].correct];
-            resultsHtml += `
-                <div style="margin-top:10px; padding:8px; background:#1e2a36; border-left:4px solid ${isCorrect ? '#2ecc71' : '#e74c3c'}; border-radius:8px;">
-                    <div style="color:white;">${questions[i].text}</div>
-                    <div style="font-size:13px;">Ваш ответ: ${userAnswerText} ${isCorrect ? '✅' : '❌'}</div>
-                    <div style="font-size:13px;">Правильный ответ: ${correctAnswerText}</div>
-                    <div style="font-size:12px; color:#aaa;">${questions[i].explanation}</div>
-                </div>
-            `;
+            const userText = userAnswer !== -1 ? q.options[userAnswer] : 'Не выбран';
+            const correctText = q.options[q.correct];
+            resultsHtml += `<div style="margin-top:8px; padding:8px; background:#1e2a36; border-left:4px solid ${isCorrect ? '#2ecc71' : '#e74c3c'};">
+                <div style="color:white;">${q.text}</div>
+                <div>Ваш ответ: ${userText} ${isCorrect ? '✅' : '❌'}</div>
+                <div>Правильный: ${correctText}</div>
+                <div style="font-size:12px;">${q.explanation}</div>
+            </div>`;
         }
-        resultsHtml += `<div style="margin-top:15px; text-align:center;"><strong style="color:white;">Правильных ответов: ${score} из ${questions.length}</strong></div>`;
-        resultsHtml += `<button id="restartQuizBtn" style="margin-top:10px; background:#e67e22; border:none; padding:6px 15px; border-radius:30px; color:white;">🔄 Пройти тест заново</button>`;
+        resultsHtml += `<div style="margin-top:15px; text-align:center;"><strong style="color:white;">Правильных ответов: ${score} из ${quizState.questions.length}</strong></div>`;
+        resultsHtml += `<button id="restartQuizBtn" style="margin-top:10px; background:#e67e22; border:none; padding:6px 20px; border-radius:30px; color:white;">🔄 Пройти заново</button>`;
         const resultDiv = document.getElementById('quizResult');
         const container = document.getElementById('quizContainer');
         if (resultDiv && container) {
             resultDiv.innerHTML = resultsHtml;
             resultDiv.style.display = 'block';
             container.style.display = 'none';
-            document.getElementById('restartQuizBtn')?.addEventListener('click', () => {
+            document.getElementById('restartQuizBtn').onclick = () => {
                 resultDiv.style.display = 'none';
                 container.style.display = 'block';
-                initQuiz(questions);
-            });
+                initQuiz(quizState.questions);
+            };
         }
     }
 
-    // Открытие окна
-    subjBtn.onclick = () => {
-        modal.style.display = 'flex';
-        renderSubjectList();
-    };
+    // Открытие
+    subjBtn.onclick = () => { modal.style.display = 'flex'; renderSubjectList(); };
     document.getElementById('closeSubjectsModal').onclick = () => modal.style.display = 'none';
 })();
 </script>
