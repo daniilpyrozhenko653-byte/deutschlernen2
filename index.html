@@ -10265,6 +10265,67 @@ speech_culture: {
     subjBtn.onclick = () => { modal.style.display = 'flex'; renderSubjectList(); };
     document.getElementById('closeSubjectsModal').onclick = () => modal.style.display = 'none';
 })();
+
+
+
+
+
+
+    // ========== КНОПКА "ПОДДЕРЖАТЬ" (РЕКВИЗИТЫ ДЛЯ ПЕРЕВОДА) ==========
+(function() {
+    if (document.getElementById('supportBtn')) return;
+
+    // Находим самую правую кнопку среди существующих
+    const existingBtns = ['unifiedGamesBtn', 'languagesSectionBtn', 'subjectsSectionBtn'];
+    let maxRight = 20;
+    for (let id of existingBtns) {
+        let btn = document.getElementById(id);
+        if (btn) {
+            let right = parseInt(btn.style.right);
+            if (!isNaN(right) && right > maxRight) maxRight = right;
+        }
+    }
+
+    // Создаём кнопку
+    const supportBtn = document.createElement('div');
+    supportBtn.id = 'supportBtn';
+    supportBtn.innerHTML = '🤝 Поддержать';
+    supportBtn.style.cssText = `position:absolute; top:20px; right:${maxRight + 90}px; background:#e74c3c; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);`;
+    document.body.appendChild(supportBtn);
+
+    // Модальное окно с реквизитами
+    const modal = document.createElement('div');
+    modal.id = 'supportModal';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100003; display:none; flex-direction:column; gap:15px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7); width:90%; max-width:400px; text-align:center;';
+    modal.innerHTML = `
+        <div style="display:flex; justify-content:flex-end;">
+            <button id="closeSupportModal" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+        </div>
+        <h3 style="color:white;">🤝 Поддержать проект</h3>
+        <p style="color:#ccc;">Ваша помощь позволит добавлять новые языки, темы и улучшать сервис.</p>
+        <div style="background:#2c3e50; padding:10px; border-radius:10px; margin:10px 0;">
+            <p style="color:white; margin:5px 0;"><strong>Получатель:</strong> Pyrozhenko, Danyil</p>
+            <p style="color:white; margin:5px 0;"><strong>IBAN:</strong> <span id="ibanCode">DE92 3755 1780 1020 1888 41</span> <button id="copyIbanBtn" style="background:#3498db; border:none; padding:2px 8px; border-radius:10px; cursor:pointer;">📋 Копировать</button></p>
+            <p style="color:white; margin:5px 0;"><strong>BIC:</strong> WELADED1LAF</p>
+        </div>
+        <p style="color:#aaa; font-size:12px;">Спасибо за поддержку! 🙏</p>
+    `;
+    document.body.appendChild(modal);
+
+    // Обработчики
+    supportBtn.onclick = () => modal.style.display = 'flex';
+    document.getElementById('closeSupportModal').onclick = () => modal.style.display = 'none';
+    document.getElementById('copyIbanBtn').onclick = () => {
+        const iban = document.getElementById('ibanCode').innerText;
+        navigator.clipboard.writeText(iban).then(() => {
+            const msg = document.createElement('div');
+            msg.textContent = '✅ IBAN скопирован!';
+            msg.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#27ae60; color:white; padding:6px 12px; border-radius:20px; z-index:100004; font-size:13px;';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 1500);
+        });
+    };
+})();
 </script>
 </body>
 </html>
