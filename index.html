@@ -10191,36 +10191,31 @@ speech_culture: {
 
 
 
-// ========== РАЗДЕЛ "УРОКИ НЕМЕЦКОГО" (A0..C1, ПОЛНЫЕ УРОКИ) ==========
+// ========== РАЗДЕЛ "УРОКИ НЕМЕЦКОГО" (A0 – 50 УРОКОВ, ПОЛНЫЙ КУРС) ==========
 (function() {
     if (document.getElementById('germanLessonsBtn')) return;
 
     // ---------- СОЗДАЁМ КНОПКУ ПОД ЗАГОЛОВКОМ ----------
     const container = document.querySelector('.app-container');
     if (!container) {
-        console.warn('Контейнер .app-container не найден, кнопка не добавлена');
+        console.warn('.app-container не найден');
         return;
     }
-    // Ищем заголовок h1
     const h1 = container.querySelector('h1');
     if (!h1) return;
 
-    // Создаём кнопку (без абсолютного позиционирования)
     const lessonsBtn = document.createElement('button');
     lessonsBtn.id = 'germanLessonsBtn';
     lessonsBtn.innerHTML = '📖 Уроки немецкого';
     lessonsBtn.style.cssText = 'background:#2c3e50; color:white; border:none; padding:6px 16px; border-radius:30px; cursor:pointer; font-size:14px; font-weight:bold; margin-top:10px; margin-bottom:5px; display:inline-block; transition:0.2s;';
     lessonsBtn.onmouseenter = () => lessonsBtn.style.transform = 'scale(1.02)';
     lessonsBtn.onmouseleave = () => lessonsBtn.style.transform = 'scale(1)';
-
-    // Вставляем кнопку после заголовка
     h1.insertAdjacentElement('afterend', lessonsBtn);
-    // Добавляем небольшой div-контейнер для отступа
     const spacer = document.createElement('div');
     spacer.style.height = '5px';
     lessonsBtn.insertAdjacentElement('afterend', spacer);
 
-    // ---------- МОДАЛЬНОЕ ОКНО (прежнее) ----------
+    // ---------- МОДАЛЬНОЕ ОКНО ----------
     const modal = document.createElement('div');
     modal.id = 'germanLessonsModal';
     modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:900px; height:85%; max-height:600px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
@@ -10233,7 +10228,17 @@ speech_culture: {
     `;
     document.body.appendChild(modal);
 
-    // ------------- СТРУКТУРА УРОВНЕЙ (A0..C1) -------------
+    // Добавляем CSS-стили для выделения правил
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        .grammar-rule { background:#2c3e50; border-left:4px solid #f39c12; padding:10px 15px; margin:15px 0; border-radius:8px; }
+        .grammar-rule strong { color:#f39c12; }
+        .highlight { background:#34495e; padding:2px 6px; border-radius:12px; font-weight:bold; color:#fff; }
+        .example { font-family: monospace; background:#1e2a36; padding:4px 8px; border-radius:6px; margin:5px 0; }
+    `;
+    document.head.appendChild(styleSheet);
+
+    // ---------- СТРУКТУРА УРОВНЕЙ ----------
     const lessonsDB = {
         A0: { name: 'Начальный абсолютный (A0)', lessons: [] },
         A1: { name: 'Начальный (A1)', lessons: [] },
@@ -10243,148 +10248,222 @@ speech_culture: {
         C1: { name: 'Продвинутый (C1)', lessons: [] }
     };
 
-    // ===================== УРОКИ УРОВНЯ A0 (ПЕРВЫЕ 6) =====================
-    // Урок 1 – Знакомство и приветствия
-    lessonsDB.A0.lessons.push({
-        id: 1,
-        title: 'Знакомство и приветствия',
-        grammar: `<h3>Приветствия в немецком языке</h3>
-                  <p><strong>Формальные:</strong> Guten Morgen (до 10–11), Guten Tag (днём), Guten Abend (вечером).<br>
-                  <strong>Неформальные:</strong> Hallo! (привет), Tschüss! (пока), Servus! (привет/пока – юг Германии).<br>
-                  <strong>Как дела?</strong> Wie geht es dir? – Mir geht es gut. / Nicht so gut. / Es geht.</p>
-                  <p><strong>Важно:</strong> В немецком вежливое «Вы» – Sie (пишется с большой буквы).</p>`,
-        vocabulary: [
-            { word: 'Hallo', translation: 'Привет' },
-            { word: 'Guten Morgen', translation: 'Доброе утро' },
-            { word: 'Guten Tag', translation: 'Добрый день' },
-            { word: 'Guten Abend', translation: 'Добрый вечер' },
-            { word: 'Tschüss', translation: 'Пока' },
-            { word: 'Auf Wiedersehen', translation: 'До свидания' },
-            { word: 'Wie geht es dir?', translation: 'Как у тебя дела?' },
-            { word: 'Mir geht es gut', translation: 'У меня всё хорошо' }
-        ],
-        sentences: [
-            { german: 'Hallo, ich heiße Anna.', russian: 'Привет, меня зовут Анна.' },
-            { german: 'Guten Tag! Wie geht es Ihnen?', russian: 'Добрый день! Как у Вас дела?' },
-            { german: 'Mir geht es gut, danke.', russian: 'У меня всё хорошо, спасибо.' },
-            { german: 'Auf Wiedersehen, bis morgen!', russian: 'До свидания, до завтра!' }
-        ]
-    });
-    // Урок 2 – Числа 0–10 и глагол haben
-    lessonsDB.A0.lessons.push({
-        id: 2,
-        title: 'Числа 0–10 и глагол haben',
-        grammar: `<h3>Числа и глагол «иметь»</h3>
-                  <p><strong>Числа 0–10:</strong> null, eins, zwei, drei, vier, fünf, sechs, sieben, acht, neun, zehn.<br>
-                  <strong>Глагол haben (иметь):</strong> ich habe, du hast, er/sie/es hat, wir haben, ihr habt, sie/Sie haben.<br>
-                  Пример: Ich habe einen Hund. (У меня есть собака.) Du hast keine Zeit. (У тебя нет времени.)</p>
-                  <p><strong>Отрицание kein/keine</strong> – для существительных: Ich habe keinen Bruder.</p>`,
-        vocabulary: [
-            { word: 'null', translation: 'ноль' }, { word: 'eins', translation: 'один' },
-            { word: 'zwei', translation: 'два' }, { word: 'drei', translation: 'три' },
-            { word: 'vier', translation: 'четыре' }, { word: 'fünf', translation: 'пять' },
-            { word: 'sechs', translation: 'шесть' }, { word: 'sieben', translation: 'семь' },
-            { word: 'acht', translation: 'восемь' }, { word: 'neun', translation: 'девять' },
-            { word: 'zehn', translation: 'десять' }, { word: 'haben', translation: 'иметь' },
-            { word: 'der Hund', translation: 'собака' }, { word: 'die Zeit', translation: 'время' }
-        ],
-        sentences: [
-            { german: 'Ich habe zwei Brüder.', russian: 'У меня есть два брата.' },
-            { german: 'Hast du einen Euro?', russian: 'У тебя есть один евро?' },
-            { german: 'Wir haben keine Zeit.', russian: 'У нас нет времени.' },
-            { german: 'Wie viele Bücher hast du? – Ich habe zehn Bücher.', russian: 'Сколько у тебя книг? – У меня десять книг.' }
-        ]
-    });
-    // Урок 3 – Местоимения er, sie, es. Глаголы sein и haben для них
-    lessonsDB.A0.lessons.push({
-        id: 3,
-        title: 'Местоимения er, sie, es. Глаголы sein und haben',
-        grammar: `<h3>Он, она, оно</h3>
-                  <p>Местоимения третьего лица: er (он), sie (она), es (оно). Глаголы: er/sie/es ist (быть), er/sie/es hat (иметь).<br>
-                  Род существительного подсказывает местоимение: der Tisch → er, die Lampe → sie, das Buch → es.<br>
-                  Пример: Der Hund ist groß. → Er ist groß.</p>`,
-        vocabulary: [
-            { word: 'er', translation: 'он' }, { word: 'sie', translation: 'она' },
-            { word: 'es', translation: 'оно' }, { word: 'sein', translation: 'быть' },
-            { word: 'der Tisch', translation: 'стол' }, { word: 'die Lampe', translation: 'лампа' },
-            { word: 'das Kind', translation: 'ребёнок' }
-        ],
-        sentences: [
-            { german: 'Der Tisch ist neu. Er ist neu.', russian: 'Стол новый. Он новый.' },
-            { german: 'Die Lampe ist kaputt. Sie ist kaputt.', russian: 'Лампа сломана. Она сломана.' },
-            { german: 'Das Kind ist klein. Es ist klein.', russian: 'Ребёнок маленький. Он маленький.' }
-        ]
-    });
-    // Урок 4 – Множественное число местоимений (wir, ihr, sie). Вежливое Sie
-    lessonsDB.A0.lessons.push({
-        id: 4,
-        title: 'Множественное число местоимений (wir, ihr, sie). Вежливое Sie',
-        grammar: `<h3>Мы, вы, они, Вы</h3>
-                  <p><strong>wir</strong> – мы, <strong>ihr</strong> – вы (неформальное), <strong>sie</strong> – они, <strong>Sie</strong> – Вы (вежливое).<br>
-                  Спряжение sein: wir sind, ihr seid, sie sind, Sie sind.<br>
-                  Спряжение haben: wir haben, ihr habt, sie haben, Sie haben.</p>`,
-        vocabulary: [
-            { word: 'wir', translation: 'мы' }, { word: 'ihr', translation: 'вы (неформ.)' },
-            { word: 'sie (они)', translation: 'они' }, { word: 'Sie (Вы)', translation: 'Вы (вежл.)' },
-            { word: 'der Freund', translation: 'друг' }
-        ],
-        sentences: [
-            { german: 'Wir sind aus Russland.', russian: 'Мы из России.' },
-            { german: 'Habt ihr Geschwister?', russian: 'У вас есть братья/сёстры?' },
-            { german: 'Sie sind sehr nett.', russian: 'Они очень милые.' },
-            { german: 'Sind Sie Herr Müller?', russian: 'Вы господин Мюллер?' }
-        ]
-    });
-    // Урок 5 – Порядок слов в простом предложении. Утверждение, вопрос, отрицание
-    lessonsDB.A0.lessons.push({
-        id: 5,
-        title: 'Порядок слов. Утверждение, вопрос, отрицание',
-        grammar: `<h3>Порядок слов</h3>
-                  <p><strong>Утверждение:</strong> подлежащее + глагол (2 место).<br>
-                  <strong>Вопрос без слова:</strong> глагол на 1 месте.<br>
-                  <strong>Вопрос с W-словом:</strong> W + глагол + подлежащее.<br>
-                  <strong>nicht</strong> для глаголов/прилагательных, <strong>kein/keine</strong> для существительных.</p>`,
-        vocabulary: [
-            { word: 'wer', translation: 'кто' }, { word: 'wie', translation: 'как' },
-            { word: 'wo', translation: 'где' }, { word: 'was', translation: 'что' },
-            { word: 'nicht', translation: 'не (действие)' }, { word: 'kein', translation: 'никакой (муж/ср)' },
-            { word: 'keine', translation: 'никакая (жен/мн)' }
-        ],
-        sentences: [
-            { german: 'Ich bin müde.', russian: 'Я устал.' },
-            { german: 'Bist du müde?', russian: 'Ты устал?' },
-            { german: 'Wo ist mein Buch?', russian: 'Где моя книга?' },
-            { german: 'Ich habe keine Zeit.', russian: 'У меня нет времени.' }
-        ]
-    });
-    // Урок 6 – Предлоги места: in, auf, unter, neben. Дательный падеж
-    lessonsDB.A0.lessons.push({
-        id: 6,
-        title: 'Предлоги места. Дательный падеж (Dativ)',
-        grammar: `<h3>Предлоги места и Dativ</h3>
-                  <p>in (в), auf (на), unter (под), neben (рядом с). После них всегда Dativ.<br>
-                  Артикли в Dativ: der → dem, die → der, das → dem, die (мн.) → den + n.<br>
-                  Примеры: auf dem Tisch (на столе), in der Schule (в школе).</p>`,
-        vocabulary: [
-            { word: 'in', translation: 'в' }, { word: 'auf', translation: 'на' },
-            { word: 'unter', translation: 'под' }, { word: 'neben', translation: 'рядом' },
-            { word: 'der Tisch', translation: 'стол' }, { word: 'das Bett', translation: 'кровать' }
-        ],
-        sentences: [
-            { german: 'Die Katze ist unter dem Tisch.', russian: 'Кошка под столом.' },
-            { german: 'Das Buch liegt auf dem Tisch.', russian: 'Книга лежит на столе.' },
-            { german: 'Ich bin in der Schule.', russian: 'Я в школе.' }
-        ]
-    });
+    // ===================== МАССИВ 50 УРОКОВ ДЛЯ A0 =====================
+    const a0Lessons = [
+        { id:1, title:'Знакомство и приветствия',
+          grammar:`<h3>Приветствия</h3><div class="grammar-rule">✔ Формальные: Guten Morgen (утро), Guten Tag (день), Guten Abend (вечер)</div><div class="grammar-rule">✔ Неформальные: Hallo, Tschüss, Servus</div><p>Как дела? <span class="highlight">Wie geht es dir?</span> – Mir geht es gut / Nicht so gut / Es geht.</p><p>Вежливое <span class="highlight">Sie</span> всегда с большой буквы.</p>`,
+          vocabulary:[{word:'Hallo',trans:'Привет'},{word:'Guten Morgen',trans:'Доброе утро'},{word:'Guten Tag',trans:'Добрый день'},{word:'Guten Abend',trans:'Добрый вечер'},{word:'Tschüss',trans:'Пока'},{word:'Auf Wiedersehen',trans:'До свидания'},{word:'Wie geht es dir?',trans:'Как дела?'},{word:'Mir geht es gut',trans:'У меня всё хорошо'}],
+          sentences:[{german:'Hallo, ich heiße Anna.',russian:'Привет, меня зовут Анна.'},{german:'Guten Tag! Wie geht es Ihnen?',russian:'Добрый день! Как Ваши дела?'},{german:'Mir geht es gut, danke.',russian:'У меня всё хорошо, спасибо.'},{german:'Auf Wiedersehen, bis morgen!',russian:'До свидания, до завтра!'}] },
+        { id:2, title:'Числа 0–10 и глагол haben',
+          grammar:`<h3>Числа: null, eins, zwei, drei, vier, fünf, sechs, sieben, acht, neun, zehn</h3><div class="grammar-rule">Глагол <span class="highlight">haben</span> (иметь): ich habe, du hast, er/sie/es hat, wir haben, ihr habt, sie/Sie haben</div><div class="grammar-rule">Отрицание существительного: <span class="highlight">kein/keine</span> (Ich habe keinen Bruder.)</div>`,
+          vocabulary:[{word:'null',trans:'ноль'},{word:'eins',trans:'один'},{word:'zwei',trans:'два'},{word:'drei',trans:'три'},{word:'vier',trans:'четыре'},{word:'fünf',trans:'пять'},{word:'sechs',trans:'шесть'},{word:'sieben',trans:'семь'},{word:'acht',trans:'восемь'},{word:'neun',trans:'девять'},{word:'zehn',trans:'десять'},{word:'haben',trans:'иметь'},{word:'der Hund',trans:'собака'},{word:'die Zeit',trans:'время'}],
+          sentences:[{german:'Ich habe zwei Brüder.',russian:'У меня есть два брата.'},{german:'Hast du einen Euro?',russian:'У тебя есть евро?'},{german:'Wir haben keine Zeit.',russian:'У нас нет времени.'}] },
+        { id:3, title:'Местоимения er, sie, es',
+          grammar:`<h3>Личные местоимения 3‑го лица: <span class="highlight">er</span> (он), <span class="highlight">sie</span> (она), <span class="highlight">es</span> (оно)</h3><div class="grammar-rule">Глаголы: er/sie/es <strong>ist</strong> (быть), er/sie/es <strong>hat</strong> (иметь)</div><p>Род существительного подсказывает местоимение: der Tisch → er, die Lampe → sie, das Buch → es.</p>`,
+          vocabulary:[{word:'er',trans:'он'},{word:'sie',trans:'она'},{word:'es',trans:'оно'},{word:'sein',trans:'быть'},{word:'der Tisch',trans:'стол'},{word:'die Lampe',trans:'лампа'},{word:'das Kind',trans:'ребёнок'}],
+          sentences:[{german:'Der Tisch ist neu. Er ist neu.',russian:'Стол новый. Он новый.'},{german:'Die Lampe ist kaputt. Sie ist kaputt.',russian:'Лампа сломана. Она сломана.'},{german:'Das Kind ist klein. Es ist klein.',russian:'Ребёнок маленький.'}] },
+        { id:4, title:'Множественное число местоимений (wir, ihr, sie)',
+          grammar:`<h3>Местоимения во множественном числе:</h3><div class="grammar-rule">✔ <span class="highlight">wir</span> – мы</div><div class="grammar-rule">✔ <span class="highlight">ihr</span> – вы (неформальное)</div><div class="grammar-rule">✔ <span class="highlight">sie</span> – они</div><div class="grammar-rule">✔ <span class="highlight">Sie</span> – Вы (вежливое)</div><p>Спряжение sein: wir sind, ihr seid, sie sind, Sie sind. Спряжение haben: wir haben, ihr habt, sie haben, Sie haben.</p>`,
+          vocabulary:[{word:'wir',trans:'мы'},{word:'ihr',trans:'вы (неформ.)'},{word:'sie (они)',trans:'они'},{word:'Sie (Вы)',trans:'Вы (вежл.)'},{word:'der Freund',trans:'друг'}],
+          sentences:[{german:'Wir sind aus Russland.',russian:'Мы из России.'},{german:'Habt ihr Geschwister?',russian:'У вас есть братья/сёстры?'},{german:'Sie sind sehr nett.',russian:'Они очень милые.'}] },
+        { id:5, title:'Порядок слов в утвердительном предложении',
+          grammar:`<div class="grammar-rule">Глагол всегда на <strong>втором месте</strong>: Подлежащее + ГЛАГОЛ + …</div><p>Примеры: Ich <span class="highlight">lerne</span> Deutsch. Du <span class="highlight">hast</span> einen Hund.</p><p>Нельзя ставить глагол в конец или на первое место в утверждении.</p>`,
+          vocabulary:[{word:'lernen',trans:'учить'},{word:'müde',trans:'усталый'}],
+          sentences:[{german:'Ich heiße Tom.',russian:'Меня зовут Том.'},{german:'Sie wohnt in Berlin.',russian:'Она живёт в Берлине.'}] },
+        { id:6, title:'Предлоги места (in, auf, unter, neben) + Dativ',
+          grammar:`<h3>Предлоги, отвечающие на вопрос <em>Wo?</em> (где?)</h3><div class="grammar-rule">✔ <span class="highlight">in</span> – в</div><div class="grammar-rule">✔ <span class="highlight">auf</span> – на (поверхность)</div><div class="grammar-rule">✔ <span class="highlight">unter</span> – под</div><div class="grammar-rule">✔ <span class="highlight">neben</span> – рядом</div><p>После этих предлогов всегда <strong>дательный падеж (Dativ)</strong>.</p><p>Артикли в Dativ: der → dem, die → der, das → dem, die (мн.) → den + n.</p>`,
+          vocabulary:[{word:'in',trans:'в'},{word:'auf',trans:'на'},{word:'unter',trans:'под'},{word:'neben',trans:'рядом'},{word:'der Tisch',trans:'стол'},{word:'das Bett',trans:'кровать'}],
+          sentences:[{german:'Die Katze ist unter dem Tisch.',russian:'Кошка под столом.'},{german:'Das Buch liegt auf dem Tisch.',russian:'Книга лежит на столе.'}] },
+        { id:7, title:'Вопросы без вопросительного слова (Ja/Nein-Fragen)',
+          grammar:`<div class="grammar-rule">Порядок слов: ГЛАГОЛ + подлежащее + остальная часть?</div><p>Примеры: <span class="highlight">Hast</span> du Zeit? – Ja, ich habe Zeit. <span class="highlight">Bist</span> du müde? – Nein, ich bin nicht müde.</p>`,
+          vocabulary:[{word:'ja',trans:'да'},{word:'nein',trans:'нет'}],
+          sentences:[{german:'Hast du Geschwister? – Ja, ich habe einen Bruder.',russian:'У тебя есть братья/сёстры? – Да, у меня есть брат.'},{german:'Kommst du aus Deutschland? – Nein, ich komme aus Russland.',russian:'Ты из Германии? – Нет, я из России.'}] },
+        { id:8, title:'Вопросы с вопросительными словами (W-Fragen)',
+          grammar:`<div class="grammar-rule">Структура: <strong>W‑слово + глагол + подлежащее</strong></div><p>Основные W‑слова: <span class="highlight">Wer?</span> (кто), <span class="highlight">Wie?</span> (как), <span class="highlight">Wo?</span> (где), <span class="highlight">Was?</span> (что), <span class="highlight">Wie viele?</span> (сколько).</p>`,
+          vocabulary:[{word:'wer',trans:'кто'},{word:'wie',trans:'как'},{word:'wo',trans:'где'},{word:'was',trans:'что'},{word:'wie viele',trans:'сколько'}],
+          sentences:[{german:'Wie alt bist du? – Ich bin 25 Jahre alt.',russian:'Сколько тебе лет? – Мне 25 лет.'},{german:'Wo wohnst du? – Ich wohne in Berlin.',russian:'Где ты живёшь? – Я живу в Берлине.'}] },
+        { id:9, title:'Отрицание с nicht',
+          grammar:`<div class="grammar-rule"><span class="highlight">nicht</span> отрицает глагол, прилагательное или всё предложение.</div><p>Часто стоит в конце или перед отрицаемым элементом. Пример: Ich schlafe <span class="highlight">nicht</span>. Sie ist <span class="highlight">nicht</span> alt.</p>`,
+          vocabulary:[{word:'nicht',trans:'не (действие/признак)'},{word:'alt',trans:'старый'},{word:'interessant',trans:'интересный'}],
+          sentences:[{german:'Ich bin nicht müde.',russian:'Я не устал.'},{german:'Er wohnt nicht in Berlin.',russian:'Он не живёт в Берлине.'}] },
+        { id:10, title:'Отрицание с kein / keine',
+          grammar:`<div class="grammar-rule"><span class="highlight">kein/keine</span> отрицает существительное (без артикля или с неопределённым артиклем).</div><p>kein – для муж. и ср. рода, keine – для жен. рода и множественного числа. Пример: Ich habe <span class="highlight">kein</span> Geld. Sie hat <span class="highlight">keine</span> Schwester.</p>`,
+          vocabulary:[{word:'kein',trans:'никакой (муж/ср)'},{word:'keine',trans:'никакая (жен/мн)'},{word:'das Geld',trans:'деньги'},{word:'die Schwester',trans:'сестра'},{word:'das Kind',trans:'ребёнок'}],
+          sentences:[{german:'Ich habe keinen Hund.',russian:'У меня нет собаки.'},{german:'Sie hat keine Zeit.',russian:'У неё нет времени.'}] },
+        // Уроки 11-50 (краткое содержание, но полное)
+        { id:11, title:'Определённый артикль (der, die, das)',
+          grammar:`<h3>Как определить род?</h3><div class="grammar-rule">Женский род (die): -ung, -heit, -keit, -schaft, большинство на -e</div><div class="grammar-rule">Мужской род (der): -er, -ling, -ist</div><div class="grammar-rule">Средний род (das): -chen, -lein, -ment, инфинитивы как существительные</div>`,
+          vocabulary:[{word:'der Tisch',trans:'стол'},{word:'die Lampe',trans:'лампа'},{word:'das Buch',trans:'книга'}],
+          sentences:[{german:'Der Tisch ist neu.',russian:'Стол новый.'},{german:'Die Lampe leuchtet.',russian:'Лампа светит.'}] },
+        { id:12, title:'Неопределённый артикль (ein, eine)',
+          grammar:`<div class="grammar-rule"><span class="highlight">ein</span> – для муж. и ср. рода (ein Tisch, ein Buch), <span class="highlight">eine</span> – для жен. рода (eine Lampe).</div><p>При первом упоминании. Отрицание: kein/keine.</p>`,
+          vocabulary:[{word:'ein',trans:'один (муж/ср)'},{word:'eine',trans:'одна (жен)'}],
+          sentences:[{german:'Das ist ein neuer Tisch.',russian:'Это новый стол.'},{german:'Sie hat eine Schwester.',russian:'У неё есть сестра.'}] },
+        { id:13, title:'Отсутствие артикля (профессии, национальности)',
+          grammar:`<div class="grammar-rule">При профессиях, национальностях, абстрактных понятиях артикль не ставится: Ich bin <span class="highlight">Arzt</span>. Sie ist <span class="highlight">Russin</span>.</div>`,
+          vocabulary:[{word:'der Arzt',trans:'врач'},{word:'die Russin',trans:'россиянка'}],
+          sentences:[{german:'Er ist Student.',russian:'Он студент.'},{german:'Sie kommt aus Italien. Sie ist Italienerin.',russian:'Она из Италии. Она итальянка.'}] },
+        { id:14, title:'Множественное число существительных (способы)',
+          grammar:`<div class="grammar-rule">Основные способы: <strong>-e</strong> (der Tisch → die Tische), <strong>-n/-en</strong> (die Lampe → die Lampen), <strong>-er</strong> с умлаутом (das Buch → die Bücher), <strong>-s</strong> для заимствований (das Handy → die Handys).</div>`,
+          vocabulary:[{word:'der Tisch',trans:'стол'},{word:'die Lampe',trans:'лампа'},{word:'das Buch',trans:'книга'}],
+          sentences:[{german:'Die Tische sind neu.',russian:'Столы новые.'},{german:'Ich habe zwei Handys.',russian:'У меня два мобильника.'}] },
+        { id:15, title:'Винительный падеж (Akkusativ)',
+          grammar:`<div class="grammar-rule">Артикли в Akk: <span class="highlight">der → den</span>, <span class="highlight">die → die</span>, <span class="highlight">das → das</span>, <span class="highlight">eine → eine</span>.</div><p>Глаголы, требующие Akk: haben, sehen, nehmen, brauchen.</p>`,
+          vocabulary:[{word:'sehen',trans:'видеть'},{word:'brauchen',trans:'нуждаться'}],
+          sentences:[{german:'Ich sehe den Tisch.',russian:'Я вижу стол.'},{german:'Wir brauchen eine Lampe.',russian:'Нам нужна лампа.'}] },
+        { id:16, title:'Спряжение слабых глаголов в Präsens',
+          grammar:`<div class="grammar-rule">Окончания: -e, -st, -t, -en, -t, -en (machen: ich mache, du machst, er macht, wir machen, ihr macht, sie machen).</div>`,
+          vocabulary:[{word:'machen',trans:'делать'},{word:'wohnen',trans:'жить'}],
+          sentences:[{german:'Ich mache die Hausaufgabe.',russian:'Я делаю домашнее задание.'},{german:'Wo wohnst du?',russian:'Где ты живёшь?'}] },
+        { id:17, title:'Сильные глаголы (e → i / ie)',
+          grammar:`<div class="grammar-rule">Глаголы с изменением корня: <span class="highlight">e → i / ie</span> во 2‑м и 3‑м лице ед.ч. (sprechen → du sprichst, er spricht; lesen → du liest, er liest).</div>`,
+          vocabulary:[{word:'sprechen',trans:'говорить'},{word:'lesen',trans:'читать'}],
+          sentences:[{german:'Ich spreche Deutsch.',russian:'Я говорю по-немецки.'},{german:'Er liest ein Buch.',russian:'Он читает книгу.'}] },
+        { id:18, title:'Сильные глаголы (a → ä, au → äu)',
+          grammar:`<div class="grammar-rule">Изменение <span class="highlight">a → ä</span> (fahren → du fährst, er fährt) и <span class="highlight">au → äu</span> (laufen → du läufst, er läuft).</div>`,
+          vocabulary:[{word:'fahren',trans:'ехать'},{word:'laufen',trans:'бегать'}],
+          sentences:[{german:'Du fährst nach Berlin.',russian:'Ты едешь в Берлин.'},{german:'Er läuft schnell.',russian:'Он бегает быстро.'}] },
+        { id:19, title:'Модальный глагол können',
+          grammar:`<div class="grammar-rule">können – мочь/уметь. Спряжение: ich kann, du kannst, er kann, wir können, ihr könnt, sie können.</div><p>Конструкция с инфинитивом: Ich kann schwimmen.</p>`,
+          vocabulary:[{word:'können',trans:'мочь'},{word:'schwimmen',trans:'плавать'}],
+          sentences:[{german:'Ich kann gut Deutsch.',russian:'Я хорошо умею по-немецки.'},{german:'Kannst du mir helfen?',russian:'Ты можешь мне помочь?'}] },
+        { id:20, title:'Модальный глагол müssen',
+          grammar:`<div class="grammar-rule">müssen – долженствовать (необходимость). Спряжение: ich muss, du musst, er muss, wir müssen, ihr müsst, sie müssen. Инфинитив в конце.</div>`,
+          vocabulary:[{word:'müssen',trans:'быть должным'},{word:'arbeiten',trans:'работать'}],
+          sentences:[{german:'Ich muss arbeiten.',russian:'Я должен работать.'},{german:'Musst du schon gehen?',russian:'Ты уже должен идти?'}] },
+        { id:21, title:'Модальный глагол wollen',
+          grammar:`<div class="grammar-rule">wollen – хотеть (желание, намерение). Спряжение: ich will, du willst, er will, wir wollen, ihr wollt, sie wollen.</div>`,
+          vocabulary:[{word:'wollen',trans:'хотеть'},{word:'lernen',trans:'учить'}],
+          sentences:[{german:'Ich will Deutsch lernen.',russian:'Я хочу учить немецкий.'},{german:'Sie will nach Hause gehen.',russian:'Она хочет пойти домой.'}] },
+        { id:22, title:'Модальные глаголы sollen и dürfen',
+          grammar:`<div class="grammar-rule">sollen – долженствование по чужой воле (мне сказали). dürfen – разрешение/запрет.</div><p>Спряжение: ich soll, du sollst, er soll; ich darf, du darfst, er darf.</p>`,
+          vocabulary:[{word:'sollen',trans:'следовать'},{word:'dürfen',trans:'мочь (разрешение)'}],
+          sentences:[{german:'Du sollst leise sein.',russian:'Тебе следует быть тихим.'},{german:'Darf ich fragen?',russian:'Можно спросить?'}] },
+        { id:23, title:'Порядок слов с модальными глаголами',
+          grammar:`<div class="grammar-rule">Модальный глагол на <strong>втором</strong> месте, смысловой глагол – в конце предложения (инфинитив).</div><p>Beispiel: Ich <span class="highlight">kann</span> heute nicht kommen.</p>`,
+          vocabulary:[{word:'kommen',trans:'приходить'}],
+          sentences:[{german:'Er will morgen kommen.',russian:'Он хочет прийти завтра.'},{german:'Wir müssen jetzt gehen.',russian:'Мы должны идти сейчас.'}] },
+        { id:24, title:'Предлоги с Akkusativ (durch, für, gegen, ohne, um)',
+          grammar:`<div class="grammar-rule">Предлоги, требующие винительного падежа: <span class="highlight">durch</span> (через), <span class="highlight">für</span> (для), <span class="highlight">gegen</span> (против), <span class="highlight">ohne</span> (без), <span class="highlight">um</span> (вокруг / во сколько).</div>`,
+          vocabulary:[{word:'durch',trans:'через'},{word:'für',trans:'для'},{word:'gegen',trans:'против'},{word:'ohne',trans:'без'},{word:'um',trans:'в (о времени)'}],
+          sentences:[{german:'Das Geschenk ist für dich.',russian:'Подарок для тебя.'},{german:'Er geht um den Park.',russian:'Он идёт вокруг парка.'}] },
+        { id:25, title:'Предлоги с Dativ (aus, bei, mit, nach, von, zu)',
+          grammar:`<div class="grammar-rule">Предлоги дательного падежа: <span class="highlight">aus</span> (из), <span class="highlight">bei</span> (у), <span class="highlight">mit</span> (с), <span class="highlight">nach</span> (после / в направлении), <span class="highlight">von</span> (от), <span class="highlight">zu</span> (к).</div>`,
+          vocabulary:[{word:'aus',trans:'из'},{word:'bei',trans:'у'},{word:'mit',trans:'с'},{word:'nach',trans:'после'},{word:'von',trans:'от'},{word:'zu',trans:'к'}],
+          sentences:[{german:'Ich komme aus Russland.',russian:'Я из России.'},{german:'Wir fahren mit dem Bus.',russian:'Мы едем на автобусе.'}] },
+        { id:26, title:'Вопросы с предлогами (Womit? Wofür? Worüber?)',
+          grammar:`<div class="grammar-rule">Слияние <span class="highlight">wo</span> + предлог: womit (с чем), wofür (для чего), wobei (при чём).</div>`,
+          vocabulary:[{word:'womit',trans:'с чем'},{word:'wofür',trans:'для чего'},{word:'wobei',trans:'при чём'}],
+          sentences:[{german:'Womit schreibst du? – Mit einem Stift.',russian:'Чем ты пишешь? – Ручкой.'},{german:'Wofür interessierst du dich?',russian:'Чем ты интересуешься?'}] },
+        { id:27, title:'Союзы и, или, но (und, oder, aber)',
+          grammar:`<div class="grammar-rule">Сочинительные союзы <span class="highlight">und</span>, <span class="highlight">oder</span>, <span class="highlight">aber</span> не меняют порядок слов.</div>`,
+          vocabulary:[{word:'und',trans:'и'},{word:'oder',trans:'или'},{word:'aber',trans:'но'}],
+          sentences:[{german:'Ich habe einen Hund und eine Katze.',russian:'У меня есть собака и кошка.'},{german:'Sie ist jung, aber klug.',russian:'Она молода, но умна.'}] },
+        { id:28, title:'Придаточное причины с weil',
+          grammar:`<div class="grammar-rule">Союз <span class="highlight">weil</span> (потому что) отправляет глагол в конец придаточного предложения.</div>`,
+          vocabulary:[{word:'weil',trans:'потому что'}],
+          sentences:[{german:'Ich bleibe zu Hause, weil es regnet.',russian:'Я остаюсь дома, потому что идёт дождь.'},{german:'Sie lernt Deutsch, weil sie in Deutschland wohnen will.',russian:'Она учит немецкий, потому что хочет жить в Германии.'}] },
+        { id:29, title:'Придаточное дополнительное с dass',
+          grammar:`<div class="grammar-rule">Союз <span class="highlight">dass</span> (что) также требует глагол в конце придаточного предложения.</div>`,
+          vocabulary:[{word:'dass',trans:'что'}],
+          sentences:[{german:'Ich weiß, dass du Recht hast.',russian:'Я знаю, что ты прав.'},{german:'Er sagt, dass er müde ist.',russian:'Он говорит, что устал.'}] },
+        { id:30, title:'Склонение личных местоимений (Akkusativ / Dativ)',
+          grammar:`<div class="grammar-rule">Akkusativ: mich, dich, ihn, sie, es, uns, euch, sie, Sie. Dativ: mir, dir, ihm, ihr, ihm, uns, euch, ihnen, Ihnen.</div>`,
+          vocabulary:[{word:'mir',trans:'мне'},{word:'dir',trans:'тебе'},{word:'ihm',trans:'ему'},{word:'ihr',trans:'ей'}],
+          sentences:[{german:'Kannst du mir helfen?',russian:'Ты можешь мне помочь?'},{german:'Ich sehe ihn jeden Tag.',russian:'Я вижу его каждый день.'}] },
+        { id:31, title:'Повелительное наклонение (Imperativ)',
+          grammar:`<div class="grammar-rule">Формы: для du – komm(e)!, для ihr – kommt!, для Sie – kommen Sie!.</div><p>Отрицание: Komm nicht zu spät! (Не опаздывай!)</p>`,
+          vocabulary:[{word:'kommen',trans:'приходить'},{word:'gehen',trans:'идти'}],
+          sentences:[{german:'Komm bitte her!',russian:'Иди сюда, пожалуйста!'},{german:'Stehen Sie auf!',russian:'Встаньте!'}] },
+        { id:32, title:'Простое прошедшее (Präteritum) haben, sein, модальных глаголов',
+          grammar:`<div class="grammar-rule">haben → ich hatte, du hattest; sein → ich war; können → ich konnte; müssen → ich musste; wollen → ich wollte.</div>`,
+          vocabulary:[{word:'hatte',trans:'имел'},{word:'war',trans:'был'},{word:'konnte',trans:'мог'}],
+          sentences:[{german:'Ich hatte keine Zeit.',russian:'У меня не было времени.'},{german:'Er war in Berlin.',russian:'Он был в Берлине.'}] },
+        { id:33, title:'Указательные местоимения (dieser, diese, dieses)',
+          grammar:`<div class="grammar-rule">Склоняются как определённый артикль: dieser Tisch, diese Lampe, dieses Buch. Пример: Dieses Buch ist gut.</div>`,
+          vocabulary:[{word:'dieser',trans:'этот (м.)'},{word:'diese',trans:'эта (ж.)'},{word:'dieses',trans:'это (ср.)'}],
+          sentences:[{german:'Dieser Pullover ist teuer.',russian:'Этот свитер дорогой.'},{german:'Diese Frau ist meine Mutter.',russian:'Эта женщина – моя мама.'}] },
+        { id:34, title:'Притяжательные местоимения (mein, dein, sein, ihr, unser, euer)',
+          grammar:`<div class="grammar-rule">Согласуются с существительным: mein Buch, meine Tasche, mein Hund, meine Eltern.</div><p>Формы: mein, dein, sein, ihr, unser, euer, ihr (их).</p>`,
+          vocabulary:[{word:'mein',trans:'мой'},{word:'dein',trans:'твой'},{word:'sein',trans:'его'},{word:'ihr (её)',trans:'её'}],
+          sentences:[{german:'Das ist mein Bruder.',russian:'Это мой брат.'},{german:'Ist das deine Schwester?',russian:'Это твоя сестра?'}] },
+        { id:35, title:'Степени сравнения прилагательных',
+          grammar:`<div class="grammar-rule">Komparativ: schöner, größer. Superlativ: am schönsten, der/die/das schönste.</div><p>Пример: schnell – schneller – am schnellsten.</p>`,
+          vocabulary:[{word:'schnell',trans:'быстрый'},{word:'schön',trans:'красивый'}],
+          sentences:[{german:'Mein Auto ist schneller als deins.',russian:'Моя машина быстрее твоей.'},{german:'Das ist das schönste Haus.',russian:'Это самый красивый дом.'}] },
+        { id:36, title:'Конструкция «es gibt»',
+          grammar:`<div class="grammar-rule"><span class="highlight">es gibt</span> + Akkusativ – имеется, существует (безличный оборот). Пример: Es gibt einen Tisch.</div>`,
+          vocabulary:[{word:'es gibt',trans:'имеется'}],
+          sentences:[{german:'Es gibt viele Möglichkeiten.',russian:'Есть много возможностей.'},{german:'Gibt es hier einen Bahnhof?',russian:'Здесь есть вокзал?'}] },
+        { id:37, title:'Оборот es ist / es sind для времени и погоды',
+          grammar:`<div class="grammar-rule">Es ist 10 Uhr. (Сейчас 10 часов). Es ist kalt. (Холодно). Es sind 10 Euro. (Это 10 евро).</div>`,
+          vocabulary:[{word:'es ist',trans:'сейчас/это'},{word:'kalt',trans:'холодно'}],
+          sentences:[{german:'Es ist fünf Uhr.',russian:'Пять часов.'},{german:'Es regnet.',russian:'Идёт дождь.'}] },
+        { id:38, title:'Сложные предложения с dass / weil (закрепление)',
+          grammar:`<div class="grammar-rule">В придаточном предложении глагол уходит в конец. Сравнение: Ich glaube, dass er <span class="highlight">kommt</span>. Er bleibt zu Hause, weil es <span class="highlight">regnet</span>.</div>`,
+          vocabulary:[{word:'glauben',trans:'верить, полагать'}],
+          sentences:[{german:'Ich denke, dass er recht hat.',russian:'Я думаю, что он прав.'},{german:'Sie ist traurig, weil sie keine Zeit hat.',russian:'Она грустная, потому что у неё нет времени.'}] },
+        { id:39, title:'Числительные 11–100',
+          grammar:`<div class="grammar-rule">11–19: elf, zwölf, dreizehn, vierzehn… 20–100: zwanzig, dreißig, vierzig… и составные: einundzwanzig (21), zweiunddreißig (32).</div>`,
+          vocabulary:[{word:'elf',trans:'одиннадцать'},{word:'zwölf',trans:'двенадцать'},{word:'zwanzig',trans:'двадцать'},{word:'dreißig',trans:'тридцать'}],
+          sentences:[{german:'Ich bin fünfundzwanzig Jahre alt.',russian:'Мне двадцать пять лет.'},{german:'Der Tisch kostet dreiundvierzig Euro.',russian:'Стол стоит сорок три евро.'}] },
+        { id:40, title:'Который час? (Wie spät ist es?)',
+          grammar:`<div class="grammar-rule">Es ist 8 Uhr (восемь), halb 9 (половина девятого = 8:30), Viertel nach 8 (8:15), Viertel vor 9 (8:45).</div>`,
+          vocabulary:[{word:'die Uhr',trans:'часы'},{word:'halb',trans:'половина'},{word:'Viertel',trans:'четверть'}],
+          sentences:[{german:'Wie spät ist es? – Es ist Viertel nach sieben.',russian:'Который час? – Четверть восьмого.'},{german:'Wir treffen uns um halb elf.',russian:'Мы встречаемся в половине одиннадцатого.'}] },
+        { id:41, title:'Предлоги времени (um, von … bis, am, im)',
+          grammar:`<div class="grammar-rule">um + Uhrzeit (um 8 Uhr), von … bis (von Montag bis Freitag), am + Tag (am Montag), im + Monat/Jahreszeit (im Mai, im Sommer).</div>`,
+          vocabulary:[{word:'um',trans:'в (о времени)'},{word:'von...bis',trans:'с...до'},{word:'am',trans:'в (день)'},{word:'im',trans:'в (месяц/сезон)'}],
+          sentences:[{german:'Der Kurs beginnt um 9 Uhr.',russian:'Курс начинается в 9 часов.'},{german:'Wir fahren im August nach Spanien.',russian:'Мы едем в Испанию в августе.'}] },
+        { id:42, title:'Глаголы с фиксированным предлогом (warten auf, sich freuen auf/über)',
+          grammar:`<div class="grammar-rule">warten auf + Akk (ждать кого-то/что-то), sich freuen auf + Akk (радоваться предстоящему), sich freuen über + Akk (радоваться случившемуся).</div>`,
+          vocabulary:[{word:'warten auf',trans:'ждать'},{word:'sich freuen auf',trans:'радоваться (будущему)'},{word:'sich freuen über',trans:'радоваться (произошедшему)'}],
+          sentences:[{german:'Ich warte auf meinen Freund.',russian:'Я жду своего друга.'},{german:'Sie freut sich auf die Ferien.',russian:'Она радуется каникулам.'}] },
+        { id:43, title:'Отделяемые приставки (anrufen, aufstehen, einladen)',
+          grammar:`<div class="grammar-rule">Приставка отделяется и стоит в конце предложения в Präsens. Пример: Ich <span class="highlight">rufe</span> dich <span class="highlight">an</span>. (Я звоню тебе.)</div>`,
+          vocabulary:[{word:'anrufen',trans:'звонить'},{word:'aufstehen',trans:'вставать'},{word:'einladen',trans:'приглашать'}],
+          sentences:[{german:'Wann stehst du auf? – Um 7 Uhr.',russian:'Когда ты встаёшь? – В 7 часов.'},{german:'Lädst du mich ein?',russian:'Ты приглашаешь меня?'}] },
+        { id:44, title:'Неотделяемые приставки (be-, ge-, er-, ver-, zer-, ent-, emp-)',
+          grammar:`<div class="grammar-rule">Неотделяемые приставки всегда с глаголом (без отделения). Ударение на корне. Пример: Ich <span class="highlight">verstehe</span> dich.</div>`,
+          vocabulary:[{word:'verstehen',trans:'понимать'},{word:'erzählen',trans:'рассказывать'}],
+          sentences:[{german:'Erzähl mir bitte!',russian:'Расскажи мне, пожалуйста!'},{german:'Wir besuchen unsere Großeltern.',russian:'Мы навещаем наших бабушку и дедушку.'}] },
+        { id:45, title:'Ответы: Ja – Nein – Doch',
+          grammar:`<div class="grammar-rule">Doch используется для утвердительного ответа на отрицательный вопрос. – Hast du kein Geld? – Doch, ich habe Geld.</div>`,
+          vocabulary:[{word:'doch',trans:'напротив / же (в ответе)'}],
+          sentences:[{german:'Kommst du nicht mit? – Doch, ich komme.',russian:'Ты не идёшь? – Нет, иду.'},{german:'Hast du keine Schwester? – Doch, ich habe eine.',russian:'У тебя нет сестры? – Есть, есть.'}] },
+        { id:46, title:'Сложные существительные (словосложение)',
+          grammar:`<div class="grammar-rule">der Tisch + die Lampe = die Tischlampe (настольная лампа). Род определяется последним словом.</div>`,
+          vocabulary:[{word:'das Wohnzimmer',trans:'гостиная'},{word:'der Schreibtisch',trans:'письменный стол'}],
+          sentences:[{german:'Die Wohnzimmertür ist geschlossen.',russian:'Дверь гостиной закрыта.'},{german:'Kannst du den Schreibtisch putzen?',russian:'Ты можешь вытереть письменный стол?'}] },
+        { id:47, title:'Местоименные наречия (damit, dafür, darauf)',
+          grammar:`<div class="grammar-rule">Замена «предлог + местоимение»: für das → dafür, mit dem → damit, auf das → darauf. Пример: Ich warte auf den Bus. – Ich warte darauf.</div>`,
+          vocabulary:[{word:'damit',trans:'с этим'},{word:'dafür',trans:'за это'},{word:'darauf',trans:'на это'}],
+          sentences:[{german:'Er hat ein neues Auto. Er ist darauf stolz.',russian:'У него новая машина. Он гордится этим.'},{german:'Womit schreibst du? – Damit.',russian:'Чем ты пишешь? – Этим.'}] },
+        { id:48, title:'Глаголы, управляющие Dativ (helfen, gefallen, schmecken, gehören, antworten)',
+          grammar:`<div class="grammar-rule">Эти глаголы всегда требуют дательного падежа: helfen + Dativ (помогать кому-то), gefallen + Dativ (нравиться кому-то).</div>`,
+          vocabulary:[{word:'helfen',trans:'помогать'},{word:'gefallen',trans:'нравиться'},{word:'schmecken',trans:'быть вкусным'},{word:'gehören',trans:'принадлежать'}],
+          sentences:[{german:'Kannst du mir helfen?',russian:'Ты можешь мне помочь?'},{german:'Das Essen schmeckt mir gut.',russian:'Еда мне нравится.'}] },
+        { id:49, title:'Глаголы, управляющие Akkusativ (besuchen, bezahlen, vergessen, bestehen)',
+          grammar:`<div class="grammar-rule">Переходные глаголы: jemanden/etwas (Akkusativ) besuchen, bezahlen, vergessen. Пример: Ich vergesse den Namen.</div>`,
+          vocabulary:[{word:'besuchen',trans:'посещать'},{word:'bezahlen',trans:'платить'},{word:'vergessen',trans:'забывать'}],
+          sentences:[{german:'Besuchst du deine Oma?',russian:'Ты навещаешь свою бабушку?'},{german:'Ich habe den Schlüssel vergessen.',russian:'Я забыл ключ.'}] },
+        { id:50, title:'Итоговое повторение A0',
+          grammar:`<h3>Что мы выучили на уровне A0?</h3><div class="grammar-rule">✔ Алфавит, числа, приветствия</div><div class="grammar-rule">✔ Спряжение haben, sein, модальных глаголов, отделяемых приставок</div><div class="grammar-rule">✔ Порядок слов в утверждении, вопросах, придаточных</div><div class="grammar-rule">✔ Предлоги Akk/Dativ, падежи, артикли</div><div class="grammar-rule">✔ Тысячи слов и устойчивых фраз</div><p>Теперь переходите к уровню A1! Wiederholen Sie alles und üben Sie täglich.</p>`,
+          vocabulary:[{word:'wiederholen',trans:'повторять'},{word:'üben',trans:'упражняться'}],
+          sentences:[{german:'Ich wiederhole die Vokabeln jeden Tag.',russian:'Я повторяю слова каждый день.'},{german:'Deutsch macht Spaß!',russian:'Немецкий – это весело!'}] }
+    ];
 
-    // Для остальных уровней добавлен заглушки (позже вы их наполните)
-    lessonsDB.A1.lessons.push({ id: 1, title: 'Perfekt (прошедшее время)', grammar: '<p>Perfekt с haben/sein</p>', vocabulary: [{ word:'machen', translation:'делать' }], sentences: [{ german:'Ich habe gemacht', russian:'Я сделал' }] });
-    lessonsDB.A2.lessons.push({ id: 1, title: 'Модальные глаголы', grammar: '<p>können, müssen, wollen</p>', vocabulary: [{ word:'können', translation:'мочь' }], sentences: [{ german:'Ich kann Deutsch', russian:'Я могу по-немецки' }] });
-    lessonsDB.B1.lessons.push({ id: 1, title: 'Придаточные предложения', grammar: '<p>dass, weil – глагол в конце</p>', vocabulary: [{ word:'weil', translation:'потому что' }], sentences: [{ german:'Ich bleibe, weil es regnet', russian:'Я остаюсь, потому что идёт дождь' }] });
-    lessonsDB.B2.lessons.push({ id: 1, title: 'Пассивный залог', grammar: '<p>werden + Partizip II</p>', vocabulary: [{ word:'werden', translation:'становиться' }], sentences: [{ german:'Das Buch wird gelesen', russian:'Книга читается' }] });
-    lessonsDB.C1.lessons.push({ id: 1, title: 'Konjunktiv I', grammar: '<p>Косвенная речь в новостях</p>', vocabulary: [{ word:'sagen', translation:'сказать' }], sentences: [{ german:'Er sagt, er habe Zeit', russian:'Он говорит, что у него есть время' }] });
+    // Присваиваем массив уроков уровню A0
+    lessonsDB.A0.lessons = a0Lessons;
 
-    // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (прежние) ----------
+    // Добавляем заглушки для других уровней (можно позже заполнить)
+    lessonsDB.A1.lessons.push({ id:1, title:'Perfekt (прошедшее)', grammar:'<p>Образуется с haben/sein + Partizip II.</p>', vocabulary:[{word:'machen',trans:'делать'}], sentences:[{german:'Ich habe gemacht',russian:'Я сделал'}] });
+    lessonsDB.A2.lessons.push({ id:1, title:'Модальные глаголы', grammar:'<p>können, müssen, wollen</p>', vocabulary:[{word:'können',trans:'мочь'}], sentences:[{german:'Ich kann Deutsch',russian:'Я могу по-немецки'}] });
+    lessonsDB.B1.lessons.push({ id:1, title:'Придаточные', grammar:'<p>dass, weil – глагол в конце</p>', vocabulary:[{word:'weil',trans:'потому что'}], sentences:[{german:'Ich bleibe, weil es regnet',russian:'Я остаюсь, потому что дождь'}] });
+    lessonsDB.B2.lessons.push({ id:1, title:'Пассив', grammar:'<p>werden + Partizip II</p>', vocabulary:[{word:'werden',trans:'становиться'}], sentences:[{german:'Das Buch wird gelesen',russian:'Книга читается'}] });
+    lessonsDB.C1.lessons.push({ id:1, title:'Konjunktiv I', grammar:'<p>Косвенная речь</p>', vocabulary:[{word:'sagen',trans:'сказать'}], sentences:[{german:'Er sagt, er habe Zeit',russian:'Он говорит, что у него есть время'}] });
+
+    // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (рендер, озвучка, заметки) ----------
     let currentLevel = 'A0';
     let currentLessonIndex = 0;
     function getCurrentLesson() { return lessonsDB[currentLevel].lessons[currentLessonIndex]; }
@@ -10439,6 +10518,7 @@ speech_culture: {
             </div>
         `;
         document.getElementById('lessonsContent').innerHTML = html;
+
         document.getElementById('backToLevelsBtn').onclick = showLevelSelector;
         document.getElementById('prevLessonBtn').onclick = () => { if (currentLessonIndex>0) { currentLessonIndex--; renderLesson(); } };
         document.getElementById('nextLessonBtn').onclick = () => { if (currentLessonIndex<levelData.lessons.length-1) { currentLessonIndex++; renderLesson(); } };
