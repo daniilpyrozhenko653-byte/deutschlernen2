@@ -10271,26 +10271,17 @@ speech_culture: {
 
 
 
-    // ========== КНОПКА "ПОДДЕРЖАТЬ" (РЕКВИЗИТЫ ДЛЯ ПЕРЕВОДА) ==========
+    // ========== ПЛАВАЮЩАЯ КНОПКА "ПОДДЕРЖАТЬ" (ВИДНА НА ТЕЛЕФОНАХ) ==========
 (function() {
     if (document.getElementById('supportBtn')) return;
 
-    // Находим самую правую кнопку среди существующих
-    const existingBtns = ['unifiedGamesBtn', 'languagesSectionBtn', 'subjectsSectionBtn'];
-    let maxRight = 20;
-    for (let id of existingBtns) {
-        let btn = document.getElementById(id);
-        if (btn) {
-            let right = parseInt(btn.style.right);
-            if (!isNaN(right) && right > maxRight) maxRight = right;
-        }
-    }
-
-    // Создаём кнопку
+    // Создаём плавающую кнопку в правом нижнем углу
     const supportBtn = document.createElement('div');
     supportBtn.id = 'supportBtn';
     supportBtn.innerHTML = '🤝 Поддержать';
-    supportBtn.style.cssText = `position:absolute; top:20px; right:${maxRight + 90}px; background:#e74c3c; color:white; padding:4px 12px; border-radius:15px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);`;
+    supportBtn.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#e74c3c; color:white; padding:8px 16px; border-radius:30px; cursor:pointer; font-size:14px; font-weight:bold; z-index:10000; box-shadow:0 2px 10px rgba(0,0,0,0.3); transition:0.2s;';
+    supportBtn.onmouseenter = () => supportBtn.style.transform = 'scale(1.02)';
+    supportBtn.onmouseleave = () => supportBtn.style.transform = 'scale(1)';
     document.body.appendChild(supportBtn);
 
     // Модальное окно с реквизитами
@@ -10320,7 +10311,7 @@ speech_culture: {
         navigator.clipboard.writeText(iban).then(() => {
             const msg = document.createElement('div');
             msg.textContent = '✅ IBAN скопирован!';
-            msg.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#27ae60; color:white; padding:6px 12px; border-radius:20px; z-index:100004; font-size:13px;';
+            msg.style.cssText = 'position:fixed; bottom:80px; right:20px; background:#27ae60; color:white; padding:6px 12px; border-radius:20px; z-index:100004; font-size:13px;';
             document.body.appendChild(msg);
             setTimeout(() => msg.remove(), 1500);
         });
