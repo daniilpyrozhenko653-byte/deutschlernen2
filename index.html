@@ -10296,35 +10296,7 @@ speech_culture: {
             B2: ['Konjunktiv I (косвенная речь)', 'Konjunktiv I в новостях', 'Konjunktiv I vs II', 'Пассив с модальными глаголами', 'Пассив состояния (sein + Partizip II)', 'Замена пассива активом', 'Сложные союзы: je...desto, nicht nur...sondern auch', 'Союзы: während, indem, sodass', 'Склонение прилагательных после nichts, etwas, viel, wenig', 'Склонение в сравнительной степени', 'Склонение в превосходной степени', 'Предлоги с генитивом (anstatt, trotz, wegen, während)', 'Сложные предлоги (in Bezug auf, mit Hilfe von)', 'Устойчивые выражения с предлогами', 'Стилистические приёмы (повторы, инверсия)', 'Пунктуация в сложных предложениях', 'Абстрактная лексика (Wirtschaft, Politik, Kultur)', 'Термины (Medizin, Jura, IT)', 'Деловая переписка (E-Mail, Brief)', 'Презентация и аргументация'],
             C1: ['Идиомы и фразеологизмы', 'Крылатые выражения из литературы', 'Стилистически окрашенная лексика (umgangssprachlich, gehoben)', 'Контраст zwischen gesprochener und geschriebener Sprache', 'Реферирование научных статей', 'Цитирование и косвенная речь', 'Парафраз и синонимическая замена', 'Юмор и сарказм в немецком', 'Эмоционально-оценочная лексика', 'Сложные модели словообразования', 'Неологизмы и заимствования', 'Канцеляризмы (Amtssprache)', 'Разговорные сокращения', 'Анализ стихов и прозы', 'Дискуссия на политические темы', 'Дискуссия на философские темы', 'Презентация результатов исследования', 'Написание рецензии', 'Написание комментария к новостям', 'Подготовка к TestDaF / Goethe C1']
         };
-        const levelThemes = themes[level] || Array(50).fill('Общая тема');
-        for (let i = 1; i <= count; i++) {
-            const theme = levelThemes[(i-1) % levelThemes.length] + ` (урок ${i})`;
-            lessons.push({
-                id: startId + i - 1,
-                title: `${level} – ${theme}`,
-                grammar: `<div class="grammar-rule">📘 <strong>${theme}</strong></div>
-                          <p>В этом уроке мы изучаем правила, связанные с темой ${theme}.<br>
-                          Пример: <span class="highlight">правило 1</span> – описание правила.<br>
-                          Правило 2: всегда ставьте глагол на второе место в утверждении.<br>
-                          Запомните исключения: если есть модальный глагол, инфинитив уходит в конец.</p>`,
-                vocabulary: [
-                    { word: 'das Beispiel', translation: 'пример' },
-                    { word: 'die Regel', translation: 'правило' },
-                    { word: 'der Satz', translation: 'предложение' },
-                    { word: 'die Ausnahme', translation: 'исключение' },
-                    { word: 'lernen', translation: 'учить' },
-                    { word: 'wiederholen', translation: 'повторять' },
-                    { word: 'die Katze', translation: 'кот' }
-                ],
-                sentences: [
-                    { german: 'Das ist ein Beispielsatz.', russian: 'Это пример предложения.' },
-                    { german: 'Ich lerne jeden Tag zehn neue Wörter.', russian: 'Я учу десять новых слов каждый день.' },
-                    { german: 'Diese Regel ist sehr wichtig.', russian: 'Это правило очень важно.' }
-                ]
-            });
-        }
-        return lessons;
-    }
+        
 
 
 
