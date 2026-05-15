@@ -10344,37 +10344,45 @@ speech_culture: {
 // Замена первого урока уровня A0 на полноценный
 goldLessonsByLevel.A0[0] = {
     id: 1,
-    title: 'Приветствия и знакомство',
-    grammar: `<div class="grammar-rule">✔ Формальные приветствия</div>
-              <p><strong>Guten Morgen</strong> – доброе утро (до 10–11)</p>
-              <p><strong>Guten Tag</strong> – добрый день</p>
-              <p><strong>Guten Abend</strong> – добрый вечер</p>
-              <div class="grammar-rule">✔ Неформальные приветствия</div>
-              <p><strong>Hallo</strong> – привет</p>
-              <p><strong>Tschüss</strong> – пока</p>
-              <p><strong>Servus</strong> – привет/пока (юг Германии, Австрия)</p>
-              <div class="grammar-rule">✔ Как спросить и ответить «Как дела?»</div>
-              <p><strong>Wie geht es dir?</strong> – Как у тебя дела? (неформ.)</p>
-              <p><strong>Wie geht es Ihnen?</strong> – Как у Вас дела? (форм.)</p>
-              <p><strong>Mir geht es gut.</strong> – У меня всё хорошо.</p>
-              <p><strong>Nicht so gut.</strong> – Не очень.</p>
-              <div class="grammar-rule">✔ Вежливое «Вы»</div>
-              <p><strong>Sie</strong> – всегда с большой буквы, форма глагола как у "они".</p>`,
+    title: 'Erste Schritte – Begrüßung und Vorstellung',
+    grammar: <div class="grammar-rule">В немецком языке различают неформальное (с друзьями, детьми, близкими) и формальное (с незнакомыми взрослыми, начальниками, в магазинах) обращение.<br>На уровне A0 тебе достаточно освоить неформальные варианты – они самые простые и употребительные.</div>
+              <div class="grammar-rule">Приветствия:</div>
+              <p><strong>· Hallo!</strong> – Привет! (универсальное, неформальное)</p>
+              <p><strong>· Guten Morgen!</strong> – Доброе утро!</p>
+              <p><strong>· Guten Tag!</strong> – Добрый день!</p>
+              <p><strong>· Guten Abend!</strong> – Добрый вечер!</p>
+              <p><strong>· Tschüss!</strong> – Пока! (неформальное прощание)</p>
+              <div class="grammar-rule">Как представиться:</div>
+              <p><strong>· Ich heiße …</strong> – Меня зовут … (подходит в любой ситуации)</p>
+              <p><strong>· Ich bin …</strong> – Я … (немного проще)</p>
+              <p><strong>· Wie heißt du?</strong> – Как тебя зовут? (обращение на «ты»)</p>
+              <div class="grammar-rule">Важные слова вежливости:</div>
+              <p><strong>· Bitte</strong> – пожалуйста (когда просишь или отвечаешь на спасибо)</p>
+              <p><strong>· Danke</strong> – спасибо</p>
+              <p><strong>· Ja</strong> – да</p>
+              <p><strong>· Nein</strong> – нет</p>
+              <div class="grammar-rule">Замечание:</div>
+              <p>В немецком все существительные пишутся с большой буквы, но в этом уроке у нас только местоимения и глаголы – пока запомни: <strong>ich</strong> (я), <strong>du</strong> (ты) – с маленькой, а <strong>Sie</strong> (Вы вежливое) – с большой.</p>,
     vocabulary: [
-        { word: 'Hallo', translation: 'Привет' },
-        { word: 'Guten Morgen', translation: 'Доброе утро' },
-        { word: 'Guten Tag', translation: 'Добрый день' },
-        { word: 'Guten Abend', translation: 'Добрый вечер' },
-        { word: 'Tschüss', translation: 'Пока' },
-        { word: 'Auf Wiedersehen', translation: 'До свидания' },
-        { word: 'Wie geht es dir?', translation: 'Как у тебя дела?' },
-        { word: 'Mir geht es gut', translation: 'У меня всё хорошо' }
+        { word: 'Hallo', translation: 'привет' },
+        { word: 'Tschüss', translation: 'пока' },
+        { word: 'Ja', translation: 'да' },
+        { word: 'Nein', translation: 'нет' },
+        { word: 'Danke', translation: 'спасибо' },
+        { word: 'Bitte', translation: 'пожалуйста' },
+        { word: 'ich', translation: 'я' },
+        { word: 'du', translation: 'ты' },
+        { word: 'heißen', translation: 'называться' },
+        { word: 'bin', translation: '(я) есть / являюсь' }
     ],
     sentences: [
-        { german: 'Hallo, ich heiße Anna.', russian: 'Привет, меня зовут Анна.' },
-        { german: 'Guten Tag! Wie geht es Ihnen?', russian: 'Добрый день! Как у Вас дела?' },
-        { german: 'Mir geht es gut, danke.', russian: 'У меня всё хорошо, спасибо.' },
-        { german: 'Auf Wiedersehen, bis morgen!', russian: 'До свидания, до завтра!' }
+        { german: 'Ich heiße Anna.', russian: 'Меня зовут Анна.' },
+        { german: 'Ich bin Peter.', russian: 'Я Петер.' },
+        { german: 'Wie heißt du?', russian: 'Как тебя зовут?' },
+        { german: 'Hallo, ich bin Maria.', russian: 'Привет, я Мария.' },
+        { german: 'Tschüss, Peter!', russian: 'Пока, Петер!' },
+        { german: 'Danke! – Bitte!', russian: 'Спасибо! – Пожалуйста!' },
+        { german: 'Ja, danke. Nein, tschüss.', russian: 'Да, спасибо. Нет, пока.' }
     ]
 };
 
