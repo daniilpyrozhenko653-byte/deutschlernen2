@@ -10142,11 +10142,11 @@ speech_culture: {
 
 
 
-    // ========== ПЛАВАЮЩАЯ КНОПКА "ПОДДЕРЖАТЬ" (ВИДНА НА ТЕЛЕФОНАХ) ==========
+    // ========== ПЛАВАЮЩАЯ КНОПКА "ПОДДЕРЖАТЬ" (С ПРОСЬБОЙ И ПОДЕЛИТЬСЯ) ==========
 (function() {
     if (document.getElementById('supportBtn')) return;
 
-    // Создаём плавающую кнопку в правом нижнем углу
+    // Плавающая кнопка внизу справа
     const supportBtn = document.createElement('div');
     supportBtn.id = 'supportBtn';
     supportBtn.innerHTML = '🤝 Поддержать';
@@ -10155,22 +10155,24 @@ speech_culture: {
     supportBtn.onmouseleave = () => supportBtn.style.transform = 'scale(1)';
     document.body.appendChild(supportBtn);
 
-    // Модальное окно с реквизитами
+    // Модальное окно с расширенным текстом
     const modal = document.createElement('div');
     modal.id = 'supportModal';
-    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100003; display:none; flex-direction:column; gap:15px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7); width:90%; max-width:400px; text-align:center;';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:25px; z-index:100003; display:none; flex-direction:column; gap:15px; box-shadow:0 0 0 1000px rgba(0,0,0,0.7); width:90%; max-width:450px; text-align:center;';
     modal.innerHTML = `
         <div style="display:flex; justify-content:flex-end;">
             <button id="closeSupportModal" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
         </div>
         <h3 style="color:white;">🤝 Поддержать проект</h3>
-        <p style="color:#ccc;">Ваша помощь позволит добавлять новые языки, темы и улучшать сервис.</p>
-        <div style="background:#2c3e50; padding:10px; border-radius:10px; margin:10px 0;">
+        <p style="color:#ccc;">Дорогие друзья! Мы создаём этот сайт, чтобы учить немецкий и другие языки абсолютно бесплатно. Если вам нравится наш проект, вы можете поддержать его развитие. Любая сумма поможет нам добавлять новые языки, уроки и тесты.</p>
+        <p style="color:#ccc;">Пожалуйста, перешлите ссылку на сайт друзьям, которые тоже учат языки. Вместе мы сделаем обучение доступнее!</p>
+        <div style="background:#2c3e50; padding:15px; border-radius:15px; margin:10px 0;">
             <p style="color:white; margin:5px 0;"><strong>Получатель:</strong> Pyrozhenko, Danyil</p>
-            <p style="color:white; margin:5px 0;"><strong>IBAN:</strong> <span id="ibanCode">DE92 3755 1780 1020 1888 41</span> <button id="copyIbanBtn" style="background:#3498db; border:none; padding:2px 8px; border-radius:10px; cursor:pointer;">📋 Копировать</button></p>
+            <p style="color:white; margin:5px 0;"><strong>IBAN:</strong> <span id="ibanCode">DE92 3755 1780 1020 1888 41</span> <button id="copyIbanBtn" style="background:#3498db; border:none; padding:4px 10px; border-radius:20px; margin-left:5px; cursor:pointer;">📋 Копировать</button></p>
             <p style="color:white; margin:5px 0;"><strong>BIC:</strong> WELADED1LAF</p>
         </div>
-        <p style="color:#aaa; font-size:12px;">Спасибо за поддержку! 🙏</p>
+        <p style="color:#aaa; font-size:13px;">🌟 Спасибо за вашу поддержку! 🌟<br>Вы помогаете сайту расти и становиться лучше.</p>
+        <button id="shareSiteBtn" style="background:#27ae60; border:none; padding:8px; border-radius:30px; margin-top:5px; color:white; cursor:pointer;">📢 Поделиться ссылкой</button>
     `;
     document.body.appendChild(modal);
 
@@ -10187,8 +10189,18 @@ speech_culture: {
             setTimeout(() => msg.remove(), 1500);
         });
     };
+    document.getElementById('shareSiteBtn').onclick = () => {
+        // Копируем ссылку на текущую страницу
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            const msg = document.createElement('div');
+            msg.textContent = '🔗 Ссылка скопирована! Поделитесь с друзьями.';
+            msg.style.cssText = 'position:fixed; bottom:80px; right:20px; background:#3498db; color:white; padding:6px 12px; border-radius:20px; z-index:100004; font-size:13px;';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2000);
+        });
+    };
 })();
-
 
 
 
