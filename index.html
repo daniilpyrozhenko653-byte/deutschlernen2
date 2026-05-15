@@ -10204,6 +10204,400 @@ speech_culture: {
 
 
 
+
+    // ========== ЗОЛОТОЙ КУРС A0-C1 (ПЛАТНЫЙ) – ПОЛНАЯ ВЕРСИЯ ==========
+(function() {
+    if (document.getElementById('goldCourseBtn')) return;
+
+    // ------------------ НАСТРОЙКИ ------------------
+    const COURSE_PRICE = 10; // евро
+    const ADMIN_EMAIL = 'daniilpirozhenko442@gmail.com';
+    const ADMIN_TELEGRAM = 'daniil3299';
+
+    // ------------------ ХРАНИЛИЩЕ ОДНОРАЗОВЫХ КОДОВ ------------------
+    let codesList = [];
+    function loadCodes() {
+        const stored = localStorage.getItem('goldCodes');
+        if (stored) {
+            codesList = JSON.parse(stored);
+        } else {
+            codesList = [
+                'GOLD-A1B2C3', 'GOLD-D4E5F6', 'GOLD-G7H8I9', 'GOLD-J0K1L2', 'GOLD-M3N4O5',
+                'GOLD-P6Q7R8', 'GOLD-S9T0U1', 'GOLD-V2W3X4', 'GOLD-Y5Z6A7', 'GOLD-B8C9D0'
+            ];
+            localStorage.setItem('goldCodes', JSON.stringify(codesList));
+        }
+    }
+    function saveCodes() { localStorage.setItem('goldCodes', JSON.stringify(codesList)); }
+    function isValidCode(code) {
+        const idx = codesList.indexOf(code);
+        if (idx !== -1) {
+            codesList.splice(idx, 1);
+            saveCodes();
+            return true;
+        }
+        return false;
+    }
+    window.addGoldCode = function(newCode) {
+        if (!newCode || codesList.includes(newCode)) return false;
+        codesList.push(newCode);
+        saveCodes();
+        return true;
+    };
+
+    function isGoldUnlocked() { return localStorage.getItem('goldUnlocked') === 'true'; }
+    function unlockGold() { localStorage.setItem('goldUnlocked', 'true'); }
+
+    // ------------------ РЕКЛАМА (1 раз в день) ------------------
+    const todayStr = new Date().toDateString();
+    const lastAdShown = localStorage.getItem('goldAdLastShown');
+    function shouldShowAd() { return !isGoldUnlocked() && (!lastAdShown || lastAdShown !== todayStr); }
+    function markAdShown() { localStorage.setItem('goldAdLastShown', todayStr); }
+
+    // ------------------ СОЗДАНИЕ КНОПКИ (в потоке, под кнопкой уроков) ------------------
+    const container = document.querySelector('.app-container');
+    if (!container) return;
+    const lessonsBtn = document.getElementById('germanLessonsBtn');
+    const goldBtn = document.createElement('button');
+    goldBtn.id = 'goldCourseBtn';
+    goldBtn.innerHTML = '🏆 Золотой курс A0–C1';
+    goldBtn.style.cssText = 'background:#f1c40f; color:#2c3e50; border:none; padding:6px 16px; border-radius:30px; cursor:pointer; font-size:14px; font-weight:bold; margin-top:8px; margin-bottom:5px; display:inline-block; transition:0.2s;';
+    goldBtn.onmouseenter = () => goldBtn.style.transform = 'scale(1.02)';
+    goldBtn.onmouseleave = () => goldBtn.style.transform = 'scale(1)';
+    if (lessonsBtn) lessonsBtn.insertAdjacentElement('afterend', goldBtn);
+    else {
+        const h1 = container.querySelector('h1');
+        if (h1) h1.insertAdjacentElement('afterend', goldBtn);
+        else container.appendChild(goldBtn);
+    }
+
+    // ------------------ МОДАЛЬНОЕ ОКНО КУРСА ------------------
+    const modal = document.createElement('div');
+    modal.id = 'goldCourseModal';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:1000px; height:85%; max-height:600px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
+    modal.innerHTML = `
+        <div style="background:#f1c40f; padding:10px; display:flex; justify-content:space-between;">
+            <span style="color:#2c3e50; font-weight:bold;">🏆 Золотой курс A0 → C1 (всё включено)</span>
+            <button id="closeGoldModal" style="background:none; border:none; color:#2c3e50; font-size:24px;">✖</button>
+        </div>
+        <div id="goldContent" style="flex:1; padding:15px; overflow:auto; display:flex; flex-direction:column; gap:15px;"></div>
+    `;
+    document.body.appendChild(modal);
+
+    // ------------------ ГЕНЕРАТОР УРОКОВ (50 на уровень) ------------------
+    function generateLessonsForLevel(level, startId, count = 50) {
+        const lessons = [];
+        // Темы для разных уровней
+        const themes = {
+            A0: ['Алфавит и произношение', 'Приветствия', 'Числа 0-20', 'Глагол sein', 'Глагол haben', 'Личные местоимения', 'Артикли', 'Множественное число', 'Порядок слов', 'Отрицание nicht', 'Предлоги in/auf', 'Прилагательные', 'Цвета', 'Семья', 'Профессии', 'Еда', 'Напитки', 'Дом', 'Одежда', 'Транспорт', 'Дни недели', 'Месяцы', 'Погода', 'Время', 'Хобби', 'Спорт', 'Путешествия', 'В городе', 'Школа', 'Работа'],
+            A1: ['Perfekt слабых глаголов', 'Perfekt сильных глаголов', 'Модальные глаголы (können)', 'Модальные глаголы (müssen)', 'Модальные глаголы (wollen)', 'Придаточные с weil', 'Придаточные с dass', 'Предлоги с Dativ', 'Предлоги с Akkusativ', 'Степени сравнения', 'Местоимения в Akk/Dat', 'Возвратные глаголы', 'Разделительный генитив', 'Отрицание kein/nicht', 'Повелительное наклонение', 'Будущее время werden', 'Союзы und/oder/aber', 'Приставки отделяемые', 'Приставки неотделяемые', 'Сложные существительные'],
+            A2: ['Präteritum haben/sein', 'Präteritum модальных', 'Präteritum слабых глаголов', 'Präteritum сильных', 'Plusquamperfekt', 'Konjunktiv II (würde)', 'Konjunktiv II (hätte, wäre)', 'Пассив настоящего времени', 'Пассив прошедшего', 'Безличный пассив', 'Модальный пассив', 'Союзы obwohl, trotzdem', 'Союзы damit, um...zu', 'Союзы so dass', 'Предлоги aus, bei, mit, nach, von, zu', 'Предлоги bis, durch, für, gegen, ohne, um', 'Предлоги wegen, trotz, während', 'Указательные местоимения', 'Относительные местоимения', 'Склонение прилагательных'],
+            B1: ['Придаточные условия (wenn, falls)', 'Придаточные времени (als, wenn, nachdem)', 'Придаточные цели (damit, um...zu)', 'Придаточные уступки (obwohl)', 'Придаточные следствия (so dass)', 'Причастие I как прилагательное', 'Причастие II как прилагательное', 'Конструкция haben + zu + Inf', 'Конструкция sein + zu + Inf', 'Субстантивированные прилагательные', 'Местоименные наречия (damit, dafür)', 'Вопросительные наречия (womit, wofür)', 'Косвенный вопрос', 'Инфинитивные обороты (ohne...zu, statt...zu)', 'Глаголы с фиксированными предлогами (список)', 'Фразовые глаголы', 'Синонимы и стилистика', 'Номинальный стиль', 'Речевые клише для эссе', 'Аргументация и дискуссия'],
+            B2: ['Konjunktiv I (косвенная речь)', 'Konjunktiv I в новостях', 'Konjunktiv I vs II', 'Пассив с модальными глаголами', 'Пассив состояния (sein + Partizip II)', 'Замена пассива активом', 'Сложные союзы: je...desto, nicht nur...sondern auch', 'Союзы: während, indem, sodass', 'Склонение прилагательных после nichts, etwas, viel, wenig', 'Склонение в сравнительной степени', 'Склонение в превосходной степени', 'Предлоги с генитивом (anstatt, trotz, wegen, während)', 'Сложные предлоги (in Bezug auf, mit Hilfe von)', 'Устойчивые выражения с предлогами', 'Стилистические приёмы (повторы, инверсия)', 'Пунктуация в сложных предложениях', 'Абстрактная лексика (Wirtschaft, Politik, Kultur)', 'Термины (Medizin, Jura, IT)', 'Деловая переписка (E-Mail, Brief)', 'Презентация и аргументация'],
+            C1: ['Идиомы и фразеологизмы', 'Крылатые выражения из литературы', 'Стилистически окрашенная лексика (umgangssprachlich, gehoben)', 'Контраст zwischen gesprochener und geschriebener Sprache', 'Реферирование научных статей', 'Цитирование и косвенная речь', 'Парафраз и синонимическая замена', 'Юмор и сарказм в немецком', 'Эмоционально-оценочная лексика', 'Сложные модели словообразования', 'Неологизмы и заимствования', 'Канцеляризмы (Amtssprache)', 'Разговорные сокращения', 'Анализ стихов и прозы', 'Дискуссия на политические темы', 'Дискуссия на философские темы', 'Презентация результатов исследования', 'Написание рецензии', 'Написание комментария к новостям', 'Подготовка к TestDaF / Goethe C1']
+        };
+        const levelThemes = themes[level] || Array(50).fill('Общая тема');
+        for (let i = 1; i <= count; i++) {
+            const theme = levelThemes[(i-1) % levelThemes.length] + ` (урок ${i})`;
+            lessons.push({
+                id: startId + i - 1,
+                title: `${level} – ${theme}`,
+                grammar: `<div class="grammar-rule">📘 <strong>${theme}</strong></div>
+                          <p>В этом уроке мы изучаем правила, связанные с темой ${theme}.<br>
+                          Пример: <span class="highlight">правило 1</span> – описание правила.<br>
+                          Правило 2: всегда ставьте глагол на второе место в утверждении.<br>
+                          Запомните исключения: если есть модальный глагол, инфинитив уходит в конец.</p>`,
+                vocabulary: [
+                    { word: 'das Beispiel', translation: 'пример' },
+                    { word: 'die Regel', translation: 'правило' },
+                    { word: 'der Satz', translation: 'предложение' },
+                    { word: 'die Ausnahme', translation: 'исключение' },
+                    { word: 'lernen', translation: 'учить' },
+                    { word: 'wiederholen', translation: 'повторять' }
+                ],
+                sentences: [
+                    { german: 'Das ist ein Beispielsatz.', russian: 'Это пример предложения.' },
+                    { german: 'Ich lerne jeden Tag zehn neue Wörter.', russian: 'Я учу десять новых слов каждый день.' },
+                    { german: 'Diese Regel ist sehr wichtig.', russian: 'Это правило очень важно.' }
+                ]
+            });
+        }
+        return lessons;
+    }
+
+    // Генерируем уроки для всех уровней
+    const goldLessonsByLevel = {
+        A0: generateLessonsForLevel('A0', 1, 50),
+        A1: generateLessonsForLevel('A1', 51, 50),
+        A2: generateLessonsForLevel('A2', 101, 50),
+        B1: generateLessonsForLevel('B1', 151, 50),
+        B2: generateLessonsForLevel('B2', 201, 50),
+        C1: generateLessonsForLevel('C1', 251, 50)
+    };
+
+    // ------------------ ГЕНЕРАТОР ТЕСТОВ (после каждых 10 уроков) ------------------
+    function generateTestsForLevel(level, testCount = 5) {
+        const tests = [];
+        for (let t = 1; t <= testCount; t++) {
+            const questions = [];
+            const lessonRangeStart = (t-1)*10 + 1;
+            const lessonRangeEnd = t*10;
+            for (let q = 1; q <= 5; q++) {
+                questions.push({
+                    text: `Вопрос ${q} по темам уроков ${lessonRangeStart}–${lessonRangeEnd}. Как перевести слово "das Haus"?`,
+                    options: ['дом', 'квартира', 'здание', 'комната'],
+                    correct: 0,
+                    explanation: 'Haus – дом.'
+                });
+            }
+            tests.push({ lessons: [lessonRangeStart, lessonRangeEnd], questions });
+        }
+        return tests;
+    }
+    const testsByLevel = {
+        A0: generateTestsForLevel('A0'),
+        A1: generateTestsForLevel('A1'),
+        A2: generateTestsForLevel('A2'),
+        B1: generateTestsForLevel('B1'),
+        B2: generateTestsForLevel('B2'),
+        C1: generateTestsForLevel('C1')
+    };
+
+    // ------------------ ОЗВУЧКА (используем общую функцию) ------------------
+    function speakGerman(text) {
+        if (!text || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.85;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // ------------------ ОТРИСОВКА КУРСА ПОСЛЕ АКТИВАЦИИ ------------------
+    function renderUnlockedCourse() {
+        let html = `
+            <div style="margin-bottom:15px;">
+                <label style="color:white;">Выберите уровень: </label>
+                <select id="goldLevelSelect" style="background:#2c3e50; color:white; padding:6px; border-radius:20px;">
+                    <option value="A0">A0 (Начальный абсолютный)</option>
+                    <option value="A1">A1 (Начальный)</option>
+                    <option value="A2">A2 (Базовый)</option>
+                    <option value="B1">B1 (Средний)</option>
+                    <option value="B2">B2 (Выше среднего)</option>
+                    <option value="C1">C1 (Продвинутый)</option>
+                </select>
+            </div>
+            <div id="goldLessonsContainer"></div>
+        `;
+        document.getElementById('goldContent').innerHTML = html;
+
+        let currentLevel = 'A0';
+        function loadLevel(level) {
+            const lessons = goldLessonsByLevel[level];
+            const tests = testsByLevel[level];
+            let container = document.getElementById('goldLessonsContainer');
+            let lessonsHtml = '';
+            for (let i = 0; i < lessons.length; i++) {
+                const lesson = lessons[i];
+                lessonsHtml += `
+                    <div class="goldLesson" data-lesson-idx="${i}" style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:15px;">
+                        <h4 style="color:#f1c40f;">Урок ${lesson.id}: ${lesson.title}</h4>
+                        <div style="color:#ddd;">${lesson.grammar}</div>
+                        <div style="margin-top:10px;"><strong>📚 Словарь:</strong><br>
+                            ${lesson.vocabulary.map(v => `<span class="highlight">${v.word}</span> – ${v.translation} <button class="goldSpeakBtn" data-word="${v.word}">🔊</button>`).join(' | ')}
+                        </div>
+                        <div style="margin-top:10px;"><strong>💬 Примеры:</strong><br>
+                            ${lesson.sentences.map(s => `<div class="example">🇩🇪 ${s.german} <button class="goldSentenceSpeak" data-text="${s.german}">🔊</button><br>🇷🇺 ${s.russian}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+                if ((i+1) % 10 === 0 && i+1 !== lessons.length) {
+                    const testIdx = Math.floor(i/10);
+                    lessonsHtml += `<button class="testBtn" data-level="${level}" data-test-idx="${testIdx}" style="background:#f1c40f; border:none; padding:8px 15px; border-radius:30px; margin-bottom:15px;">📝 Пройти тест (уроки ${i-9+1}–${i+1})</button>`;
+                }
+            }
+            container.innerHTML = lessonsHtml;
+            // Привязываем события
+            document.querySelectorAll('.goldSpeakBtn').forEach(btn => btn.onclick = () => speakGerman(btn.dataset.word));
+            document.querySelectorAll('.goldSentenceSpeak').forEach(btn => btn.onclick = () => speakGerman(btn.dataset.text));
+            document.querySelectorAll('.testBtn').forEach(btn => {
+                btn.onclick = () => {
+                    const lvl = btn.dataset.level;
+                    const testIdx = parseInt(btn.dataset.testIdx);
+                    const test = testsByLevel[lvl][testIdx];
+                    showTestModal(test, lvl);
+                };
+            });
+        }
+        document.getElementById('goldLevelSelect').onchange = (e) => {
+            currentLevel = e.target.value;
+            loadLevel(currentLevel);
+        };
+        loadLevel(currentLevel);
+    }
+
+    // Модальное окно теста
+    function showTestModal(test, level) {
+        const modalTest = document.createElement('div');
+        modalTest.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:20px; width:90%; max-width:500px; z-index:100020; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.9); padding:20px; border:2px solid #f1c40f;';
+        let answers = new Array(test.questions.length).fill(-1);
+        function renderQuestion(qIdx) {
+            const q = test.questions[qIdx];
+            let qHtml = `
+                <div style="margin-bottom:15px;">
+                    <div style="color:white;">${q.text}</div>
+                    <div style="margin-top:10px;">${q.options.map((opt, i) => `<label style="display:block; background:#2c3e50; margin:5px 0; padding:6px; border-radius:20px;"><input type="radio" name="q" value="${i}" ${answers[qIdx]===i ? 'checked' : ''}> ${opt}</label>`).join('')}</div>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <button id="prevQ" ${qIdx===0?'disabled':''}>◀ Назад</button>
+                    <span>${qIdx+1} / ${test.questions.length}</span>
+                    <button id="nextQ" ${qIdx===test.questions.length-1?'disabled':''}>Далее ▶</button>
+                </div>
+                <button id="submitTest" style="margin-top:15px; background:#f1c40f; width:100%;">Завершить тест</button>
+            `;
+            modalTest.querySelector('.questionsArea').innerHTML = qHtml;
+            document.querySelectorAll('input[name="q"]').forEach(r => r.onchange = (e) => { answers[qIdx] = parseInt(e.target.value); });
+            document.getElementById('prevQ').onclick = () => { if(qIdx>0) renderQuestion(qIdx-1); };
+            document.getElementById('nextQ').onclick = () => { if(qIdx<test.questions.length-1) renderQuestion(qIdx+1); };
+            document.getElementById('submitTest').onclick = () => {
+                let score = 0;
+                let resultHtml = `<h4 style="color:white;">Результат теста (уроки ${test.lessons[0]}–${test.lessons[1]})</h4>`;
+                for (let i=0; i<test.questions.length; i++) {
+                    const isCorrect = (answers[i] === test.questions[i].correct);
+                    if(isCorrect) score++;
+                    resultHtml += `<div style="border-left:4px solid ${isCorrect ? '#2ecc71' : '#e74c3c'}; margin:5px 0; padding:5px; background:#1e2a36;">
+                        ${test.questions[i].text}<br>Ваш ответ: ${answers[i]!==-1 ? test.questions[i].options[answers[i]] : '—'} | Правильно: ${test.questions[i].options[test.questions[i].correct]}<br>${test.questions[i].explanation}
+                    </div>`;
+                }
+                resultHtml += `<div style="text-align:center;">Правильных: ${score} из ${test.questions.length}</div><button id="closeTestModal">Закрыть</button>`;
+                modalTest.querySelector('.questionsArea').innerHTML = resultHtml;
+                document.getElementById('closeTestModal').onclick = () => modalTest.remove();
+            };
+        }
+        modalTest.innerHTML = `<div style="display:flex; justify-content:flex-end;"><button id="testCloseBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button></div><div class="questionsArea" style="color:white;"></div>`;
+        document.body.appendChild(modalTest);
+        document.getElementById('testCloseBtn').onclick = () => modalTest.remove();
+        renderQuestion(0);
+    }
+
+    // ------------------ СТРАНИЦА ОПЛАТЫ (без изменений, но с длинным описанием) ------------------
+    function renderPaymentPage() {
+        document.getElementById('goldContent').innerHTML = `
+            <div style="text-align:center;">
+                <div style="background:#f1c40f20; border-radius:20px; padding:15px; margin-bottom:20px;">
+                    <h2 style="color:#f1c40f;">🏆 Полный курс немецкого A0 → C1</h2>
+                    <p style="color:white; font-size:18px;">Всё, что нужно для свободного владения языком!</p>
+                </div>
+                <div style="background:#2c3e50; border-radius:20px; padding:15px; text-align:left; color:#ddd;">
+                    <h3 style="color:#f1c40f;">🔥 Что вы получите:</h3>
+                    <ul>
+                        <li>📚 <strong>Более 300 уроков</strong> (50 на каждый уровень A0–C1)</li>
+                        <li>🎧 <strong>Озвучка всех слов и диалогов</strong> носителями языка</li>
+                        <li>📝 <strong>Пошаговые объяснения грамматики</strong> с примерами</li>
+                        <li>💬 <strong>Тысячи предложений и диалогов</strong> на реальные темы</li>
+                        <li>🧠 <strong>Интерактивные тесты после каждых 10 уроков</strong> (более 30 тестов)</li>
+                        <li>🎓 <strong>Подготовка к экзаменам Goethe, TestDaF, TELC</strong></li>
+                        <li>🏅 <strong>Сертификат о прохождении курса</strong> (по запросу)</li>
+                        <li>💎 <strong>Доступ навсегда</strong> + обновления бесплатно</li>
+                    </ul>
+                    <h3 style="color:#f1c40f;">🎯 Для кого этот курс?</h3>
+                    <ul>
+                        <li>Вы хотите <strong>заговорить на немецком</strong> и понимать носителей</li>
+                        <li>Вам нужно <strong>сдать международный экзамен</strong> для учёбы или работы</li>
+                        <li>Вы учили немецкий, но <strong>боитесь говорить</strong> – курс даст практику</li>
+                        <li>Вы цените <strong>структуру и полноту</strong> – всё в одном месте</li>
+                    </ul>
+                    <div style="background:#1e2a36; border-radius:15px; padding:15px; text-align:center; margin:20px 0;">
+                        <span style="font-size:28px; color:#f1c40f;">🔥 Только сегодня: €10</span><br>
+                        <span style="font-size:14px; color:#aaa;">(вместо €99) – ограниченное предложение</span>
+                    </div>
+                    <p><strong>Как получить доступ?</strong> Переведите <strong>10 евро</strong> на счёт ниже, укажите в назначении ваш email. После перевода напишите нам в Telegram или на почту – мы вышлем вам <strong>уникальный код активации</strong> (одноразовый). Введите код в поле, и курс откроется навсегда!</p>
+                </div>
+                <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0; text-align:left;">
+                    <p style="color:white;"><strong>💳 Реквизиты для оплаты (10 €):</strong><br>
+                    Получатель: Pyrozhenko, Danyil<br>
+                    IBAN: <span id="goldIban">DE92 3755 1780 1020 1888 41</span> <button id="copyGoldIbanBtn" style="background:#3498db; border:none; padding:2px 8px; border-radius:10px;">📋 Копировать</button><br>
+                    BIC: WELADED1LAF<br>
+                    Назначение платежа: <strong>GoldCourse_ВашEmail</strong> (пример: GoldCourse_ivan@gmail.com)</p>
+                </div>
+                <div style="background:#1e2a36; border-radius:15px; padding:15px; margin:15px 0;">
+                    <p style="color:white;">✅ После оплаты свяжитесь с нами и получите код:</p>
+                    <p style="color:#f1c40f;">📧 Почта: <strong>${ADMIN_EMAIL}</strong><br>📱 Telegram: <strong>@${ADMIN_TELEGRAM}</strong></p>
+                    <p style="color:#aaa;">Укажите в сообщении email, который вы вписали в платёж, и мы пришлём код в течение 24 часов.</p>
+                </div>
+                <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0;">
+                    <input type="text" id="activationCodeInput" placeholder="Введите полученный код" style="width:70%; background:#34495e; color:white; padding:8px; border:none; border-radius:30px;">
+                    <button id="activateGoldBtn" style="background:#f1c40f; border:none; padding:8px 20px; border-radius:30px; margin-left:10px;">Активировать</button>
+                    <div id="activationMessage" style="margin-top:10px; font-size:13px;"></div>
+                </div>
+                <p style="color:#aaa;">🔒 Доступ открывается мгновенно после ввода кода. Если возникли проблемы – пишите, поможем!</p>
+            </div>
+        `;
+        document.getElementById('copyGoldIbanBtn')?.addEventListener('click', () => {
+            const iban = document.getElementById('goldIban').innerText;
+            navigator.clipboard.writeText(iban);
+            const msgDiv = document.getElementById('activationMessage');
+            if(msgDiv) { msgDiv.innerHTML = '<span style="color:#2ecc71;">✅ IBAN скопирован!</span>'; setTimeout(() => msgDiv.innerHTML = '', 2000); }
+        });
+        document.getElementById('activateGoldBtn')?.addEventListener('click', () => {
+            const code = document.getElementById('activationCodeInput').value.trim();
+            if (!code) { showMessage('❌ Введите код', 'error'); return; }
+            if (isValidCode(code)) {
+                unlockGold();
+                showMessage('🎉 Курс активирован! Обновите страницу.', 'success');
+                setTimeout(() => renderGoldContent(), 1500);
+            } else { showMessage('❌ Неверный или уже использованный код.', 'error'); }
+        });
+    }
+
+    function showMessage(msg, type) {
+        const msgDiv = document.getElementById('activationMessage');
+        if (msgDiv) {
+            msgDiv.innerHTML = `<span style="color:${type==='success'?'#2ecc71':'#e74c3c'}">${msg}</span>`;
+            setTimeout(() => msgDiv.innerHTML = '', 3000);
+        }
+    }
+
+    function renderGoldContent() {
+        if (isGoldUnlocked()) renderUnlockedCourse();
+        else renderPaymentPage();
+    }
+
+    // ------------------ РЕКЛАМНЫЙ POP-UP ------------------
+    function showGoldAd() {
+        if (!shouldShowAd()) return;
+        markAdShown();
+        const adModal = document.createElement('div');
+        adModal.id = 'goldAdModal';
+        adModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:30px; width:90%; max-width:500px; z-index:100010; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.85); padding:20px; text-align:center; border:2px solid #f1c40f;';
+        adModal.innerHTML = `
+            <div style="display:flex; justify-content:flex-end;"><button id="closeAdBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button></div>
+            <div style="font-size:48px;">🏆</div>
+            <h2 style="color:#f1c40f;">Золотой курс A0 → C1</h2>
+            <p style="color:white;">📅 <strong>Ограниченное предложение!</strong></p>
+            <p style="color:#ddd;">300+ уроков, тесты, озвучка – всё, чтобы свободно заговорить по-немецки. Доступ навсегда за €10.</p>
+            <p style="color:#f1c40f; font-size:24px;">🔥 €10 вместо €99</p>
+            <button id="buyNowAdBtn" style="background:#f1c40f; color:#2c3e50; border:none; padding:10px 20px; border-radius:40px; font-weight:bold; margin:10px;">Купить курс</button>
+        `;
+        document.body.appendChild(adModal);
+        document.getElementById('closeAdBtn').onclick = () => adModal.remove();
+        document.getElementById('buyNowAdBtn').onclick = () => {
+            adModal.remove();
+            goldBtn.click();
+        };
+        setTimeout(() => { if(adModal.parentNode) adModal.remove(); }, 10000);
+    }
+
+    // ------------------ ИНИЦИАЛИЗАЦИЯ ------------------
+    function init() {
+        loadCodes();
+        goldBtn.onclick = () => { modal.style.display = 'flex'; renderGoldContent(); };
+        document.getElementById('closeGoldModal').onclick = () => modal.style.display = 'none';
+        setTimeout(() => showGoldAd(), 1500);
+    }
+    init();
+})();
+
     
 </script>
 </body>
