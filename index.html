@@ -11459,6 +11459,37 @@ goldLessonsByLevel.A0[9] = {
         C1: generateTestsForLevel('C1')
     };
 
+
+
+
+
+    // === ТЕСТ 1: УРОКИ 1–10 (20 вопросов) ===
+tests.push({
+    lessons: [1, 10],
+    questions: [
+        { text: 'Как по-немецки «привет»?', options: ['Tschüss', 'Hallo', 'Guten Abend', 'Auf Wiedersehen'], correct: 1, explanation: 'Hallo – привет (неформальное).' },
+        { text: 'Сколько будет 5 + 3? (Назовите число по-немецки)', options: ['sechs', 'sieben', 'acht', 'neun'], correct: 2, explanation: 'acht = 8.' },
+        { text: 'Как сказать «Я имею собаку»?', options: ['Ich habe einen Hund', 'Ich bin einen Hund', 'Ich habe eine Hund', 'Ich habe Hund'], correct: 0, explanation: 'haben + Akkusativ: einen Hund.' },
+        { text: 'Какой артикль у слова «Mutter» в именительном падеже?', options: ['der', 'die', 'das', 'den'], correct: 1, explanation: 'Mutter – женский род → die Mutter.' },
+        { text: 'Что означает фраза «Guten Morgen»?', options: ['Добрый день', 'Добрый вечер', 'Доброе утро', 'Спокойной ночи'], correct: 2, explanation: 'Guten Morgen – доброе утро.' },
+        { text: 'Выберите правильную форму глагола «sein» для «er»', options: ['bin', 'bist', 'ist', 'sind'], correct: 2, explanation: 'er ist.' },
+        { text: 'Как сказать «У меня нет времени»?', options: ['Ich habe nicht Zeit', 'Ich habe keine Zeit', 'Ich habe kein Zeit', 'Ich habe keine Zeit nicht'], correct: 1, explanation: 'keine Zeit, потому что Zeit – женский род.' },
+        { text: 'Какой предлог означает «под»?', options: ['auf', 'in', 'unter', 'neben'], correct: 2, explanation: 'unter – под.' },
+        { text: 'Как спросить «Который час?»', options: ['Wie spät ist es?', 'Wann ist es?', 'Wie viel Uhr?', 'Was ist die Zeit?'], correct: 0, explanation: 'Wie spät ist es? – стандартный вопрос о времени.' },
+        { text: 'Как будет «я хочу» (глагол wollen в 1-м лице)?', options: ['ich will', 'ich wollte', 'ich möchte', 'ich wünsche'], correct: 0, explanation: 'ich will – я хочу.' },
+        { text: 'Как сказать «мой брат»?', options: ['mein Bruder', 'meine Bruder', 'meiner Bruder', 'meinen Bruder'], correct: 0, explanation: 'Bruder – мужской род → mein Bruder.' },
+        { text: 'Какой глагол означает «уметь, мочь»?', options: ['müssen', 'wollen', 'können', 'dürfen'], correct: 2, explanation: 'können – мочь / уметь.' },
+        { text: 'Как будет «мы идём»?', options: ['ich gehe', 'du gehst', 'wir gehen', 'sie geht'], correct: 2, explanation: 'wir gehen.' },
+        { text: 'Что означает слово «die Familie»?', options: ['семья', 'мать', 'отец', 'ребёнок'], correct: 0, explanation: 'die Familie – семья.' },
+        { text: 'Как сказать «книга лежит на столе»?', options: ['Das Buch liegt auf dem Tisch', 'Das Buch liegt auf der Tisch', 'Das Buch ist auf dem Tisch', 'Das Buch ist auf der Tisch'], correct: 0, explanation: 'liegen + Dativ: auf dem Tisch.' },
+        { text: 'Какой предлог означает «рядом с»?', options: ['hinter', 'vor', 'neben', 'zwischen'], correct: 2, explanation: 'neben – рядом с.' },
+        { text: 'Как будет «ты работаешь»?', options: ['du arbeite', 'du arbeitest', 'du arbeitet', 'du arbeit'], correct: 1, explanation: 'окончание -st для du.' },
+        { text: 'Как сказать «это плохая идея»?', options: ['Das ist eine schlechte Idee', 'Das ist eine nicht gute Idee', 'Das ist kein gute Idee', 'Das ist eine kein Idee'], correct: 0, explanation: 'schlecht – плохой.' },
+        { text: 'Что означает фраза «Auf Wiedersehen»?', options: ['Привет', 'До свидания', 'Добрый день', 'Спасибо'], correct: 1, explanation: 'Auf Wiedersehen – официальное прощание.' },
+        { text: 'Какой артикль у слова «Buch» в винительном падеже (Akkusativ)?', options: ['der', 'den', 'das', 'die'], correct: 2, explanation: 'das bleibt das.' }
+    ]
+});
+
     // ------------------ ОЗВУЧКА (используем общую функцию) ------------------
     function speakGerman(text) {
         if (!text || !window.speechSynthesis) return;
