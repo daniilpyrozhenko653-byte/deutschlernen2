@@ -10392,7 +10392,7 @@ goldLessonsByLevel.A0[0] = {  // обратите внимание: индекс
     goldLessonsByLevel.A0[1] = {
     id: 2,
     title: 'Zahlen und Alter – Числа, возраст и счёт',
-    grammar: <div class="grammar-rule">📅 ЧИСЛА 0–12 (база, учим наизусть)</div>
+    grammar: `<div class="grammar-rule">📅 ЧИСЛА 0–12 (база, учим наизусть)</div>
 <p><strong>0</strong> – null &nbsp;| <strong>1</strong> – eins &nbsp;| <strong>2</strong> – zwei &nbsp;| <strong>3</strong> – drei<br>
 <strong>4</strong> – vier &nbsp;| <strong>5</strong> – fünf &nbsp;| <strong>6</strong> – sechs &nbsp;| <strong>7</strong> – sieben<br>
 <strong>8</strong> – acht &nbsp;| <strong>9</strong> – neun &nbsp;| <strong>10</strong> – zehn &nbsp;| <strong>11</strong> – elf &nbsp;| <strong>12</strong> – zwölf</p>
@@ -10447,7 +10447,7 @@ goldLessonsByLevel.A0[0] = {  // обратите внимание: индекс
 · <strong>zwölf</strong> = „цвёльф“</p>
 
 <div class="grammar-rule">📆 ДНИ И МЕСЯЦЫ (кратко)</div>
-<p>Числа нужны и для дат: <strong>der 1. Mai</strong>, <strong>am 12. Oktober</strong>. На уровне A0 достаточно запомнить числа до 31.</p>,
+<p>Числа нужны и для дат: <strong>der 1. Mai</strong>, <strong>am 12. Oktober</strong>. На уровне A0 достаточно запомнить числа до 31.</p>`,
     vocabulary: [
         { word: 'null', translation: 'ноль' },
         { word: 'eins', translation: 'один' },
@@ -10458,7 +10458,7 @@ goldLessonsByLevel.A0[0] = {  // обратите внимание: индекс
         { word: 'sechs', translation: 'шесть' },
         { word: 'sieben', translation: 'семь' },
         { word: 'acht', translation: 'восемь' },
-[15.05.2026 19:46] Даня: { word: 'neun', translation: 'девять' },
+        { word: 'neun', translation: 'девять' },
         { word: 'zehn', translation: 'десять' },
         { word: 'elf', translation: 'одиннадцать' },
         { word: 'zwölf', translation: 'двенадцать' },
@@ -10487,36 +10487,24 @@ goldLessonsByLevel.A0[0] = {  // обратите внимание: индекс
         { word: 'die Nummer', translation: 'номер' }
     ],
     sentences: [
-        // Простые фразы о возрасте
         { german: 'Wie alt bist du?', russian: 'Сколько тебе лет?' },
         { german: 'Ich bin 20 Jahre alt.', russian: 'Мне 20 лет.' },
         { german: 'Ich bin 30.', russian: 'Мне 30.' },
         { german: 'Meine Mutter ist 45 Jahre alt.', russian: 'Моей маме 45 лет.' },
         { german: 'Mein Bruder ist 12.', russian: 'Моему брату 12.' },
         { german: 'Das Baby ist 1 Jahr alt.', russian: 'Ребёнку 1 год.' },
-        
-        // Диалог 1: знакомство и возраст
         { german: '– Hallo! Wie heißt du? – Ich heiße Tom. – Wie alt bist du? – Ich bin 25. Und du? – Ich bin 22.', russian: '– Привет! Как тебя зовут? – Меня зовут Том. – Сколько тебе лет? – Мне 25. А тебе? – Мне 22.' },
-        
-        // Диалог 2: формальный
         { german: '– Guten Tag! Wie alt sind Sie? – Ich bin 54 Jahre alt. – Danke. Und Ihre Tochter? – Sie ist 18.', russian: '– Добрый день! Сколько Вам лет? – Мне 54 года. – Спасибо. А Ваша дочь? – Ей 18.' },
-        
-        // Цены
         { german: 'Wie viel kostet der Kaffee? – Der Kaffee kostet 2,50 Euro.', russian: 'Сколько стоит кофе? – Кофе стоит 2,50 евро.' },
         { german: 'Das ist teuer. Gibt es etwas billigeres?', russian: 'Это дорого. Есть что-то подешевле?' },
         { german: 'Die Pizza kostet 8 Euro. Das ist billig!', russian: 'Пицца стоит 8 евро. Это дёшево!' },
-        
-        // Номер телефона
         { german: 'Wie ist deine Telefonnummer? – Meine Nummer ist null eins sieben zwei drei vier fünf sechs.', russian: 'Какой твой номер телефона? – Мой номер: 0172 3456.' },
         { german: 'Meine Nummer ist null null vier neun zwei zwei eins.', russian: 'Мой номер: 0049 221.' },
-        
-        // Счёт и бытовые фразы
         { german: 'Eins, zwei, drei, vier, fünf – fünf Äpfel, bitte!', russian: 'Раз, два, три, четыре, пять – пять яблок, пожалуйста!' },
         { german: 'Wir brauchen sechs Teller und acht Gabeln.', russian: 'Нам нужно шесть тарелок и восемь вилок.' },
         { german: 'Heute ist der 17. Juni. Morgen ist der 18.', russian: 'Сегодня 17 июня. Завтра 18-е.' },
         { german: 'Ich habe 100 Euro in meiner Tasche.', russian: 'У меня 100 евро в сумке.' },
         { german: '21, 22, 23 – das sind die Zahlen nach 20.', russian: '21, 22, 23 – это числа после 20.' },
-[15.05.2026 19:46] Даня: // Дополнительный мини-диалог в кафе
         { german: '– Guten Tag! Was kostet der Kuchen? – Der Kuchen kostet 3 Euro. – Okay, ich nehme zwei Stück. – Das sind dann 6 Euro, bitte.', russian: '– Добрый день! Сколько стоит пирожное? – Пирожное стоит 3 евро. – Хорошо, я возьму два куска. – С вас 6 евро, пожалуйста.' }
     ]
 };
