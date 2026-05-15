@@ -10298,50 +10298,7 @@ speech_culture: {
         };
         
 
-        const levelThemes = themes[level] || Array(50).fill('Общая тема');
-        for (let i = 1; i <= count; i++) {
-            const theme = levelThemes[(i-1) % levelThemes.length] + ` (урок ${i})`;
-            lessons.push({
-                id: startId + i - 1,
-                title: `${level} – ${theme}`,
-                grammar: `<div class="grammar-rule">📘 <strong>${theme}</strong></div>
-                          <p>В этом уроке мы изучаем правила, связанные с темой ${theme}.<br>
-                          Пример: <span class="highlight">правило 1</span> – описание правила.<br>
-                          Правило 2: всегда ставьте глагол на второе место в утверждении.<br>
-                          Запомните исключения: если есть модальный глагол, инфинитив уходит в конец.</p>`,
-                vocabulary: [
-                    { word: 'das Beispiel', translation: 'пример' },
-                    { word: 'die Regel', translation: 'правило' },
-                    { word: 'der Satz', translation: 'предложение' },
-                    { word: 'die Ausnahme', translation: 'исключение' },
-                    { word: 'lernen', translation: 'учить' },
-                    { word: 'wiederholen', translation: 'повторять' },
-                    { word: 'die Katze', translation: 'кот' }
-                ],
-                sentences: [
-                    { german: 'Das ist ein Beispielsatz.', russian: 'Это пример предложения.' },
-                    { german: 'Ich lerne jeden Tag zehn neue Wörter.', russian: 'Я учу десять новых слов каждый день.' },
-                    { german: 'Diese Regel ist sehr wichtig.', russian: 'Это правило очень важно.' }
-                ]
-            });
-        }
-        return lessons;
-    }
-
-
-    
-    // Генерируем уроки для всех уровней
-    const goldLessonsByLevel = {
-        A0: generateLessonsForLevel('A0', 1, 50),
-        A1: generateLessonsForLevel('A1', 51, 50),
-        A2: generateLessonsForLevel('A2', 101, 50),
-        B1: generateLessonsForLevel('B1', 151, 50),
-        B2: generateLessonsForLevel('B2', 201, 50),
-        C1: generateLessonsForLevel('C1', 251, 50)
-    };
-
-
-// ------------------ ИНИЦИАЛИЗАЦИЯ УРОВНЕЙ ------------------
+       // ------------------ ИНИЦИАЛИЗАЦИЯ УРОВНЕЙ ------------------
 const goldLessonsByLevel = {
     A0: [],
     A1: [],
@@ -10396,17 +10353,15 @@ const realTestsForA0 = [
 
 // ------------------ НАЗНАЧАЕМ ТЕСТЫ ДЛЯ ВСЕХ УРОВНЕЙ ------------------
 const testsByLevel = {
-    A0: realTestsForA0,                      // реальные тесты для A0
-    A1: generateTestsForLevel('A1'),         // заглушки
+    A0: realTestsForA0,
+    A1: generateTestsForLevel('A1'),
     A2: generateTestsForLevel('A2'),
     B1: generateTestsForLevel('B1'),
     B2: generateTestsForLevel('B2'),
     C1: generateTestsForLevel('C1')
 };
 
-
-
-    
+// ------------------ ДОБАВЛЯЕМ РУЧНЫЕ УРОКИ ДЛЯ A0 ------------------
 goldLessonsByLevel.A0[0] = {
     id: 1,
     title: 'Erste Schritte – Begrüßung und Vorstellung',
@@ -10450,6 +10405,8 @@ goldLessonsByLevel.A0[0] = {
         { german: 'Ja, danke. Nein, tschüss.', russian: 'Да, спасибо. Нет, пока.' }
     ]
 };
+
+// Затем добавьте остальные уроки (индексы 1..9) по аналогии.
 
 
 
