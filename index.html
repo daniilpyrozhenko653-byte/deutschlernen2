@@ -10341,10 +10341,115 @@ speech_culture: {
     };
 
 
-goldLessonsByLevel.A0 = [
-    { id:1, title:'Тест', grammar:'Тест', vocabulary:[], sentences:[] },
-    { id:2, title:'Тест2', grammar:'Тест2', vocabulary:[], sentences:[] }
+// ------------------ ИНИЦИАЛИЗАЦИЯ УРОВНЕЙ ------------------
+const goldLessonsByLevel = {
+    A0: [],
+    A1: [],
+    A2: [],
+    B1: [],
+    B2: [],
+    C1: []
+};
+
+// ------------------ ГЕНЕРАТОР ТЕСТОВ (заглушки для A1–C1) ------------------
+function generateTestsForLevel(level, testCount = 5) {
+    const tests = [];
+    for (let t = 1; t <= testCount; t++) {
+        const questions = [];
+        const lessonRangeStart = (t-1)*10 + 1;
+        const lessonRangeEnd = t*10;
+        for (let q = 1; q <= 5; q++) {
+            questions.push({
+                text: `Вопрос ${q} по темам уроков ${lessonRangeStart}–${lessonRangeEnd}. (Добавьте реальные вопросы для уровня ${level})`,
+                options: ['Вариант 1', 'Вариант 2', 'Вариант 3', 'Вариант 4'],
+                correct: 0,
+                explanation: 'Замените этот тест реальными вопросами.'
+            });
+        }
+        tests.push({ lessons: [lessonRangeStart, lessonRangeEnd], questions });
+    }
+    return tests;
+}
+
+// ------------------ РЕАЛЬНЫЕ ТЕСТЫ ДЛЯ A0 (УРОКИ 1–10) ------------------
+const realTestsForA0 = [
+    {
+        lessons: [1, 10],
+        questions: [
+            { text: 'Как по-немецки «привет»?', options: ['Tschüss', 'Hallo', 'Guten Abend', 'Auf Wiedersehen'], correct: 1, explanation: 'Hallo – неформальное приветствие.' },
+            { text: 'Сколько будет 5 + 3? (по-немецки)', options: ['sechs', 'sieben', 'acht', 'neun'], correct: 2, explanation: 'acht = 8.' },
+            { text: 'Как правильно сказать «Я имею собаку»?', options: ['Ich habe einen Hund', 'Ich bin einen Hund', 'Ich habe eine Hund', 'Ich habe Hund'], correct: 0, explanation: 'haben + Akkusativ: einen Hund.' },
+            { text: 'Какой артикль у слова «Mutter» в именительном падеже?', options: ['der', 'die', 'das', 'den'], correct: 1, explanation: 'Mutter – женский род → die.' },
+            { text: 'Что означает «Guten Morgen»?', options: ['Добрый день', 'Добрый вечер', 'Доброе утро', 'Спокойной ночи'], correct: 2, explanation: 'Guten Morgen – доброе утро.' },
+            { text: 'Выберите правильную форму глагола «sein» для «er»', options: ['bin', 'bist', 'ist', 'sind'], correct: 2, explanation: 'er ist.' },
+            { text: 'Как сказать «У меня нет времени»?', options: ['Ich habe nicht Zeit', 'Ich habe keine Zeit', 'Ich habe kein Zeit', 'Ich habe keine Zeit nicht'], correct: 1, explanation: 'keine Zeit – Zeit женский род.' },
+            { text: 'Какой предлог означает «под»?', options: ['auf', 'in', 'unter', 'neben'], correct: 2, explanation: 'unter – под.' },
+            { text: 'Как спросить «Который час?»', options: ['Wie spät ist es?', 'Wann ist es?', 'Wie viel Uhr?', 'Was ist die Zeit?'], correct: 0, explanation: 'Wie spät ist es? – стандартный вопрос.' },
+            { text: 'Как будет «я хочу» (глагол wollen в 1-м лице)?', options: ['ich will', 'ich wollte', 'ich möchte', 'ich wünsche'], correct: 0, explanation: 'ich will – я хочу.' }
+        ]
+    },
+    { lessons: [11,20], questions: [{ text: 'Тест для уроков 11–20 появится после добавления уроков.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
+    { lessons: [21,30], questions: [{ text: 'Тест для уроков 21–30.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
+    { lessons: [31,40], questions: [{ text: 'Тест для уроков 31–40.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
+    { lessons: [41,50], questions: [{ text: 'Тест для уроков 41–50.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] }
 ];
+
+// ------------------ НАЗНАЧАЕМ ТЕСТЫ ДЛЯ ВСЕХ УРОВНЕЙ ------------------
+const testsByLevel = {
+    A0: realTestsForA0,                      // реальные тесты для A0
+    A1: generateTestsForLevel('A1'),         // заглушки
+    A2: generateTestsForLevel('A2'),
+    B1: generateTestsForLevel('B1'),
+    B2: generateTestsForLevel('B2'),
+    C1: generateTestsForLevel('C1')
+};
+
+
+
+    
+goldLessonsByLevel.A0[0] = {
+    id: 1,
+    title: 'Erste Schritte – Begrüßung und Vorstellung',
+    grammar: `<div class="grammar-rule">В немецком языке различают <strong>неформальное</strong> (с друзьями, детьми, близкими) и <strong>формальное</strong> (с незнакомыми взрослыми, начальниками, в магазинах) обращение.<br>На уровне A0 тебе достаточно освоить неформальные варианты – они самые простые и употребительные.</div>
+<div class="grammar-rule">Приветствия:</div>
+<p><strong>· Hallo!</strong> – Привет! (универсальное, неформальное)</p>
+<p><strong>· Guten Morgen!</strong> – Доброе утро!</p>
+<p><strong>· Guten Tag!</strong> – Добрый день!</p>
+<p><strong>· Guten Abend!</strong> – Добрый вечер!</p>
+<p><strong>· Tschüss!</strong> – Пока! (неформальное прощание)</p>
+<div class="grammar-rule">Как представиться:</div>
+<p><strong>· Ich heiße …</strong> – Меня зовут … (подходит в любой ситуации)</p>
+<p><strong>· Ich bin …</strong> – Я … (немного проще)</p>
+<p><strong>· Wie heißt du?</strong> – Как тебя зовут? (обращение на «ты»)</p>
+<div class="grammar-rule">Важные слова вежливости:</div>
+<p><strong>· Bitte</strong> – пожалуйста (когда просишь или когда отвечаешь на спасибо)</p>
+<p><strong>· Danke</strong> – спасибо</p>
+<p><strong>· Ja</strong> – да</p>
+<p><strong>· Nein</strong> – нет</p>
+<div class="grammar-rule">💡 Примечание:</div>
+<p>В немецком все существительные пишутся с большой буквы, но в этом уроке у нас только местоимения и глаголы – пока запомни: <strong>ich</strong> (я), <strong>du</strong> (ты) – с маленькой, а <strong>Sie</strong> (Вы вежливое) – с большой.</p>`,
+    vocabulary: [
+        { word: 'Hallo', translation: 'Привет' },
+        { word: 'Tschüss', translation: 'Пока' },
+        { word: 'Ja', translation: 'да' },
+        { word: 'Nein', translation: 'нет' },
+        { word: 'Danke', translation: 'спасибо' },
+        { word: 'Bitte', translation: 'пожалуйста' },
+        { word: 'ich', translation: 'я' },
+        { word: 'du', translation: 'ты' },
+        { word: 'heißen', translation: 'называться' },
+        { word: 'bin', translation: '(я) есть / являюсь' }
+    ],
+    sentences: [
+        { german: 'Ich heiße Anna.', russian: 'Меня зовут Анна.' },
+        { german: 'Ich bin Peter.', russian: 'Я Петер.' },
+        { german: 'Wie heißt du?', russian: 'Как тебя зовут?' },
+        { german: 'Hallo, ich bin Maria.', russian: 'Привет, я Мария.' },
+        { german: 'Tschüss, Peter!', russian: 'Пока, Петер!' },
+        { german: 'Danke! – Bitte!', russian: 'Спасибо! – Пожалуйста!' },
+        { german: 'Ja, danke. Nein, tschüss.', russian: 'Да, спасибо. Нет, пока.' }
+    ]
+};
 
 
 
