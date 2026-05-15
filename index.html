@@ -11423,58 +11423,6 @@ goldLessonsByLevel.A0[9] = {
 
 
 
-// ------------------ ГЕНЕРАТОР ТЕСТОВ (после каждых 10 уроков) ------------------
-function generateTestsForLevel(level, testCount = 5) {
-    const tests = [];
-    for (let t = 1; t <= testCount; t++) {
-        const questions = [];
-        const lessonRangeStart = (t-1)*10 + 1;
-        const lessonRangeEnd = t*10;
-        for (let q = 1; q <= 5; q++) {
-            questions.push({
-                text: `Вопрос ${q} по темам уроков ${lessonRangeStart}–${lessonRangeEnd}. Как перевести слово "das Haus"?`,
-                options: ['дом', 'квартира', 'здание', 'комната'],
-                correct: 0,
-                explanation: 'Haus – дом.'
-            });
-        }
-        tests.push({ lessons: [lessonRangeStart, lessonRangeEnd], questions });
-    }
-    return tests;
-}
-
-// Реальные тесты для A0 (только для первых 10 уроков)
-const realTestsForA0 = [
-    {
-        lessons: [1, 10],
-        questions: [
-            { text: 'Как по-немецки «привет»?', options: ['Tschüss', 'Hallo', 'Guten Abend', 'Auf Wiedersehen'], correct: 1, explanation: 'Hallo – привет.' },
-            { text: 'Сколько будет 5 + 3? (по-немецки)', options: ['sechs', 'sieben', 'acht', 'neun'], correct: 2, explanation: 'acht = 8.' },
-            { text: 'Как сказать «Я имею собаку»?', options: ['Ich habe einen Hund', 'Ich bin einen Hund', 'Ich habe eine Hund', 'Ich habe Hund'], correct: 0, explanation: 'haben + Akkusativ: einen Hund.' },
-            { text: 'Какой артикль у слова «Mutter»?', options: ['der', 'die', 'das', 'den'], correct: 1, explanation: 'Mutter – женский род → die.' },
-            { text: 'Что означает «Guten Morgen»?', options: ['Добрый день', 'Добрый вечер', 'Доброе утро', 'Спокойной ночи'], correct: 2, explanation: 'Guten Morgen – доброе утро.' },
-            { text: 'Форма глагола «sein» для «er»?', options: ['bin', 'bist', 'ist', 'sind'], correct: 2, explanation: 'er ist.' },
-            { text: 'Как сказать «У меня нет времени»?', options: ['Ich habe nicht Zeit', 'Ich habe keine Zeit', 'Ich habe kein Zeit', 'Ich habe keine Zeit nicht'], correct: 1, explanation: 'keine Zeit (женский род).' },
-            { text: 'Предлог «под»?', options: ['auf', 'in', 'unter', 'neben'], correct: 2, explanation: 'unter – под.' },
-            { text: 'Как спросить «Который час?»', options: ['Wie spät ist es?', 'Wann ist es?', 'Wie viel Uhr?', 'Was ist die Zeit?'], correct: 0, explanation: 'Wie spät ist es? – стандартный вопрос.' },
-            { text: '«я хочу» (глагол wollen)', options: ['ich will', 'ich wollte', 'ich möchte', 'ich wünsche'], correct: 0, explanation: 'ich will – я хочу.' }
-        ]
-    },
-    // Тест для уроков 11–20 (пока заглушка)
-    { lessons: [11,20], questions: [{ text: 'Тест для уроков 11–20 (скоро появится).', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы после создания уроков.' }] },
-    { lessons: [21,30], questions: [{ text: 'Тест для уроков 21–30 (скоро появится).', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
-    { lessons: [31,40], questions: [{ text: 'Тест для уроков 31–40 (скоро появится).', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
-    { lessons: [41,50], questions: [{ text: 'Тест для уроков 41–50 (скоро появится).', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] }
-];
-
-const testsByLevel = {
-    A0: realTestsForA0,
-    A1: generateTestsForLevel('A1'),
-    A2: generateTestsForLevel('A2'),
-    B1: generateTestsForLevel('B1'),
-    B2: generateTestsForLevel('B2'),
-    C1: generateTestsForLevel('C1')
-};
 
 
 
