@@ -10298,6 +10298,35 @@ speech_culture: {
         };
         
 
+        const levelThemes = themes[level] || Array(50).fill('Общая тема');
+        for (let i = 1; i <= count; i++) {
+            const theme = levelThemes[(i-1) % levelThemes.length] + ` (урок ${i})`;
+            lessons.push({
+                id: startId + i - 1,
+                title: `${level} – ${theme}`,
+                grammar: `<div class="grammar-rule">📘 <strong>${theme}</strong></div>
+                          <p>В этом уроке мы изучаем правила, связанные с темой ${theme}.<br>
+                          Пример: <span class="highlight">правило 1</span> – описание правила.<br>
+                          Правило 2: всегда ставьте глагол на второе место в утверждении.<br>
+                          Запомните исключения: если есть модальный глагол, инфинитив уходит в конец.</p>`,
+                vocabulary: [
+                    { word: 'das Beispiel', translation: 'пример' },
+                    { word: 'die Regel', translation: 'правило' },
+                    { word: 'der Satz', translation: 'предложение' },
+                    { word: 'die Ausnahme', translation: 'исключение' },
+                    { word: 'lernen', translation: 'учить' },
+                    { word: 'wiederholen', translation: 'повторять' },
+                    { word: 'die Katze', translation: 'кот' }
+                ],
+                sentences: [
+                    { german: 'Das ist ein Beispielsatz.', russian: 'Это пример предложения.' },
+                    { german: 'Ich lerne jeden Tag zehn neue Wörter.', russian: 'Я учу десять новых слов каждый день.' },
+                    { german: 'Diese Regel ist sehr wichtig.', russian: 'Это правило очень важно.' }
+                ]
+            });
+        }
+        return lessons;
+    }
 
 
     
