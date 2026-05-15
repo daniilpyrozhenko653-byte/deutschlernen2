@@ -10504,47 +10504,49 @@ speech_culture: {
     }
 
     function renderPaymentPage() {
-        document.getElementById('goldContent').innerHTML = `
-            <div style="text-align:center;">
-                <div style="background:#f1c40f20; border-radius:20px; padding:15px; margin-bottom:20px;">
-                    <h2 style="color:#f1c40f;">🏆 Полный курс немецкого A0 → C1</h2>
-                    <p style="color:white; font-size:18px;">Всё, что нужно для свободного владения языком!</p>
-                </div>
-                <div style="background:#2c3e50; border-radius:20px; padding:15px; text-align:left; color:#ddd;">
-                    <h3 style="color:#f1c40f;">🔥 Что вы получите:</h3>
-                    <ul>
-                        <li>📚 <strong>Более 300 уроков</strong> (50 на каждый уровень A0–C1)</li>
-                        <li>🎧 <strong>Озвучка всех слов и диалогов</strong> носителями языка</li>
-                        <li>📝 <strong>Пошаговые объяснения грамматики</strong> с примерами</li>
-                        <li>💬 <strong>Тысячи предложений</strong> на реальные темы</li>
-                        <li>🧠 <strong>Интерактивные тесты после каждых 10 уроков</strong></li>
-                        <li>🎓 <strong>Подготовка к экзаменам Goethe, TestDaF, TELC</strong></li>
-                        <li>💎 <strong>Доступ навсегда</strong> + обновления бесплатно</li>
-                    </ul>
-                    <div style="background:#1e2a36; border-radius:15px; padding:15px; text-align:center; margin:20px 0;">
-                        <span style="font-size:28px; color:#f1c40f;">🔥 Только сегодня: €10</span><br>
-                        <span style="font-size:14px; color:#aaa;">(вместо €59) – ограниченное предложение</span>
-                    </div>
-                    <p><strong>Как получить доступ?</strong> Переведите <strong>10 евро</strong> на счёт ниже, укажите в назначении ваш email. После перевода напишите нам в Telegram или на почту – мы вышлем вам <strong>уникальный код активации</strong>.</p>
-                </div>
-                <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0; text-align:left;">
-                    <p style="color:white;"><strong>💳 Реквизиты для оплаты (10 €):</strong><br>
-                    Получатель: Pyrozhenko, Danyil<br>
-                    IBAN: <span id="goldIban">DE92 3755 1780 1020 1888 41</span> <button id="copyGoldIbanBtn" style="background:#3498db; border:none; padding:2px 8px; border-radius:10px;">📋 Копировать</button><br>
-                    BIC: WELADED1LAF<br>
-                    Назначение платежа: <strong>GoldCourse_ВашEmail</strong></p>
-                </div>
-                <div style="background:#1e2a36; border-radius:15px; padding:15px; margin:15px 0;">
-                    <p style="color:white;">✅ После оплаты свяжитесь с нами:</p>
-                    <p style="color:#f1c40f;">📧 Почта: <strong>${daniilpirozhenko442@gmail.com}</strong><br>📱 Telegram: <strong>@${@daniil3299}</strong></p>
-                </div>
-                <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0;">
-                    <input type="text" id="activationCodeInput" placeholder="Введите полученный код" style="width:70%; background:#34495e; color:white; padding:8px; border:none; border-radius:30px;">
-                    <button id="activateGoldBtn" style="background:#f1c40f; border:none; padding:8px 20px; border-radius:30px; margin-left:10px;">Активировать</button>
-                    <div id="activationMessage" style="margin-top:10px; font-size:13px;"></div>
-                </div>
+    document.getElementById('goldContent').innerHTML = `
+        <div style="text-align:center;">
+            <div style="background:#f1c40f20; border-radius:20px; padding:15px; margin-bottom:20px;">
+                <h2 style="color:#f1c40f;">🏆 Полный курс немецкого A0 → C1</h2>
+                <p style="color:white; font-size:18px;">Всё, что нужно для свободного владения языком!</p>
             </div>
-        `;
+            <div style="background:#2c3e50; border-radius:20px; padding:15px; text-align:left; color:#ddd;">
+                <h3 style="color:#f1c40f;">🔥 Что вы получите:</h3>
+                <ul>
+                    <li>📚 <strong>Более 300 уроков</strong> (50 на каждый уровень A0–C1)</li>
+                    <li>🎧 <strong>Озвучка всех слов и диалогов</strong> носителями языка</li>
+                    <li>📝 <strong>Пошаговые объяснения грамматики</strong> с примерами</li>
+                    <li>💬 <strong>Тысячи предложений</strong> на реальные темы</li>
+                    <li>🧠 <strong>Интерактивные тесты после каждых 10 уроков</strong></li>
+                    <li>🎓 <strong>Подготовка к экзаменам Goethe, TestDaF, TELC</strong></li>
+                    <li>💎 <strong>Доступ навсегда</strong> + обновления бесплатно</li>
+                </ul>
+                <div style="background:#1e2a36; border-radius:15px; padding:15px; text-align:center; margin:20px 0;">
+                    <span style="font-size:28px; color:#f1c40f;">🔥 Только сегодня: €10</span><br>
+                    <span style="font-size:14px; color:#aaa;">(вместо €59) – ограниченное предложение</span>
+                </div>
+                <p><strong>Как получить доступ?</strong> Переведите <strong>10 евро</strong> на счёт ниже, укажите в назначении ваш email. После перевода напишите нам в Telegram или на почту – мы вышлем вам <strong>уникальный код активации</strong>.</p>
+            </div>
+            <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0; text-align:left;">
+                <p style="color:white;"><strong>💳 Реквизиты для оплаты (10 €):</strong><br>
+                Получатель: Pyrozhenko, Danyil<br>
+                IBAN: <span id="goldIban">DE92 3755 1780 1020 1888 41</span> <button id="copyGoldIbanBtn" style="background:#3498db; border:none; padding:2px 8px; border-radius:10px;">📋 Копировать</button><br>
+                BIC: WELADED1LAF<br>
+                Назначение платежа: <strong>GoldCourse_ВашEmail</strong></p>
+            </div>
+            <div style="background:#1e2a36; border-radius:15px; padding:15px; margin:15px 0;">
+                <p style="color:white;">✅ После оплаты свяжитесь с нами:</p>
+                <p style="color:#f1c40f;">📧 Почта: <strong>daniilpirozhenko442@gmail.com</strong><br>📱 Telegram: <strong>@daniil3299</strong></p>
+            </div>
+            <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0;">
+                <input type="text" id="activationCodeInput" placeholder="Введите полученный код" style="width:70%; background:#34495e; color:white; padding:8px; border:none; border-radius:30px;">
+                <button id="activateGoldBtn" style="background:#f1c40f; border:none; padding:8px 20px; border-radius:30px; margin-left:10px;">Активировать</button>
+                <div id="activationMessage" style="margin-top:10px; font-size:13px;"></div>
+            </div>
+        </div>
+    `;
+    // ... остальные обработчики
+}
         document.getElementById('copyGoldIbanBtn')?.addEventListener('click', () => {
             const iban = document.getElementById('goldIban').innerText;
             navigator.clipboard.writeText(iban);
