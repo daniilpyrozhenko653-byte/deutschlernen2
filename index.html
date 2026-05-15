@@ -11423,7 +11423,41 @@ goldLessonsByLevel.A0[9] = {
 
 
 
+// ------------------ ГЕНЕРАТОР ТЕСТОВ (после каждых 10 уроков) ------------------
+    function generateTestsForLevel(level, testCount = 5) {
+        const tests = [];
+        for (let t = 1; t <= testCount; t++) {
+            const questions = [];
+            const lessonRangeStart = (t-1)*10 + 1;
+            const lessonRangeEnd = t*10;
+            for (let q = 1; q <= 5; q++) {
+                questions.push({
+                    text: `Вопрос ${q} по темам уроков ${lessonRangeStart}–${lessonRangeEnd}. Как перевести слово "das Haus"?`,
+                    options: ['дом', 'квартира', 'здание', 'комната'],
+                    correct: 0,
+                    explanation: 'Haus – дом.'
+                });
+            }
+            tests.push({ lessons: [lessonRangeStart, lessonRangeEnd], questions });
+        }
+        return tests;
+    }
+    
 
+    
+    
+    
+    
+
+    
+    const testsByLevel = {
+        A0: generateTestsForLevel('A0'),
+        A1: generateTestsForLevel('A1'),
+        A2: generateTestsForLevel('A2'),
+        B1: generateTestsForLevel('B1'),
+        B2: generateTestsForLevel('B2'),
+        C1: generateTestsForLevel('C1')
+    };
 
 
 
