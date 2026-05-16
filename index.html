@@ -10567,49 +10567,72 @@ speech_culture: {
         C1: generateTestsForLevel('C1')
     };
 
-    // ------------------ ФУНКЦИЯ ПОКАЗА ТЕСТА (модальное окно) ------------------
     function showTestModal(test, level) {
-        const modalTest = document.createElement('div');
-        modalTest.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:20px; width:90%; max-width:500px; z-index:100020; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.9); padding:20px; border:2px solid #f1c40f;';
-        let answers = new Array(test.questions.length).fill(-1);
-        function renderQuestion(qIdx) {
-            const q = test.questions[qIdx];
-            let qHtml = `
-                <div style="margin-bottom:15px;">
-                    <div style="color:white;">${q.text}</div>
-                    <div style="margin-top:10px;">${q.options.map((opt, i) => `<label style="display:block; background:#2c3e50; margin:5px 0; padding:6px; border-radius:20px;"><input type="radio" name="q" value="${i}" ${answers[qIdx]===i ? 'checked' : ''}> ${opt}</label>`).join('')}</div>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <button id="prevQ" ${qIdx===0?'disabled':''}>◀ Назад</button>
-                    <span>${qIdx+1} / ${test.questions.length}</span>
-                    <button id="nextQ" ${qIdx===test.questions.length-1?'disabled':''}>Далее ▶</button>
-                </div>
-                <button id="submitTest" style="margin-top:15px; background:#f1c40f; width:100%;">Завершить тест</button>
-            `;
-            modalTest.querySelector('.questionsArea').innerHTML = qHtml;
-            document.querySelectorAll('input[name="q"]').forEach(r => r.onchange = (e) => { answers[qIdx] = parseInt(e.target.value); });
-            document.getElementById('prevQ').onclick = () => { if(qIdx>0) renderQuestion(qIdx-1); };
-            document.getElementById('nextQ').onclick = () => { if(qIdx<test.questions.length-1) renderQuestion(qIdx+1); };
-            document.getElementById('submitTest').onclick = () => {
-                let score = 0;
-                let resultHtml = `<h4 style="color:white;">Результат теста (уроки ${test.lessons[0]}–${test.lessons[1]})</h4>`;
-                for (let i=0; i<test.questions.length; i++) {
-                    const isCorrect = (answers[i] === test.questions[i].correct);
-                    if(isCorrect) score++;
-                    resultHtml += `<div style="border-left:4px solid ${isCorrect ? '#2ecc71' : '#e74c3c'}; margin:5px 0; padding:5px; background:#1e2a36;">
-                        ${test.questions[i].text}<br>Ваш ответ: ${answers[i]!==-1 ? test.questions[i].options[answers[i]] : '—'} | Правильно: ${test.questions[i].options[test.questions[i].correct]}<br>${test.questions[i].explanation}
-                    </div>`;
-                }
-                resultHtml += `<div style="text-align:center;">Правильных: ${score} из ${test.questions.length}</div><button id="closeTestModal">Закрыть</button>`;
-                modalTest.querySelector('.questionsArea').innerHTML = resultHtml;
-                document.getElementById('closeTestModal').onclick = () => modalTest.remove();
-            };
-        }
-        modalTest.innerHTML = `<div style="display:flex; justify-content:flex-end;"><button id="testCloseBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button></div><div class="questionsArea" style="color:white;"></div>`;
-        document.body.appendChild(modalTest);
-        document.getElementById('testCloseBtn').onclick = () => modalTest.remove();
-        renderQuestion(0);
+    const modalTest = document.createElement('div');
+    modalTest.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:20px; width:90%; max-width:500px; z-index:100020; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.9); border:2px solid #f1c40f;';
+    
+    let answers = new Array(test.questions.length).fill(-1);
+    
+    // Функция закрытия окна
+    function closeModal() {
+        modalTest.remove();
     }
+    
+    // Шапка с крестиком (всегда на месте)
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex; justify-content:flex-end; padding:10px;';
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✖';
+    closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:24px; cursor:pointer;';
+    closeBtn.onclick = closeModal;
+    header.appendChild(closeBtn);
+    modalTest.appendChild(header);
+    
+    // Контейнер для контента (вопросы или результаты)
+    const contentDiv = document.createElement('div');
+    contentDiv.style.cssText = 'padding:20px; padding-top:0;';
+    modalTest.appendChild(contentDiv);
+    
+    function renderQuestion(qIdx) {
+        const q = test.questions[qIdx];
+        let qHtml = `
+            <div style="margin-bottom:15px;">
+                <div style="color:white;">${q.text}</div>
+                <div style="margin-top:10px;">${q.options.map((opt, i) => `<label style="display:block; background:#2c3e50; margin:5px 0; padding:6px; border-radius:20px;"><input type="radio" name="q" value="${i}" ${answers[qIdx]===i ? 'checked' : ''}> ${opt}</label>`).join('')}</div>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <button id="prevQ" ${qIdx===0?'disabled':''}>◀ Назад</button>
+                <span>${qIdx+1} / ${test.questions.length}</span>
+                <button id="nextQ" ${qIdx===test.questions.length-1?'disabled':''}>Далее ▶</button>
+            </div>
+            <button id="submitTest" style="margin-top:15px; background:#f1c40f; width:100%;">Завершить тест</button>
+        `;
+        contentDiv.innerHTML = qHtml;
+        // Привязываем события
+        document.querySelectorAll('input[name="q"]').forEach(r => r.onchange = (e) => { answers[qIdx] = parseInt(e.target.value); });
+        document.getElementById('prevQ').onclick = () => { if(qIdx>0) renderQuestion(qIdx-1); };
+        document.getElementById('nextQ').onclick = () => { if(qIdx<test.questions.length-1) renderQuestion(qIdx+1); };
+        document.getElementById('submitTest').onclick = () => {
+            let score = 0;
+            let resultHtml = `<h4 style="color:white;">Результат теста (уроки ${test.lessons[0]}–${test.lessons[1]})</h4>`;
+            for (let i=0; i<test.questions.length; i++) {
+                const isCorrect = (answers[i] === test.questions[i].correct);
+                if(isCorrect) score++;
+                resultHtml += `<div style="border-left:4px solid ${isCorrect ? '#2ecc71' : '#e74c3c'}; margin:5px 0; padding:5px; background:#1e2a36;">
+                    ${test.questions[i].text}<br>Ваш ответ: ${answers[i]!==-1 ? test.questions[i].options[answers[i]] : '—'} | Правильно: ${test.questions[i].options[test.questions[i].correct]}<br>${test.questions[i].explanation}
+                </div>`;
+            }
+            resultHtml += `<div style="text-align:center; margin:10px 0;">Правильных: ${score} из ${test.questions.length}</div>`;
+            // Добавляем кнопку "Закрыть" (дублирует крестик, но удобно)
+            resultHtml += `<button id="closeTestResultBtn" style="background:#f1c40f; border:none; padding:8px 15px; border-radius:30px;">Закрыть</button>`;
+            contentDiv.innerHTML = resultHtml;
+            document.getElementById('closeTestResultBtn').onclick = closeModal;
+        };
+    }
+    
+    document.body.appendChild(modalTest);
+    renderQuestion(0);
+}
 
     // ------------------ РЕНДЕР КУРСА (с исправленным условием для кнопки теста) ------------------
     function renderUnlockedCourse() {
