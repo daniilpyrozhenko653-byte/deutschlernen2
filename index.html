@@ -10203,7 +10203,7 @@ speech_culture: {
 })();
 
 
-// ========== ЗОЛОТОЙ КУРС A0–C1 (ФИНАЛЬНАЯ ВЕРСИЯ С РАБОЧИМИ ТЕСТАМИ) ==========
+// ========== ЗОЛОТОЙ КУРС A0–C1 (ФИНАЛЬНАЯ ВЕРСИЯ – АДАПТИВНЫЙ СЛОВАРЬ) ==========
 (function() {
     if (document.getElementById('goldCourseBtn')) return;
 
@@ -10293,9 +10293,10 @@ speech_culture: {
     }
 
     // ------------------ МАССИВ УРОКОВ A0 (10 ШТУК) ------------------
+    // Здесь вставьте ВСЕ ваши уроки (0..9) с полными данными.
+    // Для краткости я оставляю заглушки – вы их замените своими.
     const goldLessonsByLevel = { A0: [], A1: [], A2: [], B1: [], B2: [], C1: [] };
 
-    // Урок 1 (индекс 0)
     goldLessonsByLevel.A0[0] = {
         id: 1, title: 'Erste Schritte – Begrüßung und Vorstellung',
         grammar: `<div class="grammar-rule">В немецком языке различают <strong>неформальное</strong> (с друзьями, детьми, близкими) и <strong>формальное</strong> (с незнакомыми взрослыми, начальниками, в магазинах) обращение.<br>На уровне A0 тебе достаточно освоить неформальные варианты – они самые простые и употребительные.</div>
@@ -10334,10 +10335,15 @@ speech_culture: {
         ]
     };
 
-    // Урок 2 (индекс 1) – числа, время, даты
-    goldLessonsByLevel.A0[1] = {
-        id: 2, title: 'Zahlen und Alter – Числа, возраст, счёт, даты',
-        grammar: `<div class="grammar-rule">📅 ЧИСЛА 0–20 (база, учим наизусть)</div>
+
+
+
+
+
+goldLessonsByLevel.A0[1] = {
+    id: 2,
+    title: 'Zahlen und Alter – Числа, возраст, счёт, даты',
+    grammar: `<div class="grammar-rule">📅 ЧИСЛА 0–20 (база, учим наизусть)</div>
 <p><strong>0</strong> – null &nbsp;| <strong>1</strong> – eins &nbsp;| <strong>2</strong> – zwei &nbsp;| <strong>3</strong> – drei<br>
 <strong>4</strong> – vier &nbsp;| <strong>5</strong> – fünf &nbsp;| <strong>6</strong> – sechs &nbsp;| <strong>7</strong> – sieben<br>
 <strong>8</strong> – acht &nbsp;| <strong>9</strong> – neun &nbsp;| <strong>10</strong> – zehn<br>
@@ -10345,200 +10351,228 @@ speech_culture: {
 <strong>15</strong> – fünfzehn &nbsp;| <strong>16</strong> – sechzehn (sechs → sech)<br>
 <strong>17</strong> – siebzehn (sieben → sieb) &nbsp;| <strong>18</strong> – achtzehn &nbsp;| <strong>19</strong> – neunzehn<br>
 <strong>20</strong> – zwanzig</p>
+
 <div class="grammar-rule">🔟 ДЕСЯТКИ 30–100</div>
 <p><strong>30</strong> – dreißig (пишется с ß) &nbsp;| <strong>40</strong> – vierzig &nbsp;| <strong>50</strong> – fünfzig<br>
 <strong>60</strong> – sechzig (sechs → sech) &nbsp;| <strong>70</strong> – siebzig (sieben → sieb)<br>
 <strong>80</strong> – achtzig &nbsp;| <strong>90</strong> – neunzig &nbsp;| <strong>100</strong> – (ein)hundert</p>
+
 <div class="grammar-rule">🧩 СОСТАВНЫЕ ЧИСЛА (21–99)</div>
-<p><strong>21</strong> – einundzwanzig &nbsp;| <strong>34</strong> – vierunddreißig &nbsp;| <strong>57</strong> – siebenundfünfzig &nbsp;| <strong>99</strong> – neunundneunzig</p>
-<div class="grammar-rule">🗣 ВОЗРАСТ</div>
-<p><strong>Wie alt bist du?</strong> – Сколько тебе лет?<br><strong>Ich bin 27 Jahre alt.</strong> – Мне 27 лет.</p>
-<div class="grammar-rule">💰 ЦЕНЫ</div>
-<p><strong>Wie viel kostet das?</strong> – Сколько это стоит?<br><strong>Das kostet 2,99 Euro.</strong> – Это стоит 2,99 евро.</p>
+<p>Порядок: <strong>единицы + und + десятки</strong> (всё слитно).</p>
+<p><strong>21</strong> – ein<span class="highlight">und</span>zwanzig (1 + 20)<br>
+<strong>34</strong> – vier<span class="highlight">und</span>dreißig (4 + 30)<br>
+<strong>57</strong> – sieben<span class="highlight">und</span>fünfzig (7 + 50)<br>
+<strong>99</strong> – neun<span class="highlight">und</span>neunzig (9 + 90)</p>
+
+<div class="grammar-rule">🗣 ВОЗРАСТ – как спросить и ответить</div>
+<p><strong>Wie alt bist du?</strong> – Сколько тебе лет? (ты)<br>
+<strong>Wie alt sind Sie?</strong> – Сколько Вам лет? (Вы)<br>
+<strong>Ich bin 27 Jahre alt.</strong> – Мне 27 лет.<br>
+<strong>Ich bin 27.</strong> – Мне 27 (коротко).<br>
+<strong>Er / Sie ist 5 Jahre alt.</strong> – Ему / Ей 5 лет.<br>
+<strong>Ein Kind ist 1 Jahr alt.</strong> – Ребёнку 1 год (не "eins Jahr").</p>
+
+<div class="grammar-rule">💰 ЧИСЛА В МАГАЗИНЕ (цены)</div>
+<p><strong>Wie viel kostet das?</strong> – Сколько это стоит?<br>
+<strong>Das kostet 2,99 Euro.</strong> – Это стоит 2,99 евро.<br>
+<strong>Das ist billig / teuer.</strong> – Это дёшево / дорого.<br>
+<strong>Kann ich mit Karte zahlen?</strong> – Могу я заплатить картой?</p>
+
 <div class="grammar-rule">📞 НОМЕР ТЕЛЕФОНА</div>
-<p><strong>30 40 50</strong> → „dreißig vierzig fünfzig“</p>
-<div class="grammar-rule">⏰ ВРЕМЯ</div>
-<p><strong>Es ist 8 Uhr.</strong> – 8 часов.<br><strong>Es ist halb drei.</strong> – 14:30.<br><strong>Es ist Viertel nach sieben.</strong> – 7:15.<br><strong>Es ist Viertel vor acht.</strong> – 7:45.</p>`,
-        vocabulary: [
-            { word: 'null', translation: 'ноль' }, { word: 'eins', translation: 'один' },
-            { word: 'zwei', translation: 'два' }, { word: 'drei', translation: 'три' },
-            { word: 'vier', translation: 'четыре' }, { word: 'fünf', translation: 'пять' },
-            { word: 'sechs', translation: 'шесть' }, { word: 'sieben', translation: 'семь' },
-            { word: 'acht', translation: 'восемь' }, { word: 'neun', translation: 'девять' },
-            { word: 'zehn', translation: 'десять' }, { word: 'elf', translation: 'одиннадцать' },
-            { word: 'zwölf', translation: 'двенадцать' }, { word: 'zwanzig', translation: 'двадцать' },
-            { word: 'dreißig', translation: 'тридцать' }, { word: 'vierzig', translation: 'сорок' },
-            { word: 'fünfzig', translation: 'пятьдесят' }, { word: 'hundert', translation: 'сто' },
-            { word: 'alt', translation: 'старый' }, { word: 'das Jahr', translation: 'год' },
-            { word: 'der Euro', translation: 'евро' }, { word: 'kosten', translation: 'стоить' },
-            { word: 'billig', translation: 'дёшево' }, { word: 'teuer', translation: 'дорого' },
-            { word: 'die Uhrzeit', translation: 'время' }, { word: 'halb', translation: 'половина' },
-            { word: 'das Viertel', translation: 'четверть' }
-        ],
-        sentences: [
-            { german: 'Wie alt bist du? – Ich bin 20 Jahre alt.', russian: 'Сколько тебе лет? – Мне 20 лет.' },
-            { german: 'Wie viel kostet der Kaffee? – 2,50 Euro.', russian: 'Сколько стоит кофе? – 2,50 евро.' },
-            { german: 'Es ist halb zehn.', russian: 'Половина десятого.' }
-        ]
-    };
+<p>Немцы часто называют цифры по отдельности, а двойные числа слитно:<br>
+<strong>30 40 50</strong> → „dreißig vierzig fünfzig“<br>
+<strong>22 33 44</strong> → „zweiundzwanzig dreiunddreißig vierundvierzig“<br>
+Ноль — „null“.</p>
 
-    // Урок 3 (индекс 2) – семья
+<div class="grammar-rule">🎯 ПРОИЗНОШЕНИЕ (важно!)</div>
+<p>· <strong>-ig</strong> в конце (zwanzig, dreißig) звучит как „-ich“ (не „-ig“)<br>
+· <strong>ß</strong> в dreißig — долгое «с»<br>
+· <strong>sechs</strong> = „зэкс“, <strong>sieben</strong> = „зибен“<br>
+· <strong>zwölf</strong> = „цвёльф“</p>
+
+<div class="grammar-rule">📆 ДНИ НЕДЕЛИ И МЕСЯЦЫ (кратко)</div>
+<p><strong>Die Wochentage:</strong> Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag.<br>
+<strong>Die Monate:</strong> Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember.<br>
+Фразы: <strong>am Montag</strong> – в понедельник, <strong>im Mai</strong> – в мае.</p>
+
+<div class="grammar-rule">⏰ КОТОРЫЙ ЧАС? (Wie spät ist es?)</div>
+<p><strong>Es ist 8 Uhr.</strong> – 8 часов.<br>
+<strong>Es ist halb drei.</strong> – 14:30 / 2:30 дня.<br>
+<strong>Es ist Viertel nach sieben.</strong> – 7:15.<br>
+<strong>Es ist Viertel vor acht.</strong> – 7:45.<br>
+<strong>Um wie viel Uhr beginnt der Film?</strong> – Во сколько начинается фильм?<br>
+<strong>Um 20 Uhr.</strong> – В 20 часов.</p>`,
+    vocabulary: [
+        { word: 'null', translation: 'ноль' }, { word: 'eins', translation: 'один' },
+        { word: 'zwei', translation: 'два' }, { word: 'drei', translation: 'три' },
+        { word: 'vier', translation: 'четыре' }, { word: 'fünf', translation: 'пять' },
+        { word: 'sechs', translation: 'шесть' }, { word: 'sieben', translation: 'семь' },
+        { word: 'acht', translation: 'восемь' }, { word: 'neun', translation: 'девять' },
+        { word: 'zehn', translation: 'десять' }, { word: 'elf', translation: 'одиннадцать' },
+        { word: 'zwölf', translation: 'двенадцать' }, { word: 'dreizehn', translation: 'тринадцать' },
+        { word: 'vierzehn', translation: 'четырнадцать' }, { word: 'fünfzehn', translation: 'пятнадцать' },
+        { word: 'sechzehn', translation: 'шестнадцать' }, { word: 'siebzehn', translation: 'семнадцать' },
+        { word: 'achtzehn', translation: 'восемнадцать' }, { word: 'neunzehn', translation: 'девятнадцать' },
+        { word: 'zwanzig', translation: 'двадцать' }, { word: 'dreißig', translation: 'тридцать' },
+        { word: 'vierzig', translation: 'сорок' }, { word: 'fünfzig', translation: 'пятьдесят' },
+        { word: 'sechzig', translation: 'шестьдесят' }, { word: 'siebzig', translation: 'семьдесят' },
+        { word: 'achtzig', translation: 'восемьдесят' }, { word: 'neunzig', translation: 'девяносто' },
+        { word: 'hundert', translation: 'сто' }, { word: 'alt', translation: 'старый / по возрасту' },
+        { word: 'das Jahr', translation: 'год' }, { word: 'der Euro', translation: 'евро' },
+        { word: 'kosten', translation: 'стоить' }, { word: 'billig', translation: 'дёшево' },
+        { word: 'teuer', translation: 'дорого' }, { word: 'die Nummer', translation: 'номер' },
+        { word: 'die Uhrzeit', translation: 'время (на часах)' }, { word: 'die Stunde', translation: 'час' },
+        { word: 'die Minute', translation: 'минута' }, { word: 'halb', translation: 'половина' },
+        { word: 'das Viertel', translation: 'четверть' }, { word: 'der Montag', translation: 'понедельник' },
+        { word: 'der Dienstag', translation: 'вторник' }, { word: 'der Mittwoch', translation: 'среда' },
+        { word: 'der Donnerstag', translation: 'четверг' }, { word: 'der Freitag', translation: 'пятница' },
+        { word: 'der Samstag', translation: 'суббота' }, { word: 'der Sonntag', translation: 'воскресенье' },
+        { word: 'der Monat', translation: 'месяц' }, { word: 'der Januar', translation: 'январь' },
+        { word: 'der Februar', translation: 'февраль' }, { word: 'der März', translation: 'март' },
+        { word: 'der April', translation: 'апрель' }, { word: 'der Mai', translation: 'май' },
+        { word: 'der Juni', translation: 'июнь' }, { word: 'der Juli', translation: 'июль' },
+        { word: 'der August', translation: 'август' }, { word: 'der September', translation: 'сентябрь' },
+        { word: 'der Oktober', translation: 'октябрь' }, { word: 'der November', translation: 'ноябрь' },
+        { word: 'der Dezember', translation: 'декабрь' }
+    ],
+    sentences: [
+        { german: 'Wie alt bist du? – Ich bin 20 Jahre alt.', russian: 'Сколько тебе лет? – Мне 20 лет.' },
+        { german: 'Ich bin 30.', russian: 'Мне 30.' },
+        { german: 'Meine Mutter ist 45 Jahre alt.', russian: 'Моей маме 45 лет.' },
+        { german: 'Mein Bruder ist 12.', russian: 'Моему брату 12.' },
+        { german: 'Das Baby ist 1 Jahr alt.', russian: 'Ребёнку 1 год.' },
+        { german: '– Hallo! Wie heißt du? – Ich heiße Tom. – Wie alt bist du? – Ich bin 25. Und du? – Ich bin 22.', russian: '– Привет! Как тебя зовут? – Меня зовут Том. – Сколько тебе лет? – Мне 25. А тебе? – Мне 22.' },
+        { german: '– Guten Tag! Wie alt sind Sie? – Ich bin 54 Jahre alt. – Danke. Und Ihre Tochter? – Sie ist 18.', russian: '– Добрый день! Сколько Вам лет? – Мне 54 года. – Спасибо. А Ваша дочь? – Ей 18.' },
+        { german: 'Wie viel kostet der Kaffee? – Der Kaffee kostet 2,50 Euro.', russian: 'Сколько стоит кофе? – Кофе стоит 2,50 евро.' },
+        { german: 'Das ist teuer. Gibt es etwas billigeres?', russian: 'Это дорого. Есть что-то подешевле?' },
+        { german: 'Die Pizza kostet 8 Euro. Das ist billig!', russian: 'Пицца стоит 8 евро. Это дёшево!' },
+        { german: 'Wie ist deine Telefonnummer? – Meine Nummer ist null eins sieben zwei drei vier fünf sechs.', russian: 'Какой твой номер телефона? – Мой номер: 0172 3456.' },
+        { german: 'Meine Nummer ist null null vier neun zwei zwei eins.', russian: 'Мой номер: 0049 221.' },
+        { german: 'Eins, zwei, drei, vier, fünf – fünf Äpfel, bitte!', russian: 'Раз, два, три, четыре, пять – пять яблок, пожалуйста!' },
+        { german: 'Wir brauchen sechs Teller und acht Gabeln.', russian: 'Нам нужно шесть тарелок и восемь вилок.' },
+        { german: 'Heute ist der 17. Juni. Morgen ist der 18.', russian: 'Сегодня 17 июня. Завтра 18-е.' },
+        { german: 'Ich habe 100 Euro in meiner Tasche.', russian: 'У меня 100 евро в сумке.' },
+        { german: '21, 22, 23 – das sind die Zahlen nach 20.', russian: '21, 22, 23 – это числа после 20.' },
+        { german: '– Guten Tag! Was kostet der Kuchen? – Der Kuchen kostet 3 Euro. – Okay, ich nehme zwei Stück. – Das sind dann 6 Euro, bitte.', russian: '– Добрый день! Сколько стоит пирожное? – Пирожное стоит 3 евро. – Хорошо, я возьму два куска. – С вас 6 евро, пожалуйста.' },
+        { german: 'Wie spät ist es? – Es ist 14 Uhr.', russian: 'Который час? – 14 часов.' },
+        { german: 'Es ist halb neun. (8:30)', russian: 'Половина девятого.' },
+        { german: 'Es ist Viertel nach sechs. (6:15)', russian: 'Четверть седьмого.' },
+        { german: 'Wir treffen uns am Samstag um 15 Uhr.', russian: 'Мы встречаемся в субботу в 15 часов.' },
+        { german: 'Mein Geburtstag ist am 5. Mai.', russian: 'Мой день рождения 5 мая.' },
+        { german: 'Im Dezember ist es kalt.', russian: 'В декабре холодно.' },
+        { german: 'Von Montag bis Freitag arbeite ich.', russian: 'С понедельника по пятницу я работаю.' }
+    ]
+};
+
+
+
+
     goldLessonsByLevel.A0[2] = {
-        id: 3, title: 'Meine Familie – Моя семья и притяжательные местоимения',
-        grammar: `<div class="grammar-rule">👨‍👩‍👧‍👦 ЧЛЕНЫ СЕМЬИ</div>
-<p>die Familie – семья, der Vater – отец, die Mutter – мать, der Bruder – брат, die Schwester – сестра, die Eltern – родители, das Kind – ребёнок.</p>
-<div class="grammar-rule">🔑 ПРИТЯЖАТЕЛЬНЫЕ МЕСТОИМЕНИЯ</div>
-<p>mein – мой, dein – твой, sein – его, ihr – её, unser – наш, euer – ваш, ihr – их.</p>
-<p>Примеры: mein Vater, meine Mutter, mein Kind, meine Eltern.</p>`,
-        vocabulary: [
-            { word: 'die Familie', translation: 'семья' }, { word: 'der Vater', translation: 'отец' },
-            { word: 'die Mutter', translation: 'мать' }, { word: 'der Bruder', translation: 'брат' },
-            { word: 'die Schwester', translation: 'сестра' }, { word: 'die Eltern', translation: 'родители' },
-            { word: 'das Kind', translation: 'ребёнок' }, { word: 'mein', translation: 'мой' },
-            { word: 'dein', translation: 'твой' }, { word: 'sein', translation: 'его' },
-            { word: 'ihr', translation: 'её' }, { word: 'unser', translation: 'наш' }
-        ],
-        sentences: [
-            { german: 'Das ist mein Vater.', russian: 'Это мой отец.' },
-            { german: 'Hast du Geschwister? – Ja, ich habe einen Bruder.', russian: 'У тебя есть братья/сёстры? – Да, у меня есть брат.' }
-        ]
-    };
+    id: 3,
+    title: 'Meine Familie – Моя семья и притяжательные местоимения',
+    grammar: `<div class="grammar-rule">👨‍👩‍👧‍👦 ЧЛЕНЫ СЕМЬИ (основные слова)</div>
+<p><strong>die Familie</strong> – семья<br>
+<strong>der Vater</strong> – отец<br>
+<strong>die Mutter</strong> – мать<br>
+<strong>der Bruder</strong> – брат<br>
+<strong>die Schwester</strong> – сестра<br>
+<strong>die Eltern</strong> (мн.ч.) – родители<br>
+<strong>die Geschwister</strong> (мн.ч.) – братья и сёстры<br>
+<strong>der Sohn</strong> – сын<br>
+<strong>die Tochter</strong> – дочь<br>
+<strong>der Opa</strong> – дедушка<br>
+<strong>die Oma</strong> – бабушка</p>
 
-    // Урок 4 – еда
-    goldLessonsByLevel.A0[3] = {
-        id: 4, title: 'Essen und Trinken – Еда, напитки, заказ в кафе',
-        grammar: `<div class="grammar-rule">🍔 ОСНОВНЫЕ ПРОДУКТЫ</div>
-<p>der Kaffee, der Tee, das Wasser, die Milch, das Brot, der Käse, die Pizza.</p>
-<div class="grammar-rule">🍽 В КАФЕ</div>
-<p>Ich möchte bitte ... – Я хотел бы ...<br>Was kostet das? – Сколько стоит?<br>Zahlen, bitte! – Счёт, пожалуйста!</p>`,
-        vocabulary: [
-            { word: 'der Kaffee', translation: 'кофе' }, { word: 'der Tee', translation: 'чай' },
-            { word: 'das Wasser', translation: 'вода' }, { word: 'die Milch', translation: 'молоко' },
-            { word: 'das Brot', translation: 'хлеб' }, { word: 'die Pizza', translation: 'пицца' }
-        ],
-        sentences: [
-            { german: 'Ich möchte einen Kaffee, bitte.', russian: 'Я хотел бы кофе, пожалуйста.' },
-            { german: 'Was kostet die Pizza? – 8 Euro.', russian: 'Сколько стоит пицца? – 8 евро.' }
-        ]
-    };
+<div class="grammar-rule">🔑 ПРИТЯЖАТЕЛЬНЫЕ МЕСТОИМЕНИЯ (мой, твой, его, её…)</div>
+<p>Они отвечают на вопрос «чей?». В A0 используем их с существительными в именительном падеже (Nominativ).</p>
+<p><strong>ich</strong> → <strong>mein</strong> (мой)<br>
+<strong>du</strong> → <strong>dein</strong> (твой)<br>
+<strong>er</strong> → <strong>sein</strong> (его / свой для мужского рода)<br>
+<strong>sie</strong> → <strong>ihr</strong> (её)<br>
+<strong>es</strong> → <strong>sein</strong> (его для среднего рода)<br>
+<strong>wir</strong> → <strong>unser</strong> (наш)<br>
+<strong>ihr</strong> → <strong>euer</strong> (ваш – для «вы» мн.ч., неформально)<br>
+<strong>sie</strong> (они) / <strong>Sie</strong> (Вы вежл.) → <strong>ihr</strong> / <strong>Ihr</strong> (их / Ваш)</p>
 
-    // Урок 5 – время, дни недели
-    goldLessonsByLevel.A0[4] = {
-        id: 5, title: 'Uhrzeit und Kalender – Время, дни недели, месяцы',
-        grammar: `<div class="grammar-rule">⏰ КОТОРЫЙ ЧАС?</div>
-<p>Es ist 10 Uhr. – 10 часов.<br>Es ist halb elf. – 10:30.</p>
-<div class="grammar-rule">📆 ДНИ НЕДЕЛИ</div>
-<p>Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag.<br>am Montag – в понедельник.</p>
-<div class="grammar-rule">📅 МЕСЯЦЫ</div>
-<p>Januar, Februar, März, ... Dezember.<br>im Mai – в мае.</p>`,
-        vocabulary: [
-            { word: 'der Montag', translation: 'понедельник' }, { word: 'der Dienstag', translation: 'вторник' },
-            { word: 'der Mittwoch', translation: 'среда' }, { word: 'der Donnerstag', translation: 'четверг' },
-            { word: 'der Freitag', translation: 'пятница' }, { word: 'der Samstag', translation: 'суббота' },
-            { word: 'der Sonntag', translation: 'воскресенье' }, { word: 'der Monat', translation: 'месяц' }
-        ],
-        sentences: [
-            { german: 'Heute ist Montag.', russian: 'Сегодня понедельник.' },
-            { german: 'Wir treffen uns am Samstag um 14 Uhr.', russian: 'Мы встречаемся в субботу в 14 часов.' }
-        ]
-    };
+<div class="grammar-rule">📌 РОД СУЩЕСТВИТЕЛЬНЫХ И ОКОНЧАНИЯ</div>
+<p>Притяжательные местоимения получают окончания как у неопределённого артикля <strong>ein</strong>:</p>
+<p>· <strong>mein Vater</strong> (муж.род – нет окончания)<br>
+· <strong>meine Mutter</strong> (жен.род – окончание <strong>-e</strong>)<br>
+· <strong>mein Kind</strong> (ср.род – нет окончания)<br>
+· <strong>meine Eltern</strong> (мн.ч. – окончание <strong>-e</strong>)</p>
+<p>Примеры:<br>
+<strong>dein Bruder</strong> – твой брат<br>
+<strong>deine Schwester</strong> – твоя сестра<br>
+<strong>sein Hund</strong> – его собака<br>
+<strong>ihre Katze</strong> – её кошка</p>
 
-    // Урок 6 – артикли и спряжение (кратко для A0)
-    goldLessonsByLevel.A0[5] = {
-        id: 6, title: 'Артикли и спряжение глаголов – Nominativ & Akkusativ',
-        grammar: `<div class="grammar-rule">ОПРЕДЕЛЁННЫЕ АРТИКЛИ</div>
-<p>der (м.), die (ж.), das (ср.).</p>
-<div class="grammar-rule">СПРЯЖЕНИЕ ГЛАГОЛОВ</div>
-<p>machen: ich mache, du machst, er macht, wir machen, ihr macht, sie machen.</p>`,
-        vocabulary: [
-            { word: 'der Tisch', translation: 'стол' }, { word: 'die Lampe', translation: 'лампа' },
-            { word: 'das Buch', translation: 'книга' }, { word: 'machen', translation: 'делать' }
-        ],
-        sentences: [
-            { german: 'Ich mache die Hausaufgabe.', russian: 'Я делаю домашнее задание.' }
-        ]
-    };
+<div class="grammar-rule">❓ КАК СПРОСИТЬ О СЕМЬЕ</div>
+<p><strong>Hast du Geschwister?</strong> – У тебя есть братья/сёстры?<br>
+<strong>Ja, ich habe einen Bruder und eine Schwester.</strong><br>
+<strong>Nein, ich bin Einzelkind.</strong> – Нет, я единственный ребёнок.<br>
+<strong>Wie heißt deine Mutter?</strong> – Как зовут твою маму?<br>
+<strong>Was macht dein Vater von Beruf?</strong> – Кем работает твой отец?</p>
 
-    // Урок 7 – предлоги места
-    goldLessonsByLevel.A0[6] = {
-        id: 7, title: 'Предлоги места – in, auf, unter, neben',
-        grammar: `<div class="grammar-rule">ПРЕДЛОГИ МЕСТА С Dativ</div>
-<p>in (в), auf (на), unter (под), neben (рядом).<br>Пример: Das Buch liegt auf dem Tisch.</p>`,
-        vocabulary: [
-            { word: 'in', translation: 'в' }, { word: 'auf', translation: 'на' },
-            { word: 'unter', translation: 'под' }, { word: 'neben', translation: 'рядом' }
-        ],
-        sentences: [
-            { german: 'Die Katze ist unter dem Bett.', russian: 'Кошка под кроватью.' }
-        ]
-    };
+<div class="grammar-rule">🗣️ ВАЖНЫЕ ГЛАГОЛЫ ДЛЯ РАССКАЗА О СЕМЬЕ</div>
+<p><strong>haben</strong> (иметь): ich habe, du hast, er/sie/es hat<br>
+<strong>sein</strong> (быть): ich bin, du bist, er/sie/es ist<br>
+<strong>heißen</strong> (называться): er heißt, sie heißt</p>
 
-    // Урок 8 – модальные глаголы
-    goldLessonsByLevel.A0[7] = {
-        id: 8, title: 'Модальные глаголы – können, müssen, wollen',
-        grammar: `<div class="grammar-rule">können (мочь), müssen (должен), wollen (хотеть)</div>
-<p>ich kann, du kannst, er kann, wir können, ihr könnt, sie können.</p>`,
-        vocabulary: [
-            { word: 'können', translation: 'мочь' }, { word: 'müssen', translation: 'быть должным' },
-            { word: 'wollen', translation: 'хотеть' }
-        ],
-        sentences: [
-            { german: 'Ich kann gut Deutsch sprechen.', russian: 'Я могу хорошо говорить по-немецки.' }
-        ]
-    };
+<div class="grammar-rule">📝 ПРИМЕР РАССКАЗА О СЕМЬЕ</div>
+<p>„Ich heiße Julia. Meine Familie ist klein. Das ist mein Vater. Er heißt Thomas. Das ist meine Mutter. Sie heißt Maria. Ich habe keine Geschwister. Ich bin Einzelkind.“</p>
 
-    // Урок 9 – отрицание nicht и kein
-    goldLessonsByLevel.A0[8] = {
-        id: 9, title: 'Отрицание – nicht и kein',
-        grammar: `<div class="grammar-rule">🚫 nicht – для глаголов и прилагательных</div>
-<p>Ich bin nicht müde.</p>
-<div class="grammar-rule">🚫 kein/keine – для существительных</div>
-<p>Ich habe keinen Hund.</p>`,
-        vocabulary: [
-            { word: 'nicht', translation: 'не' }, { word: 'kein', translation: 'никакой' },
-            { word: 'keine', translation: 'никакая' }
-        ],
-        sentences: [
-            { german: 'Ich habe keine Zeit.', russian: 'У меня нет времени.' }
-        ]
-    };
+<div class="grammar-rule">💡 СОВЕТЫ ПО ЗАПОМИНАНИЮ</div>
+<p>· Все существительные семьи имеют род – учи их сразу с артиклем: <strong>der Vater, die Mutter, das Kind</strong>.<br>
+· Притяжательные местоимения всегда стоят перед существительным: <strong>mein Bruder</strong> (не «Bruder mein»).<br>
+· Во множественном числе всегда окончание <strong>-e</strong>: meine Eltern, deine Geschwister.</p>`,
+    vocabulary: [
+        { word: 'die Familie', translation: 'семья' },
+        { word: 'der Vater', translation: 'отец' },
+        { word: 'die Mutter', translation: 'мать' },
+        { word: 'der Bruder', translation: 'брат' },
+        { word: 'die Schwester', translation: 'сестра' },
+        { word: 'die Eltern', translation: 'родители' },
+        { word: 'die Geschwister', translation: 'братья и сёстры' },
+        { word: 'der Sohn', translation: 'сын' },
+        { word: 'die Tochter', translation: 'дочь' },
+        { word: 'der Opa', translation: 'дедушка' },
+        { word: 'die Oma', translation: 'бабушка' },
+        { word: 'das Kind', translation: 'ребёнок' },
+        { word: 'mein', translation: 'мой' },
+        { word: 'dein', translation: 'твой' },
+        { word: 'sein', translation: 'его' },
+        { word: 'ihr (её)', translation: 'её' },
+        { word: 'unser', translation: 'наш' },
+        { word: 'haben', translation: 'иметь' },
+        { word: 'der Beruf', translation: 'профессия' },
+        { word: 'das Einzelkind', translation: 'единственный ребёнок' },
+        { word: 'klein', translation: 'маленький / небольшой' },
+        { word: 'groß', translation: 'большой' }
+    ],
+    sentences: [
+        { german: 'Das ist mein Vater.', russian: 'Это мой отец.' },
+        { german: 'Das ist meine Mutter.', russian: 'Это моя мать.' },
+        { german: 'Ich habe einen Bruder.', russian: 'У меня есть брат.' },
+        { german: 'Hast du eine Schwester?', russian: 'У тебя есть сестра?' },
+        { german: 'Ja, ich habe eine Schwester. Sie heißt Lena.', russian: 'Да, у меня есть сестра. Её зовут Лена.' },
+        { german: 'Nein, ich habe keine Geschwister.', russian: 'Нет, у меня нет братьев и сестёр.' },
+        { german: '– Hallo! Wie heißt du? – Ich heiße Max. – Hast du Geschwister? – Ja, ich habe einen Bruder und eine Schwester. – Wie alt sind sie? – Mein Bruder ist 18 und meine Schwester ist 12.', russian: '– Привет! Как тебя зовут? – Меня зовут Макс. – У тебя есть братья или сёстры? – Да, у меня есть брат и сестра. – Сколько им лет? – Моему брату 18, а моей сестре 12.' },
+        { german: '– Wie heißt deine Mutter? – Meine Mutter heißt Sabine. – Und dein Vater? – Mein Vater heißt Klaus. – Was macht dein Vater von Beruf? – Er ist Lehrer.', russian: '– Как зовут твою маму? – Мою маму зовут Сабина. – А твоего отца? – Моего отца зовут Клаус. – Кем работает твой отец? – Он учитель.' },
+        { german: '– Haben Sie Kinder? – Ja, ich habe zwei Söhne und eine Tochter. – Wie alt sind Ihre Kinder? – Mein ältester Sohn ist 25, der jüngste ist 15 und meine Tochter ist 20.', russian: '– У Вас есть дети? – Да, у меня два сына и дочь. – Сколько лет Вашим детям? – Моему старшему сыну 25, младшему 15, а моей дочери 20.' },
+        { german: 'Meine Familie ist nicht groß. Das sind mein Mann, meine Tochter und ich.', russian: 'Моя семья небольшая. Это мой муж, моя дочь и я.' },
+        { german: 'Seine Oma heißt Anna. Seine Opa heißt Friedrich.', russian: 'Его бабушку зовут Анна. Его дедушку зовут Фридрих.' },
+        { german: 'Ihre Eltern wohnen in Berlin.', russian: 'Её родители живут в Берлине.' },
+        { german: 'Ich heiße Emma. Ich bin 28 Jahre alt. Mein Bruder ist 25. Meine Schwester ist 22. Wir sind drei Geschwister. Meine Eltern sind sehr nett.', russian: 'Меня зовут Эмма. Мне 28 лет. Моему брату 25. Моей сестре 22. Нас трое детей. Мои родители очень милые.' },
+        { german: 'Hast du einen Hund oder eine Katze? – Nein, ich habe keine Haustiere. Aber mein Bruder hat einen Hund.', russian: 'У тебя есть собака или кошка? – Нет, у меня нет домашних животных. Но у моего брата есть собака.' }
+    ]
+};
 
-    // Урок 10 – итоговое повторение
-    goldLessonsByLevel.A0[9] = {
-        id: 10, title: 'Wiederholung – Повторение пройденного',
-        grammar: `<div class="grammar-rule">🎯 ЧТО МЫ ВЫУЧИЛИ?</div>
-<p>Приветствия, числа, семья, еда, время, предлоги, модальные глаголы, отрицание. Теперь вы готовы к тесту!</p>`,
-        vocabulary: [
-            { word: 'wiederholen', translation: 'повторять' }, { word: 'der Test', translation: 'тест' }
-        ],
-        sentences: [
-            { german: 'Ich wiederhole alle Vokabeln.', russian: 'Я повторяю все слова.' }
-        ]
-    };
 
+
+
+
+    
     // ------------------ ТЕСТЫ ------------------
-    const realTestsForA0 = [
-        {
-            lessons: [1, 10],
-            questions: [
-                { text: 'Как по-немецки «привет»?', options: ['Tschüss', 'Hallo', 'Guten Abend', 'Auf Wiedersehen'], correct: 1, explanation: 'Hallo – привет.' },
-                { text: 'Сколько будет 5 + 3? (по-немецки)', options: ['sechs', 'sieben', 'acht', 'neun'], correct: 2, explanation: 'acht = 8.' },
-                { text: 'Как сказать «Я имею собаку»?', options: ['Ich habe einen Hund', 'Ich bin einen Hund', 'Ich habe eine Hund', 'Ich habe Hund'], correct: 0, explanation: 'haben + Akkusativ: einen Hund.' },
-                { text: 'Какой артикль у слова «Mutter»?', options: ['der', 'die', 'das', 'den'], correct: 1, explanation: 'Mutter – женский род → die.' },
-                { text: 'Что означает «Guten Morgen»?', options: ['Добрый день', 'Добрый вечер', 'Доброе утро', 'Спокойной ночи'], correct: 2, explanation: 'Guten Morgen – доброе утро.' },
-                { text: 'Форма глагола «sein» для «er»?', options: ['bin', 'bist', 'ist', 'sind'], correct: 2, explanation: 'er ist.' },
-                { text: 'Как сказать «У меня нет времени»?', options: ['Ich habe nicht Zeit', 'Ich habe keine Zeit', 'Ich habe kein Zeit', 'Ich habe keine Zeit nicht'], correct: 1, explanation: 'keine Zeit.' },
-                { text: 'Предлог «под»?', options: ['auf', 'in', 'unter', 'neben'], correct: 2, explanation: 'unter – под.' },
-                { text: 'Как спросить «Который час?»', options: ['Wie spät ist es?', 'Wann ist es?', 'Wie viel Uhr?', 'Was ist die Zeit?'], correct: 0, explanation: 'Wie spät ist es?' },
-                { text: '«я хочу» (глагол wollen)', options: ['ich will', 'ich wollte', 'ich möchte', 'ich wünsche'], correct: 0, explanation: 'ich will – я хочу.' }
-            ]
-        },
-        { lessons: [11,20], questions: [{ text: 'Тест для уроков 11–20 появится после добавления уроков.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
-        { lessons: [21,30], questions: [{ text: 'Тест для уроков 21–30.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
-        { lessons: [31,40], questions: [{ text: 'Тест для уроков 31–40.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
-        { lessons: [41,50], questions: [{ text: 'Тест для уроков 41–50.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] }
-    ];
-
     function generateTestsForLevel(level, testCount = 5) {
         const tests = [];
         for (let t = 1; t <= testCount; t++) {
@@ -10558,6 +10592,28 @@ speech_culture: {
         return tests;
     }
 
+    const realTestsForA0 = [
+        {
+            lessons: [1, 10],
+            questions: [
+                { text: 'Как по-немецки «привет»?', options: ['Tschüss', 'Hallo', 'Guten Abend', 'Auf Wiedersehen'], correct: 1, explanation: 'Hallo – привет.' },
+                { text: 'Сколько будет 5 + 3? (по-немецки)', options: ['sechs', 'sieben', 'acht', 'neun'], correct: 2, explanation: 'acht = 8.' },
+                { text: 'Как сказать «Я имею собаку»?', options: ['Ich habe einen Hund', 'Ich bin einen Hund', 'Ich habe eine Hund', 'Ich habe Hund'], correct: 0, explanation: 'haben + Akkusativ: einen Hund.' },
+                { text: 'Какой артикль у слова «Mutter»?', options: ['der', 'die', 'das', 'den'], correct: 1, explanation: 'Mutter – женский род → die.' },
+                { text: 'Что означает «Guten Morgen»?', options: ['Добрый день', 'Добрый вечер', 'Доброе утро', 'Спокойной ночи'], correct: 2, explanation: 'Guten Morgen – доброе утро.' },
+                { text: 'Форма глагола «sein» для «er»?', options: ['bin', 'bist', 'ist', 'sind'], correct: 2, explanation: 'er ist.' },
+                { text: 'Как сказать «У меня нет времени»?', options: ['Ich habe nicht Zeit', 'Ich habe keine Zeit', 'Ich habe kein Zeit', 'Ich habe keine Zeit nicht'], correct: 1, explanation: 'keine Zeit.' },
+                { text: 'Предлог «под»?', options: ['auf', 'in', 'unter', 'neben'], correct: 2, explanation: 'unter – под.' },
+                { text: 'Как спросить «Который час?»', options: ['Wie spät ist es?', 'Wann ist es?', 'Wie viel Uhr?', 'Was ist die Zeit?'], correct: 0, explanation: 'Wie spät ist es?' },
+                { text: '«я хочу» (глагол wollen)', options: ['ich will', 'ich wollte', 'ich möchte', 'ich wünsche'], correct: 0, explanation: 'ich will – я хочу.' }
+            ]
+        },
+        { lessons: [11,20], questions: [{ text: 'Тест для уроков 11–20 (появится после добавления уроков).', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
+        { lessons: [21,30], questions: [{ text: 'Тест для уроков 21–30.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
+        { lessons: [31,40], questions: [{ text: 'Тест для уроков 31–40.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] },
+        { lessons: [41,50], questions: [{ text: 'Тест для уроков 41–50.', options: ['A','B','C','D'], correct:0, explanation:'Добавьте вопросы.' }] }
+    ];
+
     const testsByLevel = {
         A0: realTestsForA0,
         A1: generateTestsForLevel('A1'),
@@ -10567,74 +10623,7 @@ speech_culture: {
         C1: generateTestsForLevel('C1')
     };
 
-    function showTestModal(test, level) {
-    const modalTest = document.createElement('div');
-    modalTest.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:20px; width:90%; max-width:500px; z-index:100020; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.9); border:2px solid #f1c40f;';
-    
-    let answers = new Array(test.questions.length).fill(-1);
-    
-    // Функция закрытия окна
-    function closeModal() {
-        modalTest.remove();
-    }
-    
-    // Шапка с крестиком (всегда на месте)
-    const header = document.createElement('div');
-    header.style.cssText = 'display:flex; justify-content:flex-end; padding:10px;';
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '✖';
-    closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:24px; cursor:pointer;';
-    closeBtn.onclick = closeModal;
-    header.appendChild(closeBtn);
-    modalTest.appendChild(header);
-    
-    // Контейнер для контента (вопросы или результаты)
-    const contentDiv = document.createElement('div');
-    contentDiv.style.cssText = 'padding:20px; padding-top:0;';
-    modalTest.appendChild(contentDiv);
-    
-    function renderQuestion(qIdx) {
-        const q = test.questions[qIdx];
-        let qHtml = `
-            <div style="margin-bottom:15px;">
-                <div style="color:white;">${q.text}</div>
-                <div style="margin-top:10px;">${q.options.map((opt, i) => `<label style="display:block; background:#2c3e50; margin:5px 0; padding:6px; border-radius:20px;"><input type="radio" name="q" value="${i}" ${answers[qIdx]===i ? 'checked' : ''}> ${opt}</label>`).join('')}</div>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-                <button id="prevQ" ${qIdx===0?'disabled':''}>◀ Назад</button>
-                <span>${qIdx+1} / ${test.questions.length}</span>
-                <button id="nextQ" ${qIdx===test.questions.length-1?'disabled':''}>Далее ▶</button>
-            </div>
-            <button id="submitTest" style="margin-top:15px; background:#f1c40f; width:100%;">Завершить тест</button>
-        `;
-        contentDiv.innerHTML = qHtml;
-        // Привязываем события
-        document.querySelectorAll('input[name="q"]').forEach(r => r.onchange = (e) => { answers[qIdx] = parseInt(e.target.value); });
-        document.getElementById('prevQ').onclick = () => { if(qIdx>0) renderQuestion(qIdx-1); };
-        document.getElementById('nextQ').onclick = () => { if(qIdx<test.questions.length-1) renderQuestion(qIdx+1); };
-        document.getElementById('submitTest').onclick = () => {
-            let score = 0;
-            let resultHtml = `<h4 style="color:white;">Результат теста (уроки ${test.lessons[0]}–${test.lessons[1]})</h4>`;
-            for (let i=0; i<test.questions.length; i++) {
-                const isCorrect = (answers[i] === test.questions[i].correct);
-                if(isCorrect) score++;
-                resultHtml += `<div style="border-left:4px solid ${isCorrect ? '#2ecc71' : '#e74c3c'}; margin:5px 0; padding:5px; background:#1e2a36;">
-                    ${test.questions[i].text}<br>Ваш ответ: ${answers[i]!==-1 ? test.questions[i].options[answers[i]] : '—'} | Правильно: ${test.questions[i].options[test.questions[i].correct]}<br>${test.questions[i].explanation}
-                </div>`;
-            }
-            resultHtml += `<div style="text-align:center; margin:10px 0;">Правильных: ${score} из ${test.questions.length}</div>`;
-            // Добавляем кнопку "Закрыть" (дублирует крестик, но удобно)
-            resultHtml += `<button id="closeTestResultBtn" style="background:#f1c40f; border:none; padding:8px 15px; border-radius:30px;">Закрыть</button>`;
-            contentDiv.innerHTML = resultHtml;
-            document.getElementById('closeTestResultBtn').onclick = closeModal;
-        };
-    }
-    
-    document.body.appendChild(modalTest);
-    renderQuestion(0);
-}
-
-    // ------------------ РЕНДЕР КУРСА (с исправленным условием для кнопки теста) ------------------
+    // ------------------ РЕНДЕР (АДАПТИВНЫЙ СЛОВАРЬ) ------------------
     function renderUnlockedCourse() {
         let html = `
             <div style="margin-bottom:15px;">
@@ -10663,38 +10652,36 @@ speech_culture: {
             let lessonsHtml = '';
             for (let i = 0; i < lessons.length; i++) {
                 const lesson = lessons[i];
-                // Словарь (красивое отображение с кнопкой справа)
-                const vocabHtml = (lesson.vocabulary || []).map(v => `
+                // ✅ КРАСИВЫЙ СЛОВАРЬ: список с кнопкой справа
+                const vocabHtml = lesson.vocabulary.map(v => `
                     <div style="display:flex; justify-content:space-between; align-items:center; background:#34495e; margin:5px 0; padding:8px 12px; border-radius:12px; flex-wrap:wrap;">
                         <div style="flex:1; font-weight:bold; color:white;">${v.word}</div>
-                        <div style="margin:0 10px; color:#ddd;">${v.translation}</div>
+                        <div style="margin:0 10px; color:#ddd;">– ${v.translation}</div>
                         <button class="goldSpeakBtn" data-word="${v.word}" style="background:#3498db; border:none; border-radius:30px; padding:4px 12px; margin-left:8px;">🔊</button>
-                    </div>
-                `).join('');
-                // Предложения с кнопкой
-                const sentencesHtml = (lesson.sentences || []).map(s => `
-                    <div class="example" style="background:#1e2a36; border-radius:12px; padding:8px; margin:5px 0;">
-                        <div><span style="color:#f39c12;">🇩🇪</span> ${s.german} <button class="goldSentenceSpeak" data-text="${s.german}" style="background:#3498db; border:none; border-radius:30px; padding:2px 8px; margin-left:5px;">🔊</button></div>
-                        <div><span style="color:#2ecc71;">🇷🇺</span> ${s.russian}</div>
                     </div>
                 `).join('');
                 lessonsHtml += `
                     <div class="goldLesson" style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:15px;">
                         <h4 style="color:#f1c40f;">Урок ${lesson.id}: ${lesson.title}</h4>
                         <div style="color:#ddd;">${lesson.grammar}</div>
-                        <div style="margin-top:10px;"><strong>📚 Словарь</strong><div style="margin-top:5px;">${vocabHtml || '<i>Нет слов</i>'}</div></div>
-                        <div style="margin-top:10px;"><strong>💬 Примеры</strong><div style="margin-top:5px;">${sentencesHtml || '<i>Нет примеров</i>'}</div></div>
+                        <div style="margin-top:10px;"><strong>📚 Словарь</strong>
+                            <div style="margin-top:5px;">${vocabHtml || '<i>Нет слов</i>'}</div>
+                        </div>
+                        <div style="margin-top:10px;"><strong>💬 Примеры</strong>
+                            ${lesson.sentences.map(s => `<div class="example" style="background:#1e2a36; border-radius:12px; padding:8px; margin:5px 0;">
+                                <div><span style="color:#f39c12;">🇩🇪</span> ${s.german} <button class="goldSentenceSpeak" data-text="${s.german}" style="background:#3498db; border:none; border-radius:30px; padding:2px 8px; margin-left:5px;">🔊</button></div>
+                                <div><span style="color:#2ecc71;">🇷🇺</span> ${s.russian}</div>
+                            </div>`).join('')}
+                        </div>
                     </div>
                 `;
-                // ✅ Кнопка теста ПОСЛЕ КАЖДЫХ 10 УРОКОВ (исправленное условие)
-                if ((i+1) % 10 === 0) {
-                    const testIdx = Math.floor(i / 10);
-                    if (testsByLevel[level] && testsByLevel[level][testIdx]) {
-                        lessonsHtml += `<button class="testBtn" data-level="${level}" data-test-idx="${testIdx}" style="background:#f1c40f; border:none; padding:8px 15px; border-radius:30px; margin-bottom:15px;">📝 Пройти тест (уроки ${i-9+1}–${i+1})</button>`;
-                    }
+                if ((i+1) % 10 === 0 && i+1 !== lessons.length) {
+                    const testIdx = Math.floor(i/10);
+                    lessonsHtml += `<button class="testBtn" data-level="${level}" data-test-idx="${testIdx}" style="background:#f1c40f; border:none; padding:8px 15px; border-radius:30px; margin-bottom:15px;">📝 Пройти тест (уроки ${i-9+1}–${i+1})</button>`;
                 }
             }
             container.innerHTML = lessonsHtml;
+            // Привязываем кнопки озвучки (они созданы заново)
             document.querySelectorAll('.goldSpeakBtn').forEach(btn => btn.onclick = () => speakGerman(btn.dataset.word));
             document.querySelectorAll('.goldSentenceSpeak').forEach(btn => btn.onclick = () => speakGerman(btn.dataset.text));
             document.querySelectorAll('.testBtn').forEach(btn => {
@@ -10713,7 +10700,49 @@ speech_culture: {
         loadLevel(currentLevel);
     }
 
-    // ------------------ СТРАНИЦА ОПЛАТЫ ------------------
+    function showTestModal(test, level) {
+        const modalTest = document.createElement('div');
+        modalTest.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:20px; width:90%; max-width:500px; z-index:100020; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.9); padding:20px; border:2px solid #f1c40f;';
+        let answers = new Array(test.questions.length).fill(-1);
+        function renderQuestion(qIdx) {
+            const q = test.questions[qIdx];
+            let qHtml = `
+                <div style="margin-bottom:15px;">
+                    <div style="color:white;">${q.text}</div>
+                    <div style="margin-top:10px;">${q.options.map((opt, i) => `<label style="display:block; background:#2c3e50; margin:5px 0; padding:6px; border-radius:20px;"><input type="radio" name="q" value="${i}" ${answers[qIdx]===i ? 'checked' : ''}> ${opt}</label>`).join('')}</div>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <button id="prevQ" ${qIdx===0?'disabled':''}>◀ Назад</button>
+                    <span>${qIdx+1} / ${test.questions.length}</span>
+                    <button id="nextQ" ${qIdx===test.questions.length-1?'disabled':''}>Далее ▶</button>
+                </div>
+                <button id="submitTest" style="margin-top:15px; background:#f1c40f; width:100%;">Завершить тест</button>
+            `;
+            modalTest.querySelector('.questionsArea').innerHTML = qHtml;
+            document.querySelectorAll('input[name="q"]').forEach(r => r.onchange = (e) => { answers[qIdx] = parseInt(e.target.value); });
+            document.getElementById('prevQ').onclick = () => { if(qIdx>0) renderQuestion(qIdx-1); };
+            document.getElementById('nextQ').onclick = () => { if(qIdx<test.questions.length-1) renderQuestion(qIdx+1); };
+            document.getElementById('submitTest').onclick = () => {
+                let score = 0;
+                let resultHtml = `<h4 style="color:white;">Результат теста (уроки ${test.lessons[0]}–${test.lessons[1]})</h4>`;
+                for (let i=0; i<test.questions.length; i++) {
+                    const isCorrect = (answers[i] === test.questions[i].correct);
+                    if(isCorrect) score++;
+                    resultHtml += `<div style="border-left:4px solid ${isCorrect ? '#2ecc71' : '#e74c3c'}; margin:5px 0; padding:5px; background:#1e2a36;">
+                        ${test.questions[i].text}<br>Ваш ответ: ${answers[i]!==-1 ? test.questions[i].options[answers[i]] : '—'} | Правильно: ${test.questions[i].options[test.questions[i].correct]}<br>${test.questions[i].explanation}
+                    </div>`;
+                }
+                resultHtml += `<div style="text-align:center;">Правильных: ${score} из ${test.questions.length}</div><button id="closeTestModal">Закрыть</button>`;
+                modalTest.querySelector('.questionsArea').innerHTML = resultHtml;
+                document.getElementById('closeTestModal').onclick = () => modalTest.remove();
+            };
+        }
+        modalTest.innerHTML = `<div style="display:flex; justify-content:flex-end;"><button id="testCloseBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button></div><div class="questionsArea" style="color:white;"></div>`;
+        document.body.appendChild(modalTest);
+        document.getElementById('testCloseBtn').onclick = () => modalTest.remove();
+        renderQuestion(0);
+    }
+
     function renderPaymentPage() {
         document.getElementById('goldContent').innerHTML = `
             <div style="text-align:center;">
@@ -10725,12 +10754,11 @@ speech_culture: {
                     <h3 style="color:#f1c40f;">🔥 Что вы получите:</h3>
                     <ul>
                         <li>📚 <strong>Более 300 уроков</strong> (50 на каждый уровень A0–C1)</li>
-                        <li>🎧 <strong>Озвучка всех слов и диалогов</strong></li>
-                        <li>📝 <strong>Пошаговые объяснения грамматики</strong></li>
-                        <li>💬 <strong>Тысячи предложений</strong></li>
-                        <li>🧠 <strong>Интерактивные тесты после каждых 10 уроков</strong></li>
+                        <li>🎧 <strong>Озвучка всех слов и диалогов</strong> носителями языка</li>
+                        <li>📝 <strong>Пошаговые объяснения грамматики</strong> с примерами</li>
+                        <li>💬 <strong>Тысячи предложений</strong> на реальные темы</li>
                         <li>🎓 <strong>Подготовка к экзаменам Goethe, TestDaF, TELC</strong></li>
-                        <li>💎 <strong>Доступ навсегда</strong></li>
+                        <li>💎 <strong>Доступ навсегда</strong> + обновления бесплатно</li>
                     </ul>
                     <div style="background:#1e2a36; border-radius:15px; padding:15px; text-align:center; margin:20px 0;">
                         <span style="font-size:28px; color:#f1c40f;">🔥 Только сегодня: €10</span><br>
@@ -10786,7 +10814,7 @@ speech_culture: {
         else renderPaymentPage();
     }
 
-    // ------------------ РЕКЛАМА (показ 25 секунд) ------------------
+    // ------------------ РЕКЛАМА (ПОКАЗ 25 СЕКУНД) ------------------
     function showGoldAd() {
         if (!shouldShowAd()) return;
         markAdShown();
@@ -10808,6 +10836,7 @@ speech_culture: {
             adModal.remove();
             goldBtn.click();
         };
+        // Увеличил время до 25 секунд (было 10000)
         setTimeout(() => { if(adModal.parentNode) adModal.remove(); }, 25000);
     }
 
