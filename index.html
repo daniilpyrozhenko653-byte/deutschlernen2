@@ -10171,6 +10171,11 @@ speech_culture: {
             <p style="color:white; margin:5px 0;"><strong>IBAN:</strong> <span id="ibanCode">DE92 3755 1780 1020 1888 41</span> <button id="copyIbanBtn" style="background:#3498db; border:none; padding:4px 10px; border-radius:20px; margin-left:5px; cursor:pointer;">📋 Копировать</button></p>
             <p style="color:white; margin:5px 0;"><strong>BIC:</strong> WELADED1LAF</p>
         </div>
+        <div style="background:#2c3e50; padding:15px; border-radius:15px; margin:10px 0;">
+            <p style="color:white; margin:0 0 8px 0;"><strong>💳 Или через DonationAlerts</strong></p>
+            <a href="https://www.donationalerts.com/r/daniil3299" target="_blank" style="display:inline-block; background:#ff6600; color:white; text-decoration:none; padding:8px 16px; border-radius:30px; font-weight:bold;">Перейти на DonationAlerts</a>
+            <p style="color:#aaa; font-size:12px; margin-top:8px;">Вы можете отправить любую сумму через удобный сервис</p>
+        </div>
         <p style="color:#aaa; font-size:13px;">🌟 Спасибо за вашу поддержку! 🌟<br>Вы помогаете сайту расти и становиться лучше.</p>
         <button id="shareSiteBtn" style="background:#27ae60; border:none; padding:8px; border-radius:30px; margin-top:5px; color:white; cursor:pointer;">📢 Поделиться ссылкой</button>
     `;
@@ -10190,7 +10195,6 @@ speech_culture: {
         });
     };
     document.getElementById('shareSiteBtn').onclick = () => {
-        // Копируем ссылку на текущую страницу
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
             const msg = document.createElement('div');
