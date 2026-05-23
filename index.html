@@ -14661,74 +14661,40 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-    (function createSmartDropdowns() {
+    (function() {
     if (document.getElementById('smartDropdownWrapper')) return;
 
     const container = document.querySelector('.app-container');
     if (!container) return;
 
-    // ----- 1. Прячем старые кнопки -----
-    const oldButtons = [
+    // --- 1. Прячем оригинальные кнопки ---
+    const hiddenButtons = [
         'simpleReaderBtn', 'unifiedGamesBtn', 'languagesSectionBtn',
         'subjectsSectionBtn', 'plannerBtn', 'goldCourseBtn'
     ];
-    oldButtons.forEach(id => {
+    hiddenButtons.forEach(id => {
         const btn = document.getElementById(id);
-        if (btn && btn.style) btn.style.display = 'none';
+        if (btn) btn.style.display = 'none';
     });
 
-    // ----- 2. Контейнер для двух переключателей (уменьшенные) -----
-    const wrapper = document.createElement('div');
-    wrapper.id = 'smartDropdownWrapper';
-    wrapper.style.cssText = `
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        margin: 12px 0 16px;
-    `;
-
-    const otherBtn = document.createElement('button');
-    otherBtn.textContent = '📚 Другие разделы';
-    otherBtn.style.cssText = `
-        flex: 1;
-        background: #2c3e50;
-        color: white;
-        border: none;
-        padding: 4px 10px;
-        border-radius: 30px;
-        font-size: 12px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s;
-    `;
-
-    const coursesBtn = document.createElement('button');
-    coursesBtn.textContent = '🏆 Курсы';
-    coursesBtn.style.cssText = `
-        flex: 1;
-        background: #2c3e50;
-        color: white;
-        border: none;
-        padding: 4px 10px;
-        border-radius: 30px;
-        font-size: 12px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s;
-    `;
-
-    wrapper.appendChild(otherBtn);
-    wrapper.appendChild(coursesBtn);
-
-    const h1 = container.querySelector('h1');
-    if (h1 && h1.nextSibling) {
-        container.insertBefore(wrapper, h1.nextSibling);
-    } else {
-        container.appendChild(wrapper);
+    // --- 2. Функция открытия немецкого курса (через скрытую кнопку) ---
+    function openGermanCourse() {
+        const goldBtn = document.getElementById('goldCourseBtn');
+        if (goldBtn) {
+            goldBtn.style.display = 'inline-flex';
+            goldBtn.click();
+            setTimeout(() => { goldBtn.style.display = 'none'; }, 500);
+        } else {
+            showModal('Ошибка', 'Кнопка курса не найдена', true);
+        }
     }
 
-    // ----- 3. Вспомогательная функция для модальных окон -----
-    function showMessageModal(title, content, isError = false) {
+    function isGermanUnlocked() {
+        return localStorage.getItem('germanCourseUnlocked') === 'true' || localStorage.getItem('goldUnlocked') === 'true';
+    }
+
+    // --- 3. Вспомогательное модальное окно ---
+    function showModal(title, message, isError = false) {
         const modal = document.createElement('div');
         modal.style.cssText = `
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -14738,18 +14704,22 @@ goldLessonsByLevel.A0[23] = {
             text-align: center;
         `;
         modal.innerHTML = `
-            <h3 style="color:${isError ? '#e74c3c' : '#f1c40f'}; margin-bottom: 15px;">${title}</h3>
-            <div style="color:white; margin-bottom: 20px;">${content}</div>
-            <button id="closeMsgBtn" style="background: #1abc9c; border: none; padding: 8px 20px; border-radius: 30px; color: white; cursor: pointer;">OK</button>
+            <h3 style="color:${isError ? '#e74c3c' : '#f1c40f'};">${title}</h3>
+            <div style="color:white; margin: 15px 0;">${message}</div>
+            <button id="closeModalBtn" style="background:#1abc9c; border:none; padding:8px 20px; border-radius:30px; color:white;">OK</button>
         `;
         document.body.appendChild(modal);
-        document.getElementById('closeMsgBtn').onclick = () => modal.remove();
+        document.getElementById('closeModalBtn').onclick = () => modal.remove();
     }
 
-    // ----- 4. Платёжное окно для немецкого курса (с вводом кода и активацией) -----
-    function showGermanCoursePayment() {
+    // --- 4. Платёжное окно для немецкого курса (только если не активирован) ---
+    function showGermanPayment() {
+        if (isGermanUnlocked()) {
+            openGermanCourse();
+            return;
+        }
+
         const modal = document.createElement('div');
-        modal.id = 'goldPaymentModal';
         modal.style.cssText = `
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #1e272e; border-radius: 20px; width: 95%; max-width: 500px;
@@ -14757,46 +14727,44 @@ goldLessonsByLevel.A0[23] = {
             max-height: 85vh; overflow-y: auto;
         `;
         modal.innerHTML = `
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="color: #f1c40f;">🏆 Курс (немецкий)</h2>
-                <p style="color: white;">Доступ навсегда • €10</p>
+            <div style="text-align:center; margin-bottom:20px;">
+                <h2 style="color:#f1c40f;">🏆 Курс (немецкий)</h2>
+                <p style="color:white;">Доступ навсегда • €10</p>
             </div>
-            <div style="background: #2c3e50; border-radius: 15px; padding: 15px; margin-bottom: 20px;">
-                <p style="color: white;"><strong>💳 Реквизиты для оплаты (10 €):</strong><br>
+            <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:20px;">
+                <p style="color:white;"><strong>💳 Реквизиты для оплаты (10 €):</strong><br>
                 Получатель: Pyrozhenko, Danyil<br>
                 IBAN: <span id="ibanCode">DE92 3755 1780 1020 1888 41</span> 
-                <button id="copyIbanBtn" style="background: #3498db; border: none; padding: 2px 8px; border-radius: 20px; cursor: pointer;">📋 Копировать</button><br>
+                <button id="copyIbanBtn" style="background:#3498db; border:none; padding:2px 8px; border-radius:20px; cursor:pointer;">📋 Копировать</button><br>
                 BIC: WELADED1LAF<br>
                 Назначение платежа: <strong>GoldCourse_ВашEmail</strong></p>
             </div>
-            <div style="background: #2c3e50; border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center;">
-                <p style="color: white;"><strong>💳 Или через DonationAlerts</strong></p>
-                <a href="https://www.donationalerts.com/r/daniil3299" target="_blank" style="display: inline-block; background: #ff6600; color: white; text-decoration: none; padding: 8px 16px; border-radius: 30px; font-weight: bold;">Перейти на DonationAlerts</a>
+            <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:20px; text-align:center;">
+                <p style="color:white;"><strong>💳 Или через DonationAlerts</strong></p>
+                <a href="https://www.donationalerts.com/r/daniil3299" target="_blank" style="display:inline-block; background:#ff6600; color:white; text-decoration:none; padding:8px 16px; border-radius:30px;">Перейти на DonationAlerts</a>
             </div>
-            <div style="background: #2c3e50; border-radius: 15px; padding: 15px; margin-bottom: 20px;">
-                <p style="color: white;">✅ После оплаты введите полученный код активации:</p>
-                <input type="text" id="activationCodeInput" placeholder="Код активации" style="width: 100%; background: #34495e; color: white; padding: 8px; border: none; border-radius: 20px; margin-bottom: 10px;">
-                <button id="activateGermanBtn" style="background: #f1c40f; border: none; padding: 8px; border-radius: 30px; width: 100%; cursor: pointer; font-weight: bold;">Активировать</button>
-                <div id="activationMessage" style="margin-top: 8px; font-size: 12px;"></div>
+            <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:20px;">
+                <p style="color:white;">✅ После оплаты введите полученный код активации:</p>
+                <input type="text" id="activationCode" placeholder="Код активации" style="width:100%; background:#34495e; color:white; padding:8px; border:none; border-radius:20px; margin-bottom:10px;">
+                <button id="activateBtn" style="background:#f1c40f; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer; font-weight:bold;">Активировать</button>
+                <div id="activationMsg" style="margin-top:8px; font-size:12px;"></div>
             </div>
-            <button id="closePaymentModal" style="background: #e74c3c; border: none; padding: 8px; border-radius: 30px; width: 100%; color: white; cursor: pointer;">Закрыть</button>
+            <button id="closePayBtn" style="background:#e74c3c; border:none; padding:8px; border-radius:30px; width:100%; color:white;">Закрыть</button>
         `;
         document.body.appendChild(modal);
 
-        // Копирование IBAN
         document.getElementById('copyIbanBtn').onclick = () => {
             const iban = document.getElementById('ibanCode').innerText;
             navigator.clipboard.writeText(iban);
-            showMessageModal('✅', 'IBAN скопирован!');
+            showModal('✅', 'IBAN скопирован!');
         };
 
-        // Проверка и активация кода (совместимо со старым «Золотым курсом»)
-        function isValidGermanCode(code) {
+        function activate(code) {
             let codes = localStorage.getItem('germanCourseCodes');
             if (!codes) {
-                const defaultCodes = ['GER-A1B2C3', 'GER-D4E5F6', 'GER-G7H8I9', 'GER-J0K1L2', 'GER-M3N4O5', 'GER-P6Q7R8', 'GER-S9T0U1', 'GER-V2W3X4', 'GER-Y5Z6A7', 'GER-B8C9D0'];
-                localStorage.setItem('germanCourseCodes', JSON.stringify(defaultCodes));
-                codes = JSON.stringify(defaultCodes);
+                const defaults = ['GER-A1B2C3', 'GER-D4E5F6', 'GER-G7H8I9', 'GER-J0K1L2', 'GER-M3N4O5', 'GER-P6Q7R8', 'GER-S9T0U1', 'GER-V2W3X4', 'GER-Y5Z6A7', 'GER-B8C9D0'];
+                localStorage.setItem('germanCourseCodes', JSON.stringify(defaults));
+                codes = JSON.stringify(defaults);
             }
             const arr = JSON.parse(codes);
             const idx = arr.indexOf(code);
@@ -14804,143 +14772,129 @@ goldLessonsByLevel.A0[23] = {
                 arr.splice(idx, 1);
                 localStorage.setItem('germanCourseCodes', JSON.stringify(arr));
                 localStorage.setItem('germanCourseUnlocked', 'true');
+                localStorage.setItem('goldUnlocked', 'true');
                 return true;
             }
             return false;
         }
 
-        document.getElementById('activateGermanBtn').onclick = () => {
-            const code = document.getElementById('activationCodeInput').value.trim();
-            const msgDiv = document.getElementById('activationMessage');
+        const activateBtn = document.getElementById('activateBtn');
+        const msgDiv = document.getElementById('activationMsg');
+        activateBtn.onclick = () => {
+            const code = document.getElementById('activationCode').value.trim();
             if (!code) {
                 msgDiv.innerHTML = '<span style="color:#e74c3c;">❌ Введите код</span>';
                 return;
             }
-            if (isValidGermanCode(code)) {
-                // Устанавливаем флаг для старого «Золотого курса»
-                localStorage.setItem('goldUnlocked', 'true');
+            if (activate(code)) {
                 msgDiv.innerHTML = '<span style="color:#2ecc71;">🎉 Курс активирован! Открываю...</span>';
                 setTimeout(() => {
-                    modal.remove(); // закрываем платёжное окно
-                    const goldBtn = document.getElementById('goldCourseBtn');
-                    if (goldBtn) {
-                        // Временно показываем скрытую кнопку и кликаем по ней
-                        goldBtn.style.display = 'inline-flex';
-                        goldBtn.click();
-                        // Через полсекунды снова скрываем кнопку (чтобы не мешалась)
-                        setTimeout(() => { goldBtn.style.display = 'none'; }, 500);
-                    } else {
-                        showMessageModal('Успех', 'Курс активирован. Обновите страницу и нажмите "Курсы" → "Курс (немецкий)"');
-                    }
+                    modal.remove();
+                    openGermanCourse();
                 }, 1000);
             } else {
-                msgDiv.innerHTML = '<span style="color:#e74c3c;">❌ Неверный или уже использованный код.</span>';
+                msgDiv.innerHTML = '<span style="color:#e74c3c;">❌ Неверный или использованный код</span>';
             }
         };
-
-        document.getElementById('closePaymentModal').onclick = () => modal.remove();
+        document.getElementById('closePayBtn').onclick = () => modal.remove();
     }
 
-    // ----- 5. Данные для выпадающих меню -----
-    const otherItems = [
-        { label: '📖 Читать', actionId: 'simpleReaderBtn' },
-        { label: '🎮 Игры', actionId: 'unifiedGamesBtn' },
-        { label: '🌍 Другие языки', actionId: 'languagesSectionBtn' },
-        { label: '📚 Предметы', actionId: 'subjectsSectionBtn' },
-        { label: '📋 Планер', actionId: 'plannerBtn' }
-    ];
+    // --- 5. Создаём кнопки-переключатели ---
+    const wrapper = document.createElement('div');
+    wrapper.id = 'smartDropdownWrapper';
+    wrapper.style.cssText = 'display:flex; gap:8px; justify-content:center; margin:12px 0 16px;';
 
-    const coursesItems = [
+    const otherBtn = document.createElement('button');
+    otherBtn.textContent = '📚 Другие разделы';
+    Object.assign(otherBtn.style, {
+        flex: '1', background: '#2c3e50', color: 'white', border: 'none',
+        padding: '4px 10px', borderRadius: '30px', fontSize: '12px',
+        fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
+    });
+
+    const coursesBtn = document.createElement('button');
+    coursesBtn.textContent = '🏆 Курсы';
+    Object.assign(coursesBtn.style, {
+        flex: '1', background: '#2c3e50', color: 'white', border: 'none',
+        padding: '4px 10px', borderRadius: '30px', fontSize: '12px',
+        fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
+    });
+
+    wrapper.appendChild(otherBtn);
+    wrapper.appendChild(coursesBtn);
+
+    const h1 = container.querySelector('h1');
+    if (h1 && h1.nextSibling) container.insertBefore(wrapper, h1.nextSibling);
+    else container.appendChild(wrapper);
+
+    // --- 6. Выпадающие меню ---
+    const otherItems = [
+        { label: '📖 Читать', id: 'simpleReaderBtn' },
+        { label: '🎮 Игры', id: 'unifiedGamesBtn' },
+        { label: '🌍 Другие языки', id: 'languagesSectionBtn' },
+        { label: '📚 Предметы', id: 'subjectsSectionBtn' },
+        { label: '📋 Планер', id: 'plannerBtn' }
+    ];
+    const courseItems = [
         { label: 'Курс (немецкий)', type: 'german' },
         { label: 'Курс (испанский)', type: 'spanish' },
         { label: 'Курс (французский)', type: 'french' }
     ];
 
-    // ----- 6. Обработчики выбора -----
-    function handleOtherSelect(item) {
-        const targetBtn = document.getElementById(item.actionId);
-        if (targetBtn) targetBtn.click();
-        else console.warn(`Кнопка ${item.actionId} не найдена`);
-    }
-
-    function handleCoursesSelect(item) {
-        if (item.type === 'german') {
-            showGermanCoursePayment();
-        } else if (item.type === 'spanish') {
-            showMessageModal('🇪🇸 Испанский курс', 'Курс испанского языка находится в разработке. Следите за обновлениями!', false);
-        } else if (item.type === 'french') {
-            showMessageModal('🇫🇷 Французский курс', 'Курс французского языка находится в разработке. Следите за обновлениями!', false);
-        }
-    }
-
-    // ----- 7. Создание выпадающего меню -----
-    function createDropdown(items, onSelect, isCourses = false) {
-        const dropdown = document.createElement('div');
-        dropdown.className = 'smart-dropdown';
-        dropdown.style.cssText = `
-            position: absolute;
-            background: #1e272e;
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            overflow: hidden;
-            z-index: 10020;
-            min-width: 180px;
-        `;
-        items.forEach(item => {
-            const option = document.createElement('div');
-            option.textContent = isCourses ? item.label : item.label;
-            option.style.cssText = `
-                padding: 10px 16px;
-                color: white;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s;
-                border-bottom: 1px solid #2c3e50;
-                white-space: nowrap;
-            `;
-            option.onmouseenter = () => option.style.background = '#2c3e50';
-            option.onmouseleave = () => option.style.background = '';
-            option.onclick = (e) => {
-                e.stopPropagation();
-                onSelect(item);
-                dropdown.remove();
-                activeDropdown = null;
-            };
-            dropdown.appendChild(option);
-        });
-        return dropdown;
-    }
-
     let activeDropdown = null;
 
-    function closeActiveDropdown() {
+    function closeDropdown() {
         if (activeDropdown) {
             activeDropdown.remove();
             activeDropdown = null;
         }
     }
 
-    function openDropdown(button, items, onSelect, isCourses = false) {
-        if (activeDropdown) {
-            if (activeDropdown._sourceButton === button) {
-                closeActiveDropdown();
-                return;
-            } else {
-                closeActiveDropdown();
-            }
+    function createDropdown(items, onClick) {
+        const div = document.createElement('div');
+        div.className = 'smart-dropdown';
+        div.style.cssText = `
+            position: absolute; background: #1e272e; border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4); overflow: hidden;
+            z-index: 10020; min-width: 160px;
+        `;
+        items.forEach(item => {
+            const opt = document.createElement('div');
+            opt.textContent = item.label;
+            opt.style.cssText = `
+                padding: 10px 16px; color: white; font-size: 13px;
+                cursor: pointer; transition: 0.2s; border-bottom: 1px solid #2c3e50;
+                white-space: nowrap;
+            `;
+            opt.onmouseenter = () => opt.style.background = '#2c3e50';
+            opt.onmouseleave = () => opt.style.background = '';
+            opt.onclick = (e) => {
+                e.stopPropagation();
+                onClick(item);
+                closeDropdown();
+            };
+            div.appendChild(opt);
+        });
+        return div;
+    }
+
+    function openDropdown(button, items, onClick) {
+        if (activeDropdown && activeDropdown._btn === button) {
+            closeDropdown();
+            return;
         }
-        const dropdown = createDropdown(items, onSelect, isCourses);
+        closeDropdown();
+        const dd = createDropdown(items, onClick);
         const rect = button.getBoundingClientRect();
-        dropdown.style.left = `${rect.left}px`;
-        dropdown.style.top = `${rect.bottom + 5}px`;
-        dropdown._sourceButton = button;
-        document.body.appendChild(dropdown);
-        activeDropdown = dropdown;
+        dd.style.left = `${rect.left}px`;
+        dd.style.top = `${rect.bottom + 5}px`;
+        dd._btn = button;
+        document.body.appendChild(dd);
+        activeDropdown = dd;
 
         const closeHandler = (e) => {
-            if (!dropdown.contains(e.target) && e.target !== button) {
-                closeActiveDropdown();
+            if (!dd.contains(e.target) && e.target !== button) {
+                closeDropdown();
                 document.removeEventListener('click', closeHandler);
             }
         };
@@ -14949,24 +14903,29 @@ goldLessonsByLevel.A0[23] = {
 
     otherBtn.onclick = (e) => {
         e.stopPropagation();
-        openDropdown(otherBtn, otherItems, handleOtherSelect, false);
+        openDropdown(otherBtn, otherItems, (item) => {
+            const btn = document.getElementById(item.id);
+            if (btn) btn.click();
+        });
     };
     coursesBtn.onclick = (e) => {
         e.stopPropagation();
-        openDropdown(coursesBtn, coursesItems, handleCoursesSelect, true);
+        openDropdown(coursesBtn, courseItems, (item) => {
+            if (item.type === 'german') showGermanPayment();
+            else if (item.type === 'spanish') showModal('🇪🇸 Испанский курс', 'Курс испанского языка находится в разработке. Следите за обновлениями!');
+            else if (item.type === 'french') showModal('🇫🇷 Французский курс', 'Курс французского языка находится в разработке. Следите за обновлениями!');
+        });
     };
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeActiveDropdown();
-    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDropdown(); });
 
-    // ----- 8. Кнопка «Поддержать» остаётся на месте -----
-    const supportBtn = document.getElementById('supportBtn');
-    if (supportBtn) {
-        supportBtn.style.position = 'fixed';
-        supportBtn.style.bottom = '20px';
-        supportBtn.style.right = '20px';
-        supportBtn.style.zIndex = '10000';
+    // --- 7. Кнопка «Поддержать» остаётся нетронутой ---
+    const support = document.getElementById('supportBtn');
+    if (support) {
+        support.style.position = 'fixed';
+        support.style.bottom = '20px';
+        support.style.right = '20px';
+        support.style.zIndex = '10000';
     }
 })();
     
