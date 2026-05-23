@@ -14199,50 +14199,436 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-// ---- СОЗДАНИЕ КНОПКИ "ПЛАНЕР" С ГАРАНТИРОВАННЫМ РАСПОЛОЖЕНИЕМ СПРАВА ОТ "ЗОЛОТОГО КУРСА" ----
-const goldCourseBtn = document.getElementById('goldCourseBtn');
-const container = document.querySelector('.app-container');
-if (!container) return;
+// ========== РАЗДЕЛ "ПЛАНЕР" (ЗАДАЧИ + ФИНАНСЫ) – ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
+(function() {
+    if (document.getElementById('plannerBtn')) return;
 
-// Создаём саму кнопку
-const plannerBtn = document.createElement('div');
-plannerBtn.id = 'plannerBtn';
-plannerBtn.innerHTML = '📋 Планер';
-plannerBtn.style.cssText = 'background:#1abc9c; color:white; padding:6px 16px; border-radius:30px; cursor:pointer; font-size:14px; font-weight:bold; transition:0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); display:inline-block;';
-plannerBtn.onmouseenter = () => plannerBtn.style.transform = 'scale(1.02)';
-plannerBtn.onmouseleave = () => plannerBtn.style.transform = 'scale(1)';
+    // ---- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ УВЕДОМЛЕНИЙ ----
+    function showMessage(message, type = 'info') {
+        const msgDiv = document.createElement('div');
+        msgDiv.textContent = message;
+        msgDiv.style.cssText = `position:fixed; bottom:20px; right:20px; background:${type === 'error' ? '#e74c3c' : (type === 'success' ? '#2ecc71' : '#3498db')}; color:white; padding:12px 20px; border-radius:15px; z-index:100030; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:14px;`;
+        document.body.appendChild(msgDiv);
+        setTimeout(() => msgDiv.remove(), 2500);
+    }
 
-// Проверяем, есть ли уже контейнер для кнопок вверху
-let btnWrapper = document.getElementById('topBtnsWrapper');
-if (!btnWrapper) {
-    btnWrapper = document.createElement('div');
-    btnWrapper.id = 'topBtnsWrapper';
-    btnWrapper.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:8px 0; justify-content:flex-start;';
-    // Находим место для вставки: после h1 или после первого элемента в .app-container
-    const h1 = container.querySelector('h1');
-    if (h1 && h1.nextSibling) container.insertBefore(btnWrapper, h1.nextSibling);
-    else container.appendChild(btnWrapper);
-}
+    // ========== СОЗДАНИЕ КНОПКИ "ПЛАНЕР" ==========
+    const container = document.querySelector('.app-container');
+    if (!container) return;
 
-// Если есть кнопка "Золотой курс" – переносим её в wrapper
-if (goldCourseBtn && goldCourseBtn.parentNode !== btnWrapper) {
-    // Удаляем старые стили позиционирования, если были
-    goldCourseBtn.style.position = '';
-    goldCourseBtn.style.top = '';
-    goldCourseBtn.style.right = '';
-    goldCourseBtn.style.margin = '';
-    goldCourseBtn.style.display = 'inline-block';
-    btnWrapper.appendChild(goldCourseBtn);
-}
+    // Создаём кнопку
+    const plannerBtn = document.createElement('div');
+    plannerBtn.id = 'plannerBtn';
+    plannerBtn.innerHTML = '📋 Планер';
+    plannerBtn.style.cssText = 'display:inline-block; background:#1abc9c; color:white; padding:6px 16px; border-radius:30px; cursor:pointer; font-size:14px; font-weight:bold; transition:0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2);';
+    plannerBtn.onmouseenter = () => plannerBtn.style.transform = 'scale(1.02)';
+    plannerBtn.onmouseleave = () => plannerBtn.style.transform = 'scale(1)';
 
-// Добавляем кнопку "Планер" в wrapper (если её ещё нет)
-if (!document.getElementById('plannerBtn')) {
+    // Находим или создаём контейнер для кнопок
+    let btnWrapper = document.getElementById('topBtnsWrapper');
+    if (!btnWrapper) {
+        btnWrapper = document.createElement('div');
+        btnWrapper.id = 'topBtnsWrapper';
+        btnWrapper.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:8px 0;';
+        const h1 = container.querySelector('h1');
+        if (h1 && h1.nextSibling) container.insertBefore(btnWrapper, h1.nextSibling);
+        else container.appendChild(btnWrapper);
+    }
+
+    // Перемещаем кнопку "Золотой курс" (если есть) в обёртку
+    const goldCourseBtn = document.getElementById('goldCourseBtn');
+    if (goldCourseBtn && goldCourseBtn.parentNode !== btnWrapper) {
+        goldCourseBtn.style.position = '';
+        goldCourseBtn.style.top = '';
+        goldCourseBtn.style.right = '';
+        goldCourseBtn.style.display = 'inline-block';
+        btnWrapper.appendChild(goldCourseBtn);
+    }
+
+    // Добавляем кнопку "Планер" в обёртку
     btnWrapper.appendChild(plannerBtn);
-} else {
-    // Если кнопка уже существует где-то, перемещаем
-    const existing = document.getElementById('plannerBtn');
-    if (existing && existing.parentNode !== btnWrapper) btnWrapper.appendChild(existing);
-}
+
+    // ---- МОДАЛЬНОЕ ОКНО ----
+    const modal = document.createElement('div');
+    modal.id = 'plannerModal';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:1000px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
+    modal.innerHTML = `
+        <div style="background:#1abc9c; padding:10px; display:flex; justify-content:space-between;">
+            <span style="color:white; font-weight:bold;">📋 Планер и финансы</span>
+            <button id="closePlannerModal" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+        </div>
+        <div style="display:flex; border-bottom:1px solid #7f8c8d;">
+            <button id="plannerTabTasksBtn" style="flex:1; background:#2c3e50; border:none; color:white; padding:8px; cursor:pointer;">✅ Задачи</button>
+            <button id="plannerTabFinanceBtn" style="flex:1; background:#1e272e; border:none; color:white; padding:8px; cursor:pointer;">💰 Финансы</button>
+        </div>
+        <div id="plannerTasksArea" style="flex:1; padding:15px; overflow:auto;"></div>
+        <div id="plannerFinanceArea" style="flex:1; padding:15px; overflow:auto; display:none;"></div>
+    `;
+    document.body.appendChild(modal);
+
+    // ==================== ЗАДАЧИ ====================
+    let tasks = [];
+
+    function loadTasks() {
+        const saved = localStorage.getItem('planner_tasks');
+        tasks = saved ? JSON.parse(saved) : [];
+    }
+    function saveTasks() { localStorage.setItem('planner_tasks', JSON.stringify(tasks)); }
+
+    function addTask(task) {
+        tasks.push(task);
+        saveTasks();
+        renderTasks();
+    }
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        renderTasks();
+    }
+    function toggleTaskComplete(id) {
+        const task = tasks.find(t => t.id === id);
+        if (task) { task.completed = !task.completed; saveTasks(); renderTasks(); }
+    }
+    function updateTask(id, newTitle, newDateTime, newPriority, newCategory) {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            task.title = newTitle;
+            task.dateTime = newDateTime;
+            task.priority = newPriority;
+            task.category = newCategory;
+            saveTasks();
+            renderTasks();
+        }
+    }
+
+    function openEditTaskModal(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+        const editModal = document.createElement('div');
+        editModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; border-radius:20px; width:90%; max-width:450px; z-index:100020; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.9);';
+        editModal.innerHTML = `
+            <h3 style="color:white;">✏️ Редактировать задачу</h3>
+            <input type="text" id="editTitle" value="${task.title.replace(/"/g, '&quot;')}" placeholder="Название *" style="width:100%; margin-bottom:10px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+            <input type="datetime-local" id="editDateTime" value="${task.dateTime}" style="width:100%; margin-bottom:10px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+            <select id="editPriority" style="width:100%; margin-bottom:10px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                <option value="high" ${task.priority === 'high' ? 'selected' : ''}>Высокий</option>
+                <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Средний</option>
+                <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Низкий</option>
+            </select>
+            <select id="editCategory" style="width:100%; margin-bottom:15px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                <option value="work" ${task.category === 'work' ? 'selected' : ''}>Работа</option>
+                <option value="personal" ${task.category === 'personal' ? 'selected' : ''}>Личное</option>
+                <option value="study" ${task.category === 'study' ? 'selected' : ''}>Учёба</option>
+                <option value="other" ${task.category === 'other' ? 'selected' : ''}>Другое</option>
+            </select>
+            <div style="display:flex; gap:10px;">
+                <button id="saveEditBtn" style="background:#1abc9c; border:none; padding:8px; border-radius:30px; flex:1;">Сохранить</button>
+                <button id="cancelEditBtn" style="background:#e74c3c; border:none; padding:8px; border-radius:30px; flex:1;">Отмена</button>
+            </div>
+        `;
+        document.body.appendChild(editModal);
+        document.getElementById('saveEditBtn').onclick = () => {
+            const newTitle = document.getElementById('editTitle').value.trim();
+            const newDateTime = document.getElementById('editDateTime').value;
+            const newPriority = document.getElementById('editPriority').value;
+            const newCategory = document.getElementById('editCategory').value;
+            if (!newTitle) { showMessage('Название не может быть пустым', 'error'); return; }
+            if (!newDateTime) { showMessage('Дата и время обязательны', 'error'); return; }
+            updateTask(id, newTitle, newDateTime, newPriority, newCategory);
+            editModal.remove();
+        };
+        document.getElementById('cancelEditBtn').onclick = () => editModal.remove();
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('plannerTasksArea');
+        if (!container) return;
+        let html = `
+            <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:20px;">
+                <h3 style="color:white;">➕ Добавить задачу</h3>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <input type="text" id="newTaskTitle" placeholder="Название *" style="background:#34495e; color:white; padding:10px; border:none; border-radius:20px;">
+                    <input type="datetime-local" id="newTaskDateTime" required style="background:#34495e; color:white; padding:10px; border:none; border-radius:20px;">
+                    <div style="display:flex; gap:10px;">
+                        <select id="newTaskPriority" style="flex:1; background:#34495e; color:white; padding:10px; border:none; border-radius:20px;">
+                            <option value="high">Высокий</option>
+                            <option value="medium">Средний</option>
+                            <option value="low">Низкий</option>
+                        </select>
+                        <select id="newTaskCategory" style="flex:1; background:#34495e; color:white; padding:10px; border:none; border-radius:20px;">
+                            <option value="work">Работа</option>
+                            <option value="personal">Личное</option>
+                            <option value="study">Учёба</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </div>
+                    <button id="addTaskBtn" style="background:#1abc9c; border:none; padding:10px; border-radius:30px; color:white;">Добавить</button>
+                </div>
+            </div>
+            <h3 style="color:white;">📋 Мои задачи</h3>
+        `;
+        if (tasks.length === 0) {
+            html += `<p style="color:white;">Нет задач. Добавьте первую!</p>`;
+        } else {
+            const sorted = [...tasks].sort((a,b) => new Date(a.dateTime) - new Date(b.dateTime));
+            sorted.forEach(task => {
+                const priorityColor = { high:'#e74c3c', medium:'#f39c12', low:'#2ecc71' }[task.priority];
+                const categoryText = { work:'Работа', personal:'Личное', study:'Учёба', other:'Другое' }[task.category];
+                const displayDateTime = task.dateTime ? task.dateTime.replace('T', ' ') : '';
+                html += `
+                    <div style="background:#2c3e50; border-radius:15px; padding:12px; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="checkbox" class="taskCheckbox" data-id="${task.id}" ${task.completed ? 'checked' : ''} style="transform:scale(1.2);">
+                            <span style="color:white; ${task.completed ? 'text-decoration:line-through; opacity:0.7;' : ''} font-size:16px;">${task.title}</span>
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+                            <span style="background:#34495e; padding:4px 10px; border-radius:20px; font-size:12px;">📅 ${displayDateTime}</span>
+                            <span style="background:${priorityColor}; padding:4px 10px; border-radius:20px; font-size:12px;">${task.priority === 'high' ? 'Высокий' : task.priority === 'medium' ? 'Средний' : 'Низкий'}</span>
+                            <span style="background:#555; padding:4px 10px; border-radius:20px; font-size:12px;">${categoryText}</span>
+                        </div>
+                        <div style="margin-top:10px; display:flex; gap:8px;">
+                            <button class="editTaskBtn" data-id="${task.id}" style="background:#3498db; border:none; padding:5px 12px; border-radius:20px; color:white;">✏️ Редактировать</button>
+                            <button class="deleteTaskBtn" data-id="${task.id}" style="background:#e74c3c; border:none; padding:5px 12px; border-radius:20px; color:white;">🗑️ Удалить</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        container.innerHTML = html;
+
+        document.getElementById('addTaskBtn').onclick = () => {
+            const title = document.getElementById('newTaskTitle').value.trim();
+            const dateTime = document.getElementById('newTaskDateTime').value;
+            const priority = document.getElementById('newTaskPriority').value;
+            const category = document.getElementById('newTaskCategory').value;
+            if (!title) { showMessage('Введите название задачи', 'error'); return; }
+            if (!dateTime) { showMessage('Укажите дату и время', 'error'); return; }
+            addTask({ id: Date.now(), title, dateTime, priority, category, completed: false });
+            document.getElementById('newTaskTitle').value = '';
+            document.getElementById('newTaskDateTime').value = '';
+            showMessage('Задача добавлена', 'success');
+        };
+        document.querySelectorAll('.taskCheckbox').forEach(cb => { cb.onclick = () => toggleTaskComplete(parseInt(cb.dataset.id)); });
+        document.querySelectorAll('.deleteTaskBtn').forEach(btn => { btn.onclick = () => deleteTask(parseInt(btn.dataset.id)); });
+        document.querySelectorAll('.editTaskBtn').forEach(btn => { btn.onclick = () => openEditTaskModal(parseInt(btn.dataset.id)); });
+    }
+
+    // ==================== ФИНАНСЫ ====================
+    let accounts = [];
+    let transactionsFinance = [];
+
+    function loadAccounts() {
+        const saved = localStorage.getItem('planner_accounts');
+        accounts = saved ? JSON.parse(saved) : [];
+    }
+    function saveAccounts() { localStorage.setItem('planner_accounts', JSON.stringify(accounts)); }
+
+    function loadTransactionsFinance() {
+        const saved = localStorage.getItem('planner_finance_transactions');
+        transactionsFinance = saved ? JSON.parse(saved) : [];
+    }
+    function saveTransactionsFinance() { localStorage.setItem('planner_finance_transactions', JSON.stringify(transactionsFinance)); }
+
+    function addAccount(name) {
+        accounts.push({ id: Date.now(), name, balance: 0 });
+        saveAccounts();
+        renderFinance();
+    }
+    function deleteAccount(id) {
+        transactionsFinance = transactionsFinance.filter(t => t.accountId !== id);
+        accounts = accounts.filter(acc => acc.id !== id);
+        saveAccounts();
+        saveTransactionsFinance();
+        renderFinance();
+    }
+    function addTransactionFinance(transaction) {
+        transactionsFinance.push(transaction);
+        const acc = accounts.find(a => a.id === transaction.accountId);
+        if (acc) {
+            if (transaction.type === 'income') acc.balance += transaction.amount;
+            else acc.balance -= transaction.amount;
+            saveAccounts();
+        }
+        saveTransactionsFinance();
+        renderFinance();
+    }
+    function deleteTransactionFinance(id) {
+        const trans = transactionsFinance.find(t => t.id === id);
+        if (trans) {
+            const acc = accounts.find(a => a.id === trans.accountId);
+            if (acc) {
+                if (trans.type === 'income') acc.balance -= trans.amount;
+                else acc.balance += trans.amount;
+                saveAccounts();
+            }
+        }
+        transactionsFinance = transactionsFinance.filter(t => t.id !== id);
+        saveTransactionsFinance();
+        renderFinance();
+    }
+
+    function getCurrentMonth() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    }
+
+    function openAddAccountModal() {
+        const modalAcc = document.createElement('div');
+        modalAcc.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; border-radius:20px; width:90%; max-width:400px; z-index:100020; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.9);';
+        modalAcc.innerHTML = `
+            <h3 style="color:white;">💰 Новый счёт</h3>
+            <input type="text" id="newAccName" placeholder="Название (например, Тинькофф, Наличные)" style="width:100%; margin:15px 0; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+            <div style="display:flex; gap:10px;">
+                <button id="createAccBtn" style="background:#1abc9c; border:none; padding:8px; border-radius:30px; flex:1;">Создать</button>
+                <button id="cancelAccBtn" style="background:#e74c3c; border:none; padding:8px; border-radius:30px; flex:1;">Отмена</button>
+            </div>
+        `;
+        document.body.appendChild(modalAcc);
+        document.getElementById('createAccBtn').onclick = () => {
+            const name = document.getElementById('newAccName').value.trim();
+            if (!name) { showMessage('Введите название', 'error'); return; }
+            addAccount(name);
+            modalAcc.remove();
+            showMessage('Счёт добавлен', 'success');
+        };
+        document.getElementById('cancelAccBtn').onclick = () => modalAcc.remove();
+    }
+
+    function openAddTransactionModal() {
+        if (accounts.length === 0) { showMessage('Сначала создайте счёт (кнопка ➕ Счёт)', 'error'); return; }
+        const modalTrans = document.createElement('div');
+        modalTrans.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; border-radius:20px; width:90%; max-width:450px; z-index:100020; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.9);';
+        modalTrans.innerHTML = `
+            <h3 style="color:white;">💸 Добавить операцию</h3>
+            <input type="text" id="transDesc" placeholder="Описание *" style="width:100%; margin-bottom:10px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+            <input type="number" id="transAmount" placeholder="Сумма (€) *" step="0.01" style="width:100%; margin-bottom:10px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+            <select id="transType" style="width:100%; margin-bottom:10px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                <option value="income">💰 Доход</option>
+                <option value="expense">💸 Расход</option>
+            </select>
+            <select id="transAccount" style="width:100%; margin-bottom:10px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                ${accounts.map(acc => `<option value="${acc.id}">${acc.name} (баланс: ${acc.balance} €)</option>`).join('')}
+            </select>
+            <input type="date" id="transDate" value="${new Date().toISOString().slice(0,10)}" style="width:100%; margin-bottom:15px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+            <div style="display:flex; gap:10px;">
+                <button id="saveTransBtn" style="background:#1abc9c; border:none; padding:8px; border-radius:30px; flex:1;">Сохранить</button>
+                <button id="cancelTransBtn" style="background:#e74c3c; border:none; padding:8px; border-radius:30px; flex:1;">Отмена</button>
+            </div>
+        `;
+        document.body.appendChild(modalTrans);
+        document.getElementById('saveTransBtn').onclick = () => {
+            const desc = document.getElementById('transDesc').value.trim();
+            const amount = parseFloat(document.getElementById('transAmount').value);
+            const type = document.getElementById('transType').value;
+            const accountId = parseInt(document.getElementById('transAccount').value);
+            const date = document.getElementById('transDate').value;
+            if (!desc) { showMessage('Введите описание', 'error'); return; }
+            if (isNaN(amount) || amount <= 0) { showMessage('Некорректная сумма', 'error'); return; }
+            if (!date) { showMessage('Укажите дату', 'error'); return; }
+            addTransactionFinance({ id: Date.now(), description: desc, amount, type, accountId, date });
+            modalTrans.remove();
+            showMessage('Операция добавлена', 'success');
+        };
+        document.getElementById('cancelTransBtn').onclick = () => modalTrans.remove();
+    }
+
+    function renderFinance() {
+        const container = document.getElementById('plannerFinanceArea');
+        if (!container) return;
+        const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+        const currentMonth = getCurrentMonth();
+
+        let html = `
+            <div style="margin-bottom:20px;">
+                <button id="addAccountBtn" style="background:#1abc9c; border:none; padding:8px 16px; border-radius:30px; margin-right:10px;">➕ Счёт</button>
+                <button id="addOperationBtn" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px;">💸 Операция</button>
+            </div>
+            <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:20px;">
+                <h3 style="color:white;">💰 Общий баланс</h3>
+                <div style="font-size:32px; font-weight:bold; color:#f39c12;">${totalBalance} €</div>
+            </div>
+            <h3 style="color:white;">📊 Мои счета</h3>
+        `;
+        if (accounts.length === 0) {
+            html += `<p style="color:white;">Нет счетов. Нажмите «➕ Счёт», чтобы добавить.</p>`;
+        } else {
+            accounts.forEach(acc => {
+                const balanceColor = acc.balance >= 0 ? '#2ecc71' : '#e74c3c';
+                html += `
+                    <div style="background:#2c3e50; border-radius:15px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:white;">${acc.name}</span>
+                        <span style="color:${balanceColor}; font-weight:bold;">${acc.balance} €</span>
+                        <button class="deleteAccountBtn" data-id="${acc.id}" style="background:#e74c3c; border:none; padding:4px 10px; border-radius:20px;">🗑️</button>
+                    </div>
+                `;
+            });
+        }
+
+        html += `<h3 style="color:white; margin-top:20px;">📋 История операций (${currentMonth})</h3>`;
+        const monthTransactions = transactionsFinance.filter(t => t.date && t.date.startsWith(currentMonth));
+        if (monthTransactions.length === 0) {
+            html += `<p style="color:white;">Нет операций за текущий месяц.</p>`;
+        } else {
+            monthTransactions.sort((a,b) => new Date(b.date) - new Date(a.date));
+            monthTransactions.forEach(t => {
+                const acc = accounts.find(a => a.id === t.accountId);
+                const sign = t.type === 'income' ? '+' : '-';
+                const color = t.type === 'income' ? '#2ecc71' : '#e74c3c';
+                html += `
+                    <div style="background:#2c3e50; border-radius:15px; padding:12px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                            <span style="color:white;">${t.description}</span>
+                            <span style="color:${color}; font-weight:bold;">${sign} ${t.amount} €</span>
+                        </div>
+                        <div style="font-size:12px; color:#aaa; margin-top:4px;">
+                            ${t.date} • ${acc ? acc.name : 'Удалён счёт'}
+                        </div>
+                        <button class="deleteTransFinanceBtn" data-id="${t.id}" style="background:#e74c3c; border:none; padding:4px 10px; border-radius:20px; margin-top:6px;">🗑️</button>
+                    </div>
+                `;
+            });
+        }
+
+        container.innerHTML = html;
+        document.getElementById('addAccountBtn').onclick = openAddAccountModal;
+        document.getElementById('addOperationBtn').onclick = openAddTransactionModal;
+        document.querySelectorAll('.deleteAccountBtn').forEach(btn => {
+            btn.onclick = () => { if (confirm('Удалить счёт и все его операции?')) deleteAccount(parseInt(btn.dataset.id)); };
+        });
+        document.querySelectorAll('.deleteTransFinanceBtn').forEach(btn => {
+            btn.onclick = () => deleteTransactionFinance(parseInt(btn.dataset.id));
+        });
+    }
+
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    loadTasks();
+    loadAccounts();
+    loadTransactionsFinance();
+    renderTasks();
+
+    function showTasksTab() {
+        document.getElementById('plannerTasksArea').style.display = 'block';
+        document.getElementById('plannerFinanceArea').style.display = 'none';
+        document.getElementById('plannerTabTasksBtn').style.background = '#2c3e50';
+        document.getElementById('plannerTabFinanceBtn').style.background = '#1e272e';
+        renderTasks();
+    }
+    function showFinanceTab() {
+        document.getElementById('plannerTasksArea').style.display = 'none';
+        document.getElementById('plannerFinanceArea').style.display = 'block';
+        document.getElementById('plannerTabTasksBtn').style.background = '#1e272e';
+        document.getElementById('plannerTabFinanceBtn').style.background = '#2c3e50';
+        renderFinance();
+    }
+
+    document.getElementById('plannerTabTasksBtn').onclick = showTasksTab;
+    document.getElementById('plannerTabFinanceBtn').onclick = showFinanceTab;
+    document.getElementById('closePlannerModal').onclick = () => modal.style.display = 'none';
+    plannerBtn.onclick = () => {
+        modal.style.display = 'flex';
+        showTasksTab();
+    };
+})();
     
 </script>
 </body>
