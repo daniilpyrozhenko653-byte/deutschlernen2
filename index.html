@@ -14201,16 +14201,16 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-    // ========== РАЗДЕЛ "ПЛАНЕР" (ЗАДАЧИ + ФИНАНСЫ) – ИСПРАВЛЕННЫЙ ==========
+    // ========== РАЗДЕЛ "ПЛАНЕР" (ЗАДАЧИ + ФИНАНСЫ) ==========
 (function() {
     if (document.getElementById('plannerBtn')) return;
 
-    // Находим кнопку "Золотой курс", чтобы разместить планер справа от неё
+    // Определяем позицию кнопки справа от "Золотой курс"
     const goldBtn = document.getElementById('goldCourseBtn');
     let rightPos = '20px';
     if (goldBtn) {
         const goldRight = parseInt(goldBtn.style.right);
-        if (!isNaN(goldRight)) rightPos = (goldRight + 110) + 'px';
+        if (!isNaN(goldRight)) rightPos = (goldRight + 120) + 'px';
     } else {
         const supportBtn = document.getElementById('supportBtn');
         if (supportBtn) {
@@ -14227,7 +14227,7 @@ goldLessonsByLevel.A0[23] = {
     // Модальное окно
     const modal = document.createElement('div');
     modal.id = 'plannerModal';
-    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:1100px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
+    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:1000px; height:85%; max-height:650px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
     modal.innerHTML = `
         <div style="background:#1abc9c; padding:10px; display:flex; justify-content:space-between;">
             <span style="color:white; font-weight:bold;">📋 Планер и финансы</span>
@@ -14244,95 +14244,94 @@ goldLessonsByLevel.A0[23] = {
 
     // ========== ЗАДАЧИ ==========
     let tasks = [];
-
     function loadTasks() {
         const saved = localStorage.getItem('planner_tasks');
-        if (saved) tasks = JSON.parse(saved);
-        else tasks = [];
+        tasks = saved ? JSON.parse(saved) : [];
     }
     function saveTasks() { localStorage.setItem('planner_tasks', JSON.stringify(tasks)); }
-
-    function addTask(task) {
-        tasks.push(task);
-        saveTasks();
-        renderTasks();
-    }
-    function deleteTask(id) {
-        tasks = tasks.filter(t => t.id !== id);
-        saveTasks();
-        renderTasks();
-    }
+    function addTask(task) { tasks.push(task); saveTasks(); renderTasks(); }
+    function deleteTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); renderTasks(); }
     function toggleTaskComplete(id) {
         const task = tasks.find(t => t.id === id);
         if (task) { task.completed = !task.completed; saveTasks(); renderTasks(); }
     }
-    // Редактирование через модальное окно (без alert/prompt)
-    function editTaskWithModal(id) {
+    function editTask(id, newTitle, newDueDate, newPriority, newCategory) {
         const task = tasks.find(t => t.id === id);
-        if (!task) return;
-        const modalEdit = document.createElement('div');
-        modalEdit.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; border-radius:20px; padding:20px; z-index:100020; display:flex; flex-direction:column; gap:10px; min-width:300px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
-        modalEdit.innerHTML = `
-            <h3 style="color:white;">Редактировать задачу</h3>
-            <input type="text" id="editTitle" value="${task.title.replace(/"/g, '&quot;')}" style="background:#34495e; color:white; padding:6px; border:none; border-radius:20px;">
-            <input type="date" id="editDueDate" value="${task.dueDate || ''}" style="background:#34495e; color:white; padding:6px; border:none; border-radius:20px;">
-            <select id="editPriority" style="background:#34495e; color:white; padding:6px; border:none; border-radius:20px;">
-                <option value="high" ${task.priority==='high'?'selected':''}>Высокий</option>
-                <option value="medium" ${task.priority==='medium'?'selected':''}>Средний</option>
-                <option value="low" ${task.priority==='low'?'selected':''}>Низкий</option>
+        if (task) {
+            task.title = newTitle;
+            task.dueDate = newDueDate;
+            task.priority = newPriority;
+            task.category = newCategory;
+            saveTasks(); renderTasks();
+        }
+    }
+    // Календарь: получить дни с незавершёнными задачами
+    function getDaysWithTasks(year, month) {
+        const days = {};
+        tasks.filter(t => !t.completed && t.dueDate).forEach(t => {
+            const [y,m,d] = t.dueDate.split('-');
+            if (parseInt(y) === year && parseInt(m) === month+1) {
+                days[parseInt(d)] = true;
+            }
+        });
+        return days;
+    }
+    function renderCalendar() {
+        const now = new Date();
+        let year = now.getFullYear(), month = now.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        const daysWithTasks = getDaysWithTasks(year, month);
+        let html = `<div style="background:#2c3e50; border-radius:15px; padding:10px; margin-bottom:15px;">
+            <h4 style="color:white; text-align:center;">${year} / ${String(month+1).padStart(2,'0')}</h4>
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center;">`;
+        const weekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+        weekdays.forEach(d => html += `<div style="color:#aaa;">${d}</div>`);
+        let startOffset = (firstDay === 0 ? 6 : firstDay - 1);
+        for (let i = 0; i < startOffset; i++) html += `<div></div>`;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const hasTask = daysWithTasks[d];
+            html += `<div style="color:white; background:${hasTask ? '#2ecc71' : '#34495e'}; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; margin:auto;">${d}</div>`;
+        }
+        html += `</div></div>`;
+        return html;
+    }
+    // Форма добавления / редактирования задачи (модальное окно)
+    function openTaskModal(title, dueDate, priority, category, callback) {
+        const modalDiv = document.createElement('div');
+        modalDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c3e50; border-radius:20px; padding:20px; z-index:100010; display:flex; flex-direction:column; gap:10px; box-shadow:0 0 0 1000px rgba(0,0,0,0.9); width:300px;';
+        modalDiv.innerHTML = `
+            <h3 style="color:white;">${callback === editTask ? 'Редактировать задачу' : 'Новая задача'}</h3>
+            <input type="text" id="modalTitle" value="${title.replace(/"/g, '&quot;')}" placeholder="Название" style="background:#34495e; color:white; padding:6px; border-radius:20px; border:none;">
+            <input type="date" id="modalDate" value="${dueDate}" style="background:#34495e; color:white; padding:6px; border-radius:20px; border:none;">
+            <select id="modalPriority" style="background:#34495e; color:white; padding:6px; border-radius:20px;">
+                <option value="high" ${priority==='high'?'selected':''}>Высокий</option>
+                <option value="medium" ${priority==='medium'?'selected':''}>Средний</option>
+                <option value="low" ${priority==='low'?'selected':''}>Низкий</option>
             </select>
-            <select id="editCategory" style="background:#34495e; color:white; padding:6px; border:none; border-radius:20px;">
-                <option value="work" ${task.category==='work'?'selected':''}>Работа</option>
-                <option value="personal" ${task.category==='personal'?'selected':''}>Личное</option>
-                <option value="study" ${task.category==='study'?'selected':''}>Учёба</option>
-                <option value="other" ${task.category==='other'?'selected':''}>Другое</option>
+            <select id="modalCategory" style="background:#34495e; color:white; padding:6px; border-radius:20px;">
+                <option value="work" ${category==='work'?'selected':''}>Работа</option>
+                <option value="personal" ${category==='personal'?'selected':''}>Личное</option>
+                <option value="study" ${category==='study'?'selected':''}>Учёба</option>
+                <option value="other" ${category==='other'?'selected':''}>Другое</option>
             </select>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button id="saveEditBtn" style="background:#1abc9c; border:none; padding:6px 12px; border-radius:20px; color:white;">Сохранить</button>
-                <button id="cancelEditBtn" style="background:#7f8c8d; border:none; padding:6px 12px; border-radius:20px; color:white;">Отмена</button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button id="modalSave" style="background:#1abc9c; border:none; padding:6px; border-radius:20px; color:white;">Сохранить</button>
+                <button id="modalCancel" style="background:#7f8c8d; border:none; padding:6px; border-radius:20px; color:white;">Отмена</button>
             </div>
         `;
-        document.body.appendChild(modalEdit);
-        modalEdit.querySelector('#saveEditBtn').onclick = () => {
-            const newTitle = modalEdit.querySelector('#editTitle').value.trim();
+        document.body.appendChild(modalDiv);
+        document.getElementById('modalSave').onclick = () => {
+            const newTitle = document.getElementById('modalTitle').value.trim();
             if (!newTitle) return;
-            task.title = newTitle;
-            task.dueDate = modalEdit.querySelector('#editDueDate').value;
-            task.priority = modalEdit.querySelector('#editPriority').value;
-            task.category = modalEdit.querySelector('#editCategory').value;
-            saveTasks();
-            renderTasks();
-            modalEdit.remove();
+            const newDate = document.getElementById('modalDate').value;
+            const newPriority = document.getElementById('modalPriority').value;
+            const newCategory = document.getElementById('modalCategory').value;
+            callback(newTitle, newDate, newPriority, newCategory);
+            modalDiv.remove();
         };
-        modalEdit.querySelector('#cancelEditBtn').onclick = () => modalEdit.remove();
+        document.getElementById('modalCancel').onclick = () => modalDiv.remove();
     }
-
-    // Календарь с задачами
-    function renderCalendar() {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startWeekday = firstDay.getDay(); // 0 = воскресенье
-        const daysInMonth = lastDay.getDate();
-        let calendarHtml = `<div style="background:#2c3e50; border-radius:15px; padding:10px; margin-bottom:15px;">
-            <h3 style="color:white; text-align:center;">📅 ${firstDay.toLocaleString('ru', { month: 'long', year: 'numeric' })}</h3>
-            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:5px; text-align:center;">
-                <span style="color:#aaa;">Пн</span><span style="color:#aaa;">Вт</span><span style="color:#aaa;">Ср</span><span style="color:#aaa;">Чт</span><span style="color:#aaa;">Пт</span><span style="color:#aaa;">Сб</span><span style="color:#aaa;">Вс</span>
-        `;
-        // Пустые ячейки до первого дня (если месяц начинается не с понедельника, корректируем)
-        let startOffset = (startWeekday === 0 ? 6 : startWeekday - 1);
-        for (let i = 0; i < startOffset; i++) calendarHtml += `<div></div>`;
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const hasTask = tasks.some(t => t.dueDate === dateStr && !t.completed);
-            calendarHtml += `<div style="padding:5px; background:${hasTask ? '#1abc9c' : '#34495e'}; border-radius:10px;">${d}</div>`;
-        }
-        calendarHtml += `</div></div>`;
-        return calendarHtml;
-    }
-
     function renderTasks() {
         const container = document.getElementById('plannerTasksArea');
         if (!container) return;
@@ -14340,20 +14339,7 @@ goldLessonsByLevel.A0[23] = {
             <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:15px;">
                 <h3 style="color:white;">➕ Добавить задачу</h3>
                 <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
-                    <input type="text" id="newTaskTitle" placeholder="Название задачи" style="flex:2; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                    <input type="date" id="newTaskDueDate" style="background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                    <select id="newTaskPriority" style="background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                        <option value="high">Высокий приоритет</option>
-                        <option value="medium">Средний приоритет</option>
-                        <option value="low">Низкий приоритет</option>
-                    </select>
-                    <select id="newTaskCategory" style="background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                        <option value="work">Работа</option>
-                        <option value="personal">Личное</option>
-                        <option value="study">Учёба</option>
-                        <option value="other">Другое</option>
-                    </select>
-                    <button id="addTaskBtn" style="background:#1abc9c; border:none; padding:8px 16px; border-radius:30px; color:white;">Добавить</button>
+                    <button id="quickAddTaskBtn" style="background:#1abc9c; border:none; padding:8px 16px; border-radius:30px; color:white;">+ Новая задача</button>
                 </div>
             </div>
             ${renderCalendar()}
@@ -14362,13 +14348,13 @@ goldLessonsByLevel.A0[23] = {
         if (tasks.length === 0) html += `<p style="color:white;">Нет задач. Добавьте первую!</p>`;
         else {
             const categories = { work: [], personal: [], study: [], other: [] };
-            tasks.forEach(task => { categories[task.category].push(task); });
+            tasks.forEach(task => categories[task.category].push(task));
             for (let [cat, catTasks] of Object.entries(categories)) {
-                if (catTasks.length === 0) continue;
-                let catName = { work: 'Работа', personal: 'Личное', study: 'Учёба', other: 'Другое' }[cat];
+                if (!catTasks.length) continue;
+                const catName = { work:'Работа', personal:'Личное', study:'Учёба', other:'Другое' }[cat];
                 html += `<div style="margin-top:15px;"><h4 style="color:#1abc9c;">📁 ${catName}</h4>`;
                 catTasks.forEach(task => {
-                    const priorityColor = { high: '#e74c3c', medium: '#f39c12', low: '#2ecc71' }[task.priority];
+                    const priorityColor = { high:'#e74c3c', medium:'#f39c12', low:'#2ecc71' }[task.priority];
                     const dueDateStr = task.dueDate ? `📅 ${task.dueDate}` : '';
                     html += `
                         <div style="background:#2c3e50; border-radius:15px; padding:12px; margin-bottom:8px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;">
@@ -14389,26 +14375,10 @@ goldLessonsByLevel.A0[23] = {
             }
         }
         container.innerHTML = html;
-
         // Обработчики
-        document.getElementById('addTaskBtn').onclick = () => {
-            const title = document.getElementById('newTaskTitle').value.trim();
-            const dueDate = document.getElementById('newTaskDueDate').value;
-            const priority = document.getElementById('newTaskPriority').value;
-            const category = document.getElementById('newTaskCategory').value;
-            if (!title) return;
-            addTask({
-                id: Date.now(),
-                title,
-                dueDate,
-                priority,
-                category,
-                completed: false,
-                createdAt: new Date().toISOString()
-            });
-            document.getElementById('newTaskTitle').value = '';
-            document.getElementById('newTaskDueDate').value = '';
-        };
+        document.getElementById('quickAddTaskBtn').onclick = () => openTaskModal('', '', 'medium', 'work', (title, date, priority, category) => {
+            addTask({ id: Date.now(), title, dueDate: date, priority, category, completed: false, createdAt: new Date().toISOString() });
+        });
         document.querySelectorAll('.taskCheckbox').forEach(cb => {
             cb.onclick = (e) => { toggleTaskComplete(parseInt(cb.dataset.id)); };
         });
@@ -14416,36 +14386,29 @@ goldLessonsByLevel.A0[23] = {
             btn.onclick = () => { deleteTask(parseInt(btn.dataset.id)); };
         });
         document.querySelectorAll('.editTaskBtn').forEach(btn => {
-            btn.onclick = () => { editTaskWithModal(parseInt(btn.dataset.id)); };
+            btn.onclick = () => {
+                const id = parseInt(btn.dataset.id);
+                const task = tasks.find(t => t.id === id);
+                if (task) openTaskModal(task.title, task.dueDate || '', task.priority, task.category, (newTitle, newDate, newPriority, newCategory) => {
+                    editTask(id, newTitle, newDate, newPriority, newCategory);
+                });
+            };
         });
     }
 
     // ========== ФИНАНСЫ ==========
     let transactions = [];
-
     function loadTransactions() {
         const saved = localStorage.getItem('planner_transactions');
-        if (saved) transactions = JSON.parse(saved);
-        else transactions = [];
+        transactions = saved ? JSON.parse(saved) : [];
     }
     function saveTransactions() { localStorage.setItem('planner_transactions', JSON.stringify(transactions)); }
-
-    function addTransaction(transaction) {
-        transactions.push(transaction);
-        saveTransactions();
-        renderFinance();
-    }
-    function deleteTransaction(id) {
-        transactions = transactions.filter(t => t.id !== id);
-        saveTransactions();
-        renderFinance();
-    }
-
+    function addTransaction(trans) { transactions.push(trans); saveTransactions(); renderFinance(); }
+    function deleteTransaction(id) { transactions = transactions.filter(t => t.id !== id); saveTransactions(); renderFinance(); }
     function getCurrentMonth() {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     }
-
     function renderFinance() {
         const container = document.getElementById('plannerFinanceArea');
         if (!container) return;
@@ -14458,7 +14421,6 @@ goldLessonsByLevel.A0[23] = {
         });
         const balance = incomeTotal - expenseTotal;
         const progressPercent = incomeTotal > 0 ? (expenseTotal / incomeTotal * 100) : 0;
-
         let html = `
             <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
                 <div style="flex:1; background:#2c3e50; border-radius:15px; padding:15px; text-align:center;">
@@ -14485,7 +14447,7 @@ goldLessonsByLevel.A0[23] = {
                 <h3 style="color:white;">➕ Добавить операцию</h3>
                 <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
                     <input type="text" id="transDesc" placeholder="Описание" style="flex:2; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                    <input type="number" id="transAmount" placeholder="Сумма (€)" step="0.01" style="width:120px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                    <input type="number" id="transAmount" placeholder="Сумма (€)" style="width:120px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
                     <select id="transType" style="background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
                         <option value="income">💰 Доход</option>
                         <option value="expense">💸 Расход</option>
@@ -14512,36 +14474,26 @@ goldLessonsByLevel.A0[23] = {
             });
         }
         container.innerHTML = html;
-
-        // Перепривязываем обработчики (каждый раз при рендере)
-        const addBtn = document.getElementById('addTransactionBtn');
-        if (addBtn) {
-            addBtn.onclick = () => {
-                const desc = document.getElementById('transDesc').value.trim();
-                const amount = parseFloat(document.getElementById('transAmount').value);
-                const type = document.getElementById('transType').value;
-                const date = document.getElementById('transDate').value;
-                if (!desc || isNaN(amount) || amount <= 0) return;
-                addTransaction({
-                    id: Date.now(),
-                    description: desc,
-                    amount: amount,
-                    type: type,
-                    date: date
-                });
-                document.getElementById('transDesc').value = '';
-                document.getElementById('transAmount').value = '';
-            };
-        }
+        document.getElementById('addTransactionBtn').onclick = () => {
+            const desc = document.getElementById('transDesc').value.trim();
+            const amount = parseFloat(document.getElementById('transAmount').value);
+            const type = document.getElementById('transType').value;
+            const date = document.getElementById('transDate').value;
+            if (!desc || isNaN(amount) || amount <= 0) return;
+            addTransaction({ id: Date.now(), description: desc, amount, type, date });
+            document.getElementById('transDesc').value = '';
+            document.getElementById('transAmount').value = '';
+        };
         document.querySelectorAll('.deleteTransBtn').forEach(btn => {
             btn.onclick = () => { deleteTransaction(parseInt(btn.dataset.id)); };
         });
     }
 
-    // ========== ИНИЦИАЛИЗАЦИЯ ==========
-    loadTasks();
-    loadTransactions();
-
+    function init() {
+        loadTasks();
+        loadTransactions();
+        renderTasks();
+    }
     function showTasksTab() {
         document.getElementById('plannerTasksArea').style.display = 'block';
         document.getElementById('plannerFinanceArea').style.display = 'none';
@@ -14556,14 +14508,11 @@ goldLessonsByLevel.A0[23] = {
         document.getElementById('plannerTabFinanceBtn').style.background = '#2c3e50';
         renderFinance();
     }
-
     document.getElementById('plannerTabTasksBtn').onclick = showTasksTab;
     document.getElementById('plannerTabFinanceBtn').onclick = showFinanceTab;
     document.getElementById('closePlannerModal').onclick = () => modal.style.display = 'none';
-    plannerBtn.onclick = () => {
-        modal.style.display = 'flex';
-        showTasksTab();
-    };
+    plannerBtn.onclick = () => { modal.style.display = 'flex'; showTasksTab(); };
+    init();
 })();
     
 </script>
