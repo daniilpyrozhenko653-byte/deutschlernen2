@@ -14645,13 +14645,19 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-(function createTabsAndHide() {
+
+
+
+
+
+
+    (function initTabs() {
     if (document.getElementById('tabsWrapper')) return;
 
     const container = document.querySelector('.app-container');
     if (!container) return;
 
-    // Создаём обёртку для вкладок
+    // 1. Создаём вкладки
     const tabsWrapper = document.createElement('div');
     tabsWrapper.id = 'tabsWrapper';
     tabsWrapper.style.cssText = `
@@ -14694,7 +14700,7 @@ goldLessonsByLevel.A0[23] = {
     tabsWrapper.appendChild(otherTab);
     tabsWrapper.appendChild(coursesTab);
 
-    // Вставляем вкладки после заголовка h1
+    // Вставляем вкладки после h1
     const h1 = container.querySelector('h1');
     if (h1 && h1.nextSibling) {
         container.insertBefore(tabsWrapper, h1.nextSibling);
@@ -14702,32 +14708,115 @@ goldLessonsByLevel.A0[23] = {
         container.appendChild(tabsWrapper);
     }
 
-    // Список ID кнопок, которые будут во вкладке «Другие разделы»
+    // 2. Контейнеры для панелей
+    const otherPanel = document.createElement('div');
+    otherPanel.id = 'otherPanel';
+    otherPanel.style.cssText = `
+        display: none;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin: 16px 0;
+        padding: 10px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 20px;
+    `;
+
+    const coursesPanel = document.createElement('div');
+    coursesPanel.id = 'coursesPanel';
+    coursesPanel.style.cssText = `
+        display: none;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin: 16px 0;
+        padding: 10px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 20px;
+    `;
+
+    container.appendChild(otherPanel);
+    container.appendChild(coursesPanel);
+
+    // 3. Определяем кнопки
     const otherButtons = [
-        'simpleReaderBtn',
-        'unifiedGamesBtn',
-        'languagesSectionBtn',
-        'subjectsSectionBtn',
-        'plannerBtn'
+        'simpleReaderBtn',      // Читать
+        'unifiedGamesBtn',      // Игры
+        'languagesSectionBtn',  // Другие языки
+        'subjectsSectionBtn',   // Предметы
+        'plannerBtn'            // Планер
     ];
 
-    const goldButton = document.getElementById('goldCourseBtn');
+    const goldBtn = document.getElementById('goldCourseBtn');
 
-    // Сначала все эти кнопки скрываем (кроме кнопки «Поддержать»)
+    // Стилизация кнопок для панелей
+    function styleButton(btn, isGold = false) {
+        if (!btn) return;
+        btn.style.position = 'static';
+        btn.style.margin = '0';
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.style.borderRadius = '30px';
+        btn.style.cursor = 'pointer';
+        btn.style.transition = '0.2s';
+        btn.style.whiteSpace = 'nowrap';
+        btn.style.boxShadow = '0 1px 4px rgba(0,0,0,0.2)';
+
+        if (isGold) {
+            btn.style.padding = '8px 20px';
+            btn.style.fontSize = '14px';
+            btn.style.fontWeight = 'bold';
+            btn.style.background = '#f1c40f';
+            btn.style.color = '#2c3e50';
+        } else {
+            btn.style.padding = '6px 16px';
+            btn.style.fontSize = '12px';
+            btn.style.fontWeight = 'bold';
+            btn.style.color = 'white';
+            const colors = {
+                simpleReaderBtn: '#2196F3',
+                unifiedGamesBtn: '#2ecc71',
+                languagesSectionBtn: '#9b59b6',
+                subjectsSectionBtn: '#e67e22',
+                plannerBtn: '#1abc9c'
+            };
+            btn.style.background = colors[btn.id] || '#3498db';
+        }
+
+        btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
+        btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+    }
+
+    // Перемещаем кнопки в панели (предварительно скрываем их)
     otherButtons.forEach(id => {
         const btn = document.getElementById(id);
-        if (btn) btn.style.display = 'none';
+        if (btn && btn.parentNode !== otherPanel) {
+            // Скрываем исходную кнопку, если она где-то ещё висела
+            btn.style.display = 'none';
+            styleButton(btn, false);
+            otherPanel.appendChild(btn);
+            btn.style.display = 'none'; // скрываем внутри панели (панель скрыта)
+        }
     });
-    if (goldButton) goldButton.style.display = 'none';
 
-    // Функция показа/скрытия
+    if (goldBtn && goldBtn.parentNode !== coursesPanel) {
+        goldBtn.style.display = 'none';
+        styleButton(goldBtn, true);
+        coursesPanel.appendChild(goldBtn);
+        goldBtn.style.display = 'none';
+    }
+
+    // 4. Функции переключения (с показом/скрытием панелей и самих кнопок)
     function showOther() {
-        otherButtons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.style.display = 'inline-flex';
+        otherPanel.style.display = 'flex';
+        coursesPanel.style.display = 'none';
+        // Показываем все кнопки внутри otherPanel
+        otherPanel.querySelectorAll('div, button, .plannerBtn, #simpleReaderBtn, #unifiedGamesBtn, #languagesSectionBtn, #subjectsSectionBtn, #plannerBtn').forEach(el => {
+            if (el.style) el.style.display = 'inline-flex';
         });
-        if (goldButton) goldButton.style.display = 'none';
-        // Активный стиль вкладок
+        if (goldBtn) goldBtn.style.display = 'none';
+
         otherTab.style.background = '#1abc9c';
         otherTab.style.color = 'white';
         coursesTab.style.background = '#2c3e50';
@@ -14735,68 +14824,45 @@ goldLessonsByLevel.A0[23] = {
     }
 
     function showCourses() {
-        otherButtons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.style.display = 'none';
+        otherPanel.style.display = 'none';
+        coursesPanel.style.display = 'flex';
+        if (goldBtn) goldBtn.style.display = 'inline-flex';
+        // Скрываем все кнопки в otherPanel
+        otherPanel.querySelectorAll('div, button, .plannerBtn, #simpleReaderBtn, #unifiedGamesBtn, #languagesSectionBtn, #subjectsSectionBtn, #plannerBtn').forEach(el => {
+            if (el.style) el.style.display = 'none';
         });
-        if (goldButton) goldButton.style.display = 'inline-flex';
+
         coursesTab.style.background = '#f1c40f';
         coursesTab.style.color = '#2c3e50';
         otherTab.style.background = '#2c3e50';
         otherTab.style.color = 'white';
     }
 
-    // Назначаем обработчики
     otherTab.onclick = showOther;
     coursesTab.onclick = showCourses;
 
-    // По умолчанию ничего не показываем (все скрыты). 
-    // Если хотите, чтобы по умолчанию было видно «Другие разделы» – раскомментируйте следующую строку:
-    // showOther();
+    // По умолчанию все панели скрыты, кнопки внутри тоже скрыты
+    otherPanel.style.display = 'none';
+    coursesPanel.style.display = 'none';
+    otherButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'none';
+    });
+    if (goldBtn) goldBtn.style.display = 'none';
 
-    // Можно также привести к единому стилю кнопки во вкладке «Другие разделы» (уменьшить)
-    const styleCompact = btn => {
-        if (!btn) return;
-        btn.style.display = 'inline-flex';
-        btn.style.alignItems = 'center';
-        btn.style.justifyContent = 'center';
-        btn.style.padding = '4px 12px';
-        btn.style.fontSize = '12px';
-        btn.style.borderRadius = '30px';
-        btn.style.whiteSpace = 'nowrap';
-        btn.style.cursor = 'pointer';
-        btn.style.transition = '0.2s';
-        btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
-        btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
-        btn.onmouseleave = () => btn.style.transform = 'scale(1)';
-        // Цвета оставляем родные
-    };
-    otherButtons.forEach(id => styleCompact(document.getElementById(id)));
-    if (goldButton) {
-        goldButton.style.padding = '6px 16px';
-        goldButton.style.fontSize = '14px';
-        goldButton.style.fontWeight = 'bold';
-        goldButton.style.display = 'none'; // по умолчанию скрыта
-        goldButton.style.alignItems = 'center';
-        goldButton.style.borderRadius = '30px';
-        goldButton.style.whiteSpace = 'nowrap';
-        goldButton.style.cursor = 'pointer';
-        goldButton.style.transition = '0.2s';
-        goldButton.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
-        goldButton.onmouseenter = () => goldButton.style.transform = 'scale(1.02)';
-        goldButton.onmouseleave = () => goldButton.style.transform = 'scale(1)';
-    }
-
-    // Убедимся, что кнопка «Поддержать» не была затронута (оставляем как есть)
+    // 5. Кнопка «Поддержать» остаётся на своём месте, не трогаем
     const support = document.getElementById('supportBtn');
     if (support) {
         support.style.position = 'fixed';
         support.style.bottom = '20px';
         support.style.right = '20px';
         support.style.zIndex = '10000';
+        // Убедимся, что она не попала в панели
+        if (support.parentNode === otherPanel || support.parentNode === coursesPanel) {
+            document.body.appendChild(support);
+        }
     }
 })();
-
 
     
     
