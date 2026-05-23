@@ -14667,7 +14667,7 @@ goldLessonsByLevel.A0[23] = {
     const container = document.querySelector('.app-container');
     if (!container) return;
 
-    // ----- 1. Прячем старые кнопки (Читать, Игры, Языки, Предметы, Планер, Золотой курс) -----
+    // ----- 1. Прячем старые кнопки -----
     const oldButtons = [
         'simpleReaderBtn', 'unifiedGamesBtn', 'languagesSectionBtn',
         'subjectsSectionBtn', 'plannerBtn', 'goldCourseBtn'
@@ -14727,7 +14727,7 @@ goldLessonsByLevel.A0[23] = {
         container.appendChild(wrapper);
     }
 
-    // ----- 3. Вспомогательная функция для показа модальных окон (вместо alert) -----
+    // ----- 3. Вспомогательная функция для модальных окон -----
     function showMessageModal(title, content, isError = false) {
         const modal = document.createElement('div');
         modal.style.cssText = `
@@ -14746,7 +14746,7 @@ goldLessonsByLevel.A0[23] = {
         document.getElementById('closeMsgBtn').onclick = () => modal.remove();
     }
 
-    // ----- 4. Платёжное окно для немецкого курса (с вводом кода) -----
+    // ----- 4. Платёжное окно для немецкого курса (с вводом кода и активацией) -----
     function showGermanCoursePayment() {
         const modal = document.createElement('div');
         modal.id = 'goldPaymentModal';
@@ -14767,7 +14767,7 @@ goldLessonsByLevel.A0[23] = {
                 IBAN: <span id="ibanCode">DE92 3755 1780 1020 1888 41</span> 
                 <button id="copyIbanBtn" style="background: #3498db; border: none; padding: 2px 8px; border-radius: 20px; cursor: pointer;">📋 Копировать</button><br>
                 BIC: WELADED1LAF<br>
-                Назначение платежа: <strong>DeutschCourse_ВашEmail</strong></p>
+                Назначение платежа: <strong>GoldCourse_ВашEmail</strong></p>
             </div>
             <div style="background: #2c3e50; border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center;">
                 <p style="color: white;"><strong>💳 Или через DonationAlerts</strong></p>
@@ -14790,11 +14790,10 @@ goldLessonsByLevel.A0[23] = {
             showMessageModal('✅', 'IBAN скопирован!');
         };
 
-        // Активация кода (проверяем, есть ли код в хранилище)
+        // Проверка и активация кода (совместимо со старым «Золотым курсом»)
         function isValidGermanCode(code) {
             let codes = localStorage.getItem('germanCourseCodes');
             if (!codes) {
-                // Предустановленные коды (10 штук)
                 const defaultCodes = ['GER-A1B2C3', 'GER-D4E5F6', 'GER-G7H8I9', 'GER-J0K1L2', 'GER-M3N4O5', 'GER-P6Q7R8', 'GER-S9T0U1', 'GER-V2W3X4', 'GER-Y5Z6A7', 'GER-B8C9D0'];
                 localStorage.setItem('germanCourseCodes', JSON.stringify(defaultCodes));
                 codes = JSON.stringify(defaultCodes);
@@ -14818,8 +14817,22 @@ goldLessonsByLevel.A0[23] = {
                 return;
             }
             if (isValidGermanCode(code)) {
-                msgDiv.innerHTML = '<span style="color:#2ecc71;">🎉 Курс активирован! Обновите страницу.</span>';
-                setTimeout(() => window.location.reload(), 1500);
+                // Устанавливаем флаг для старого «Золотого курса»
+                localStorage.setItem('goldUnlocked', 'true');
+                msgDiv.innerHTML = '<span style="color:#2ecc71;">🎉 Курс активирован! Открываю...</span>';
+                setTimeout(() => {
+                    modal.remove(); // закрываем платёжное окно
+                    const goldBtn = document.getElementById('goldCourseBtn');
+                    if (goldBtn) {
+                        // Временно показываем скрытую кнопку и кликаем по ней
+                        goldBtn.style.display = 'inline-flex';
+                        goldBtn.click();
+                        // Через полсекунды снова скрываем кнопку (чтобы не мешалась)
+                        setTimeout(() => { goldBtn.style.display = 'none'; }, 500);
+                    } else {
+                        showMessageModal('Успех', 'Курс активирован. Обновите страницу и нажмите "Курсы" → "Курс (немецкий)"');
+                    }
+                }, 1000);
             } else {
                 msgDiv.innerHTML = '<span style="color:#e74c3c;">❌ Неверный или уже использованный код.</span>';
             }
@@ -14910,7 +14923,6 @@ goldLessonsByLevel.A0[23] = {
 
     function openDropdown(button, items, onSelect, isCourses = false) {
         if (activeDropdown) {
-            // Если меню уже открыто от этой же кнопки – закрываем
             if (activeDropdown._sourceButton === button) {
                 closeActiveDropdown();
                 return;
