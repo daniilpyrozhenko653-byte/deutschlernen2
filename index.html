@@ -14199,7 +14199,7 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-// ========== РАЗДЕЛ "ПЛАНЕР" (ЗАДАЧИ + ФИНАНСЫ) – ИСПРАВЛЕННОЕ РАСПОЛОЖЕНИЕ ==========
+// ========== РАЗДЕЛ "ПЛАНЕР" – ИСПРАВЛЕННОЕ РАСПОЛОЖЕНИЕ ==========
 (function() {
     if (document.getElementById('plannerBtn')) return;
 
@@ -14211,12 +14211,12 @@ goldLessonsByLevel.A0[23] = {
         setTimeout(() => msgDiv.remove(), 2500);
     }
 
-    // Контейнер для кнопок (без переноса строк)
+    // Контейнер для кнопок (flex с wrap, но кнопки уменьшены)
     let btnWrapper = document.getElementById('topBtnsWrapper');
     if (!btnWrapper) {
         btnWrapper = document.createElement('div');
         btnWrapper.id = 'topBtnsWrapper';
-        btnWrapper.style.cssText = 'display:flex; flex-wrap:nowrap; align-items:center; gap:8px; margin:8px 0; overflow-x:auto;';
+        btnWrapper.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0;';
         const container = document.querySelector('.app-container');
         if (container) {
             const h1 = container.querySelector('h1');
@@ -14227,7 +14227,7 @@ goldLessonsByLevel.A0[23] = {
         }
     }
 
-    // Перемещаем кнопку "Золотой курс" (если есть) в контейнер и убираем абсолютное позиционирование
+    // Переносим кнопку "Золотой курс" (если есть) в контейнер, убираем абсолютное позиционирование
     function fixGoldButton() {
         const goldBtn = document.getElementById('goldCourseBtn');
         if (goldBtn && goldBtn.parentNode !== btnWrapper) {
@@ -14237,6 +14237,8 @@ goldLessonsByLevel.A0[23] = {
             goldBtn.style.left = '';
             goldBtn.style.display = 'inline-block';
             goldBtn.style.margin = '0';
+            goldBtn.style.fontSize = '12px';
+            goldBtn.style.padding = '4px 10px';
             goldBtn.style.whiteSpace = 'nowrap';
             btnWrapper.appendChild(goldBtn);
         }
@@ -14249,15 +14251,15 @@ goldLessonsByLevel.A0[23] = {
         }
     }, 500);
 
-    // Создаём кнопку "Планер"
+    // Создаём кнопку "Планер" – уменьшенного размера
     const plannerBtn = document.createElement('div');
     plannerBtn.id = 'plannerBtn';
     plannerBtn.innerHTML = '📋 Планер';
-    plannerBtn.style.cssText = 'display:inline-block; background:#1abc9c; color:white; padding:6px 16px; border-radius:30px; cursor:pointer; font-size:14px; font-weight:bold; transition:0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); white-space:nowrap;';
+    plannerBtn.style.cssText = 'display:inline-block; background:#1abc9c; color:white; padding:4px 10px; border-radius:30px; cursor:pointer; font-size:12px; font-weight:bold; transition:0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); white-space:nowrap;';
     plannerBtn.onmouseenter = () => plannerBtn.style.transform = 'scale(1.02)';
     plannerBtn.onmouseleave = () => plannerBtn.style.transform = 'scale(1)';
 
-    // Добавляем "Планер" в контейнер (он будет справа от золотой кнопки, если она есть)
+    // Добавляем "Планер" в контейнер (будет справа от золотой кнопки)
     btnWrapper.appendChild(plannerBtn);
 
     // ---- МОДАЛЬНОЕ ОКНО (без изменений) ----
