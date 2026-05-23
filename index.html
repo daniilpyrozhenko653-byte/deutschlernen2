@@ -14651,25 +14651,43 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-    (function initTabs() {
-    if (document.getElementById('tabsWrapper')) return;
+
+
+
+
+
+
+    (function createSmartDropdowns() {
+    if (document.getElementById('smartDropdownWrapper')) return;
 
     const container = document.querySelector('.app-container');
     if (!container) return;
 
-    // 1. Создаём вкладки
-    const tabsWrapper = document.createElement('div');
-    tabsWrapper.id = 'tabsWrapper';
-    tabsWrapper.style.cssText = `
+    // --- 1. Удаляем старые кнопки разделов, чтобы они не светились ---
+    const oldButtons = [
+        'simpleReaderBtn', 'unifiedGamesBtn', 'languagesSectionBtn',
+        'subjectsSectionBtn', 'plannerBtn', 'goldCourseBtn'
+    ];
+    oldButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn && btn.style) {
+            btn.style.display = 'none';   // не удаляем, а прячем, чтобы сохранить их функциональность
+        }
+    });
+
+    // --- 2. Создаём обёртку для двух кнопок-переключателей ---
+    const wrapper = document.createElement('div');
+    wrapper.id = 'smartDropdownWrapper';
+    wrapper.style.cssText = `
         display: flex;
         gap: 12px;
         justify-content: center;
-        margin: 12px 0 16px;
+        margin: 12px 0 20px;
     `;
 
-    const otherTab = document.createElement('button');
-    otherTab.textContent = '📚 Другие разделы';
-    otherTab.style.cssText = `
+    const otherBtn = document.createElement('button');
+    otherBtn.textContent = '📚 Другие разделы';
+    otherBtn.style.cssText = `
         flex: 1;
         background: #2c3e50;
         color: white;
@@ -14682,9 +14700,9 @@ goldLessonsByLevel.A0[23] = {
         transition: 0.2s;
     `;
 
-    const coursesTab = document.createElement('button');
-    coursesTab.textContent = '🏆 Курсы';
-    coursesTab.style.cssText = `
+    const coursesBtn = document.createElement('button');
+    coursesBtn.textContent = '🏆 Курсы';
+    coursesBtn.style.cssText = `
         flex: 1;
         background: #2c3e50;
         color: white;
@@ -14697,171 +14715,142 @@ goldLessonsByLevel.A0[23] = {
         transition: 0.2s;
     `;
 
-    tabsWrapper.appendChild(otherTab);
-    tabsWrapper.appendChild(coursesTab);
+    wrapper.appendChild(otherBtn);
+    wrapper.appendChild(coursesBtn);
 
-    // Вставляем вкладки после h1
+    // Вставляем после заголовка h1
     const h1 = container.querySelector('h1');
     if (h1 && h1.nextSibling) {
-        container.insertBefore(tabsWrapper, h1.nextSibling);
+        container.insertBefore(wrapper, h1.nextSibling);
     } else {
-        container.appendChild(tabsWrapper);
+        container.appendChild(wrapper);
     }
 
-    // 2. Контейнеры для панелей
-    const otherPanel = document.createElement('div');
-    otherPanel.id = 'otherPanel';
-    otherPanel.style.cssText = `
-        display: none;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-        margin: 16px 0;
-        padding: 10px;
-        background: rgba(0,0,0,0.2);
-        border-radius: 20px;
-    `;
+    // --- 3. Функция создания выпадающего меню ---
+    function createDropdown(items, onSelect) {
+        const dropdown = document.createElement('div');
+        dropdown.className = 'smart-dropdown';
+        dropdown.style.cssText = `
+            position: absolute;
+            background: #1e272e;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            overflow: hidden;
+            z-index: 10020;
+            min-width: 180px;
+            backdrop-filter: blur(8px);
+        `;
+        items.forEach(item => {
+            const option = document.createElement('div');
+            option.textContent = item.label;
+            option.style.cssText = `
+                padding: 12px 18px;
+                color: white;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+                border-bottom: 1px solid #2c3e50;
+                white-space: nowrap;
+            `;
+            option.onmouseenter = () => option.style.background = '#2c3e50';
+            option.onmouseleave = () => option.style.background = '';
+            option.onclick = (e) => {
+                e.stopPropagation();
+                onSelect(item);
+                dropdown.remove();
+            };
+            dropdown.appendChild(option);
+        });
+        return dropdown;
+    }
 
-    const coursesPanel = document.createElement('div');
-    coursesPanel.id = 'coursesPanel';
-    coursesPanel.style.cssText = `
-        display: none;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-        margin: 16px 0;
-        padding: 10px;
-        background: rgba(0,0,0,0.2);
-        border-radius: 20px;
-    `;
-
-    container.appendChild(otherPanel);
-    container.appendChild(coursesPanel);
-
-    // 3. Определяем кнопки
-    const otherButtons = [
-        'simpleReaderBtn',      // Читать
-        'unifiedGamesBtn',      // Игры
-        'languagesSectionBtn',  // Другие языки
-        'subjectsSectionBtn',   // Предметы
-        'plannerBtn'            // Планер
+    // --- 4. Данные для меню ---
+    const otherItems = [
+        { label: '📖 Читать', actionId: 'simpleReaderBtn' },
+        { label: '🎮 Игры', actionId: 'unifiedGamesBtn' },
+        { label: '🌍 Другие языки', actionId: 'languagesSectionBtn' },
+        { label: '📚 Предметы', actionId: 'subjectsSectionBtn' },
+        { label: '📋 Планер', actionId: 'plannerBtn' }
     ];
 
-    const goldBtn = document.getElementById('goldCourseBtn');
+    const coursesItems = [
+        { label: '🏆 Золотой курс A0–C1', actionId: 'goldCourseBtn' }
+    ];
 
-    // Стилизация кнопок для панелей
-    function styleButton(btn, isGold = false) {
-        if (!btn) return;
-        btn.style.position = 'static';
-        btn.style.margin = '0';
-        btn.style.display = 'inline-flex';
-        btn.style.alignItems = 'center';
-        btn.style.justifyContent = 'center';
-        btn.style.borderRadius = '30px';
-        btn.style.cursor = 'pointer';
-        btn.style.transition = '0.2s';
-        btn.style.whiteSpace = 'nowrap';
-        btn.style.boxShadow = '0 1px 4px rgba(0,0,0,0.2)';
-
-        if (isGold) {
-            btn.style.padding = '8px 20px';
-            btn.style.fontSize = '14px';
-            btn.style.fontWeight = 'bold';
-            btn.style.background = '#f1c40f';
-            btn.style.color = '#2c3e50';
+    // --- 5. Обработчики выбора: имитируем клик по оригинальной кнопке ---
+    function handleOtherSelect(item) {
+        const targetBtn = document.getElementById(item.actionId);
+        if (targetBtn) {
+            targetBtn.click();
         } else {
-            btn.style.padding = '6px 16px';
-            btn.style.fontSize = '12px';
-            btn.style.fontWeight = 'bold';
-            btn.style.color = 'white';
-            const colors = {
-                simpleReaderBtn: '#2196F3',
-                unifiedGamesBtn: '#2ecc71',
-                languagesSectionBtn: '#9b59b6',
-                subjectsSectionBtn: '#e67e22',
-                plannerBtn: '#1abc9c'
-            };
-            btn.style.background = colors[btn.id] || '#3498db';
+            console.warn(`Кнопка ${item.actionId} не найдена`);
         }
-
-        btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
-        btn.onmouseleave = () => btn.style.transform = 'scale(1)';
     }
 
-    // Перемещаем кнопки в панели (предварительно скрываем их)
-    otherButtons.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn && btn.parentNode !== otherPanel) {
-            // Скрываем исходную кнопку, если она где-то ещё висела
-            btn.style.display = 'none';
-            styleButton(btn, false);
-            otherPanel.appendChild(btn);
-            btn.style.display = 'none'; // скрываем внутри панели (панель скрыта)
+    function handleCoursesSelect(item) {
+        const targetBtn = document.getElementById(item.actionId);
+        if (targetBtn) {
+            targetBtn.click();
+        } else {
+            console.warn(`Кнопка ${item.actionId} не найдена`);
         }
+    }
+
+    // --- 6. Управление открытием/закрытием (только одно меню за раз) ---
+    let activeDropdown = null;
+
+    function closeActiveDropdown() {
+        if (activeDropdown) {
+            activeDropdown.remove();
+            activeDropdown = null;
+        }
+    }
+
+    function openDropdown(button, items, onSelect) {
+        closeActiveDropdown();
+        const dropdown = createDropdown(items, onSelect);
+        const rect = button.getBoundingClientRect();
+        dropdown.style.left = `${rect.left}px`;
+        dropdown.style.top = `${rect.bottom + 8}px`;
+        document.body.appendChild(dropdown);
+        activeDropdown = dropdown;
+
+        // Закрытие при клике вне меню
+        const closeHandler = (e) => {
+            if (!dropdown.contains(e.target) && e.target !== button) {
+                closeActiveDropdown();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 20);
+    }
+
+    otherBtn.onclick = (e) => {
+        e.stopPropagation();
+        openDropdown(otherBtn, otherItems, handleOtherSelect);
+    };
+    coursesBtn.onclick = (e) => {
+        e.stopPropagation();
+        openDropdown(coursesBtn, coursesItems, handleCoursesSelect);
+    };
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeActiveDropdown();
     });
 
-    if (goldBtn && goldBtn.parentNode !== coursesPanel) {
-        goldBtn.style.display = 'none';
-        styleButton(goldBtn, true);
-        coursesPanel.appendChild(goldBtn);
-        goldBtn.style.display = 'none';
+    // --- 7. Кнопка «Поддержать» остаётся нетронутой ---
+    const supportBtn = document.getElementById('supportBtn');
+    if (supportBtn) {
+        supportBtn.style.position = 'fixed';
+        supportBtn.style.bottom = '20px';
+        supportBtn.style.right = '20px';
+        supportBtn.style.zIndex = '10000';
     }
 
-    // 4. Функции переключения (с показом/скрытием панелей и самих кнопок)
-    function showOther() {
-        otherPanel.style.display = 'flex';
-        coursesPanel.style.display = 'none';
-        // Показываем все кнопки внутри otherPanel
-        otherPanel.querySelectorAll('div, button, .plannerBtn, #simpleReaderBtn, #unifiedGamesBtn, #languagesSectionBtn, #subjectsSectionBtn, #plannerBtn').forEach(el => {
-            if (el.style) el.style.display = 'inline-flex';
-        });
-        if (goldBtn) goldBtn.style.display = 'none';
-
-        otherTab.style.background = '#1abc9c';
-        otherTab.style.color = 'white';
-        coursesTab.style.background = '#2c3e50';
-        coursesTab.style.color = 'white';
-    }
-
-    function showCourses() {
-        otherPanel.style.display = 'none';
-        coursesPanel.style.display = 'flex';
-        if (goldBtn) goldBtn.style.display = 'inline-flex';
-        // Скрываем все кнопки в otherPanel
-        otherPanel.querySelectorAll('div, button, .plannerBtn, #simpleReaderBtn, #unifiedGamesBtn, #languagesSectionBtn, #subjectsSectionBtn, #plannerBtn').forEach(el => {
-            if (el.style) el.style.display = 'none';
-        });
-
-        coursesTab.style.background = '#f1c40f';
-        coursesTab.style.color = '#2c3e50';
-        otherTab.style.background = '#2c3e50';
-        otherTab.style.color = 'white';
-    }
-
-    otherTab.onclick = showOther;
-    coursesTab.onclick = showCourses;
-
-    // По умолчанию все панели скрыты, кнопки внутри тоже скрыты
-    otherPanel.style.display = 'none';
-    coursesPanel.style.display = 'none';
-    otherButtons.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.style.display = 'none';
-    });
-    if (goldBtn) goldBtn.style.display = 'none';
-
-    // 5. Кнопка «Поддержать» остаётся на своём месте, не трогаем
-    const support = document.getElementById('supportBtn');
-    if (support) {
-        support.style.position = 'fixed';
-        support.style.bottom = '20px';
-        support.style.right = '20px';
-        support.style.zIndex = '10000';
-        // Убедимся, что она не попала в панели
-        if (support.parentNode === otherPanel || support.parentNode === coursesPanel) {
-            document.body.appendChild(support);
-        }
-    }
+    // --- 8. Убедимся, что оригинальные кнопки остались в DOM и рабочие, но скрыты ---
+    // (они уже скрыты через style.display = 'none' в начале)
 })();
 
     
