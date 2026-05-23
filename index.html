@@ -14645,7 +14645,118 @@ goldLessonsByLevel.A0[23] = {
 
 
 
+// Организация кнопок в два ряда: верхний (все остальные) и нижний (Золотой курс + Планер)
+(function arrangeTwoRows() {
+    if (document.querySelector('.top-buttons-row')) return; // уже выполнено
 
+    const container = document.querySelector('.app-container');
+    if (!container) return;
+
+    // Создаём два контейнера-ряда
+    const topRow = document.createElement('div');
+    topRow.className = 'top-buttons-row';
+    topRow.style.cssText = 'display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; justify-content: flex-start;';
+
+    const goldRow = document.createElement('div');
+    goldRow.className = 'gold-row';
+    goldRow.style.cssText = 'display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; padding-top: 8px; border-top: 1px solid rgba(255,200,100,0.3);';
+
+    // Вставляем ряды после заголовка h1
+    const h1 = container.querySelector('h1');
+    if (h1 && h1.nextSibling) {
+        container.insertBefore(topRow, h1.nextSibling);
+        container.insertBefore(goldRow, topRow.nextSibling);
+    } else {
+        container.appendChild(topRow);
+        container.appendChild(goldRow);
+    }
+
+    // Список ID кнопок для верхнего ряда (все, кроме золотого курса и планера)
+    const topButtonsIds = [
+        'simpleReaderBtn',      // Читать
+        'unifiedGamesBtn',      // Игры
+        'languagesSectionBtn',  // Другие языки
+        'subjectsSectionBtn',   // Предметы
+        'supportBtn'            // Поддержать (если есть)
+    ];
+
+    // Кнопки для нижнего ряда (золотой курс и планер – рядом)
+    const goldButtonsIds = [
+        'goldCourseBtn',
+        'plannerBtn'
+    ];
+
+    // Функция стилизации: верхние – компактные, нижние – чуть крупнее
+    function styleButton(btn, isGold = false) {
+        btn.style.position = 'static';
+        btn.style.top = '';
+        btn.style.right = '';
+        btn.style.left = '';
+        btn.style.margin = '0';
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.style.borderRadius = '30px';
+        btn.style.cursor = 'pointer';
+        btn.style.transition = '0.2s';
+        btn.style.whiteSpace = 'nowrap';
+        btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
+        btn.style.color = 'white';
+
+        if (isGold) {
+            btn.style.padding = '6px 16px';
+            btn.style.fontSize = '14px';
+            btn.style.fontWeight = 'bold';
+        } else {
+            btn.style.padding = '4px 12px';
+            btn.style.fontSize = '12px';
+            btn.style.fontWeight = 'bold';
+        }
+
+        // Оригинальные цвета
+        const colors = {
+            goldCourseBtn: '#f1c40f',
+            plannerBtn: '#1abc9c',
+            simpleReaderBtn: '#2196F3',
+            unifiedGamesBtn: '#2ecc71',
+            languagesSectionBtn: '#9b59b6',
+            subjectsSectionBtn: '#e67e22',
+            supportBtn: '#e74c3c'
+        };
+        const bgColor = colors[btn.id] || btn.style.background || '#3498db';
+        btn.style.background = bgColor;
+
+        btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
+        btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+    }
+
+    // Перемещаем и стилизуем кнопки верхнего ряда
+    topButtonsIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn && btn.parentNode !== topRow) {
+            styleButton(btn, false);
+            topRow.appendChild(btn);
+        }
+    });
+
+    // Перемещаем и стилизуем кнопки нижнего ряда (золотой курс + планер)
+    goldButtonsIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn && btn.parentNode !== goldRow) {
+            styleButton(btn, true);
+            goldRow.appendChild(btn);
+        }
+    });
+
+    // Дополнительно: размещаем «Планер» сразу после «Золотого курса» в нижнем ряду
+    const goldBtn = document.getElementById('goldCourseBtn');
+    const plannerBtn = document.getElementById('plannerBtn');
+    if (goldBtn && plannerBtn && goldRow.contains(goldBtn) && goldRow.contains(plannerBtn)) {
+        if (goldBtn.nextSibling !== plannerBtn) {
+            goldRow.insertBefore(plannerBtn, goldBtn.nextSibling);
+        }
+    }
+})();
 
 
 
