@@ -14657,32 +14657,34 @@ goldLessonsByLevel.A0[23] = {
 
 
 
+
+
+
+
     (function createSmartDropdowns() {
     if (document.getElementById('smartDropdownWrapper')) return;
 
     const container = document.querySelector('.app-container');
     if (!container) return;
 
-    // --- 1. Удаляем старые кнопки разделов, чтобы они не светились ---
+    // --- 1. Скрываем старые кнопки, но не удаляем ---
     const oldButtons = [
         'simpleReaderBtn', 'unifiedGamesBtn', 'languagesSectionBtn',
         'subjectsSectionBtn', 'plannerBtn', 'goldCourseBtn'
     ];
     oldButtons.forEach(id => {
         const btn = document.getElementById(id);
-        if (btn && btn.style) {
-            btn.style.display = 'none';   // не удаляем, а прячем, чтобы сохранить их функциональность
-        }
+        if (btn) btn.style.display = 'none';
     });
 
-    // --- 2. Создаём обёртку для двух кнопок-переключателей ---
+    // --- 2. Создаём обёртку для кнопок-переключателей (уменьшенные) ---
     const wrapper = document.createElement('div');
     wrapper.id = 'smartDropdownWrapper';
     wrapper.style.cssText = `
         display: flex;
-        gap: 12px;
+        gap: 8px;
         justify-content: center;
-        margin: 12px 0 20px;
+        margin: 10px 0 16px;
     `;
 
     const otherBtn = document.createElement('button');
@@ -14692,12 +14694,13 @@ goldLessonsByLevel.A0[23] = {
         background: #2c3e50;
         color: white;
         border: none;
-        padding: 8px 12px;
+        padding: 6px 12px;
         border-radius: 30px;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: bold;
         cursor: pointer;
         transition: 0.2s;
+        max-width: 160px;
     `;
 
     const coursesBtn = document.createElement('button');
@@ -14707,18 +14710,18 @@ goldLessonsByLevel.A0[23] = {
         background: #2c3e50;
         color: white;
         border: none;
-        padding: 8px 12px;
+        padding: 6px 12px;
         border-radius: 30px;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: bold;
         cursor: pointer;
         transition: 0.2s;
+        max-width: 160px;
     `;
 
     wrapper.appendChild(otherBtn);
     wrapper.appendChild(coursesBtn);
 
-    // Вставляем после заголовка h1
     const h1 = container.querySelector('h1');
     if (h1 && h1.nextSibling) {
         container.insertBefore(wrapper, h1.nextSibling);
@@ -14726,8 +14729,25 @@ goldLessonsByLevel.A0[23] = {
         container.appendChild(wrapper);
     }
 
-    // --- 3. Функция создания выпадающего меню ---
-    function createDropdown(items, onSelect) {
+    // --- 3. Функция создания выпадающего меню с возможностью закрыть ---
+    let activeDropdown = null;
+    let activeButton = null;
+
+    function closeActiveDropdown() {
+        if (activeDropdown) {
+            activeDropdown.remove();
+            activeDropdown = null;
+            activeButton = null;
+        }
+    }
+
+    function openDropdown(button, items, onSelect) {
+        // Если меню уже открыто и это та же кнопка – закрываем
+        if (activeDropdown && activeButton === button) {
+            closeActiveDropdown();
+            return;
+        }
+        closeActiveDropdown();
         const dropdown = document.createElement('div');
         dropdown.className = 'smart-dropdown';
         dropdown.style.cssText = `
@@ -14744,9 +14764,9 @@ goldLessonsByLevel.A0[23] = {
             const option = document.createElement('div');
             option.textContent = item.label;
             option.style.cssText = `
-                padding: 12px 18px;
+                padding: 10px 16px;
                 color: white;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 500;
                 cursor: pointer;
                 transition: all 0.2s;
@@ -14758,63 +14778,16 @@ goldLessonsByLevel.A0[23] = {
             option.onclick = (e) => {
                 e.stopPropagation();
                 onSelect(item);
-                dropdown.remove();
+                closeActiveDropdown();
             };
             dropdown.appendChild(option);
         });
-        return dropdown;
-    }
-
-    // --- 4. Данные для меню ---
-    const otherItems = [
-        { label: '📖 Читать', actionId: 'simpleReaderBtn' },
-        { label: '🎮 Игры', actionId: 'unifiedGamesBtn' },
-        { label: '🌍 Другие языки', actionId: 'languagesSectionBtn' },
-        { label: '📚 Предметы', actionId: 'subjectsSectionBtn' },
-        { label: '📋 Планер', actionId: 'plannerBtn' }
-    ];
-
-    const coursesItems = [
-        { label: '🏆 Золотой курс A0–C1', actionId: 'goldCourseBtn' }
-    ];
-
-    // --- 5. Обработчики выбора: имитируем клик по оригинальной кнопке ---
-    function handleOtherSelect(item) {
-        const targetBtn = document.getElementById(item.actionId);
-        if (targetBtn) {
-            targetBtn.click();
-        } else {
-            console.warn(`Кнопка ${item.actionId} не найдена`);
-        }
-    }
-
-    function handleCoursesSelect(item) {
-        const targetBtn = document.getElementById(item.actionId);
-        if (targetBtn) {
-            targetBtn.click();
-        } else {
-            console.warn(`Кнопка ${item.actionId} не найдена`);
-        }
-    }
-
-    // --- 6. Управление открытием/закрытием (только одно меню за раз) ---
-    let activeDropdown = null;
-
-    function closeActiveDropdown() {
-        if (activeDropdown) {
-            activeDropdown.remove();
-            activeDropdown = null;
-        }
-    }
-
-    function openDropdown(button, items, onSelect) {
-        closeActiveDropdown();
-        const dropdown = createDropdown(items, onSelect);
         const rect = button.getBoundingClientRect();
         dropdown.style.left = `${rect.left}px`;
         dropdown.style.top = `${rect.bottom + 8}px`;
         document.body.appendChild(dropdown);
         activeDropdown = dropdown;
+        activeButton = button;
 
         // Закрытие при клике вне меню
         const closeHandler = (e) => {
@@ -14826,21 +14799,69 @@ goldLessonsByLevel.A0[23] = {
         setTimeout(() => document.addEventListener('click', closeHandler), 20);
     }
 
+    // --- 4. Пункты меню ---
+    const otherItems = [
+        { label: '📖 Читать', actionId: 'simpleReaderBtn' },
+        { label: '🎮 Игры', actionId: 'unifiedGamesBtn' },
+        { label: '🌍 Другие языки', actionId: 'languagesSectionBtn' },
+        { label: '📚 Предметы', actionId: 'subjectsSectionBtn' },
+        { label: '📋 Планер', actionId: 'plannerBtn' }
+    ];
+
+    // Для курсов: создаём пункты без actionId, будем открывать модальное окно оплаты
+    function showCoursePayment(language) {
+        // Универсальная функция показа модального окна для платного курса
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:90%; max-width:450px; z-index:100030; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.9); color:white; text-align:center;';
+        modal.innerHTML = `
+            <h2 style="color:#f1c40f;">🏆 Золотой курс по ${language}</h2>
+            <p>Полный курс ${language} с нуля до уровня C1. 300+ уроков, тесты, озвучка.</p>
+            <p style="font-size:24px; margin:15px 0;">🔥 10 € (вместо 59 €)</p>
+            <p>Для получения доступа переведите 10 евро на счёт:</p>
+            <div style="background:#2c3e50; padding:10px; border-radius:15px; margin:10px 0;">
+                <strong>IBAN:</strong> DE92 3755 1780 1020 1888 41<br>
+                <strong>BIC:</strong> WELADED1LAF<br>
+                <strong>Назначение:</strong> GoldCourse_${language}_ВашEmail
+            </div>
+            <p>После оплаты напишите нам в Telegram <strong>@daniil3299</strong> или на почту <strong>daniilpirozhenko442@gmail.com</strong> – мы вышлем вам код активации.</p>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button id="closeCourseModal" style="background:#e74c3c; border:none; padding:8px; border-radius:30px; flex:1;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('closeCourseModal').onclick = () => modal.remove();
+    }
+
+    const coursesItems = [
+        { label: '🇩🇪 Золотой курс (немецкий)', language: 'немецкому', action: () => showCoursePayment('немецкому') },
+        { label: '🇪🇸 Золотой курс (испанский)', language: 'испанскому', action: () => showCoursePayment('испанскому') },
+        { label: '🇫🇷 Золотой курс (французский)', language: 'французскому', action: () => showCoursePayment('французскому') }
+    ];
+
+    function handleOtherSelect(item) {
+        const targetBtn = document.getElementById(item.actionId);
+        if (targetBtn) targetBtn.click();
+        else console.warn(`Кнопка ${item.actionId} не найдена`);
+    }
+
+    function handleCourseSelect(item) {
+        if (item.action) item.action();
+    }
+
     otherBtn.onclick = (e) => {
         e.stopPropagation();
         openDropdown(otherBtn, otherItems, handleOtherSelect);
     };
     coursesBtn.onclick = (e) => {
         e.stopPropagation();
-        openDropdown(coursesBtn, coursesItems, handleCoursesSelect);
+        openDropdown(coursesBtn, coursesItems, handleCourseSelect);
     };
 
-    // Закрытие по Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeActiveDropdown();
     });
 
-    // --- 7. Кнопка «Поддержать» остаётся нетронутой ---
+    // --- 5. Кнопка «Поддержать» остаётся ---
     const supportBtn = document.getElementById('supportBtn');
     if (supportBtn) {
         supportBtn.style.position = 'fixed';
@@ -14848,9 +14869,6 @@ goldLessonsByLevel.A0[23] = {
         supportBtn.style.right = '20px';
         supportBtn.style.zIndex = '10000';
     }
-
-    // --- 8. Убедимся, что оригинальные кнопки остались в DOM и рабочие, но скрыты ---
-    // (они уже скрыты через style.display = 'none' в начале)
 })();
 
     
