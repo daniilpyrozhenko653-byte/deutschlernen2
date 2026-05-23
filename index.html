@@ -14642,6 +14642,102 @@ goldLessonsByLevel.A0[23] = {
         showTasksTab();
     };
 })();
+
+
+
+
+
+
+
+    // Выравнивание и уменьшение всех верхних кнопок
+(function fixTopButtons() {
+    // Ждём, пока DOM загрузится полностью
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fixTopButtons);
+        return;
+    }
+
+    // Контейнер для кнопок (созданный в коде «Планера»)
+    let btnWrapper = document.getElementById('topBtnsWrapper');
+    if (!btnWrapper) {
+        // Если контейнера нет – создаём
+        btnWrapper = document.createElement('div');
+        btnWrapper.id = 'topBtnsWrapper';
+        btnWrapper.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0;';
+        const container = document.querySelector('.app-container');
+        const h1 = container?.querySelector('h1');
+        if (h1 && h1.nextSibling) container.insertBefore(btnWrapper, h1.nextSibling);
+        else if (container) container.appendChild(btnWrapper);
+        else document.body.insertBefore(btnWrapper, document.body.firstChild);
+    }
+
+    // Список ID кнопок, которые нужно обработать
+    const buttonIds = [
+        'goldCourseBtn',      // Золотой курс
+        'plannerBtn',         // Планер
+        'simpleReaderBtn',    // Читать
+        'unifiedGamesBtn',    // Игры
+        'languagesSectionBtn',// Другие языки
+        'subjectsSectionBtn'  // Предметы
+    ];
+
+    // Единый стиль для всех кнопок
+    const commonStyle = {
+        display: 'inline-block',
+        background: '',       // оставим原有的 цвет
+        color: 'white',
+        padding: '4px 10px',
+        borderRadius: '30px',
+        cursor: 'pointer',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        transition: '0.2s',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        whiteSpace: 'nowrap',
+        margin: '0'
+    };
+
+    buttonIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+
+        // Запоминаем исходный цвет фона, если он задан inline или через классы
+        let bgColor = '';
+        if (btn.style.background) bgColor = btn.style.background;
+        else if (btn.id === 'goldCourseBtn') bgColor = '#f1c40f';
+        else if (btn.id === 'plannerBtn') bgColor = '#1abc9c';
+        else if (btn.id === 'simpleReaderBtn') bgColor = '#2196F3';
+        else if (btn.id === 'unifiedGamesBtn') bgColor = '#2ecc71';
+        else if (btn.id === 'languagesSectionBtn') bgColor = '#9b59b6';
+        else if (btn.id === 'subjectsSectionBtn') bgColor = '#e67e22';
+        else bgColor = '#3498db';
+
+        // Применяем общие стили, сохраняя цвет фона
+        Object.assign(btn.style, commonStyle);
+        btn.style.background = bgColor;
+        btn.style.position = '';      // убираем absolute
+        btn.style.top = '';
+        btn.style.right = '';
+        btn.style.left = '';
+
+        // Убираем возможные трансформации, заданные в hover (они потом добавятся снова)
+        btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
+        btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+
+        // Перемещаем кнопку в общий контейнер, если её там нет
+        if (btn.parentNode !== btnWrapper) {
+            btnWrapper.appendChild(btn);
+        }
+    });
+
+    // Дополнительно: для кнопки "Читать" может быть задан абсолютный стиль внутри модуля – переопределяем
+    const readerBtn = document.getElementById('simpleReaderBtn');
+    if (readerBtn && readerBtn.style.position === 'absolute') {
+        readerBtn.style.position = '';
+        readerBtn.style.top = '';
+        readerBtn.style.right = '';
+    }
+})();
     
 </script>
 </body>
