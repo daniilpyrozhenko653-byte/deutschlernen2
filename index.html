@@ -14645,25 +14645,23 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-(function createTabs() {
+(function createTabsAndHide() {
     if (document.getElementById('tabsWrapper')) return;
 
     const container = document.querySelector('.app-container');
     if (!container) return;
 
-    // 1. Создаём обёртку для вкладок
+    // Создаём обёртку для вкладок
     const tabsWrapper = document.createElement('div');
     tabsWrapper.id = 'tabsWrapper';
     tabsWrapper.style.cssText = `
         display: flex;
         gap: 12px;
         justify-content: center;
-        margin: 12px 0 8px;
+        margin: 12px 0 16px;
     `;
 
-    // Кнопки-вкладки
     const otherTab = document.createElement('button');
-    otherTab.id = 'tabOther';
     otherTab.textContent = '📚 Другие разделы';
     otherTab.style.cssText = `
         flex: 1;
@@ -14679,7 +14677,6 @@ goldLessonsByLevel.A0[23] = {
     `;
 
     const coursesTab = document.createElement('button');
-    coursesTab.id = 'tabCourses';
     coursesTab.textContent = '🏆 Курсы';
     coursesTab.style.cssText = `
         flex: 1;
@@ -14697,136 +14694,108 @@ goldLessonsByLevel.A0[23] = {
     tabsWrapper.appendChild(otherTab);
     tabsWrapper.appendChild(coursesTab);
 
-    // 2. Контейнеры для содержимого вкладок
-    const otherContainer = document.createElement('div');
-    otherContainer.id = 'otherContainer';
-    otherContainer.style.cssText = `
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 8px 0;
-        justify-content: center;
-    `;
-
-    const coursesContainer = document.createElement('div');
-    coursesContainer.id = 'coursesContainer';
-    coursesContainer.style.cssText = `
-        display: none;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 8px 0;
-        justify-content: center;
-    `;
-
-    // Вставляем вкладки и контейнеры после заголовка h1
+    // Вставляем вкладки после заголовка h1
     const h1 = container.querySelector('h1');
     if (h1 && h1.nextSibling) {
         container.insertBefore(tabsWrapper, h1.nextSibling);
-        container.insertBefore(otherContainer, tabsWrapper.nextSibling);
-        container.insertBefore(coursesContainer, otherContainer.nextSibling);
     } else {
         container.appendChild(tabsWrapper);
-        container.appendChild(otherContainer);
-        container.appendChild(coursesContainer);
     }
 
-    // 3. Собираем все нужные кнопки
-    const buttonsToMove = [
-        'simpleReaderBtn',      // Читать
-        'unifiedGamesBtn',      // Игры
-        'languagesSectionBtn',  // Другие языки
-        'subjectsSectionBtn',   // Предметы
-        'supportBtn',           // Поддержать
-        'plannerBtn'            // Планер (если есть)
+    // Список ID кнопок, которые будут во вкладке «Другие разделы»
+    const otherButtons = [
+        'simpleReaderBtn',
+        'unifiedGamesBtn',
+        'languagesSectionBtn',
+        'subjectsSectionBtn',
+        'plannerBtn'
     ];
 
     const goldButton = document.getElementById('goldCourseBtn');
-    const planner = document.getElementById('plannerBtn');
 
-    // Переносим обычные кнопки в otherContainer
-    buttonsToMove.forEach(id => {
+    // Сначала все эти кнопки скрываем (кроме кнопки «Поддержать»)
+    otherButtons.forEach(id => {
         const btn = document.getElementById(id);
-        if (btn && btn.parentNode !== otherContainer) {
-            // Убираем абсолютное позиционирование и лишние стили
-            btn.style.position = 'static';
-            btn.style.top = '';
-            btn.style.right = '';
-            btn.style.left = '';
-            btn.style.margin = '0';
-            btn.style.display = 'inline-flex';
-            btn.style.alignItems = 'center';
-            btn.style.padding = '4px 12px';
-            btn.style.fontSize = '12px';
-            btn.style.borderRadius = '30px';
-            btn.style.whiteSpace = 'nowrap';
-            btn.style.cursor = 'pointer';
-            btn.style.transition = '0.2s';
-            btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
-            // Сохраняем цвет
-            const colors = {
-                simpleReaderBtn: '#2196F3',
-                unifiedGamesBtn: '#2ecc71',
-                languagesSectionBtn: '#9b59b6',
-                subjectsSectionBtn: '#e67e22',
-                supportBtn: '#e74c3c',
-                plannerBtn: '#1abc9c'
-            };
-            btn.style.background = colors[btn.id] || btn.style.background || '#3498db';
-            btn.style.color = 'white';
-            btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
-            btn.onmouseleave = () => btn.style.transform = 'scale(1)';
-            otherContainer.appendChild(btn);
-        }
+        if (btn) btn.style.display = 'none';
     });
+    if (goldButton) goldButton.style.display = 'none';
 
-    // Переносим золотой курс в coursesContainer
-    if (goldButton && goldButton.parentNode !== coursesContainer) {
-        goldButton.style.position = 'static';
-        goldButton.style.display = 'inline-flex';
+    // Функция показа/скрытия
+    function showOther() {
+        otherButtons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.style.display = 'inline-flex';
+        });
+        if (goldButton) goldButton.style.display = 'none';
+        // Активный стиль вкладок
+        otherTab.style.background = '#1abc9c';
+        otherTab.style.color = 'white';
+        coursesTab.style.background = '#2c3e50';
+        coursesTab.style.color = 'white';
+    }
+
+    function showCourses() {
+        otherButtons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.style.display = 'none';
+        });
+        if (goldButton) goldButton.style.display = 'inline-flex';
+        coursesTab.style.background = '#f1c40f';
+        coursesTab.style.color = '#2c3e50';
+        otherTab.style.background = '#2c3e50';
+        otherTab.style.color = 'white';
+    }
+
+    // Назначаем обработчики
+    otherTab.onclick = showOther;
+    coursesTab.onclick = showCourses;
+
+    // По умолчанию ничего не показываем (все скрыты). 
+    // Если хотите, чтобы по умолчанию было видно «Другие разделы» – раскомментируйте следующую строку:
+    // showOther();
+
+    // Можно также привести к единому стилю кнопки во вкладке «Другие разделы» (уменьшить)
+    const styleCompact = btn => {
+        if (!btn) return;
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.style.padding = '4px 12px';
+        btn.style.fontSize = '12px';
+        btn.style.borderRadius = '30px';
+        btn.style.whiteSpace = 'nowrap';
+        btn.style.cursor = 'pointer';
+        btn.style.transition = '0.2s';
+        btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
+        btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
+        btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+        // Цвета оставляем родные
+    };
+    otherButtons.forEach(id => styleCompact(document.getElementById(id)));
+    if (goldButton) {
         goldButton.style.padding = '6px 16px';
         goldButton.style.fontSize = '14px';
         goldButton.style.fontWeight = 'bold';
+        goldButton.style.display = 'none'; // по умолчанию скрыта
+        goldButton.style.alignItems = 'center';
         goldButton.style.borderRadius = '30px';
-        goldButton.style.background = '#f1c40f';
-        goldButton.style.color = '#2c3e50';
         goldButton.style.whiteSpace = 'nowrap';
         goldButton.style.cursor = 'pointer';
         goldButton.style.transition = '0.2s';
         goldButton.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
         goldButton.onmouseenter = () => goldButton.style.transform = 'scale(1.02)';
         goldButton.onmouseleave = () => goldButton.style.transform = 'scale(1)';
-        coursesContainer.appendChild(goldButton);
     }
 
-    // Если планер уже перенесён в otherContainer, то всё хорошо. Если нет – переносим.
-    // (он уже в списке buttonsToMove)
-
-    // 4. Переключение вкладок
-    function setActiveTab(tab) {
-        if (tab === 'other') {
-            otherTab.style.background = '#1abc9c';
-            otherTab.style.color = 'white';
-            coursesTab.style.background = '#2c3e50';
-            coursesTab.style.color = 'white';
-            otherContainer.style.display = 'flex';
-            coursesContainer.style.display = 'none';
-        } else {
-            coursesTab.style.background = '#f1c40f';
-            coursesTab.style.color = '#2c3e50';
-            otherTab.style.background = '#2c3e50';
-            otherTab.style.color = 'white';
-            coursesContainer.style.display = 'flex';
-            otherContainer.style.display = 'none';
-        }
+    // Убедимся, что кнопка «Поддержать» не была затронута (оставляем как есть)
+    const support = document.getElementById('supportBtn');
+    if (support) {
+        support.style.position = 'fixed';
+        support.style.bottom = '20px';
+        support.style.right = '20px';
+        support.style.zIndex = '10000';
     }
-
-    otherTab.onclick = () => setActiveTab('other');
-    coursesTab.onclick = () => setActiveTab('courses');
-
-    // По умолчанию показываем вкладку «Другие разделы»
-    setActiveTab('other');
 })();
-
 
 
     
