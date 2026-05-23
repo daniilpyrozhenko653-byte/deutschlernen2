@@ -14976,36 +14976,8 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-    // ========== ДОБАВЛЕНИЕ "МОИ КАРТОЧКИ" В МЕНЮ "ДРУГИЕ РАЗДЕЛЫ" ==========
+    // ========== МОИ КАРТОЧКИ (ДОБАВЛЕНИЕ В МЕНЮ "ДРУГИЕ РАЗДЕЛЫ") ==========
 (function() {
-    // Ждём, пока появится контейнер меню "Другие разделы" (может создаваться динамически)
-    function waitForOtherMenu(callback) {
-        let attempts = 0;
-        const interval = setInterval(() => {
-            const otherBtn = document.getElementById('otherTab') || document.querySelector('button:contains("Другие разделы")');
-            if (otherBtn) {
-                clearInterval(interval);
-                callback();
-            } else if (attempts > 30) {
-                clearInterval(interval);
-                console.warn('Меню "Другие разделы" не найдено, создаём кнопку отдельно');
-                createStandaloneMyCardsButton();
-            }
-            attempts++;
-        }, 200);
-    }
-
-    // Функция для создания плавающей кнопки, если меню не найдено
-    function createStandaloneMyCardsButton() {
-        if (document.getElementById('myCardsStandaloneBtn')) return;
-        const btn = document.createElement('div');
-        btn.id = 'myCardsStandaloneBtn';
-        btn.innerHTML = '📇 Мои карточки';
-        btn.style.cssText = 'position:fixed; bottom:90px; right:20px; background:#9b59b6; color:white; padding:6px 12px; border-radius:30px; cursor:pointer; font-size:12px; font-weight:bold; z-index:10000; box-shadow:0 1px 4px rgba(0,0,0,0.2);';
-        btn.onclick = showMyCardsModal;
-        document.body.appendChild(btn);
-    }
-
     // Функция показа модального окна с карточками
     function showMyCardsModal() {
         const existing = document.getElementById('myCardsFullModal');
@@ -15020,7 +14992,6 @@ goldLessonsByLevel.A0[23] = {
                 <button id="closeMyCardsFull" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
             </div>
             <div style="padding:15px; flex:1; overflow:auto; display:flex; flex-direction:column;">
-                <!-- Выбор языка -->
                 <div style="margin-bottom:15px;">
                     <label style="color:white;">🌐 Язык карточек:</label>
                     <select id="myCardsLangSelect" style="width:100%; margin-top:5px; background:#2c3e50; color:white; padding:8px; border:none; border-radius:20px;">
@@ -15033,28 +15004,26 @@ goldLessonsByLevel.A0[23] = {
                     </select>
                 </div>
                 <!-- Карточка-флиппер -->
-                <div style="background:#2c3e50; border-radius:20px; padding:20px; margin-bottom:20px; text-align:center; cursor:pointer;" id="flipCardContainer">
-                    <div id="flipCardContent" style="font-size:28px; font-weight:bold; color:#f1c40f;">---</div>
-                    <div id="flipCardSub" style="font-size:14px; color:#aaa; margin-top:10px;">Нажмите, чтобы перевернуть</div>
+                <div id="flipCard" style="background:#2c3e50; border-radius:20px; padding:30px 20px; margin-bottom:20px; text-align:center; cursor:pointer; transition:background 0.3s ease;">
+                    <div id="flipCardText" style="font-size:28px; font-weight:bold; color:#f1c40f;">---</div>
+                    <div id="flipCardHint" style="font-size:14px; color:#aaa; margin-top:10px;">Нажмите, чтобы перевернуть</div>
                 </div>
                 <!-- Навигация -->
                 <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px;">
-                    <button id="prevCardBtn" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white;">◀ Назад</button>
-                    <button id="randomCardBtn" style="background:#f39c12; border:none; padding:8px 16px; border-radius:30px; color:white;">🎲 Случайно</button>
-                    <button id="nextCardBtn" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white;">Вперёд ▶</button>
+                    <button id="prevCardBtn" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">◀ Назад</button>
+                    <button id="randomCardBtn" style="background:#f39c12; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">🎲 Случайно</button>
+                    <button id="nextCardBtn" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">Вперёд ▶</button>
                 </div>
                 <div style="text-align:center; margin-bottom:15px;">
                     <span id="cardCounter" style="color:white;">0 / 0</span>
-                    <button id="speakCardBtn" style="background:#1abc9c; border:none; padding:5px 12px; border-radius:20px; margin-left:10px; color:white;">🔊 Озвучить</button>
+                    <button id="speakCardBtn" style="background:#1abc9c; border:none; padding:5px 12px; border-radius:20px; margin-left:10px; color:white; cursor:pointer;">🔊 Озвучить</button>
                 </div>
-                <!-- Форма добавления -->
                 <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-top:10px;">
                     <h4 style="color:white; margin:0 0 10px 0;">➕ Добавить карточку</h4>
                     <input type="text" id="newWord" placeholder="Слово/фраза" style="width:100%; margin-bottom:8px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
                     <input type="text" id="newTranslation" placeholder="Перевод" style="width:100%; margin-bottom:8px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                    <button id="addNewCardBtn" style="background:#9b59b6; border:none; padding:8px; border-radius:30px; color:white; width:100%;">Добавить</button>
+                    <button id="addNewCardBtn" style="background:#9b59b6; border:none; padding:8px; border-radius:30px; color:white; width:100%; cursor:pointer;">Добавить</button>
                 </div>
-                <!-- Список карточек (для удаления) -->
                 <div style="margin-top:15px;">
                     <h4 style="color:white; margin:0 0 10px 0;">📋 Список карточек</h4>
                     <div id="cardsList" style="max-height:150px; overflow:auto;"></div>
@@ -15064,7 +15033,7 @@ goldLessonsByLevel.A0[23] = {
         document.body.appendChild(modal);
         document.getElementById('closeMyCardsFull').onclick = () => modal.remove();
 
-        // Логика работы с карточками
+        // ---- Данные ----
         let currentLang = 'de';
         let cards = [];
         let currentIndex = 0;
@@ -15077,7 +15046,11 @@ goldLessonsByLevel.A0[23] = {
         function loadCards() {
             const saved = localStorage.getItem(`myCards_${currentLang}`);
             cards = saved ? JSON.parse(saved) : [];
-            if (currentIndex >= cards.length) currentIndex = Math.max(0, cards.length - 1);
+            if (cards.length === 0) {
+                currentIndex = 0;
+            } else if (currentIndex >= cards.length) {
+                currentIndex = cards.length - 1;
+            }
             updateCardDisplay();
             renderCardsList();
         }
@@ -15086,23 +15059,28 @@ goldLessonsByLevel.A0[23] = {
         }
 
         function updateCardDisplay() {
-            const wordDiv = document.getElementById('flipCardContent');
-            const subDiv = document.getElementById('flipCardSub');
+            const textDiv = document.getElementById('flipCardText');
+            const hintDiv = document.getElementById('flipCardHint');
             const counterSpan = document.getElementById('cardCounter');
-            if (!wordDiv) return;
+            const flipDiv = document.getElementById('flipCard');
+            if (!textDiv) return;
+
             if (cards.length === 0) {
-                wordDiv.innerText = 'Нет карточек';
-                subDiv.innerText = 'Добавьте свою карточку';
+                textDiv.innerText = 'Нет карточек';
+                hintDiv.innerText = 'Добавьте свою карточку';
                 counterSpan.innerText = `0 / 0`;
+                flipDiv.style.background = '#2c3e50';
                 return;
             }
             const card = cards[currentIndex];
             if (isFlipped) {
-                wordDiv.innerText = card.translation;
-                subDiv.innerText = 'Оригинал: ' + card.word;
+                textDiv.innerText = card.translation;
+                hintDiv.innerText = 'Оригинал: ' + card.word;
+                flipDiv.style.background = '#1e8449'; // зелёный для перевода
             } else {
-                wordDiv.innerText = card.word;
-                subDiv.innerText = 'Нажмите, чтобы увидеть перевод';
+                textDiv.innerText = card.word;
+                hintDiv.innerText = 'Нажмите, чтобы увидеть перевод';
+                flipDiv.style.background = '#2c3e50'; // тёмный для слова
             }
             counterSpan.innerText = `${currentIndex+1} / ${cards.length}`;
         }
@@ -15112,7 +15090,6 @@ goldLessonsByLevel.A0[23] = {
             isFlipped = !isFlipped;
             updateCardDisplay();
         }
-
         function nextCard() {
             if (cards.length === 0) return;
             currentIndex = (currentIndex + 1) % cards.length;
@@ -15134,12 +15111,12 @@ goldLessonsByLevel.A0[23] = {
         function speakCurrent() {
             if (cards.length === 0) return;
             const card = cards[currentIndex];
-            const text = isFlipped ? card.word : card.word; // всегда озвучиваем слово
-            if (text) {
+            const text = card.word;
+            if (text && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = langMap[currentLang];
                 utterance.rate = 0.9;
-                window.speechSynthesis.cancel();
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -15148,7 +15125,7 @@ goldLessonsByLevel.A0[23] = {
             const container = document.getElementById('cardsList');
             if (!container) return;
             if (cards.length === 0) {
-                container.innerHTML = '<p style="color:white;">Нет карточек</p>';
+                container.innerHTML = '<p style="color:white;">Нет карточек. Добавьте первую!</p>';
                 return;
             }
             let html = '';
@@ -15165,7 +15142,8 @@ goldLessonsByLevel.A0[23] = {
                 btn.onclick = () => {
                     const idx = parseInt(btn.getAttribute('data-idx'));
                     cards.splice(idx, 1);
-                    if (currentIndex >= cards.length) currentIndex = Math.max(0, cards.length - 1);
+                    if (cards.length === 0) currentIndex = 0;
+                    else if (currentIndex >= cards.length) currentIndex = cards.length - 1;
                     saveCards();
                     updateCardDisplay();
                     renderCardsList();
@@ -15182,14 +15160,16 @@ goldLessonsByLevel.A0[23] = {
             });
         }
 
-        // Обработчики
+        // Привязка событий
         document.getElementById('myCardsLangSelect').onchange = (e) => {
             currentLang = e.target.value;
+            currentIndex = 0;
+            isFlipped = false;
             loadCards();
         };
-        document.getElementById('flipCardContainer').onclick = flipCard;
-        document.getElementById('nextCardBtn').onclick = nextCard;
+        document.getElementById('flipCard').onclick = flipCard;
         document.getElementById('prevCardBtn').onclick = prevCard;
+        document.getElementById('nextCardBtn').onclick = nextCard;
         document.getElementById('randomCardBtn').onclick = randomCard;
         document.getElementById('speakCardBtn').onclick = speakCurrent;
         document.getElementById('addNewCardBtn').onclick = () => {
@@ -15201,7 +15181,12 @@ goldLessonsByLevel.A0[23] = {
             }
             cards.push({ word, translation });
             saveCards();
-            loadCards(); // обновит всё
+            if (cards.length === 1) {
+                currentIndex = 0;
+                isFlipped = false;
+            }
+            updateCardDisplay();
+            renderCardsList();
             document.getElementById('newWord').value = '';
             document.getElementById('newTranslation').value = '';
         };
@@ -15211,18 +15196,14 @@ goldLessonsByLevel.A0[23] = {
 
     // Функция для добавления пункта в меню "Другие разделы"
     function addToOtherMenu() {
-        // Ищем кнопку "Другие разделы" – по id, если есть, или по тексту
         const otherBtn = document.getElementById('otherTab') || Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Другие разделы'));
         if (!otherBtn) {
-            // Если меню ещё нет, повторим через секунду
             setTimeout(addToOtherMenu, 500);
             return;
         }
-        // Перехватываем оригинальное открытие меню, чтобы добавить пункт
         const originalClick = otherBtn.onclick;
         otherBtn.onclick = (e) => {
             if (originalClick) originalClick(e);
-            // После открытия меню добавим пункт, если его ещё нет
             setTimeout(() => {
                 const dropdown = document.querySelector('.smart-dropdown');
                 if (dropdown && !dropdown.querySelector('[data-action="mycards"]')) {
@@ -15235,7 +15216,8 @@ goldLessonsByLevel.A0[23] = {
                     myCardsOption.onclick = (e) => {
                         e.stopPropagation();
                         showMyCardsModal();
-                        dropdown.remove();
+                        const dropdownEl = document.querySelector('.smart-dropdown');
+                        if (dropdownEl) dropdownEl.remove();
                     };
                     dropdown.appendChild(myCardsOption);
                 }
@@ -15243,7 +15225,6 @@ goldLessonsByLevel.A0[23] = {
         };
     }
 
-    // Запускаем добавление в меню после загрузки страницы
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', addToOtherMenu);
     } else {
