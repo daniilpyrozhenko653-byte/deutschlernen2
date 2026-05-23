@@ -14977,67 +14977,78 @@ goldLessonsByLevel.A0[23] = {
 
 
 (function() {
-    // Функция создания кнопки "Мои карточки" рядом с "Другие разделы"
-    function addMyCardsButton() {
-        // Ищем контейнер, где находятся кнопки (обычно topBtnsWrapper или сама панель)
-        let wrapper = document.getElementById('topBtnsWrapper');
-        if (!wrapper) {
-            // Ищем родителя кнопки "Другие разделы"
-            const otherBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Другие разделы'));
-            if (otherBtn && otherBtn.parentElement) {
-                wrapper = otherBtn.parentElement;
-            } else {
-                // Если ничего не нашли, создаём свой контейнер после h1
-                const container = document.querySelector('.app-container');
-                const h1 = container?.querySelector('h1');
-                if (h1 && h1.nextSibling) {
-                    wrapper = document.createElement('div');
-                    wrapper.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0;';
-                    h1.parentNode.insertBefore(wrapper, h1.nextSibling);
-                } else if (container) {
-                    wrapper = document.createElement('div');
-                    wrapper.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0;';
-                    container.appendChild(wrapper);
-                } else {
-                    return;
-                }
-            }
+    // Ждём загрузки DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    function init() {
+        // Добавляем пункт в меню "Другие разделы"
+        addMyCardsToOtherMenu();
+    }
+
+    function addMyCardsToOtherMenu() {
+        // Ищем кнопку "Другие разделы" (по id или тексту)
+        const otherBtn = document.getElementById('otherTab') || 
+                         Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Другие разделы'));
+        if (!otherBtn) {
+            // Если кнопка не найдена, повторим через 500 мс
+            setTimeout(addMyCardsToOtherMenu, 500);
+            return;
         }
-        // Если кнопка уже есть – не добавляем повторно
-        if (document.getElementById('myCardsStandaloneBtn')) return;
-        const btn = document.createElement('div');
-        btn.id = 'myCardsStandaloneBtn';
-        btn.innerHTML = '📇 Мои карточки';
-        btn.style.cssText = 'display:inline-block; background:#9b59b6; color:white; padding:4px 10px; border-radius:30px; cursor:pointer; font-size:12px; font-weight:bold; transition:0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); white-space:nowrap;';
-        btn.onmouseenter = () => btn.style.transform = 'scale(1.02)';
-        btn.onmouseleave = () => btn.style.transform = 'scale(1)';
-        btn.onclick = showMyCardsModal;
-        wrapper.appendChild(btn);
+        // Сохраняем оригинальный обработчик
+        const originalClick = otherBtn.onclick;
+        otherBtn.onclick = function(e) {
+            if (originalClick) originalClick(e);
+            // После открытия выпадающего меню добавим наш пункт
+            setTimeout(() => {
+                const dropdown = document.querySelector('.smart-dropdown');
+                if (dropdown && !dropdown.querySelector('.my-cards-option')) {
+                    const option = document.createElement('div');
+                    option.className = 'my-cards-option';
+                    option.textContent = '📇 Мои карточки';
+                    option.style.cssText = 'padding:10px 16px; color:white; font-size:13px; cursor:pointer; transition:0.2s; border-bottom:1px solid #2c3e50;';
+                    option.onmouseenter = () => option.style.background = '#2c3e50';
+                    option.onmouseleave = () => option.style.background = '';
+                    option.onclick = (e) => {
+                        e.stopPropagation();
+                        showMyCardsModal();
+                        // Закрываем меню
+                        const dd = document.querySelector('.smart-dropdown');
+                        if (dd) dd.remove();
+                    };
+                    dropdown.appendChild(option);
+                }
+            }, 50);
+        };
     }
 
     function showMyCardsModal() {
-        // Удаляем предыдущее окно
-        const oldModal = document.getElementById('myCardsFullModal');
-        if (oldModal) oldModal.remove();
+        // Удаляем предыдущее окно, если есть
+        const existing = document.getElementById('myCardsModalRoot');
+        if (existing) existing.remove();
 
         const modal = document.createElement('div');
-        modal.id = 'myCardsFullModal';
+        modal.id = 'myCardsModalRoot';
         modal.style.cssText = `
             position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
             background:#1e272e; border-radius:20px; width:95%; max-width:550px;
-            height:85%; max-height:600px; z-index:100080;
-            display:flex; flex-direction:column; background:#0f172a;
-            box-shadow:0 0 0 1000px rgba(0,0,0,0.9); overflow:hidden;
+            height:85%; max-height:600px; z-index:100070;
+            display:flex; flex-direction:column;
+            background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.9);
+            overflow:hidden;
         `;
         modal.innerHTML = `
             <div style="background:#9b59b6; padding:12px; display:flex; justify-content:space-between; align-items:center;">
                 <span style="color:white; font-weight:bold;">📇 Мои карточки</span>
-                <button id="closeMyCardsBtn" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+                <button id="closeMyCardsModalBtn" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
             </div>
             <div style="padding:15px; flex:1; overflow:auto; display:flex; flex-direction:column;">
                 <div style="margin-bottom:15px;">
                     <label style="color:white;">🌐 Язык карточек:</label>
-                    <select id="myLangSelect" style="width:100%; margin-top:5px; background:#2c3e50; color:white; padding:8px; border:none; border-radius:20px;">
+                    <select id="cardsLangSelect" style="width:100%; margin-top:5px; background:#2c3e50; color:white; padding:8px; border:none; border-radius:20px;">
                         <option value="de">🇩🇪 Немецкий</option>
                         <option value="en">🇬🇧 Английский</option>
                         <option value="es">🇪🇸 Испанский</option>
@@ -15046,118 +15057,117 @@ goldLessonsByLevel.A0[23] = {
                         <option value="ru">🇷🇺 Русский</option>
                     </select>
                 </div>
-                <!-- Карточка-флиппер -->
-                <div id="cardFlip" style="background:#2c3e50; border-radius:20px; padding:30px 20px; margin-bottom:20px; text-align:center; cursor:pointer; transition:background 0.3s ease;">
-                    <div id="cardText" style="font-size:28px; font-weight:bold; color:#f1c40f;">---</div>
-                    <div id="cardHint" style="font-size:14px; color:#aaa; margin-top:10px;">Нажмите, чтобы перевернуть</div>
+                <div id="cardsFlipCard" style="background:#2c3e50; border-radius:20px; padding:30px 20px; margin-bottom:20px; text-align:center; cursor:pointer; transition:background 0.3s ease;">
+                    <div id="cardsFlipText" style="font-size:28px; font-weight:bold; color:#f1c40f;">---</div>
+                    <div id="cardsFlipHint" style="font-size:14px; color:#aaa; margin-top:10px;">Нажмите, чтобы перевернуть</div>
                 </div>
                 <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px;">
-                    <button id="prevCard" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">◀ Назад</button>
-                    <button id="randomCard" style="background:#f39c12; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">🎲 Случайно</button>
-                    <button id="nextCard" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">Вперёд ▶</button>
+                    <button id="cardsPrevBtn" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">◀ Назад</button>
+                    <button id="cardsRandomBtn" style="background:#f39c12; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">🎲 Случайно</button>
+                    <button id="cardsNextBtn" style="background:#3498db; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">Вперёд ▶</button>
                 </div>
                 <div style="text-align:center; margin-bottom:15px;">
-                    <span id="cardCounter" style="color:white;">0 / 0</span>
-                    <button id="speakCard" style="background:#1abc9c; border:none; padding:5px 12px; border-radius:20px; margin-left:10px; color:white; cursor:pointer;">🔊 Озвучить</button>
+                    <span id="cardsCounter" style="color:white;">0 / 0</span>
+                    <button id="cardsSpeakBtn" style="background:#1abc9c; border:none; padding:5px 12px; border-radius:20px; margin-left:10px; color:white; cursor:pointer;">🔊 Озвучить</button>
                 </div>
                 <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-top:10px;">
                     <h4 style="color:white; margin:0 0 10px 0;">➕ Добавить карточку</h4>
-                    <input type="text" id="newWord" placeholder="Слово/фраза" style="width:100%; margin-bottom:8px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                    <input type="text" id="newTrans" placeholder="Перевод" style="width:100%; margin-bottom:8px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                    <button id="addCardBtn" style="background:#9b59b6; border:none; padding:8px; border-radius:30px; color:white; width:100%; cursor:pointer;">Добавить</button>
+                    <input type="text" id="cardsNewWord" placeholder="Слово/фраза" style="width:100%; margin-bottom:8px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                    <input type="text" id="cardsNewTrans" placeholder="Перевод" style="width:100%; margin-bottom:8px; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                    <button id="cardsAddBtn" style="background:#9b59b6; border:none; padding:8px; border-radius:30px; color:white; width:100%; cursor:pointer;">Добавить</button>
                 </div>
                 <div style="margin-top:15px;">
                     <h4 style="color:white; margin:0 0 10px 0;">📋 Список карточек</h4>
-                    <div id="cardsList" style="max-height:150px; overflow:auto;"></div>
+                    <div id="cardsListContainer" style="max-height:150px; overflow:auto;"></div>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
-        document.getElementById('closeMyCardsBtn').onclick = () => modal.remove();
+        document.getElementById('closeMyCardsModalBtn').onclick = () => modal.remove();
 
-        // === Логика работы ===
+        // --- Состояние ---
         let currentLang = 'de';
         let cards = [];
         let currentIndex = 0;
-        let flipped = false;
+        let isFlipped = false;
 
-        const langVoice = { de:'de-DE', en:'en-US', es:'es-ES', fr:'fr-FR', it:'it-IT', ru:'ru-RU' };
+        const langCodes = { de:'de-DE', en:'en-US', es:'es-ES', fr:'fr-FR', it:'it-IT', ru:'ru-RU' };
 
         function loadCards() {
             const saved = localStorage.getItem(`myCards_${currentLang}`);
             cards = saved ? JSON.parse(saved) : [];
             if (cards.length === 0) currentIndex = 0;
             else if (currentIndex >= cards.length) currentIndex = cards.length - 1;
-            updateUI();
-            renderCardList();
+            updateDisplay();
+            renderList();
         }
         function saveCards() {
             localStorage.setItem(`myCards_${currentLang}`, JSON.stringify(cards));
         }
 
-        function updateUI() {
-            const textDiv = document.getElementById('cardText');
-            const hintDiv = document.getElementById('cardHint');
-            const counterSpan = document.getElementById('cardCounter');
-            const flipDiv = document.getElementById('cardFlip');
+        function updateDisplay() {
+            const textDiv = document.getElementById('cardsFlipText');
+            const hintDiv = document.getElementById('cardsFlipHint');
+            const counterSpan = document.getElementById('cardsCounter');
+            const cardDiv = document.getElementById('cardsFlipCard');
             if (!textDiv) return;
             if (cards.length === 0) {
                 textDiv.innerText = 'Нет карточек';
                 hintDiv.innerText = 'Добавьте свою карточку';
                 counterSpan.innerText = '0 / 0';
-                flipDiv.style.background = '#2c3e50';
+                cardDiv.style.background = '#2c3e50';
                 return;
             }
             const card = cards[currentIndex];
-            if (flipped) {
+            if (isFlipped) {
                 textDiv.innerText = card.translation;
                 hintDiv.innerText = 'Оригинал: ' + card.word;
-                flipDiv.style.background = '#1e8449';
+                cardDiv.style.background = '#1e8449'; // зелёный
             } else {
                 textDiv.innerText = card.word;
-                hintDiv.innerText = 'Нажмите, чтобы перевернуть';
-                flipDiv.style.background = '#2c3e50';
+                hintDiv.innerText = 'Нажмите, чтобы увидеть перевод';
+                cardDiv.style.background = '#2c3e50'; // тёмный
             }
             counterSpan.innerText = `${currentIndex+1} / ${cards.length}`;
         }
 
         function flip() {
             if (cards.length === 0) return;
-            flipped = !flipped;
-            updateUI();
+            isFlipped = !isFlipped;
+            updateDisplay();
         }
         function next() {
             if (cards.length === 0) return;
             currentIndex = (currentIndex + 1) % cards.length;
-            flipped = false;
-            updateUI();
+            isFlipped = false;
+            updateDisplay();
         }
         function prev() {
             if (cards.length === 0) return;
             currentIndex = (currentIndex - 1 + cards.length) % cards.length;
-            flipped = false;
-            updateUI();
+            isFlipped = false;
+            updateDisplay();
         }
         function random() {
             if (cards.length === 0) return;
             currentIndex = Math.floor(Math.random() * cards.length);
-            flipped = false;
-            updateUI();
+            isFlipped = false;
+            updateDisplay();
         }
-        function speakCurrent() {
+        function speak() {
             if (cards.length === 0) return;
             const word = cards[currentIndex].word;
             if (word && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(word);
-                u.lang = langVoice[currentLang];
+                u.lang = langCodes[currentLang];
                 u.rate = 0.9;
                 window.speechSynthesis.speak(u);
             }
         }
 
-        function renderCardList() {
-            const container = document.getElementById('cardsList');
+        function renderList() {
+            const container = document.getElementById('cardsListContainer');
             if (!container) return;
             if (cards.length === 0) {
                 container.innerHTML = '<p style="color:white;">Нет карточек</p>';
@@ -15168,20 +15178,20 @@ goldLessonsByLevel.A0[23] = {
                 html += `
                     <div style="background:#34495e; border-radius:10px; padding:8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
                         <div style="color:white;">${escapeHtml(card.word)} → ${escapeHtml(card.translation)}</div>
-                        <button class="delCardItem" data-idx="${idx}" style="background:#e74c3c; border:none; border-radius:20px; padding:4px 10px; cursor:pointer;">🗑️</button>
+                        <button class="deleteCardItem" data-idx="${idx}" style="background:#e74c3c; border:none; border-radius:20px; padding:4px 10px; cursor:pointer;">🗑️</button>
                     </div>
                 `;
             });
             container.innerHTML = html;
-            document.querySelectorAll('.delCardItem').forEach(btn => {
+            document.querySelectorAll('.deleteCardItem').forEach(btn => {
                 btn.onclick = () => {
                     const idx = parseInt(btn.getAttribute('data-idx'));
                     cards.splice(idx, 1);
                     if (cards.length === 0) currentIndex = 0;
                     else if (currentIndex >= cards.length) currentIndex = cards.length - 1;
                     saveCards();
-                    updateUI();
-                    renderCardList();
+                    updateDisplay();
+                    renderList();
                 };
             });
         }
@@ -15195,21 +15205,21 @@ goldLessonsByLevel.A0[23] = {
             });
         }
 
-        // Привязка обработчиков событий
-        document.getElementById('myLangSelect').onchange = (e) => {
+        // Привязываем обработчики
+        document.getElementById('cardsLangSelect').onchange = (e) => {
             currentLang = e.target.value;
             currentIndex = 0;
-            flipped = false;
+            isFlipped = false;
             loadCards();
         };
-        document.getElementById('cardFlip').onclick = flip;
-        document.getElementById('prevCard').onclick = prev;
-        document.getElementById('nextCard').onclick = next;
-        document.getElementById('randomCard').onclick = random;
-        document.getElementById('speakCard').onclick = speakCurrent;
-        document.getElementById('addCardBtn').onclick = () => {
-            const word = document.getElementById('newWord').value.trim();
-            const trans = document.getElementById('newTrans').value.trim();
+        document.getElementById('cardsFlipCard').onclick = flip;
+        document.getElementById('cardsPrevBtn').onclick = prev;
+        document.getElementById('cardsNextBtn').onclick = next;
+        document.getElementById('cardsRandomBtn').onclick = random;
+        document.getElementById('cardsSpeakBtn').onclick = speak;
+        document.getElementById('cardsAddBtn').onclick = () => {
+            const word = document.getElementById('cardsNewWord').value.trim();
+            const trans = document.getElementById('cardsNewTrans').value.trim();
             if (!word || !trans) {
                 alert('Заполните оба поля');
                 return;
@@ -15218,22 +15228,15 @@ goldLessonsByLevel.A0[23] = {
             saveCards();
             if (cards.length === 1) {
                 currentIndex = 0;
-                flipped = false;
+                isFlipped = false;
             }
-            updateUI();
-            renderCardList();
-            document.getElementById('newWord').value = '';
-            document.getElementById('newTrans').value = '';
+            updateDisplay();
+            renderList();
+            document.getElementById('cardsNewWord').value = '';
+            document.getElementById('cardsNewTrans').value = '';
         };
 
         loadCards();
-    }
-
-    // Запускаем добавление кнопки после загрузки страницы
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addMyCardsButton);
-    } else {
-        addMyCardsButton();
     }
 })();
     
