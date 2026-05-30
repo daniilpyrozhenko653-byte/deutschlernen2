@@ -1,4 +1,4 @@
-const CACHE_NAME = 'deutschlernen-v3';
+const CACHE_NAME = 'deutschlernen-v4';
 // Кешируем не только главную страницу, но и все возможные варианты URL
 const urlsToCache = [
   './',
