@@ -10302,7 +10302,6 @@ speech_culture: {
             </div>
             <div style="margin:15px 0;">
                 <label for="courseCode">Введите полученный код:</label>
-                <input type="text" id="courseCode" placeholder="например DEUTSCH2025" style="width:100%; margin-top:5px; background:#2c3e50; border:1px solid #f1c40f; border-radius:20px; padding:8px; color:white;">
                 <button id="activateCodeBtn" style="margin-top:10px; background:#f39c12; border:none; padding:6px 12px; border-radius:30px;">Активировать курс</button>
                 <div id="codeMessage" style="margin-top:5px; font-size:12px;"></div>
             </div>
@@ -10364,36 +10363,132 @@ speech_culture: {
             document.body.appendChild(germanModal);
             document.getElementById('closePaidGermanModal').onclick = () => germanModal.style.display = 'none';
             
-            // Уроки (можно расширить)
-            const germanLessons = {
-                A0: [{ title: 'Введение', grammar: 'Приветствия, алфавит', vocabulary: ['Hallo', 'Tschüss'], sentences: ['Ich heiße...'] }],
-                A1: [{ title: 'Семья', grammar: 'Притяжательные местоимения', vocabulary: ['Mutter', 'Vater'], sentences: ['Das ist mein Vater.'] }],
-                A2: [{ title: 'Еда', grammar: 'Глагол möchten', vocabulary: ['Kaffee', 'Pizza'], sentences: ['Ich möchte einen Kaffee.'] }],
-                B1: [{ title: 'Придаточные', grammar: 'Союз weil', vocabulary: ['weil'], sentences: ['Ich bleibe zu Hause, weil es regnet.'] }],
-                B2: [{ title: 'Пассив', grammar: 'werden + Partizip II', vocabulary: ['wird gebaut'], sentences: ['Das Haus wird gebaut.'] }],
-                C1: [{ title: 'Конъюнктив II', grammar: 'würde, hätte, wäre', vocabulary: ['würde'], sentences: ['Wenn ich Zeit hätte, käme ich.'] }]
-            };
-            function renderPaidCourse(level) {
-                const lessons = germanLessons[level];
-                if (!lessons) { document.getElementById('paidGermanContent').innerHTML = '<div style="color:white;">Уроки в разработке</div>'; return; }
-                let html = '';
-                lessons.forEach(lesson => {
-                    html += `<div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:15px;">
-                        <h4 style="color:#1abc9c;">${lesson.title}</h4>
-                        <div>${lesson.grammar}</div>
-                        <div><strong>Слова:</strong> ${lesson.vocabulary.join(', ')}</div>
-                        <div><strong>Примеры:</strong> ${lesson.sentences.join('; ')}</div>
-                    </div>`;
-                });
-                document.getElementById('paidGermanContent').innerHTML = html;
-            }
-            document.getElementById('germanLevelSelectPaid').onchange = (e) => renderPaidCourse(e.target.value);
-            window.renderPaidCourse = renderPaidCourse;
+            // ========== БАЗА УРОКОВ (ЛЕГКО РАСШИРЯЕМАЯ) ==========
+const germanLessons = {
+    A0: [
+        {
+            title: 'Erste Schritte – Begrüßung',
+            grammar: 'Hallo, Tschüss, Ich heiße...',
+            vocabulary: ['Hallo – Привет', 'Tschüss – Пока', 'Ja – да', 'Nein – нет'],
+            sentences: ['Ich heiße Anna. – Меня зовут Анна.', 'Tschüss, Peter! – Пока, Петер!']
+        },
+        {
+            title: 'Zahlen 0–20',
+            grammar: 'eins, zwei, drei...',
+            vocabulary: ['eins – 1', 'zwei – 2', 'drei – 3'],
+            sentences: ['Ich bin 25 Jahre alt. – Мне 25 лет.']
         }
-        germanModal.style.display = 'flex';
-        if (typeof window.renderPaidCourse === 'function') window.renderPaidCourse('A0');
-        else document.getElementById('paidGermanContent').innerHTML = '<div style="color:white;">Загрузка...</div>';
+        // добавьте столько уроков, сколько нужно
+    ],
+    A1: [
+        { title: 'Meine Familie', grammar: 'mein, dein, sein, ihr', vocabulary: ['Vater – отец', 'Mutter – мать'], sentences: ['Das ist mein Vater. – Это мой отец.'] }
+        // ...
+    ],
+    A2: [],
+    B1: [],
+    B2: [],
+    C1: []
+};
+
+
+
+
+            function renderPaidCourse(level) {
+    const container = document.getElementById('paidGermanContent');
+    if (!container) return;
+
+    const lessons = germanLessons[level];
+    if (!lessons || lessons.length === 0) {
+        container.innerHTML = '<div style="color:white; text-align:center;">📘 Уроки для этого уровня скоро появятся.</div>';
+        return;
     }
+
+    let html = '';
+    for (let i = 0; i < lessons.length; i++) {
+        const lesson = lessons[i];
+        
+        // Словарь в виде списка с кнопками
+        let vocabHtml = '';
+        if (lesson.vocabulary && lesson.vocabulary.length) {
+            vocabHtml = '<div style="margin: 10px 0 5px 0;"><strong>📖 Словарь:</strong></div><div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+            lesson.vocabulary.forEach(item => {
+                // item может быть как строкой "слово – перевод", так и объектом {word, translation}
+                let word, translation;
+                if (typeof item === 'string') {
+                    const parts = item.split('–').map(s => s.trim());
+                    word = parts[0];
+                    translation = parts[1] || '';
+                } else {
+                    word = item.word;
+                    translation = item.translation;
+                }
+                vocabHtml += `
+                    <div style="background:#34495e; padding: 5px 12px; border-radius: 30px; display: inline-flex; align-items: center; gap: 6px;">
+                        <span><strong>${word}</strong> – ${translation}</span>
+                        <button class="speak-word-btn" data-word="${word}" style="background:#3498db; border:none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">🔊</button>
+                    </div>
+                `;
+            });
+            vocabHtml += '</div>';
+        } else {
+            vocabHtml = '<div><em>Словарь отсутствует</em></div>';
+        }
+
+        // Примеры предложений
+        let sentencesHtml = '';
+        if (lesson.sentences && lesson.sentences.length) {
+            sentencesHtml = '<div style="margin: 10px 0 5px 0;"><strong>💬 Примеры:</strong></div>';
+            lesson.sentences.forEach(s => {
+                let german, russian;
+                if (typeof s === 'string') {
+                    const parts = s.split('–').map(p => p.trim());
+                    german = parts[0];
+                    russian = parts[1] || '';
+                } else {
+                    german = s.german;
+                    russian = s.russian;
+                }
+                sentencesHtml += `
+                    <div style="background:#1e2a36; border-radius: 12px; padding: 8px; margin-bottom: 8px;">
+                        <div><span style="color:#f39c12;">🇩🇪</span> ${german} 
+                            <button class="speak-sentence-btn" data-text="${german}" style="background:#3498db; border:none; border-radius: 20px; padding: 2px 8px; margin-left: 8px;">🔊</button>
+                        </div>
+                        <div><span style="color:#2ecc71;">🇷🇺</span> ${russian}</div>
+                    </div>
+                `;
+            });
+        } else {
+            sentencesHtml = '<div><em>Примеры отсутствуют</em></div>';
+        }
+
+        html += `
+            <div class="lesson-card" style="background:#2c3e50; border-radius: 20px; padding: 16px; margin-bottom: 20px;">
+                <h4 style="color:#f1c40f; margin: 0 0 8px 0;">📘 Урок ${i+1}: ${lesson.title}</h4>
+                <div style="color:#ddd;">${lesson.grammar}</div>
+                ${vocabHtml}
+                ${sentencesHtml}
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+
+    // Привязываем обработчики озвучки для всех кнопок внутри контейнера
+    container.querySelectorAll('.speak-word-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const word = btn.getAttribute('data-word');
+            if (word && window.speechSynthesis) speakGerman(word);
+        });
+    });
+    container.querySelectorAll('.speak-sentence-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const text = btn.getAttribute('data-text');
+            if (text && window.speechSynthesis) speakGerman(text);
+        });
+    });
+}
 
     // ========== 5. СКРЫВАЕМ СТАРЫЕ КНОПКИ И СОЗДАЁМ ДВЕ ГЛАВНЫЕ ==========
     const buttonsToHide = ['simpleReaderBtn', 'unifiedGamesBtn', 'languagesSectionBtn', 'subjectsSectionBtn', 'plannerBtn'];
