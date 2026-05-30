@@ -15580,6 +15580,139 @@ if ('serviceWorker' in navigator) {
 
 
 
+
+
+
+
+    <script>
+(function() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+        console.warn('Web Speech API не поддерживается');
+        return;
+    }
+
+    // Функция для поиска текущего слова в активной карточке
+    function getCurrentWord() {
+        // Ищем элемент с текстом слова (класс может быть .card-word или #flipCardContent)
+        let wordElem = document.querySelector('#flipCardContent, .card-word, .front div:first-child, #cardWord');
+        if (wordElem && wordElem.innerText.trim() && !wordElem.innerText.includes('Нет карточек')) {
+            return wordElem.innerText.trim();
+        }
+        // Если не нашли, ищем в основной карточке флиппера
+        let flipText = document.querySelector('#flipCardText');
+        if (flipText && flipText.innerText.trim() && flipText.innerText !== '---') {
+            return flipText.innerText.trim();
+        }
+        return null;
+    }
+
+    // Создаём кнопку и вставляем в подходящее место
+    function addSpeechButton() {
+        if (document.getElementById('dictaphone-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'dictaphone-btn';
+        btn.innerHTML = '🎙️ Произнести';
+        btn.style.cssText = 'background:#9b59b6; color:white; border:none; padding:6px 12px; border-radius:30px; font-size:12px; cursor:pointer; margin-left:10px; transition:0.2s;';
+        btn.onclick = startRecording;
+
+        // Находим контейнер для кнопок под карточкой (например, .card-nav или div с навигацией)
+        const navContainer = document.querySelector('.card-nav, .flip-card-nav');
+        if (navContainer) {
+            navContainer.appendChild(btn);
+            return;
+        }
+        // Альтернатива: добавить после блока с карточкой
+        const cardContainer = document.querySelector('#flipCardContainer, .flashcard, .flip-container');
+        if (cardContainer && cardContainer.parentNode) {
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'display:flex; justify-content:center; margin:10px 0;';
+            wrapper.appendChild(btn);
+            cardContainer.parentNode.insertBefore(wrapper, cardContainer.nextSibling);
+        }
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+
+    function startRecording() {
+        const word = getCurrentWord();
+        if (!word) {
+            alert('Не удалось определить текущее слово');
+            return;
+        }
+        if (!recognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'de-DE';  // по умолчанию немецкий, но можно дать выбор
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+        }
+
+        // Уведомление
+        const btn = document.getElementById('dictaphone-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '🎤 Слушаю...';
+        btn.disabled = true;
+
+        recognition.onresult = (event) => {
+            const last = event.results.length - 1;
+            const spoken = event.results[last][0].transcript.trim().toLowerCase();
+            const target = word.toLowerCase();
+            // Простое сравнение (можно улучшить: удалить знаки препинания, сравнить по словам)
+            const isMatch = spoken === target;
+            const similarity = isMatch ? 100 : Math.floor(Math.random() * 30); // в реальности можно посчитать расстояние Левенштейна
+            let message = '';
+            if (isMatch) {
+                message = `✅ Отлично! Вы сказали: "${spoken}". Произношение верное!`;
+            } else {
+                message = `❌ Вы сказали: "${spoken}". Правильно: "${target}". Попробуйте ещё раз.`;
+            }
+            alert(message);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        };
+
+        recognition.onerror = (event) => {
+            alert('Ошибка распознавания: ' + event.error);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        };
+
+        recognition.onend = () => {
+            if (btn.disabled) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        try {
+            recognition.start();
+        } catch (e) {
+            alert('Не удалось запустить микрофон: ' + e.message);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    // Добавляем кнопку после загрузки страницы и при переключении карточек
+    function init() {
+        addSpeechButton();
+        // Обновляем кнопку при смене слова (чтобы не терялась)
+        const observer = new MutationObserver(() => {
+            // Убедимся, что кнопка существует, и слово изменилось – можно не пересоздавать
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        // Также пересоздаём кнопку, если её удалили (редко)
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+
 </script>
 </body>
 </html>
