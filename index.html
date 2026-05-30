@@ -15251,6 +15251,10 @@ goldLessonsByLevel.A0[23] = {
 
 
 
+
+
+
+
 (function() {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', upgradeNotebook);
@@ -15265,46 +15269,50 @@ goldLessonsByLevel.A0[23] = {
         const savedText = localStorage.getItem('common_notepad') || '';
 
         notesSection.innerHTML = `
-            <div class="notebook-wrapper" style="background: #fef9e6; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); padding: 16px 12px; border: 1px solid #e0c8a0; position: relative;">
-                <!-- Имитация переплёта (левая полоска) -->
-                <div style="position: absolute; top: 0; left: 10px; width: 24px; height: 100%; background: repeating-linear-gradient(90deg, #d4b48c, #d4b48c 2px, #fef9e6 2px, #fef9e6 6px); border-radius: 20px 0 0 20px;"></div>
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; margin-bottom: 10px; padding-left: 20px;">
-                    <label style="font-family: 'Segoe UI', 'Comic Neue', cursive; font-size: 1rem; color: #5d3a1a; display: flex; align-items: center; gap: 6px;">
-                        📓 Моя тетрадь
-                    </label>
-                    <button id="clearNotebookBtn" style="background: #f0dbb4; border: none; border-radius: 30px; padding: 4px 12px; font-size: 0.75rem; color: #8b5a2b; cursor: pointer; transition: 0.2s;">🗑 Очистить</button>
+            <div class="notebook-card" style="background: #fffaf2; border-radius: 24px; box-shadow: 0 6px 14px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,245,0.8); padding: 18px 14px; border: 1px solid #edd9b0;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.3rem;">📘</span>
+                        <h3 style="margin: 0; font-family: 'Georgia', 'Segoe UI', serif; font-size: 1rem; color: #5a3e1b; letter-spacing: 0.5px;">Моя тетрадь</h3>
+                    </div>
+                    <button id="clearNotebookBtn" style="background: #f5e5c8; border: none; border-radius: 40px; padding: 5px 12px; font-size: 0.7rem; color: #7a5516; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;">
+                        🧽 Очистить
+                    </button>
                 </div>
-                <textarea id="notebookTextarea" rows="4" style="width: 100%; background: #fffcf0; background-image: repeating-linear-gradient(transparent, transparent 28px, #e0c8a0 28px, #e0c8a0 29px); border: none; font-family: 'Comic Neue', 'Segoe UI', cursive; font-size: 0.95rem; line-height: 29px; padding: 5px 8px; resize: vertical; color: #3e2a1f; outline: none; border-radius: 8px; box-sizing: border-box;">${escapeHtml(savedText)}</textarea>
-                <div id="autoSaveMsg" style="font-size: 0.7rem; color: #2e7d64; margin-top: 6px; padding-left: 20px;">
-                    <span>✍️</span> <span id="saveStatus">Автосохранение</span>
+                <div style="position: relative;">
+                    <textarea id="notebookTextarea" rows="5" style="width: 100%; background: #fffcf5; border: 1px solid #ecd9b0; border-radius: 18px; font-family: 'Georgia', 'Segoe UI', serif; font-size: 15px; line-height: 1.5; padding: 12px 14px; resize: vertical; color: #2c2418; outline: none; box-sizing: border-box; transition: all 0.2s;">${escapeHtml(savedText)}</textarea>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-left: 6px;">
+                    <span style="font-size: 0.7rem; color: #b4946a;">✍️</span>
+                    <span id="saveStatus" style="font-size: 0.7rem; color: #2c7a5e;">Автосохранение</span>
                 </div>
             </div>
         `;
 
         notesSection.classList.add('notebook-upgraded');
 
-        // Добавляем адаптивные стили для маленьких экранов
+        // Адаптивные стили
         const style = document.createElement('style');
         style.textContent = `
             @media (max-width: 600px) {
-                .notebook-wrapper {
-                    padding: 12px 8px !important;
+                .notebook-card {
+                    padding: 12px 10px !important;
                 }
                 #notebookTextarea {
                     font-size: 14px !important;
-                    line-height: 26px !important;
-                    padding: 6px 8px !important;
+                    padding: 10px 12px !important;
                 }
-                .notebook-wrapper label {
+                .notebook-card h3 {
                     font-size: 0.9rem !important;
                 }
                 #clearNotebookBtn {
                     padding: 3px 10px !important;
-                    font-size: 0.7rem !important;
-                }
-                #autoSaveMsg {
                     font-size: 0.65rem !important;
                 }
+            }
+            #notebookTextarea:focus {
+                border-color: #c2a56d;
+                box-shadow: 0 0 0 2px rgba(194,165,109,0.2);
             }
         `;
         document.head.appendChild(style);
@@ -15323,9 +15331,9 @@ goldLessonsByLevel.A0[23] = {
                 localStorage.removeItem('common_notepad');
             }
             if (statusSpan) {
-                statusSpan.textContent = 'Сохранено';
+                statusSpan.textContent = '✓ Сохранено';
                 setTimeout(() => {
-                    if (statusSpan) statusSpan.textContent = 'Автосохранение';
+                    if (statusSpan) statusSpan.textContent = '✍️ Автосохранение';
                 }, 1500);
             }
         }
@@ -15337,12 +15345,13 @@ goldLessonsByLevel.A0[23] = {
 
         textarea.addEventListener('input', autoSave);
         textarea.addEventListener('blur', saveNote);
+
         clearBtn.addEventListener('click', () => {
             textarea.value = '';
             saveNote();
             if (statusSpan) {
-                statusSpan.textContent = 'Очищено';
-                setTimeout(() => statusSpan.textContent = 'Автосохранение', 1500);
+                statusSpan.textContent = '🧹 Очищено';
+                setTimeout(() => statusSpan.textContent = '✍️ Автосохранение', 1500);
             }
         });
 
