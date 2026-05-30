@@ -10261,11 +10261,7 @@ speech_culture: {
     function isGoldUnlocked() { return localStorage.getItem('goldUnlocked') === 'true'; }
     function unlockGold() { localStorage.setItem('goldUnlocked', 'true'); }
 
-    // ------------------ РЕКЛАМА (1 РАЗ В ДЕНЬ, ПОКАЗ 25 СЕКУНД) ------------------
-    const todayStr = new Date().toDateString();
-    const lastAdShown = localStorage.getItem('goldAdLastShown');
-    function shouldShowAd() { return !isGoldUnlocked() && (!lastAdShown || lastAdShown !== todayStr); }
-    function markAdShown() { localStorage.setItem('goldAdLastShown', todayStr); }
+    
 
     // ------------------ СОЗДАНИЕ КНОПКИ ------------------
     const container = document.querySelector('.app-container');
