@@ -10219,7 +10219,84 @@ speech_culture: {
 
 
 
+// ========== ЗОЛОТОЙ КУРС A0–C1 (ФИНАЛЬНАЯ ВЕРСИЯ – АДАПТИВНЫЙ СЛОВАРЬ) ==========
+(function() {
+    if (document.getElementById('goldCourseBtn')) return;
 
+    // ------------------ НАСТРОЙКИ ------------------
+    const COURSE_PRICE = 10;
+    const ADMIN_EMAIL = 'daniilpirozhenko442@gmail.com';
+    const ADMIN_TELEGRAM = 'daniil3299';
+
+    // ------------------ ХРАНИЛИЩЕ КОДОВ ------------------
+    let codesList = [];
+    function loadCodes() {
+        const stored = localStorage.getItem('goldCodes');
+        if (stored) {
+            codesList = JSON.parse(stored);
+        } else {
+            codesList = [
+                'GOLD-A1B2C3', 'GOLD-D4E5F6', 'GOLD-G7H8I9', 'GOLD-J0K1L2', 'GOLD-M3N4O5',
+                'GOLD-P6Q7R8', 'GOLD-S9T0U1', 'GOLD-V2W3X4', 'GOLD-Y5Z6A7', 'GOLD-B8C9D0'
+            ];
+            localStorage.setItem('goldCodes', JSON.stringify(codesList));
+        }
+    }
+    function saveCodes() { localStorage.setItem('goldCodes', JSON.stringify(codesList)); }
+    function isValidCode(code) {
+        const idx = codesList.indexOf(code);
+        if (idx !== -1) {
+            codesList.splice(idx, 1);
+            saveCodes();
+            return true;
+        }
+        return false;
+    }
+    window.addGoldCode = function(newCode) {
+        if (!newCode || codesList.includes(newCode)) return false;
+        codesList.push(newCode);
+        saveCodes();
+        return true;
+    };
+
+    function isGoldUnlocked() { return localStorage.getItem('goldUnlocked') === 'true'; }
+    function unlockGold() { localStorage.setItem('goldUnlocked', 'true'); }
+
+    
+
+    // ------------------ СОЗДАНИЕ КНОПКИ ------------------
+    const container = document.querySelector('.app-container');
+    if (!container) return;
+    const lessonsBtn = document.getElementById('germanLessonsBtn');
+    const goldBtn = document.createElement('button');
+    goldBtn.id = 'goldCourseBtn';
+    goldBtn.innerHTML = '🏆 Золотой курс A0–C1';
+    goldBtn.style.cssText = 'background:#f1c40f; color:#2c3e50; border:none; padding:6px 16px; border-radius:30px; cursor:pointer; font-size:14px; font-weight:bold; margin-top:8px; margin-bottom:5px; display:inline-block; transition:0.2s;';
+    goldBtn.onmouseenter = () => goldBtn.style.transform = 'scale(1.02)';
+    goldBtn.onmouseleave = () => goldBtn.style.transform = 'scale(1)';
+    if (lessonsBtn) lessonsBtn.insertAdjacentElement('afterend', goldBtn);
+    else {
+        const h1 = container.querySelector('h1');
+        if (h1) h1.insertAdjacentElement('afterend', goldBtn);
+        else container.appendChild(goldBtn);
+    }
+
+    
+
+    // ------------------ ОЗВУЧКА ------------------
+    function speakGerman(text) {
+        if (!text || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.85;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // ------------------ МАССИВ УРОКОВ A0 (10 ШТУК) ------------------
+    // Здесь вставьте ВСЕ ваши уроки (0..9) с полными данными.
+    // Для краткости я оставляю заглушки – вы их замените своими.
+    const goldLessonsByLevel = { A0: [], A1: [], A2: [], B1: [], B2: [], C1: [] };
 
 
 
