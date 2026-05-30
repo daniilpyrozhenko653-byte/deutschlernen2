@@ -50,3 +50,33 @@ self.addEventListener('message', event => {
     });
   }
 });
+
+
+
+
+
+
+
+
+
+
+// Добавьте в ваш service-worker.js
+self.addEventListener('push', (event) => {
+    const data = event.data?.json();
+    if (!data) return;
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: '/icon-192x192.png',  // Укажите путь к своей иконке
+            badge: '/badge-72x72.png',
+            data: { url: data.url || '/' }  // URL для перехода при клике
+        })
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow(event.notification.data.url)
+    );
+});
