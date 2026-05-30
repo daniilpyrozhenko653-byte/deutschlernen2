@@ -1,11 +1,11 @@
-const CACHE_NAME = 'deutschlernen-v5'; // ← поменяли номер
+const CACHE_NAME = 'langcards-v1'; // Меняйте номер при каждом обновлении
 const urlsToCache = [
   './',
   './index.html',
   'index.html',
   '/',
   '/index.html',
-  './manifest.json'      // ← добавили манифест
+  './manifest.json'
 ];
 
 self.addEventListener('install', event => {
@@ -39,4 +39,14 @@ self.addEventListener('activate', event => {
     })
   );
   self.clients.claim();
+});
+
+// Обработка сообщения от страницы для принудительного обновления
+self.addEventListener('message', event => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+    self.clients.matchAll({ type: 'window' }).then(clients => {
+      clients.forEach(client => client.postMessage({ action: 'reload' }));
+    });
+  }
 });
