@@ -1,7 +1,7 @@
 {
-  "name": "DeutschLernen",
-  "short_name": "DeutschLernen",
-  "description": "Изучение немецкого, планер, игры и финансы",
+  "name": "LangMaster — учи языки",
+  "short_name": "LangMaster",
+  "description": "Изучение языков, карточки, игры, планер и финансы",
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#1abc9c",
