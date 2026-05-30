@@ -14094,111 +14094,8 @@ goldLessonsByLevel.A0[23] = {
         renderQuestion(0);
     }
 
-    function renderPaymentPage() {
-        document.getElementById('goldContent').innerHTML = `
-            <div style="text-align:center;">
-                <div style="background:#f1c40f20; border-radius:20px; padding:15px; margin-bottom:20px;">
-                    <h2 style="color:#f1c40f;">🏆 Полный курс немецкого A0 → C1</h2>
-                    <p style="color:white; font-size:18px;">Всё, что нужно для свободного владения языком!</p>
-                </div>
-                <div style="background:#2c3e50; border-radius:20px; padding:15px; text-align:left; color:#ddd;">
-                    <h3 style="color:#f1c40f;">🔥 Что вы получите:</h3>
-                    <ul>
-                        <li>📚 <strong>Более 300 уроков</strong> (50 на каждый уровень A0–C1)</li>
-                        <li>🎧 <strong>Озвучка всех слов и диалогов</strong> носителями языка</li>
-                        <li>📝 <strong>Пошаговые объяснения грамматики</strong> с примерами</li>
-                        <li>💬 <strong>Тысячи предложений</strong> на реальные темы</li>
-                        <li>🎓 <strong>Подготовка к экзаменам Goethe, TestDaF, TELC</strong></li>
-                        <li>💎 <strong>Доступ навсегда</strong> + обновления бесплатно</li>
-                    </ul>
-                    <div style="background:#1e2a36; border-radius:15px; padding:15px; text-align:center; margin:20px 0;">
-                        <span style="font-size:28px; color:#f1c40f;">🔥 Только сегодня: €10</span><br>
-                        <span style="font-size:14px; color:#aaa;">(вместо €59) – ограниченное предложение</span>
-                    </div>
-                    <p><strong>Как получить доступ?</strong> Переведите <strong>10 евро</strong> на счёт ниже, укажите в назначении ваш email. После перевода напишите нам в Telegram или на почту – мы вышлем вам <strong>уникальный код активации</strong>.</p>
-                </div>
-                <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0; text-align:left;">
-                    <p style="color:white;"><strong>💳 Реквизиты для оплаты (10 €):</strong><br>
-                    Получатель: Pyrozhenko, Danyil<br>
-                    IBAN: <span id="goldIban">DE92 3755 1780 1020 1888 41</span> <button id="copyGoldIbanBtn" style="background:#3498db; border:none; padding:2px 8px; border-radius:10px;">📋 Копировать</button><br>
-                    BIC: WELADED1LAF<br>
-                    Назначение платежа: <strong>GoldCourse_ВашEmail</strong></p>
-                </div>
-                <div style="background:#1e2a36; border-radius:15px; padding:15px; margin:15px 0;">
-                    <p style="color:white;">✅ После оплаты свяжитесь с нами:</p>
-                    <p style="color:#f1c40f;">📧 Почта: <strong>${ADMIN_EMAIL}</strong><br>📱 Telegram: <strong>@${ADMIN_TELEGRAM}</strong></p>
-                </div>
-                <div style="background:#2c3e50; border-radius:15px; padding:15px; margin:15px 0;">
-                    <input type="text" id="activationCodeInput" placeholder="Введите полученный код" style="width:70%; background:#34495e; color:white; padding:8px; border:none; border-radius:30px;">
-                    <button id="activateGoldBtn" style="background:#f1c40f; border:none; padding:8px 20px; border-radius:30px; margin-left:10px;">Активировать</button>
-                    <div id="activationMessage" style="margin-top:10px; font-size:13px;"></div>
-                </div>
-            </div>
-        `;
-        document.getElementById('copyGoldIbanBtn')?.addEventListener('click', () => {
-            const iban = document.getElementById('goldIban').innerText;
-            navigator.clipboard.writeText(iban);
-            const msgDiv = document.getElementById('activationMessage');
-            if(msgDiv) { msgDiv.innerHTML = '<span style="color:#2ecc71;">✅ IBAN скопирован!</span>'; setTimeout(() => msgDiv.innerHTML = '', 2000); }
-        });
-        document.getElementById('activateGoldBtn')?.addEventListener('click', () => {
-            const code = document.getElementById('activationCodeInput').value.trim();
-            if (!code) { showMessage('❌ Введите код', 'error'); return; }
-            if (isValidCode(code)) {
-                unlockGold();
-                showMessage('🎉 Курс активирован! Обновите страницу.', 'success');
-                setTimeout(() => renderGoldContent(), 1500);
-            } else { showMessage('❌ Неверный или уже использованный код.', 'error'); }
-        });
-    }
-
-    function showMessage(msg, type) {
-        const msgDiv = document.getElementById('activationMessage');
-        if (msgDiv) {
-            msgDiv.innerHTML = `<span style="color:${type==='success'?'#2ecc71':'#e74c3c'}">${msg}</span>`;
-            setTimeout(() => msgDiv.innerHTML = '', 3000);
-        }
-    }
-
-    function renderGoldContent() {
-        if (isGoldUnlocked()) renderUnlockedCourse();
-        else renderPaymentPage();
-    }
-
-    // ------------------ РЕКЛАМА (ПОКАЗ 25 СЕКУНД) ------------------
-    function showGoldAd() {
-        if (!shouldShowAd()) return;
-        markAdShown();
-        const adModal = document.createElement('div');
-        adModal.id = 'goldAdModal';
-        adModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; border-radius:30px; width:90%; max-width:500px; z-index:100010; display:flex; flex-direction:column; box-shadow:0 0 0 1000px rgba(0,0,0,0.85); padding:20px; text-align:center; border:2px solid #f1c40f;';
-        adModal.innerHTML = `
-            <div style="display:flex; justify-content:flex-end;"><button id="closeAdBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button></div>
-            <div style="font-size:48px;">🏆</div>
-            <h2 style="color:#f1c40f;">Золотой курс A0 → C1</h2>
-            <p style="color:white;">📅 <strong>Ограниченное предложение!</strong></p>
-            <p style="color:#ddd;">300+ уроков, тесты, озвучка – всё, чтобы свободно заговорить по-немецки. Доступ навсегда за €10.</p>
-            <p style="color:#f1c40f; font-size:24px;">🔥 €10 вместо €59</p>
-            <button id="buyNowAdBtn" style="background:#f1c40f; color:#2c3e50; border:none; padding:10px 20px; border-radius:40px; font-weight:bold; margin:10px;">Купить курс</button>
-        `;
-        document.body.appendChild(adModal);
-        document.getElementById('closeAdBtn').onclick = () => adModal.remove();
-        document.getElementById('buyNowAdBtn').onclick = () => {
-            adModal.remove();
-            goldBtn.click();
-        };
-        // Увеличил время до 25 секунд (было 10000)
-        setTimeout(() => { if(adModal.parentNode) adModal.remove(); }, 25000);
-    }
-
-    function init() {
-        loadCodes();
-        goldBtn.onclick = () => { modal.style.display = 'flex'; renderGoldContent(); };
-        document.getElementById('closeGoldModal').onclick = () => modal.style.display = 'none';
-        setTimeout(() => showGoldAd(), 1500);
-    }
-    init();
-})();
+    
+    
     
 
 
@@ -15582,6 +15479,71 @@ if ('serviceWorker' in navigator) {
 
 
 
+
+
+(function() {
+    // Реклама курса немецкого (раз в 3 дня)
+    const AD_KEY = 'germanCourseAdShown';
+    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+    function shouldShowAd() {
+        const lastShown = localStorage.getItem(AD_KEY);
+        if (!lastShown) return true;
+        const lastTime = parseInt(lastShown, 10);
+        return (Date.now() - lastTime) > THREE_DAYS_MS;
+    }
+
+    function markAdShown() {
+        localStorage.setItem(AD_KEY, Date.now().toString());
+    }
+
+    function showAdModal() {
+        if (!shouldShowAd()) return;
+        markAdShown();
+
+        const modal = document.createElement('div');
+        modal.id = 'courseAdModal';
+        modal.style.cssText = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1e272e; border-radius: 20px; width: 90%; max-width: 450px;
+            z-index: 100090; padding: 20px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.85);
+            text-align: center; border: 2px solid #f1c40f;
+        `;
+        modal.innerHTML = `
+            <div style="display:flex; justify-content:flex-end;">
+                <button id="closeAdBtn" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✖</button>
+            </div>
+            <div style="font-size:48px;">🏆</div>
+            <h2 style="color:#f1c40f;">Полный курс немецкого A0 → C1</h2>
+            <p style="color:white;">📘 300+ уроков, озвучка, грамматика, подготовка к экзаменам</p>
+            <p style="color:#ddd;">Доступ навсегда, все обновления бесплатно</p>
+            <button id="detailsBtn" style="background:#f1c40f; color:#2c3e50; border:none; padding:10px 20px; border-radius:40px; font-weight:bold; margin:15px 0 5px; cursor:pointer;">Подробнее</button>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('closeAdBtn').onclick = () => modal.remove();
+        document.getElementById('detailsBtn').onclick = () => {
+            modal.remove();
+            if (typeof showGermanPayment === 'function') {
+                showGermanPayment();
+            } else {
+                alert('Функция оплаты временно недоступна');
+            }
+        };
+
+        // Автоматическое закрытие через 25 секунд
+        setTimeout(() => {
+            if (document.getElementById('courseAdModal')) modal.remove();
+        }, 25000);
+    }
+
+    // Показываем рекламу через 2 секунды после загрузки страницы
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(showAdModal, 2000));
+    } else {
+        setTimeout(showAdModal, 2000);
+    }
+})();
 
 
 
