@@ -15262,7 +15262,41 @@ goldLessonsByLevel.A0[23] = {
         upgradeNotebook();
     }
 
-    function upgradeNotebook() {
+    async function loadHtml2Canvas() {
+        if (window.html2canvas) return true;
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.head.appendChild(script);
+        });
+    }
+
+    async function captureNotebook(notebookElement) {
+        const originalOverflow = notebookElement.style.overflow;
+        notebookElement.style.overflow = 'visible'; // чтобы всё содержимое попало в кадр
+        try {
+            const canvas = await html2canvas(notebookElement, {
+                scale: 2,
+                backgroundColor: '#fffaf2',
+                logging: false,
+                useCORS: false
+            });
+            return canvas;
+        } finally {
+            notebookElement.style.overflow = originalOverflow;
+        }
+    }
+
+    function downloadImage(canvas, filename = 'tetrad.png') {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    async function upgradeNotebook() {
         const notesSection = document.querySelector('.notes-section');
         if (!notesSection || notesSection.classList.contains('notebook-upgraded')) return;
 
@@ -15270,17 +15304,17 @@ goldLessonsByLevel.A0[23] = {
 
         notesSection.innerHTML = `
             <div class="notebook-card" style="background: #fffaf2; border-radius: 24px; box-shadow: 0 6px 14px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,245,0.8); padding: 18px 14px; border: 1px solid #edd9b0;">
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.3rem;">📘</span>
                         <h3 style="margin: 0; font-family: 'Georgia', 'Segoe UI', serif; font-size: 1rem; color: #5a3e1b;">Моя тетрадь</h3>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button id="sendEmailBtn" style="background: #f0dbb4; border: none; border-radius: 40px; padding: 5px 12px; font-size: 0.7rem; color: #7a5516; cursor: pointer;">📧 Отправить себе</button>
                         <button id="clearNotebookBtn" style="background: #f5e5c8; border: none; border-radius: 40px; padding: 5px 12px; font-size: 0.7rem; color: #7a5516; cursor: pointer;">🧽 Очистить</button>
+                        <button id="captureNotebookBtn" style="background: #d9c5a5; border: none; border-radius: 40px; padding: 5px 10px; font-size: 0.7rem; color: #4a2e0e; cursor: pointer;">📸 Фото</button>
                     </div>
                 </div>
-                <div style="position: relative;">
+                <div>
                     <textarea id="notebookTextarea" rows="5" style="width: 100%; background: #fffcf5; border: 1px solid #ecd9b0; border-radius: 18px; font-family: 'Georgia', 'Segoe UI', serif; font-size: 15px; line-height: 1.5; padding: 12px 14px; resize: vertical; color: #2c2418; outline: none; box-sizing: border-box;">${escapeHtml(savedText)}</textarea>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-left: 6px;">
@@ -15306,7 +15340,7 @@ goldLessonsByLevel.A0[23] = {
                 .notebook-card h3 {
                     font-size: 0.9rem !important;
                 }
-                #sendEmailBtn, #clearNotebookBtn {
+                #clearNotebookBtn, #captureNotebookBtn {
                     padding: 3px 10px !important;
                     font-size: 0.65rem !important;
                 }
@@ -15320,9 +15354,8 @@ goldLessonsByLevel.A0[23] = {
 
         const textarea = document.getElementById('notebookTextarea');
         const clearBtn = document.getElementById('clearNotebookBtn');
-        const sendBtn = document.getElementById('sendEmailBtn');
+        const captureBtn = document.getElementById('captureNotebookBtn');
         const statusSpan = document.getElementById('saveStatus');
-
         let saveTimeout = null;
 
         function saveNote() {
@@ -15347,7 +15380,6 @@ goldLessonsByLevel.A0[23] = {
 
         textarea.addEventListener('input', autoSave);
         textarea.addEventListener('blur', saveNote);
-
         clearBtn.addEventListener('click', () => {
             textarea.value = '';
             saveNote();
@@ -15357,54 +15389,27 @@ goldLessonsByLevel.A0[23] = {
             }
         });
 
-        // Функция отправки email через FormSubmit (бесплатно, без сервера)
-        // Чтобы получать письма, замените 'ваш-email@example.com' на свой email в форме
-        sendBtn.addEventListener('click', () => {
-            const content = textarea.value;
-            if (!content.trim()) {
-                alert('Тетрадь пуста. Напишите что-нибудь перед отправкой.');
+        // Фото-сохранение
+        captureBtn.addEventListener('click', async () => {
+            const notebookCard = document.querySelector('.notebook-card');
+            if (!notebookCard) return;
+            const loaded = await loadHtml2Canvas();
+            if (!loaded) {
+                alert('Не удалось загрузить библиотеку для создания фото. Проверьте интернет.');
                 return;
             }
-            // Создаём модальное окно для ввода email
-            const modal = document.createElement('div');
-            modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100090; width:90%; max-width:320px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); text-align:center;';
-            modal.innerHTML = `
-                <h3 style="color:white;">📧 Отправить на почту</h3>
-                <input type="email" id="emailInput" placeholder="Ваш email" style="width:100%; margin:15px 0; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
-                <button id="submitEmailBtn" style="background:#1abc9c; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">Отправить</button>
-                <button id="cancelEmailBtn" style="background:#e74c3c; border:none; padding:8px 16px; border-radius:30px; margin-left:10px; color:white; cursor:pointer;">Отмена</button>
-            `;
-            document.body.appendChild(modal);
-            const emailInput = modal.querySelector('#emailInput');
-            document.getElementById('submitEmailBtn').onclick = () => {
-                const email = emailInput.value.trim();
-                if (!email || !email.includes('@')) {
-                    alert('Введите корректный email');
-                    return;
-                }
-                // Отправляем через FormSubmit (замените 'daniilpirozhenko442@gmail.com' на ваш email)
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'https://formsubmit.co/daniilpirozhenko442@gmail.com';
-                form.style.display = 'none';
-                const emailField = document.createElement('input');
-                emailField.name = 'email';
-                emailField.value = email;
-                const contentField = document.createElement('input');
-                contentField.name = 'message';
-                contentField.value = content;
-                const subjectField = document.createElement('input');
-                subjectField.name = '_subject';
-                subjectField.value = '📓 Моя тетрадь (DeutschLernen)';
-                form.appendChild(emailField);
-                form.appendChild(contentField);
-                form.appendChild(subjectField);
-                document.body.appendChild(form);
-                form.submit();
-                modal.remove();
-                alert('Письмо отправляется! Проверьте почту через минуту.');
-            };
-            document.getElementById('cancelEmailBtn').onclick = () => modal.remove();
+            try {
+                captureBtn.disabled = true;
+                captureBtn.textContent = '📸...';
+                const canvas = await captureNotebook(notebookCard);
+                downloadImage(canvas, `tetrad_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.png`);
+            } catch (err) {
+                console.error(err);
+                alert('Не удалось создать фото :(');
+            } finally {
+                captureBtn.disabled = false;
+                captureBtn.textContent = '📸 Фото';
+            }
         });
 
         if (!savedText && textarea.value === '') {
