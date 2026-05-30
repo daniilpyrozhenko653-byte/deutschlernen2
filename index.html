@@ -14552,62 +14552,31 @@ goldLessonsByLevel.A0[23] = {
 
 
 
-    (function() {
+    // ========== УМНОЕ МЕНЮ: ДРУГИЕ РАЗДЕЛЫ + КУРСЫ ==========
+(function() {
     if (document.getElementById('smartDropdownWrapper')) return;
 
-    const container = document.querySelector('.app-container');
-    if (!container) return;
-
-    // --- 1. Прячем оригинальные кнопки ---
+    // ---- 1. Скрываем оригинальные кнопки, которые будут в меню ----
     const hiddenButtons = [
-        'simpleReaderBtn', 'unifiedGamesBtn', 'languagesSectionBtn',
-        'subjectsSectionBtn', 'plannerBtn', 'goldCourseBtn'
+        'simpleReaderBtn',     // Читать
+        'unifiedGamesBtn',     // Игры
+        'languagesSectionBtn', // Другие языки
+        'subjectsSectionBtn',  // Предметы
+        'plannerBtn'           // Планер
     ];
     hiddenButtons.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.style.display = 'none';
     });
 
-    // --- 2. Функция открытия немецкого курса (через скрытую кнопку) ---
-    function openGermanCourse() {
-        const goldBtn = document.getElementById('goldCourseBtn');
-        if (goldBtn) {
-            goldBtn.style.display = 'inline-flex';
-            goldBtn.click();
-            setTimeout(() => { goldBtn.style.display = 'none'; }, 500);
-        } else {
-            showModal('Ошибка', 'Кнопка курса не найдена', true);
-        }
-    }
-
-    function isGermanUnlocked() {
-        return localStorage.getItem('germanCourseUnlocked') === 'true' || localStorage.getItem('goldUnlocked') === 'true';
-    }
-
-    // --- 3. Вспомогательное модальное окно ---
-    function showModal(title, message, isError = false) {
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #1e272e; border-radius: 20px; padding: 20px;
-            z-index: 100030; width: 90%; max-width: 400px;
-            box-shadow: 0 0 0 1000px rgba(0,0,0,0.8);
-            text-align: center;
-        `;
-        modal.innerHTML = `
-            <h3 style="color:${isError ? '#e74c3c' : '#f1c40f'};">${title}</h3>
-            <div style="color:white; margin: 15px 0;">${message}</div>
-            <button id="closeModalBtn" style="background:#1abc9c; border:none; padding:8px 20px; border-radius:30px; color:white;">OK</button>
-        `;
-        document.body.appendChild(modal);
-        document.getElementById('closeModalBtn').onclick = () => modal.remove();
-    }
-
-    // --- 5. Создаём кнопки-переключатели ---
+    // ---- 2. Создаём контейнер для двух кнопок-переключателей ----
+    const container = document.querySelector('.app-container');
+    if (!container) return;
     const wrapper = document.createElement('div');
     wrapper.id = 'smartDropdownWrapper';
     wrapper.style.cssText = 'display:flex; gap:8px; justify-content:center; margin:12px 0 16px;';
 
+    // Кнопка «Другие разделы»
     const otherBtn = document.createElement('button');
     otherBtn.textContent = '📚 Другие разделы';
     Object.assign(otherBtn.style, {
@@ -14616,8 +14585,9 @@ goldLessonsByLevel.A0[23] = {
         fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
     });
 
+    // Кнопка «Курсы»
     const coursesBtn = document.createElement('button');
-    coursesBtn.textContent = '🏆 Курсы';
+    coursesBtn.textContent = '📘 Курсы';
     Object.assign(coursesBtn.style, {
         flex: '1', background: '#2c3e50', color: 'white', border: 'none',
         padding: '4px 10px', borderRadius: '30px', fontSize: '12px',
@@ -14631,20 +14601,7 @@ goldLessonsByLevel.A0[23] = {
     if (h1 && h1.nextSibling) container.insertBefore(wrapper, h1.nextSibling);
     else container.appendChild(wrapper);
 
-    // --- 6. Выпадающие меню ---
-    const otherItems = [
-        { label: '📖 Читать', id: 'simpleReaderBtn' },
-        { label: '🎮 Игры', id: 'unifiedGamesBtn' },
-        { label: '🌍 Другие языки', id: 'languagesSectionBtn' },
-        { label: '📚 Предметы', id: 'subjectsSectionBtn' },
-        { label: '📋 Планер', id: 'plannerBtn' }
-    ];
-    const courseItems = [
-        { label: 'Курс (немецкий)', type: 'german' },
-        { label: 'Курс (испанский)', type: 'spanish' },
-        { label: 'Курс (французский)', type: 'french' }
-    ];
-
+    // ---- 3. Вспомогательные функции для выпадающих меню ----
     let activeDropdown = null;
 
     function closeDropdown() {
@@ -14705,6 +14662,15 @@ goldLessonsByLevel.A0[23] = {
         setTimeout(() => document.addEventListener('click', closeHandler), 20);
     }
 
+    // ---- 4. Пункты меню «Другие разделы» ----
+    const otherItems = [
+        { label: '📖 Читать', id: 'simpleReaderBtn' },
+        { label: '🎮 Игры', id: 'unifiedGamesBtn' },
+        { label: '🌍 Другие языки', id: 'languagesSectionBtn' },
+        { label: '📚 Предметы', id: 'subjectsSectionBtn' },
+        { label: '📋 Планер', id: 'plannerBtn' }
+    ];
+
     otherBtn.onclick = (e) => {
         e.stopPropagation();
         openDropdown(otherBtn, otherItems, (item) => {
@@ -14712,25 +14678,88 @@ goldLessonsByLevel.A0[23] = {
             if (btn) btn.click();
         });
     };
+
+    // ---- 5. Пункты меню «Курсы» (без золотого курса, простые уроки) ----
+    // Создаём простой модуль курсов (если ещё не существует)
+    if (!document.getElementById('simpleCoursesContent')) {
+        // Данные бесплатных уроков (можно расширить)
+        const simpleCoursesData = {
+            A0: { name: 'A0 – Абсолютный', lessons: [
+                { title: 'Приветствия', grammar: '<p>Hallo! – Привет!<br>Tschüss! – Пока!</p>', vocabulary: ['Hallo – Привет','Tschüss – Пока'], sentences: ['Ich heiße Anna. – Меня зовут Анна.'] }
+            ] },
+            A1: { name: 'A1 – Начальный', lessons: [
+                { title: 'Моя семья', grammar: '<p>mein, dein, sein, ihr</p>', vocabulary: ['der Vater – отец','die Mutter – мать'], sentences: ['Das ist mein Vater. – Это мой отец.'] }
+            ] }
+        };
+        // Создаём модальное окно для курсов
+        const coursesModal = document.createElement('div');
+        coursesModal.id = 'simpleCoursesModal';
+        coursesModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:90%; max-width:800px; height:80%; z-index:100030; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
+        coursesModal.innerHTML = `
+            <div style="background:#9b59b6; padding:10px; display:flex; justify-content:space-between;">
+                <span style="color:white;">📘 Бесплатные курсы</span>
+                <button id="closeCoursesModalBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button>
+            </div>
+            <div style="padding:10px;">
+                <label style="color:white;">Уровень: </label>
+                <select id="courseLevelSelect" style="background:#2c3e50; color:white; padding:5px; border-radius:20px;">
+                    <option value="A0">A0</option>
+                    <option value="A1">A1</option>
+                </select>
+            </div>
+            <div id="simpleCoursesContent" style="flex:1; padding:15px; overflow:auto;"></div>
+        `;
+        document.body.appendChild(coursesModal);
+        document.getElementById('closeCoursesModalBtn').onclick = () => coursesModal.style.display = 'none';
+
+        function renderSimpleCourse(level) {
+            const data = simpleCoursesData[level];
+            if (!data) { document.getElementById('simpleCoursesContent').innerHTML = '<div style="color:white;">Уроки в разработке</div>'; return; }
+            let html = `<h3 style="color:#f1c40f;">${data.name}</h3>`;
+            data.lessons.forEach(lesson => {
+                html += `
+                    <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:15px;">
+                        <h4>${lesson.title}</h4>
+                        <div>${lesson.grammar}</div>
+                        <div><strong>Слова:</strong> ${lesson.vocabulary.map(v => `<span class="speak-word" data-word="${v.split(' – ')[0]}">${v}</span>`).join(', ')}</div>
+                        <div><strong>Примеры:</strong> ${lesson.sentences.map(s => `<div>${s}</div>`).join('')}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('simpleCoursesContent').innerHTML = html;
+            document.querySelectorAll('.speak-word').forEach(el => {
+                el.onclick = () => { const w = el.getAttribute('data-word'); if(w && window.speechSynthesis) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(w); u.lang = 'de-DE'; window.speechSynthesis.speak(u); } };
+            });
+        }
+        document.getElementById('courseLevelSelect').onchange = (e) => renderSimpleCourse(e.target.value);
+        window.openSimpleCourses = () => { coursesModal.style.display = 'flex'; renderSimpleCourse('A0'); };
+    }
+
+    // Пункты для меню «Курсы»
+    const courseItems = [
+        { label: '🇩🇪 Немецкий (бесплатно)', action: () => window.openSimpleCourses() },
+        { label: '🇪🇸 Испанский (в разработке)', action: () => showModal('🇪🇸 Испанский', 'Курс испанского появится позже.') },
+        { label: '🇫🇷 Французский (в разработке)', action: () => showModal('🇫🇷 Французский', 'Курс французского появится позже.') }
+    ];
+
     coursesBtn.onclick = (e) => {
         e.stopPropagation();
         openDropdown(coursesBtn, courseItems, (item) => {
-            if (item.type === 'german') showGermanPayment();
-            else if (item.type === 'spanish') showModal('🇪🇸 Испанский курс', 'Курс испанского языка находится в разработке. Следите за обновлениями!');
-            else if (item.type === 'french') showModal('🇫🇷 Французский курс', 'Курс французского языка находится в разработке. Следите за обновлениями!');
+            if (item.action) item.action();
         });
     };
 
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDropdown(); });
-
-    // --- 7. Кнопка «Поддержать» остаётся нетронутой ---
-    const support = document.getElementById('supportBtn');
-    if (support) {
-        support.style.position = 'fixed';
-        support.style.bottom = '20px';
-        support.style.right = '20px';
-        support.style.zIndex = '10000';
+    // Вспомогательное модальное окно для сообщений
+    function showModal(title, message) {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100040; width:300px; text-align:center; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
+        modal.innerHTML = `<h3 style="color:#f1c40f;">${title}</h3><p style="color:white;">${message}</p><button style="background:#1abc9c; border:none; padding:8px 20px; border-radius:30px; margin-top:10px;">OK</button>`;
+        document.body.appendChild(modal);
+        modal.querySelector('button').onclick = () => modal.remove();
     }
+
+    // Закрытие выпадающего меню по Escape
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDropdown(); });
 })();
 
 
@@ -15342,131 +15371,6 @@ if ('serviceWorker' in navigator) {
 
 
 
-    // ========== ПРОСТЫЕ КУРСЫ A0–C1 (БЕСПЛАТНО, БЕЗ ОШИБОК) ==========
-(function() {
-    if (document.getElementById('simpleCoursesBtn')) return;
-
-    // Данные уроков (для примера – по одному уроку на уровень; вы добавите свои)
-    const coursesData = {
-        A0: {
-            name: 'Начальный абсолютный',
-            lessons: [
-                { id: 1, title: 'Приветствия и знакомство', 
-                  grammar: '<p><strong>Hallo!</strong> – Привет!<br><strong>Tschüss!</strong> – Пока!<br><strong>Ich heiße ...</strong> – Меня зовут ...<br><strong>Wie heißt du?</strong> – Как тебя зовут?</p>',
-                  vocabulary: ['Hallo – Привет','Tschüss – Пока','Ja – да','Nein – нет','Danke – спасибо','Bitte – пожалуйста'],
-                  sentences: ['Ich heiße Anna. – Меня зовут Анна.','Tschüss, Peter! – Пока, Петер!']
-                }
-            ]
-        },
-        A1: {
-            name: 'Начальный',
-            lessons: [
-                { id: 1, title: 'Моя семья', 
-                  grammar: '<p>Притяжательные местоимения: <strong>mein</strong> (мой), <strong>dein</strong> (твой), <strong>sein</strong> (его), <strong>ihr</strong> (её).<br>Глагол <strong>haben</strong> (иметь): ich habe, du hast, er/sie/es hat.</p>',
-                  vocabulary: ['die Familie – семья','der Vater – отец','die Mutter – мать','der Bruder – брат','die Schwester – сестра','haben – иметь'],
-                  sentences: ['Das ist mein Vater. – Это мой отец.','Ich habe einen Bruder. – У меня есть брат.']
-                }
-            ]
-        },
-        A2: { name: 'Базовый', lessons: [{ id:1, title:'Еда и заказ в кафе', grammar:'<p>Глагол möchten (хотел бы): ich möchte, du möchtest...<br>Слова: der Kaffee, die Pizza, das Wasser.</p>', vocabulary:['der Kaffee – кофе','die Pizza – пицца','das Wasser – вода'], sentences:['Ich möchte einen Kaffee. – Я хотел бы кофе.'] }] },
-        B1: { name: 'Средний', lessons: [{ id:1, title:'Придаточные с weil', grammar:'<p>Союз weil (потому что) ставит глагол в конец.<br>Ich lerne Deutsch, weil ich in Deutschland arbeiten möchte.</p>', vocabulary:['weil – потому что','arbeiten – работать'], sentences:['Ich bleibe zu Hause, weil es regnet. – Я остаюсь дома, потому что идёт дождь.'] }] },
-        B2: { name: 'Выше среднего', lessons: [{ id:1, title:'Пассивный залог', grammar:'<p>Passiv образуется с werden + Partizip II.<br>Das Haus wird gebaut. – Дом строится.</p>', vocabulary:['werden – становиться','gebaut – построен'], sentences:['Das Buch wird gelesen. – Книга читается.'] }] },
-        C1: { name: 'Продвинутый', lessons: [{ id:1, title:'Конъюнктив II', grammar:'<p>Формы вежливости и сослагательности: würde, hätte, wäre.<br>Ich würde gerne kommen. – Я хотел бы прийти.</p>', vocabulary:['würde – бы','hätte – имел бы','wäre – был бы'], sentences:['Wenn ich Zeit hätte, käme ich. – Если бы у меня было время, я пришёл бы.'] }] }
-    };
-
-    // Создаём кнопку в верхнем баре
-    const btnWrapper = document.getElementById('topBtnsWrapper') || (() => {
-        const wrapper = document.createElement('div');
-        wrapper.id = 'topBtnsWrapper';
-        wrapper.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0;';
-        const container = document.querySelector('.app-container');
-        if (container) container.insertBefore(wrapper, container.firstChild.nextSibling);
-        else document.body.insertBefore(wrapper, document.body.firstChild);
-        return wrapper;
-    })();
-
-    const coursesBtn = document.createElement('div');
-    coursesBtn.id = 'simpleCoursesBtn';
-    coursesBtn.innerHTML = '📚 Курсы';
-    coursesBtn.style.cssText = 'background:#9b59b6; color:white; padding:4px 12px; border-radius:30px; cursor:pointer; font-size:12px; font-weight:bold; display:inline-block; transition:0.2s;';
-    coursesBtn.onmouseenter = () => coursesBtn.style.transform = 'scale(1.02)';
-    coursesBtn.onmouseleave = () => coursesBtn.style.transform = 'scale(1)';
-    btnWrapper.appendChild(coursesBtn);
-
-    // Модальное окно
-    const modal = document.createElement('div');
-    modal.id = 'simpleCoursesModal';
-    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:900px; height:85%; max-height:600px; z-index:100003; display:none; flex-direction:column; background:#0f172a; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); overflow:hidden;';
-    modal.innerHTML = `
-        <div style="background:#9b59b6; padding:10px; display:flex; justify-content:space-between;">
-            <span style="color:white; font-weight:bold;">📚 Курсы немецкого A0–C1</span>
-            <button id="closeCoursesModal" style="background:none; border:none; color:white; font-size:24px;">✖</button>
-        </div>
-        <div style="padding:10px; background:#1e272e;">
-            <label style="color:white;">Выберите уровень: </label>
-            <select id="courseLevelSelect" style="background:#2c3e50; color:white; padding:5px; border-radius:20px;">
-                <option value="A0">A0 (абсолютный)</option>
-                <option value="A1">A1 (начальный)</option>
-                <option value="A2">A2 (базовый)</option>
-                <option value="B1">B1 (средний)</option>
-                <option value="B2">B2 (выше среднего)</option>
-                <option value="C1">C1 (продвинутый)</option>
-            </select>
-        </div>
-        <div id="coursesContent" style="flex:1; padding:15px; overflow:auto;"></div>
-    `;
-    document.body.appendChild(modal);
-    document.getElementById('closeCoursesModal').onclick = () => modal.style.display = 'none';
-    coursesBtn.onclick = () => modal.style.display = 'flex';
-
-    function speakGermanSimple(text) {
-        if (!text || !window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'de-DE';
-        utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function renderLevel(level) {
-        const data = coursesData[level];
-        if (!data || !data.lessons.length) {
-            document.getElementById('coursesContent').innerHTML = '<div style="color:white;">Уроки для этого уровня в разработке.</div>';
-            return;
-        }
-        let html = `<h3 style="color:#f1c40f;">${level} – ${data.name}</h3>`;
-        data.lessons.forEach(lesson => {
-            html += `
-                <div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:15px;">
-                    <h4 style="color:#1abc9c;">Урок ${lesson.id}: ${lesson.title}</h4>
-                    <div style="color:#ddd;">${lesson.grammar}</div>
-                    <div style="margin-top:10px;"><strong>📖 Словарь:</strong></div>
-                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
-                        ${lesson.vocabulary.map(v => {
-                            const [word, trans] = v.split(' – ');
-                            return `<span style="background:#34495e; padding:4px 12px; border-radius:30px; cursor:pointer;" class="speak-word" data-word="${word}">${v}</span>`;
-                        }).join('')}
-                    </div>
-                    <div style="margin-top:10px;"><strong>💬 Примеры:</strong></div>
-                    <ul style="color:#aaa;">
-                        ${lesson.sentences.map(s => `<li style="margin-bottom:5px;"><span style="color:#f39c12;">${s.split(' – ')[0]}</span> – ${s.split(' – ')[1]} <button class="speak-sentence" data-text="${s.split(' – ')[0]}">🔊</button></li>`).join('')}
-                    </ul>
-                </div>
-            `;
-        });
-        document.getElementById('coursesContent').innerHTML = html;
-        // Привязываем озвучку
-        document.querySelectorAll('.speak-word').forEach(el => {
-            el.onclick = () => speakGermanSimple(el.getAttribute('data-word'));
-        });
-        document.querySelectorAll('.speak-sentence').forEach(btn => {
-            btn.onclick = () => speakGermanSimple(btn.getAttribute('data-text'));
-        });
-    }
-
-    document.getElementById('courseLevelSelect').onchange = (e) => renderLevel(e.target.value);
-    renderLevel('A0');
-})();
 
 
 
