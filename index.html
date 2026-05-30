@@ -15270,17 +15270,18 @@ goldLessonsByLevel.A0[23] = {
 
         notesSection.innerHTML = `
             <div class="notebook-card" style="background: #fffaf2; border-radius: 24px; box-shadow: 0 6px 14px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,245,0.8); padding: 18px 14px; border: 1px solid #edd9b0;">
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.3rem;">📘</span>
-                        <h3 style="margin: 0; font-family: 'Georgia', 'Segoe UI', serif; font-size: 1rem; color: #5a3e1b; letter-spacing: 0.5px;">Моя тетрадь</h3>
+                        <h3 style="margin: 0; font-family: 'Georgia', 'Segoe UI', serif; font-size: 1rem; color: #5a3e1b;">Моя тетрадь</h3>
                     </div>
-                    <button id="clearNotebookBtn" style="background: #f5e5c8; border: none; border-radius: 40px; padding: 5px 12px; font-size: 0.7rem; color: #7a5516; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;">
-                        🧽 Очистить
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="sendEmailBtn" style="background: #f0dbb4; border: none; border-radius: 40px; padding: 5px 12px; font-size: 0.7rem; color: #7a5516; cursor: pointer;">📧 Отправить себе</button>
+                        <button id="clearNotebookBtn" style="background: #f5e5c8; border: none; border-radius: 40px; padding: 5px 12px; font-size: 0.7rem; color: #7a5516; cursor: pointer;">🧽 Очистить</button>
+                    </div>
                 </div>
                 <div style="position: relative;">
-                    <textarea id="notebookTextarea" rows="5" style="width: 100%; background: #fffcf5; border: 1px solid #ecd9b0; border-radius: 18px; font-family: 'Georgia', 'Segoe UI', serif; font-size: 15px; line-height: 1.5; padding: 12px 14px; resize: vertical; color: #2c2418; outline: none; box-sizing: border-box; transition: all 0.2s;">${escapeHtml(savedText)}</textarea>
+                    <textarea id="notebookTextarea" rows="5" style="width: 100%; background: #fffcf5; border: 1px solid #ecd9b0; border-radius: 18px; font-family: 'Georgia', 'Segoe UI', serif; font-size: 15px; line-height: 1.5; padding: 12px 14px; resize: vertical; color: #2c2418; outline: none; box-sizing: border-box;">${escapeHtml(savedText)}</textarea>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-left: 6px;">
                     <span style="font-size: 0.7rem; color: #b4946a;">✍️</span>
@@ -15305,7 +15306,7 @@ goldLessonsByLevel.A0[23] = {
                 .notebook-card h3 {
                     font-size: 0.9rem !important;
                 }
-                #clearNotebookBtn {
+                #sendEmailBtn, #clearNotebookBtn {
                     padding: 3px 10px !important;
                     font-size: 0.65rem !important;
                 }
@@ -15319,6 +15320,7 @@ goldLessonsByLevel.A0[23] = {
 
         const textarea = document.getElementById('notebookTextarea');
         const clearBtn = document.getElementById('clearNotebookBtn');
+        const sendBtn = document.getElementById('sendEmailBtn');
         const statusSpan = document.getElementById('saveStatus');
 
         let saveTimeout = null;
@@ -15353,6 +15355,56 @@ goldLessonsByLevel.A0[23] = {
                 statusSpan.textContent = '🧹 Очищено';
                 setTimeout(() => statusSpan.textContent = '✍️ Автосохранение', 1500);
             }
+        });
+
+        // Функция отправки email через FormSubmit (бесплатно, без сервера)
+        // Чтобы получать письма, замените 'ваш-email@example.com' на свой email в форме
+        sendBtn.addEventListener('click', () => {
+            const content = textarea.value;
+            if (!content.trim()) {
+                alert('Тетрадь пуста. Напишите что-нибудь перед отправкой.');
+                return;
+            }
+            // Создаём модальное окно для ввода email
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100090; width:90%; max-width:320px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); text-align:center;';
+            modal.innerHTML = `
+                <h3 style="color:white;">📧 Отправить на почту</h3>
+                <input type="email" id="emailInput" placeholder="Ваш email" style="width:100%; margin:15px 0; background:#34495e; color:white; padding:8px; border:none; border-radius:20px;">
+                <button id="submitEmailBtn" style="background:#1abc9c; border:none; padding:8px 16px; border-radius:30px; color:white; cursor:pointer;">Отправить</button>
+                <button id="cancelEmailBtn" style="background:#e74c3c; border:none; padding:8px 16px; border-radius:30px; margin-left:10px; color:white; cursor:pointer;">Отмена</button>
+            `;
+            document.body.appendChild(modal);
+            const emailInput = modal.querySelector('#emailInput');
+            document.getElementById('submitEmailBtn').onclick = () => {
+                const email = emailInput.value.trim();
+                if (!email || !email.includes('@')) {
+                    alert('Введите корректный email');
+                    return;
+                }
+                // Отправляем через FormSubmit (замените 'daniilpirozhenko442@gmail.com' на ваш email)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'https://formsubmit.co/daniilpirozhenko442@gmail.com';
+                form.style.display = 'none';
+                const emailField = document.createElement('input');
+                emailField.name = 'email';
+                emailField.value = email;
+                const contentField = document.createElement('input');
+                contentField.name = 'message';
+                contentField.value = content;
+                const subjectField = document.createElement('input');
+                subjectField.name = '_subject';
+                subjectField.value = '📓 Моя тетрадь (DeutschLernen)';
+                form.appendChild(emailField);
+                form.appendChild(contentField);
+                form.appendChild(subjectField);
+                document.body.appendChild(form);
+                form.submit();
+                modal.remove();
+                alert('Письмо отправляется! Проверьте почту через минуту.');
+            };
+            document.getElementById('cancelEmailBtn').onclick = () => modal.remove();
         });
 
         if (!savedText && textarea.value === '') {
