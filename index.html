@@ -10229,45 +10229,68 @@ speech_culture: {
 
 
 
-// ========== УМНОЕ МЕНЮ (ЗАМЕНЯЕТ ВСЕ СТАРЫЕ КНОПКИ) ==========
 (function() {
-    if (document.getElementById('smartMenuWrapper')) return;
+    if (document.getElementById('smartMenuFinal')) return;
 
-    // ---- 1. Скрываем оригинальные кнопки ----
-    const originalButtons = [
-        'simpleReaderBtn',     // Читать
-        'unifiedGamesBtn',     // Игры
-        'languagesSectionBtn', // Другие языки
-        'subjectsSectionBtn',  // Предметы
-        'plannerBtn'           // Планер
-    ];
-    originalButtons.forEach(id => {
+    // ========== 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    function showModalMessage(title, message) {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100060; width:90%; max-width:350px; text-align:center; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
+        modal.innerHTML = `<h3 style="color:#f1c40f;">${title}</h3><p style="color:white;">${message}</p><button style="background:#1abc9c; border:none; padding:8px 20px; border-radius:30px; margin-top:10px;">OK</button>`;
+        document.body.appendChild(modal);
+        modal.querySelector('button').onclick = () => modal.remove();
+    }
+
+    // Платёжная модалка (полные реквизиты)
+    function showGermanPaymentModal() {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100070; width:90%; max-width:500px; text-align:center; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); color:white;';
+        modal.innerHTML = `
+            <h3 style="color:#f1c40f;">🇩🇪 Платный курс немецкого</h3>
+            <p style="margin:10px 0;">Стоимость: <strong>10 €</strong></p>
+            <div style="background:#2c3e50; padding:12px; border-radius:15px; margin:10px 0;">
+                <p><strong>Получатель:</strong> Pyrozhenko, Danyil</p>
+                <p><strong>IBAN:</strong> <span id="ibanCode">DE92 3755 1780 1020 1888 41</span> 
+                    <button id="copyIbanBtn" style="background:#3498db; border:none; padding:4px 8px; border-radius:20px;">📋</button>
+                </p>
+                <p><strong>BIC:</strong> WELADED1LAF</p>
+            </div>
+            <div style="margin:10px 0;">
+                <a href="https://www.donationalerts.com/r/daniil3299" target="_blank" style="display:inline-block; background:#ff6600; color:white; text-decoration:none; padding:8px 16px; border-radius:30px;">💳 DonationAlerts</a>
+            </div>
+            <p style="font-size:12px; color:#aaa;">Связь: daniilpirozhenko442@gmail.com | @daniil3299</p>
+            <button id="closePaymentModal" style="background:#1abc9c; border:none; padding:8px 20px; border-radius:30px; margin-top:10px;">Закрыть</button>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('closePaymentModal').onclick = () => modal.remove();
+        document.getElementById('copyIbanBtn')?.addEventListener('click', () => {
+            const iban = document.getElementById('ibanCode').innerText;
+            navigator.clipboard.writeText(iban).then(() => showModalMessage('Скопировано', 'IBAN скопирован в буфер обмена'));
+        });
+    }
+
+    // ========== 2. СКРЫВАЕМ ОРИГИНАЛЬНЫЕ КНОПКИ ==========
+    const buttonsToHide = ['simpleReaderBtn', 'unifiedGamesBtn', 'languagesSectionBtn', 'subjectsSectionBtn', 'plannerBtn'];
+    buttonsToHide.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.style.display = 'none';
     });
 
-    // ---- 2. Создаём обёртку для двух главных кнопок ----
+    // ========== 3. СОЗДАЁМ ДВЕ ГЛАВНЫЕ КНОПКИ ==========
     const container = document.querySelector('.app-container');
     if (!container) return;
+
     const wrapper = document.createElement('div');
-    wrapper.id = 'smartMenuWrapper';
+    wrapper.id = 'smartMenuFinal';
     wrapper.style.cssText = 'display:flex; gap:12px; justify-content:center; margin:12px 0 16px; flex-wrap:wrap;';
 
     const otherBtn = document.createElement('button');
     otherBtn.textContent = '📚 Другие разделы';
-    Object.assign(otherBtn.style, {
-        background: '#2c3e50', color: 'white', border: 'none',
-        padding: '6px 18px', borderRadius: '30px', fontSize: '14px',
-        fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
-    });
-
+    otherBtn.style.cssText = 'background:#2c3e50; color:white; border:none; padding:6px 18px; border-radius:30px; font-size:14px; font-weight:bold; cursor:pointer; transition:0.2s;';
+    
     const coursesBtn = document.createElement('button');
     coursesBtn.textContent = '📘 Курсы';
-    Object.assign(coursesBtn.style, {
-        background: '#2c3e50', color: 'white', border: 'none',
-        padding: '6px 18px', borderRadius: '30px', fontSize: '14px',
-        fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
-    });
+    coursesBtn.style.cssText = 'background:#2c3e50; color:white; border:none; padding:6px 18px; border-radius:30px; font-size:14px; font-weight:bold; cursor:pointer; transition:0.2s;';
 
     wrapper.appendChild(otherBtn);
     wrapper.appendChild(coursesBtn);
@@ -10276,7 +10299,7 @@ speech_culture: {
     if (h1 && h1.nextSibling) container.insertBefore(wrapper, h1.nextSibling);
     else container.appendChild(wrapper);
 
-    // ---- 3. Выпадающие меню (общая логика) ----
+    // ========== 4. ЛОГИКА ВЫПАДАЮЩИХ МЕНЮ (С ПОДДЕРЖКОЙ МОБИЛЬНЫХ) ==========
     let activeDropdown = null;
     function closeDropdown() {
         if (activeDropdown) { activeDropdown.remove(); activeDropdown = null; }
@@ -10284,11 +10307,11 @@ speech_culture: {
     function createDropdown(items, onClick) {
         const div = document.createElement('div');
         div.className = 'smart-dropdown';
-        div.style.cssText = `position: absolute; background: #1e272e; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); overflow: hidden; z-index: 10020; min-width: 160px;`;
+        div.style.cssText = `position:absolute; background:#1e272e; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,0.4); overflow:auto; z-index:10020; min-width:160px; max-width:85vw;`;
         items.forEach(item => {
             const opt = document.createElement('div');
             opt.textContent = item.label;
-            opt.style.cssText = `padding: 10px 16px; color: white; font-size: 13px; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #2c3e50; white-space: nowrap;`;
+            opt.style.cssText = `padding:10px 14px; color:white; font-size:13px; cursor:pointer; transition:0.2s; border-bottom:1px solid #2c3e50; white-space:normal; word-break:break-word;`;
             opt.onmouseenter = () => opt.style.background = '#2c3e50';
             opt.onmouseleave = () => opt.style.background = '';
             opt.onclick = (e) => { e.stopPropagation(); onClick(item); closeDropdown(); };
@@ -10301,7 +10324,10 @@ speech_culture: {
         closeDropdown();
         const dd = createDropdown(items, onClick);
         const rect = button.getBoundingClientRect();
-        dd.style.left = `${rect.left}px`;
+        let left = rect.left;
+        if (left + dd.offsetWidth > window.innerWidth) left = window.innerWidth - dd.offsetWidth - 10;
+        if (left < 10) left = 10;
+        dd.style.left = `${left}px`;
         dd.style.top = `${rect.bottom + 5}px`;
         dd._btn = button;
         document.body.appendChild(dd);
@@ -10313,95 +10339,33 @@ speech_culture: {
     }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDropdown(); });
 
-    // ---- 4. Пункты меню "Другие разделы" ----
+    // ========== 5. ПУНКТЫ МЕНЮ «ДРУГИЕ РАЗДЕЛЫ» ==========
     const otherItems = [
-        { label: '📖 Читать', click: () => document.getElementById('simpleReaderBtn')?.click() },
-        { label: '🎮 Игры', click: () => document.getElementById('unifiedGamesBtn')?.click() },
-        { label: '🌍 Другие языки', click: () => document.getElementById('languagesSectionBtn')?.click() },
-        { label: '📚 Предметы', click: () => document.getElementById('subjectsSectionBtn')?.click() },
-        { label: '📋 Планер', click: () => document.getElementById('plannerBtn')?.click() },
-        { label: '📇 Мои карточки', click: () => {
-            // Функция showMyCardsModal уже существует в вашем коде
+        { label: '📖 Читать', action: () => document.getElementById('simpleReaderBtn')?.click() },
+        { label: '🎮 Игры', action: () => document.getElementById('unifiedGamesBtn')?.click() },
+        { label: '🌍 Другие языки', action: () => document.getElementById('languagesSectionBtn')?.click() },
+        { label: '📚 Предметы', action: () => document.getElementById('subjectsSectionBtn')?.click() },
+        { label: '📋 Планер', action: () => {
+            const planner = document.getElementById('plannerBtn');
+            if (planner) planner.click();
+            else showModalMessage('Ошибка', 'Кнопка планера не найдена');
+        } },
+        { label: '📇 Мои карточки', action: () => {
             if (typeof showMyCardsModal === 'function') showMyCardsModal();
-            else console.warn('showMyCardsModal not found');
+            else if (typeof window.showMyCardsModal === 'function') window.showMyCardsModal();
+            else showModalMessage('Ошибка', 'Функция моих карточек не найдена');
         } }
     ];
-    otherBtn.onclick = (e) => { e.stopPropagation(); openDropdown(otherBtn, otherItems, (item) => item.click()); };
+    otherBtn.onclick = (e) => { e.stopPropagation(); openDropdown(otherBtn, otherItems, (item) => item.action()); };
 
-    // ---- 5. Пункты меню "Курсы" (немецкий, испанский, французский) ----
-    // Создаём модальное окно для немецкого курса (бесплатные уроки), если его ещё нет
-    if (!document.getElementById('simpleGermanModal')) {
-        const germanModal = document.createElement('div');
-        germanModal.id = 'simpleGermanModal';
-        germanModal.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e272e; border-radius: 20px; width: 90%; max-width: 800px; height: 80%; max-height: 600px; z-index: 100040; display: none; flex-direction: column; background: #0f172a; box-shadow: 0 0 0 1000px rgba(0,0,0,0.8); overflow: hidden;`;
-        germanModal.innerHTML = `
-            <div style="background:#9b59b6; padding:10px; display:flex; justify-content:space-between;">
-                <span style="color:white;">🇩🇪 Бесплатный курс немецкого</span>
-                <button id="closeGermanModalBtn" style="background:none; border:none; color:white; font-size:24px;">✖</button>
-            </div>
-            <div style="padding:10px;">
-                <label style="color:white;">Уровень: </label>
-                <select id="germanLevelSelect" style="background:#2c3e50; color:white; padding:5px; border-radius:20px;">
-                    <option value="A0">A0 (начальный)</option>
-                    <option value="A1">A1 (базовый)</option>
-                </select>
-            </div>
-            <div id="germanCourseContent" style="flex:1; padding:15px; overflow:auto;"></div>
-        `;
-        document.body.appendChild(germanModal);
-        document.getElementById('closeGermanModalBtn').onclick = () => germanModal.style.display = 'none';
-
-        const germanLessons = {
-            A0: { name: 'A0 – Абсолютный', lessons: [
-                { title: 'Приветствия', grammar: '<p><strong>Hallo!</strong> – Привет!<br><strong>Tschüss!</strong> – Пока!<br><strong>Ich heiße ...</strong> – Меня зовут ...</p>', vocabulary: ['Hallo – Привет','Tschüss – Пока','Ja – да','Nein – нет'], sentences: ['Ich heiße Anna. – Меня зовут Анна.','Tschüss, Peter! – Пока, Петер!'] }
-            ] },
-            A1: { name: 'A1 – Начальный', lessons: [
-                { title: 'Моя семья', grammar: '<p>mein, dein, sein, ihr<br>Глагол haben (иметь)</p>', vocabulary: ['die Familie – семья','der Vater – отец','die Mutter – мать','der Bruder – брат','die Schwester – сестра'], sentences: ['Das ist mein Vater. – Это мой отец.','Ich habe einen Bruder. – У меня есть брат.'] }
-            ] }
-        };
-        function renderGermanCourse(level) {
-            const data = germanLessons[level];
-            if (!data) { document.getElementById('germanCourseContent').innerHTML = '<div style="color:white;">Уроки в разработке</div>'; return; }
-            let html = `<h3 style="color:#f1c40f;">${data.name}</h3>`;
-            data.lessons.forEach(lesson => {
-                html += `<div style="background:#2c3e50; border-radius:15px; padding:15px; margin-bottom:15px;">
-                    <h4 style="color:#1abc9c;">${lesson.title}</h4>
-                    <div style="color:#ddd;">${lesson.grammar}</div>
-                    <div><strong>📖 Словарь:</strong> ${lesson.vocabulary.map(v => `<span class="german-speak-word" data-word="${v.split(' – ')[0]}">${v}</span>`).join(', ')}</div>
-                    <div><strong>💬 Примеры:</strong><ul>${lesson.sentences.map(s => `<li><span class="german-speak-sentence" data-text="${s.split(' – ')[0]}">${s.split(' – ')[0]}</span> – ${s.split(' – ')[1]}</li>`).join('')}</ul></div>
-                </div>`;
-            });
-            document.getElementById('germanCourseContent').innerHTML = html;
-            document.querySelectorAll('.german-speak-word, .german-speak-sentence').forEach(el => {
-                el.onclick = () => { const w = el.getAttribute('data-word') || el.getAttribute('data-text'); if(w && window.speechSynthesis) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(w); u.lang = 'de-DE'; window.speechSynthesis.speak(u); } };
-            });
-        }
-        document.getElementById('germanLevelSelect').onchange = (e) => renderGermanCourse(e.target.value);
-        window.openGermanCourse = () => { germanModal.style.display = 'flex'; renderGermanCourse('A0'); };
-    }
-
-    function showMessageModal(title, message) {
-        const modal = document.createElement('div');
-        modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100050; width:300px; text-align:center; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
-        modal.innerHTML = `<h3 style="color:#f1c40f;">${title}</h3><p style="color:white;">${message}</p><button style="background:#1abc9c; border:none; padding:8px 20px; border-radius:30px; margin-top:10px;">OK</button>`;
-        document.body.appendChild(modal);
-        modal.querySelector('button').onclick = () => modal.remove();
-    }
-
+    // ========== 6. ПУНКТЫ МЕНЮ «КУРСЫ» ==========
     const courseItems = [
-        { label: '🇩🇪 Немецкий (бесплатно)', click: () => window.openGermanCourse() },
-        { label: '🇪🇸 Испанский (в разработке)', click: () => showMessageModal('🇪🇸 Испанский курс', 'Курс испанского языка появится позже.') },
-        { label: '🇫🇷 Французский (в разработке)', click: () => showMessageModal('🇫🇷 Французский курс', 'Курс французского языка появится позже.') }
+        { label: '🇩🇪 Немецкий (платный)', action: showGermanPaymentModal },
+        { label: '🇪🇸 Испанский (в разработке)', action: () => showModalMessage('Испанский курс', 'Курс испанского языка появится позже.') },
+        { label: '🇫🇷 Французский (в разработке)', action: () => showModalMessage('Французский курс', 'Курс французского языка появится позже.') }
     ];
-    coursesBtn.onclick = (e) => { e.stopPropagation(); openDropdown(coursesBtn, courseItems, (item) => item.click()); };
+    coursesBtn.onclick = (e) => { e.stopPropagation(); openDropdown(coursesBtn, courseItems, (item) => item.action()); };
 })();
-
-
-
-
-
-
-
 
 
 
