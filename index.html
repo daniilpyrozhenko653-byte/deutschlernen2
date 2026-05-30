@@ -15581,6 +15581,92 @@ if ('serviceWorker' in navigator) {
 
 
 
+    (function() {
+    const AD_KEY = 'de_course_ad_last_show';
+    const AD_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000; // 3 дня
+    let adModal = null;
+    let timeoutId = null;
+
+    function showAd() {
+        if (adModal) return;
+
+        adModal = document.createElement('div');
+        adModal.id = 'de-course-ad';
+        adModal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 100000;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        `;
+        adModal.innerHTML = `
+            <div style="background: linear-gradient(145deg, #2c3e50, #1a2632); border-radius: 28px; max-width: 460px; width: 90%; padding: 24px 20px; text-align: center; color: white; box-shadow: 0 20px 35px rgba(0,0,0,0.5); border: 1px solid #f1c40f; position: relative;">
+                <button id="closeAdBtn" style="position: absolute; top: 12px; right: 16px; background: none; border: none; color: #ccc; font-size: 28px; cursor: pointer; line-height: 1;">&times;</button>
+                <div style="font-size: 48px; margin-bottom: 8px;">🏆</div>
+                <h3 style="margin: 0 0 8px; color: #f1c40f;">Немецкий A0 → C1</h3>
+                <p style="margin: 8px 0; font-size: 16px;">Полный курс немецкого языка. 300+ уроков, озвучка, тесты, диалоги.</p>
+                <p style="margin: 12px 0; background: #1abc9c; display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 14px;">Доступ навсегда</p>
+                <div style="margin: 16px 0;">
+                    <button id="buyAdBtn" style="background: #f1c40f; color: #2c3e50; border: none; padding: 10px 28px; border-radius: 40px; font-size: 16px; font-weight: bold; cursor: pointer;">Подробнее</button>
+                </div>
+                <p style="font-size: 12px; color: #aaa; margin-top: 12px;">Закроется через 25 сек</p>
+            </div>
+        `;
+        document.body.appendChild(adModal);
+
+        // Закрытие по крестику
+        const closeBtn = document.getElementById('closeAdBtn');
+        if (closeBtn) closeBtn.onclick = () => closeAd();
+
+        // Кнопка "Подробнее" – открывает раздел "Курсы" (или платёжное окно)
+        const buyBtn = document.getElementById('buyAdBtn');
+        if (buyBtn) {
+            buyBtn.onclick = () => {
+                // Попытаемся открыть вкладку "Курсы" или показать платёжное окно
+                closeAd();
+                const coursesTab = document.getElementById('coursesTab');
+                if (coursesTab) {
+                    coursesTab.click();
+                } else {
+                    // Ищем кнопку "Курсы" или открываем золотой курс
+                    const goldBtn = document.getElementById('goldCourseBtn');
+                    if (goldBtn) goldBtn.click();
+                }
+            };
+        }
+
+        // Автоматическое закрытие через 25 секунд
+        timeoutId = setTimeout(() => {
+            closeAd();
+        }, 25000);
+
+        // Записываем дату показа
+        localStorage.setItem(AD_KEY, Date.now().toString());
+    }
+
+    function closeAd() {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (adModal && adModal.parentNode) adModal.remove();
+        adModal = null;
+    }
+
+    function shouldShowAd() {
+        const last = localStorage.getItem(AD_KEY);
+        if (!last) return true;
+        const lastTime = parseInt(last, 10);
+        if (isNaN(lastTime)) return true;
+        return (Date.now() - lastTime) >= AD_INTERVAL_MS;
+    }
+
+    // Проверяем при загрузке страницы
+    window.addEventListener('load', () => {
+        if (shouldShowAd()) {
+            // Небольшая задержка, чтобы страница сначала отобразилась
+            setTimeout(showAd, 1000);
+        }
+    });
+})();
+
+
 
 
 </script>
