@@ -10739,7 +10739,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 
 
-// ========== КОМПАКТНАЯ ТЕТРАДЬ 1500 СТРАНИЦ ==========
+// ========== КОМПАКТНАЯ ТЕТРАДЬ НА 1500 СТРАНИЦ + БЫСТРЫЙ ПЕРЕХОД ==========
 (function() {
     if (document.getElementById('compactNotebook')) return;
     const notesSection = document.querySelector('.notes-section');
@@ -10748,10 +10748,11 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
     const TOTAL_PAGES = 1500;
     const STORAGE_KEY = 'notebook_pages';
     let pages = new Array(TOTAL_PAGES).fill('');
-    let currentPage = 0;
+    let currentPage = 0;          // 0 – первая страница
     let animating = false;
     let touchStartX = 0, touchEndX = 0;
 
+    // Загрузка / сохранение
     function loadPages() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -10764,11 +10765,14 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
     }
 
+    // Отрисовка текущей страницы
     function renderPage() {
         const container = document.getElementById('notebookContent');
         if (!container) return;
+
         const pageNum = currentPage + 1;
         const text = pages[currentPage] || '';
+
         container.innerHTML = `
             <div style="
                 background: #fffdf7;
@@ -10819,20 +10823,44 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
             textarea.addEventListener('input', update);
             textarea.addEventListener('blur', () => { pages[currentPage] = textarea.value; savePage(currentPage); });
         }
+
         const indicator = document.getElementById('pageIndicator');
         if (indicator) indicator.innerText = `${pageNum} / ${TOTAL_PAGES}`;
+        const jumpInput = document.getElementById('jumpToPage');
+        if (jumpInput) jumpInput.value = pageNum;
     }
 
+    // Переход на конкретную страницу (без анимации, чтобы быстро)
+    function goToPage(pageNumber) {
+        let newPage = Math.max(1, Math.min(TOTAL_PAGES, pageNumber)) - 1;
+        if (newPage === currentPage) return;
+        if (animating) return;
+        // Сохраняем текущую страницу перед уходом
+        const textarea = document.getElementById('pageTextarea');
+        if (textarea) pages[currentPage] = textarea.value;
+        currentPage = newPage;
+        renderPage();
+        savePage(currentPage); // сохраняем новую страницу (на случай пустоты)
+    }
+
+    // Анимация перелистывания
     function changePage(delta) {
         if (animating) return;
         let newPage = currentPage + delta;
         if (newPage < 0 || newPage >= TOTAL_PAGES) return;
+
+        // Сохраняем текущий текст перед анимацией
+        const textarea = document.getElementById('pageTextarea');
+        if (textarea) pages[currentPage] = textarea.value;
+
         animating = true;
         const container = document.getElementById('notebookContent');
         if (!container) return;
+
         container.style.transition = 'opacity 0.2s ease, transform 0.15s ease';
         container.style.opacity = '0';
         container.style.transform = delta > 0 ? 'translateX(-10px)' : 'translateX(10px)';
+
         setTimeout(() => {
             currentPage = newPage;
             renderPage();
@@ -10842,6 +10870,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         }, 150);
     }
 
+    // Обработка свайпов
     function handleTouchStart(e) { touchStartX = e.touches[0].clientX; }
     function handleTouchEnd(e) {
         touchEndX = e.changedTouches[0].clientX;
@@ -10853,6 +10882,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
+    // Построение интерфейса с полем для перехода
     notesSection.innerHTML = `
         <div id="compactNotebook" style="
             background: #d9c8a9;
@@ -10870,28 +10900,51 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
             ">
                 <div id="notebookContent" style="flex:1; height: 100%;"></div>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
                 <button id="prevPageBtn" style="
                     background: #5d3a1a;
                     border: none;
                     color: white;
-                    font-size: 0.9rem;
-                    padding: 5px 14px;
+                    font-size: 0.85rem;
+                    padding: 5px 12px;
                     border-radius: 40px;
                     cursor: pointer;
                     font-weight: bold;
                 ">◀ Назад</button>
-                <span id="pageIndicator" style="font-size: 0.75rem; color: #5a3e1b; background: #f5e5c8; padding: 4px 12px; border-radius: 30px;">1 / ${TOTAL_PAGES}</span>
+                <div style="display: flex; gap: 6px; background: #f5e5c8; padding: 4px 10px; border-radius: 40px;">
+                    <span style="font-size: 0.7rem; color: #5a3e1b;">Страница</span>
+                    <input type="number" id="jumpToPage" min="1" max="${TOTAL_PAGES}" value="1" style="
+                        width: 55px;
+                        background: #fffdf7;
+                        border: 1px solid #d9c8a9;
+                        border-radius: 30px;
+                        padding: 2px 6px;
+                        font-size: 0.75rem;
+                        text-align: center;
+                    ">
+                    <button id="jumpBtn" style="
+                        background: #5d3a1a;
+                        border: none;
+                        color: white;
+                        font-size: 0.7rem;
+                        padding: 2px 10px;
+                        border-radius: 30px;
+                        cursor: pointer;
+                    ">Перейти</button>
+                </div>
                 <button id="nextPageBtn" style="
                     background: #5d3a1a;
                     border: none;
                     color: white;
-                    font-size: 0.9rem;
-                    padding: 5px 14px;
+                    font-size: 0.85rem;
+                    padding: 5px 12px;
                     border-radius: 40px;
                     cursor: pointer;
                     font-weight: bold;
                 ">Вперёд ▶</button>
+            </div>
+            <div style="text-align: center; margin-top: 5px;">
+                <span id="pageIndicator" style="font-size: 0.7rem; color: #5a3e1b; background: #f5e5c8; padding: 2px 8px; border-radius: 30px;">1 / ${TOTAL_PAGES}</span>
             </div>
         </div>
     `;
@@ -10901,13 +10954,27 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
     document.getElementById('prevPageBtn')?.addEventListener('click', () => changePage(-1));
     document.getElementById('nextPageBtn')?.addEventListener('click', () => changePage(1));
+
+    // Обработчик перехода по номеру страницы
+    const jumpInput = document.getElementById('jumpToPage');
+    const jumpBtn = document.getElementById('jumpBtn');
+    if (jumpBtn && jumpInput) {
+        const go = () => {
+            let val = parseInt(jumpInput.value, 10);
+            if (isNaN(val)) val = 1;
+            val = Math.min(TOTAL_PAGES, Math.max(1, val));
+            goToPage(val);
+        };
+        jumpBtn.addEventListener('click', go);
+        jumpInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') go(); });
+    }
+
     const contentDiv = document.getElementById('notebookContent');
     if (contentDiv) {
         contentDiv.addEventListener('touchstart', handleTouchStart);
         contentDiv.addEventListener('touchend', handleTouchEnd);
     }
 })();
-
 
 
 
