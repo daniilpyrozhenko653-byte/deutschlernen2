@@ -11372,18 +11372,21 @@ else showInstallButton();
         { id: 1, name: 'Learn', imgUrl: 'learn.png', price: 50 },
         { id: 2, name: 'Top', imgUrl: 'Top.png', price: 50 },
         { id: 3, name: 'Wow', imgUrl: 'Wow.png', price: 150 },
-        { id: 4, name: 'Ror', imgUrl: 'Ror.png', price: 500 },
+        { id: 4, name: 'Ror', imgUrl: 'Ror.png', price: 1000 },
         { id: 5, name: 'Faf', imgUrl: 'Faf.png', price: 1000 },
-        { id: 6, name: 'yoyo', imgUrl: 'yoyo.png', price: 2000 },
-        { id: 7, name: 'kot', imgUrl: 'kot.png', price: 2500 },
-        { id: 8, name: 'brat', imgUrl: 'brat.png', price: 3000 }
+        { id: 6, name: 'yoyo', imgUrl: 'yoyo.png', price: 1000 },
+        { id: 7, name: 'kot', imgUrl: 'kot.png', price: 1000 },
+        { id: 8, name: 'brat', imgUrl: 'brat.png', price: 1000 },
+        // Два новых стикера (цены по умолчанию 50, измените если нужно)
+        { id: 9, name: 'dog', imgUrl: 'dog.png', price: 1000 },
+        { id: 10, name: 'dog1', imgUrl: 'dog1.png', price: 1000 }
     ];
 
     // ---------- 2. БАЛАНС И БОНУСЫ (ПРОГРЕССИРУЮЩАЯ ТРОПА) ----------
-    let coins = parseInt(localStorage.getItem('userCoins')) || 0 ;
+    let coins = parseInt(localStorage.getItem('userCoins')) || 0;
     let lastLoginDate = localStorage.getItem('lastLoginDate');
     let loginStreak = parseInt(localStorage.getItem('loginStreak')) || 0;
-    const bonuses = [0, 10, 20, 40, 80, 160, 320, 640];
+    const bonuses = [0, 10, 20, 40, 80, 160, 1000, 2000];
 
     function saveBalance() { localStorage.setItem('userCoins', coins); }
 
@@ -11432,7 +11435,6 @@ else showInstallButton();
     // ---------- 4. ШЕРИНГ СТИКЕРА (ссылка + картинка) ----------
     async function shareSticker(sticker) {
         const siteUrl = window.location.origin + window.location.pathname;
-        // Создаём временный холст с картинкой стикера (для share)
         try {
             const img = new Image();
             img.crossOrigin = 'Anonymous';
@@ -11456,7 +11458,6 @@ else showInstallButton();
                     files: [file]
                 });
             } else {
-                // fallback: копируем ссылку
                 await navigator.clipboard.writeText(siteUrl);
                 showToast('🔗 Ссылка на сайт скопирована! Поделитесь в соцсетях.');
             }
@@ -11473,13 +11474,15 @@ else showInstallButton();
         shopModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:90%; max-width:550px; max-height:85vh; overflow:auto; z-index:100100; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); color:white;';
         
         // Тропа прогресса (серия) внутри магазина
+        // Вычисляем следующий бонус правильно: если серия 7, следующий = 10 (начало нового цикла)
+        let nextBonus = (loginStreak === 7) ? bonuses[1] : bonuses[loginStreak + 1];
         let trailHtml = `
             <div style="text-align:center; margin-bottom:20px; padding:10px; background:#2c3e50; border-radius:20px;">
                 <h4>🔥 Прогресс серии</h4>
                 <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 10px;">
                     ${[1,2,3,4,5,6,7].map(day => `<div id="shopDay${day}" style="width:36px; height:36px; border-radius:50%; background:${day <= loginStreak ? '#27ae60' : '#2c3e50'}; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; ${day === loginStreak+1 ? 'border:2px solid #f1c40f;' : ''}">${day}</div>`).join('')}
                 </div>
-                <div>Серия: ${loginStreak} / 7 &nbsp;|&nbsp; След. бонус: ${bonuses[loginStreak+1 > 7 ? 1 : loginStreak+1]}</div>
+                <div>Серия: ${loginStreak} / 7 &nbsp;|&nbsp; След. бонус: ${nextBonus}</div>
             </div>
         `;
         
