@@ -10738,6 +10738,10 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 
 
+
+
+
+
     // ========== КРАСИВАЯ ТЕТРАДЬ (1500 СТРАНИЦ, ПЕРЕЛИСТЫВАНИЕ, АВТОСОХРАНЕНИЕ) ==========
 (function() {
     if (document.getElementById('notebookApp')) return;
@@ -10781,16 +10785,18 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
                 flex-direction: column;
                 position: relative;
             ">
-                <div style="padding: 8px 15px 0 15px; border-bottom: 1px solid #ecd9b0; display: flex; justify-content: space-between; align-items: baseline;">
-                    <span style="font-size: 0.75rem; color: #b4946a;">Страница ${pageNum}</span>
-                    <span style="font-size: 0.7rem; color: #b4946a;" id="saveStatus">✍️</span>
+                <div style="padding: 6px 15px 0 15px; border-bottom: 1px solid #ecd9b0; display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 0.7rem; color: #b4946a;">Страница ${pageNum}</span>
+                    <span style="font-size: 0.65rem; color: #b4946a;" id="saveStatus">✍️</span>
                 </div>
                 <div style="
                     flex: 1;
                     background-image: repeating-linear-gradient(transparent, transparent 28px, #e9ddc7 28px, #e9ddc7 29px);
-                    padding: 12px 18px;
-                    margin: 5px 8px 8px 8px;
-                    border-radius: 8px;
+                    padding: 8px 18px 12px 18px;
+                    margin: 0;
+                    border-radius: 0 0 12px 12px;
+                    display: flex;
+                    flex-direction: column;
                 ">
                     <textarea id="pageTextarea" style="
                         width: 100%;
@@ -10804,6 +10810,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
                         resize: none;
                         outline: none;
                         box-sizing: border-box;
+                        flex: 1;
                     " placeholder="Что вы хотите записать?"></textarea>
                 </div>
             </div>
@@ -10858,40 +10865,40 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         if (Math.abs(diff) > 50) changePage(diff > 0 ? 1 : -1);
     }
 
-    // Построение интерфейса
+    // Построение интерфейса — уменьшили общую высоту
     notesSection.innerHTML = `
         <div id="notebookApp" style="
             background: #d9c8a9;
             border-radius: 20px;
-            padding: 12px 10px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            padding: 10px 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         ">
-            <div style="background: #fef7e0; border-radius: 16px; overflow: hidden; min-height: 340px; display: flex; flex-direction: column;">
-                <div id="notebookContent" style="flex:1; min-height: 300px;"></div>
+            <div style="background: #fef7e0; border-radius: 16px; overflow: hidden; min-height: 260px; display: flex; flex-direction: column;">
+                <div id="notebookContent" style="flex:1; min-height: 220px;"></div>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px;">
                 <button id="prevPageBtn" style="
                     background: #5d3a1a;
                     border: none;
                     color: white;
-                    font-size: 1.1rem;
-                    padding: 6px 16px;
+                    font-size: 1rem;
+                    padding: 5px 14px;
                     border-radius: 40px;
                     cursor: pointer;
                     font-weight: bold;
-                    min-width: 70px;
+                    min-width: 65px;
                 ">◀ Назад</button>
-                <span id="pageIndicator" style="font-size: 0.85rem; color: #5a3e1b; background: #f5e5c8; padding: 4px 12px; border-radius: 30px;">1 / ${TOTAL_PAGES}</span>
+                <span id="pageIndicator" style="font-size: 0.8rem; color: #5a3e1b; background: #f5e5c8; padding: 4px 12px; border-radius: 30px;">1 / ${TOTAL_PAGES}</span>
                 <button id="nextPageBtn" style="
                     background: #5d3a1a;
                     border: none;
                     color: white;
-                    font-size: 1.1rem;
-                    padding: 6px 16px;
+                    font-size: 1rem;
+                    padding: 5px 14px;
                     border-radius: 40px;
                     cursor: pointer;
                     font-weight: bold;
-                    min-width: 70px;
+                    min-width: 65px;
                 ">Вперёд ▶</button>
             </div>
         </div>
@@ -10908,7 +10915,6 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         contentDiv.addEventListener('touchend', handleTouchEnd);
     }
 })();
-
 
 
 
