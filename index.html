@@ -10559,7 +10559,7 @@ speech_culture: {
     window.showMyCardsModal = showMyCardsModal;
 })();
 
-// ========== 3. PWA УСТАНОВКА ПРИЛОЖЕНИЯ (кнопка слева на одной линии с "Поддержать") ==========
+// ========== 3. PWA УСТАНОВКА ПРИЛОЖЕНИЯ (кнопка слева вверху) ==========
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -10572,7 +10572,7 @@ function showInstallButton() {
     const btn = document.createElement('button');
     btn.id = 'installPwaBtn';
     btn.innerText = '📲 Установить приложение';
-    btn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#1abc9c; color:white; border:none; padding:8px 16px; border-radius:30px; font-size:12px; cursor:pointer; z-index:10000; display:none; box-shadow:0 2px 6px rgba(0,0,0,0.2);';
+    btn.style.cssText = 'position:fixed; top:20px; left:20px; background:#1abc9c; color:white; border:none; padding:8px 16px; border-radius:30px; font-size:12px; cursor:pointer; z-index:10000; display:none; box-shadow:0 2px 6px rgba(0,0,0,0.2);';
     document.body.appendChild(btn);
     btn.onclick = async () => {
         if (deferredPrompt) {
@@ -10586,7 +10586,6 @@ function showInstallButton() {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showInstallButton);
 else showInstallButton();
-
 // ========== 4. СИСТЕМА ПЛАТНОГО КУРСА И УМНОЕ МЕНЮ ==========
 (function() {
     if (document.getElementById('smartMenuFinal')) return;
