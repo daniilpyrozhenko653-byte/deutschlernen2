@@ -10561,37 +10561,36 @@ speech_culture: {
 
 
 
-    // ========== PWA УСТАНОВКА (маленькая, всегда в левом верхнем углу) ==========
+    // ========== 3. PWA УСТАНОВКА ПРИЛОЖЕНИЯ (маленькая, фиксированная, слева вверху) ==========
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    const btn = document.getElementById('installPwaBtn');
-    if (btn) btn.style.display = 'flex';
+    const installBtn = document.getElementById('installPwaBtn');
+    if (installBtn) installBtn.style.display = 'flex';
 });
 
-function createInstallButton() {
-    if (document.getElementById('installPwaBtn')) return;
+function showInstallButton() {
     const btn = document.createElement('button');
     btn.id = 'installPwaBtn';
-    btn.textContent = '📲Установить приложение';
+    btn.innerText = '📲';
     btn.style.cssText = `
-        position: fixed;
-        top: 12px;
-        left: 12px;
+        position: fixed !important;
+        top: 10px;
+        left: 10px;
         background: #1abc9c;
         color: white;
         border: none;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        font-size: 18px;
+        padding: 5px 8px;
+        border-radius: 30px;
+        font-size: 12px;
         cursor: pointer;
-        z-index: 10001;
+        z-index: 100000;
         display: none;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        align-items: center;
-        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        font-weight: bold;
+        transform: none;
+        will-change: auto;
     `;
     document.body.appendChild(btn);
     btn.onclick = async () => {
@@ -10604,9 +10603,8 @@ function createInstallButton() {
     };
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', createInstallButton);
-else createInstallButton();
-
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showInstallButton);
+else showInstallButton();
 
 
 
