@@ -10722,6 +10722,238 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
    
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ========== КНИЖНАЯ ТЕТРАДЬ С АВТОСОХРАНЕНИЕМ ==========
+(function() {
+    if (document.getElementById('bookNotebook')) return;
+
+    const notesSection = document.querySelector('.notes-section');
+    if (!notesSection) return;
+
+    // Загружаем сохранённый текст
+    const savedText = localStorage.getItem('common_notepad') || '';
+
+    // Создаём новый блокнот в стиле книги
+    notesSection.innerHTML = `
+        <div id="bookNotebook" style="
+            background: #fef7e0;
+            border-radius: 16px;
+            box-shadow: 8px 8px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,240,0.8);
+            padding: 20px 18px;
+            position: relative;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            transition: all 0.2s;
+            border: 1px solid #d9c8a9;
+        ">
+            <!-- "Корешок" книги слева -->
+            <div style="
+                position: absolute;
+                left: -12px;
+                top: 20px;
+                bottom: 20px;
+                width: 12px;
+                background: linear-gradient(135deg, #c2a575, #9b7e55);
+                border-radius: 4px 0 0 4px;
+                box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            "></div>
+
+            <!-- Верхняя декоративная линия -->
+            <div style="
+                border-top: 2px solid #e2cfaa;
+                border-bottom: 1px solid #e2cfaa;
+                padding: 6px 0;
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                flex-wrap: wrap;
+            ">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6rem;">📖</span>
+                    <h3 style="margin: 0; font-size: 1.2rem; color: #5a3e1b; font-weight: normal; letter-spacing: 1px;">Моя тетрадь</h3>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="clearNotebookBook" style="
+                        background: #f5e5c8;
+                        border: none;
+                        border-radius: 40px;
+                        padding: 5px 14px;
+                        font-size: 0.7rem;
+                        color: #7a5516;
+                        cursor: pointer;
+                        font-family: inherit;
+                        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                        transition: 0.1s;
+                    ">🧽 Очистить</button>
+                    <button id="captureNotebookBook" style="
+                        background: #d9c5a5;
+                        border: none;
+                        border-radius: 40px;
+                        padding: 5px 12px;
+                        font-size: 0.7rem;
+                        color: #4a2e0e;
+                        cursor: pointer;
+                        font-family: inherit;
+                        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                    ">📸 Фото</button>
+                </div>
+            </div>
+
+            <!-- Поле для записей с линейками (имитация блокнота) -->
+            <div style="
+                background: #fffdf7;
+                background-image: repeating-linear-gradient(transparent, transparent 28px, #e9ddc7 28px, #e9ddc7 29px);
+                border: 1px solid #ecd9b0;
+                border-radius: 12px;
+                padding: 12px 18px;
+                margin-bottom: 12px;
+                position: relative;
+            ">
+                <textarea id="notebookTextareaBook" rows="6" style="
+                    width: 100%;
+                    background: transparent;
+                    border: none;
+                    font-family: 'Georgia', 'Segoe UI', serif;
+                    font-size: 16px;
+                    line-height: 29px;
+                    color: #2c2418;
+                    resize: vertical;
+                    outline: none;
+                    box-sizing: border-box;
+                " placeholder="Напишите здесь свои мысли, ассоциации или примеры...">${escapeHtml(savedText)}</textarea>
+            </div>
+
+            <!-- Нижняя плашка с автосохранением -->
+            <div style="
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 8px;
+                padding-right: 5px;
+            ">
+                <span style="font-size: 0.7rem; color: #b4946a;">✍️</span>
+                <span id="saveStatusBook" style="font-size: 0.7rem; color: #2c7a5e;">Автосохранение</span>
+            </div>
+
+            <!-- Уголки как у старой книги -->
+            <div style="position: absolute; bottom: 12px; left: 12px; width: 20px; height: 20px; border-left: 2px solid #d9c8a9; border-bottom: 2px solid #d9c8a9;"></div>
+            <div style="position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; border-right: 2px solid #d9c8a9; border-top: 2px solid #d9c8a9;"></div>
+        </div>
+    `;
+
+    // Элементы
+    const textarea = document.getElementById('notebookTextareaBook');
+    const clearBtn = document.getElementById('clearNotebookBook');
+    const captureBtn = document.getElementById('captureNotebookBook');
+    const statusSpan = document.getElementById('saveStatusBook');
+
+    let saveTimeout = null;
+
+    // Функция сохранения
+    function saveNote() {
+        const text = textarea.value;
+        if (text.trim()) localStorage.setItem('common_notepad', text);
+        else localStorage.removeItem('common_notepad');
+        if (statusSpan) {
+            statusSpan.textContent = '✓ Сохранено';
+            setTimeout(() => {
+                if (statusSpan) statusSpan.textContent = '✍️ Автосохранение';
+            }, 1500);
+        }
+    }
+
+    // Автосохранение при вводе
+    function autoSave() {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveNote, 600);
+    }
+
+    textarea.addEventListener('input', autoSave);
+    textarea.addEventListener('blur', saveNote);
+
+    // Кнопка очистки
+    clearBtn.addEventListener('click', () => {
+        textarea.value = '';
+        saveNote();
+        if (statusSpan) {
+            statusSpan.textContent = '🧹 Очищено';
+            setTimeout(() => statusSpan.textContent = '✍️ Автосохранение', 1500);
+        }
+    });
+
+    // Функция для фото (используем html2canvas, если загружена, иначе заглушка)
+    let html2canvasLoaded = false;
+    async function ensureHtml2Canvas() {
+        if (window.html2canvas) {
+            html2canvasLoaded = true;
+            return true;
+        }
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = () => { html2canvasLoaded = true; resolve(true); };
+            script.onerror = () => resolve(false);
+            document.head.appendChild(script);
+        });
+    }
+
+    async function captureBook() {
+        const bookDiv = document.getElementById('bookNotebook');
+        if (!bookDiv) return;
+        const loaded = await ensureHtml2Canvas();
+        if (!loaded) {
+            alert('Не удалось загрузить библиотеку для фото. Проверьте интернет.');
+            return;
+        }
+        try {
+            captureBtn.disabled = true;
+            captureBtn.textContent = '📸...';
+            const canvas = await html2canvas(bookDiv, { scale: 2, backgroundColor: '#fef7e0' });
+            const link = document.createElement('a');
+            link.download = `tetrad_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        } catch (err) {
+            console.error(err);
+            alert('Не удалось создать фото');
+        } finally {
+            captureBtn.disabled = false;
+            captureBtn.textContent = '📸 Фото';
+        }
+    }
+
+    captureBtn.addEventListener('click', captureBook);
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+})();
+
 </script>
 </body>
 </html>
