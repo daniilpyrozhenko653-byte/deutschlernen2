@@ -11259,6 +11259,138 @@ else showInstallButton();
 
 
 
+    // ========== УЛУЧШЕННЫЕ СВАЙПЫ ДЛЯ КАРТОЧЕК (с анимацией, цветами, звуком) ==========
+(function() {
+    // Скрываем старые кнопки статусов (если ещё видны)
+    const learnedBtn = document.getElementById('markLearnedBtn');
+    const repeatBtn = document.getElementById('markRepeatBtn');
+    if (learnedBtn) learnedBtn.style.display = 'none';
+    if (repeatBtn) repeatBtn.style.display = 'none';
+
+    const card = document.getElementById('flashcard');
+    if (!card) return;
+
+    // ---- Показываем подсказку (только один раз) ----
+    if (!localStorage.getItem('swipeHintShown')) {
+        const hint = document.createElement('div');
+        hint.innerText = '👈 Свайп влево = изучено   |   Свайп вправо = на повтор 👉';
+        hint.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:#f1c40f; padding:12px 20px; border-radius:30px; font-size:14px; z-index:100050; text-align:center; white-space:nowrap;';
+        document.body.appendChild(hint);
+        setTimeout(() => hint.remove(), 4000);
+        localStorage.setItem('swipeHintShown', 'true');
+    }
+
+    // ---- Звук при свайпе (короткий "щелчок") ----
+    function playSwipeSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 880;
+            osc.type = 'sine';
+            gain.gain.value = 0.15;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
+            osc.stop(now + 0.1);
+        } catch(e) {}
+    }
+
+    let startX = 0, startY = 0;
+    let isSwiping = false;
+    let currentStatusHint = null;
+
+    // Показываем цветной индикатор направления
+    function showDirectionHint(direction) {
+        if (currentStatusHint) currentStatusHint.remove();
+        const hintDiv = document.createElement('div');
+        if (direction === 'learned') {
+            hintDiv.innerText = '✅ ИЗУЧЕНО';
+            hintDiv.style.background = '#2e7d64';
+        } else {
+            hintDiv.innerText = '🔄 НА ПОВТОР';
+            hintDiv.style.background = '#f39c12';
+        }
+        hintDiv.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); color:white; padding:8px 16px; border-radius:30px; font-size:16px; font-weight:bold; z-index:100060; opacity:0; transition:opacity 0.1s; white-space:nowrap;';
+        document.body.appendChild(hintDiv);
+        hintDiv.style.opacity = '1';
+        currentStatusHint = hintDiv;
+        setTimeout(() => {
+            if (currentStatusHint) currentStatusHint.remove();
+            currentStatusHint = null;
+        }, 200);
+    }
+
+    card.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isSwiping = true;
+        card.style.transition = 'none';
+    });
+
+    card.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        const deltaX = e.touches[0].clientX - startX;
+        const deltaY = e.touches[0].clientY - startY;
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+            e.preventDefault();
+            let translateX = Math.min(150, Math.max(-150, deltaX));
+            card.style.transform = `translateX(${translateX}px)`;
+            card.style.opacity = `${1 - Math.abs(translateX) / 200}`;
+            // Меняем цвет карточки в зависимости от направления
+            if (deltaX > 30) {
+                card.style.backgroundColor = '#f39c12';   // повтор
+                card.style.color = '#1f2c2c';
+            } else if (deltaX < -30) {
+                card.style.backgroundColor = '#2e7d64';   // изучено
+                card.style.color = 'white';
+            } else {
+                card.style.backgroundColor = '';
+                card.style.color = '';
+            }
+        }
+    });
+
+    card.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        const endX = e.changedTouches[0].clientX;
+        const deltaX = endX - startX;
+        const elapsed = Date.now() - startTime;
+
+        // Сбрасываем визуальные эффекты
+        card.style.transition = 'transform 0.2s ease, background 0.2s';
+        card.style.transform = '';
+        card.style.opacity = '1';
+        card.style.backgroundColor = '';
+        card.style.color = '';
+
+        // Если свайп короткий или медленный – не меняем статус
+        if (Math.abs(deltaX) < 50 || elapsed > 300) return;
+
+        let status = null;
+        if (deltaX > 0) status = 'repeat';    // вправо
+        else status = 'learned';              // влево
+
+        if (status && typeof toggleStatus === 'function') {
+            playSwipeSound();
+            showDirectionHint(status);
+            toggleStatus(status);
+        }
+
+        // Небольшая задержка, чтобы карточка успела обновиться
+        setTimeout(() => {
+            card.style.transform = '';
+            card.style.opacity = '1';
+        }, 50);
+    });
+
+    // Сохраняем время начала касания
+    let startTime;
+    card.addEventListener('touchstart', (e) => { startTime = Date.now(); });
+})();
 
 
 
