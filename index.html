@@ -11350,20 +11350,28 @@ else showInstallButton();
 
 
 
-    // ========== СИСТЕМА ПРОГРЕССИРУЮЩИХ БОНУСОВ + МАГАЗИН СТИКЕРОВ ==========
+
+
+
+
+
+
+
+
+
+
+    // ========== СИСТЕМА БОНУСОВ И МАГАЗИН СТИКЕРОВ (С КАРТИНКАМИ И ПОДЕЛИТЬСЯ) ==========
 (function() {
     if (document.getElementById('bonusWidget')) return;
 
-    // ---------- 1. БАЛАНС И БОНУСЫ (ПРОГРЕССИРУЮЩАЯ ТРОПА) ----------
-    let coins = parseInt(localStorage.getItem('userCoins')) || 1000;  // 1000 монет для теста
+    // ---------- 1. БАЛАНС И БОНУСЫ ----------
+    let coins = parseInt(localStorage.getItem('userCoins')) || 1000;
     let lastLoginDate = localStorage.getItem('lastLoginDate');
     let loginStreak = parseInt(localStorage.getItem('loginStreak')) || 0;
 
-    // Бонусы по дням (удвоение)
     const bonuses = [0, 10, 20, 40, 80, 160, 320, 640];
 
     function saveBalance() { localStorage.setItem('userCoins', coins); }
-
     function showToast(message, isError = false) {
         const toast = document.createElement('div');
         toast.textContent = message;
@@ -11375,26 +11383,16 @@ else showInstallButton();
     function checkDailyBonus() {
         const today = new Date().toDateString();
         if (lastLoginDate === today) return;
-
-        let bonus = 10;
-        let newStreak = 1;
+        let bonus = 10, newStreak = 1;
         if (lastLoginDate) {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             if (lastLoginDate === yesterday.toDateString()) {
-                // серия продолжается
                 newStreak = loginStreak + 1;
-                if (newStreak > 7) newStreak = 1; // после 7-го дня сброс на 1
+                if (newStreak > 7) newStreak = 1;
                 bonus = bonuses[newStreak];
-            } else {
-                newStreak = 1;
-                bonus = bonuses[1];
-            }
-        } else {
-            newStreak = 1;
-            bonus = bonuses[1];
-        }
-
+            } else { newStreak = 1; bonus = bonuses[1]; }
+        } else { newStreak = 1; bonus = bonuses[1]; }
         coins += bonus;
         loginStreak = newStreak;
         saveBalance();
@@ -11404,67 +11402,114 @@ else showInstallButton();
         showToast(`🎁 Бонус дня ${loginStreak}/7: +${bonus} монет! Серия: ${loginStreak} дней`);
     }
 
-    // ---------- 2. МАГАЗИН СТИКЕРОВ ----------
+    // ---------- 2. МАГАЗИН СТИКЕРОВ (С КАРТИНКАМИ) ----------
+    // Примеры стикеров с картинками (вы можете заменить URL на свои)
     const stickers = [
-        { id: 1, name: 'Кубок', emoji: '🏆', price: 50, category: 'трофеи' },
-        { id: 2, name: 'Огонь', emoji: '🔥', price: 30, category: 'стихии' },
-        { id: 3, name: 'Звезда', emoji: '✨', price: 40, category: 'космос' },
-        { id: 4, name: 'Алмаз', emoji: '💎', price: 100, category: 'драгоценности' },
-        { id: 5, name: 'Праздник', emoji: '🎉', price: 60, category: 'праздники' },
-        { id: 6, name: 'Крутой', emoji: '💪', price: 80, category: 'мотивация' },
-        { id: 7, name: 'Восхищение', emoji: '🤩', price: 45, category: 'эмодзи' },
-        { id: 8, name: 'Кот', emoji: '🐱', price: 35, category: 'животные' },
-        { id: 9, name: 'Сердце', emoji: '❤️', price: 25, category: 'любовь' },
-        { id: 10, name: 'Молния', emoji: '⚡', price: 55, category: 'энергия' },
-        { id: 11, name: 'Луна', emoji: '🌙', price: 70, category: 'космос' },
-        { id: 12, name: 'Ракета', emoji: '🚀', price: 90, category: 'техника' },
+        { id: 1, name: 'Кубок', emoji: '🏆', price: 50, imgUrl: null },
+        { id: 2, name: 'Огонь', emoji: '🔥', price: 30, imgUrl: null },
+        { id: 3, name: 'Звезда', emoji: '✨', price: 40, imgUrl: null },
+        { id: 4, name: 'Алмаз', emoji: '💎', price: 100, imgUrl: null },
+        { id: 5, name: 'Праздник', emoji: '🎉', price: 60, imgUrl: null },
+        { id: 6, name: 'Крутой', emoji: '💪', price: 80, imgUrl: null },
+        { id: 7, name: 'Восхищение', emoji: '🤩', price: 45, imgUrl: null },
+        { id: 8, name: 'Кот', emoji: '🐱', price: 35, imgUrl: null },
+        // Добавьте свои стикеры с картинками (укажите URL изображения)
+        // { id: 9, name: 'Мой стикер', emoji: '🌟', price: 70, imgUrl: 'Top.png' }
     ];
 
     let purchasedStickers = JSON.parse(localStorage.getItem('purchasedStickers')) || [];
-    let activeSticker = localStorage.getItem('activeSticker') || null;  // выбранный стикер для отображения
+    let activeSticker = localStorage.getItem('activeSticker') || null;
 
     function savePurchased() { localStorage.setItem('purchasedStickers', JSON.stringify(purchasedStickers)); }
     function saveActiveSticker() { localStorage.setItem('activeSticker', activeSticker); }
 
-    // Применить стикер к аватару (верхний правый угол)
-    function applyStickerToAvatar() {
-        const avatarDiv = document.getElementById('avatarWithSticker');
-        if (!avatarDiv) return;
-        if (activeSticker) {
-            const sticker = stickers.find(s => s.id == activeSticker);
-            if (sticker) avatarDiv.innerHTML = `<span style="font-size:28px;">${sticker.emoji}</span>`;
-            else avatarDiv.innerHTML = `<span style="font-size:28px;">👤</span>`;
+    // Функция поделиться стикером (генерация изображения)
+    async function shareSticker(sticker) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 400;
+        canvas.height = 400;
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = 'bold 24px "Segoe UI"';
+        ctx.fillText('🇩🇪 Немецкий тренажёр', 50, 50);
+        
+        if (sticker.imgUrl) {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = sticker.imgUrl;
+            await new Promise((resolve) => {
+                img.onload = () => {
+                    const size = 200;
+                    ctx.drawImage(img, (canvas.width - size)/2, 100, size, size);
+                    resolve();
+                };
+                img.onerror = () => resolve();
+            });
         } else {
-            avatarDiv.innerHTML = `<span style="font-size:28px;">👤</span>`;
+            ctx.font = '180px "Segoe UI"';
+            ctx.fillText(sticker.emoji, (canvas.width - 130)/2, 250);
         }
+        ctx.font = '20px "Segoe UI"';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(`⭐ ${sticker.name}`, (canvas.width - 150)/2, 340);
+        
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], 'sticker.png', { type: 'image/png' });
+            if (navigator.share) {
+                try {
+                    await navigator.share({ files: [file], title: 'Мой стикер', text: `Я собрал стикер "${sticker.name}" в изучении немецкого!` });
+                } catch(e) { console.log('Отмена', e); }
+            } else {
+                const link = document.createElement('a');
+                link.download = `sticker_${sticker.name}.png`;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showToast('📸 Изображение сохранено в загрузки');
+            }
+        }, 'image/png');
     }
 
-    // Открыть магазин
+    // Открыть магазин (с отображением тропы и серии)
     function openStickerShop() {
         const shopModal = document.createElement('div');
         shopModal.id = 'stickerShopModal';
-        shopModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:90%; max-width:550px; max-height:85vh; overflow:auto; z-index:100100; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); color:white;';
+        shopModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:90%; max-width:600px; max-height:85vh; overflow:auto; z-index:100100; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); color:white;';
         
-        let stickersHtml = '<h3 style="text-align:center;">🛍️ Магазин стикеров</h3><div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-bottom:20px;">';
+        // Тропа и серия (только в магазине)
+        const streakHtml = `
+            <div style="background:#2c3e50; border-radius:15px; padding:10px; margin-bottom:20px; text-align:center;">
+                <div style="font-size:14px; margin-bottom:8px;">🔥 Серия дней: <strong>${loginStreak}</strong> / 7</div>
+                <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                    ${[1,2,3,4,5,6,7].map(day => `<div style="width:36px; height:36px; border-radius:50%; background:${day <= loginStreak ? '#27ae60' : (day === loginStreak+1 ? '#f39c12' : '#34495e')}; display:flex; align-items:center; justify-content:center; font-weight:bold;">${day}</div>`).join('')}
+                </div>
+                <div style="margin-top:8px; font-size:12px;">📈 Следующий бонус: ${bonuses[loginStreak+1 > 7 ? 1 : loginStreak+1]} монет</div>
+            </div>
+        `;
+
+        let stickersHtml = '<h3 style="text-align:center;">🛍️ Магазин стикеров</h3>';
+        stickersHtml += '<div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-bottom:20px;">';
         stickers.forEach(s => {
             const owned = purchasedStickers.includes(s.id);
+            const imgStyle = s.imgUrl ? `background-image:url(${s.imgUrl}); background-size:cover;` : '';
             stickersHtml += `
-                <div style="background:#2c3e50; border-radius:16px; padding:12px; width:100px; text-align:center;">
-                    <div style="font-size:36px;">${s.emoji}</div>
+                <div style="background:#2c3e50; border-radius:16px; padding:12px; width:110px; text-align:center;">
+                    <div style="font-size:48px; height:60px; ${imgStyle} background-position:center; background-repeat:no-repeat; background-size:contain;">${s.imgUrl ? '' : s.emoji}</div>
                     <div>${s.name}</div>
                     <div>💰 ${s.price}</div>
                     ${owned ? '<button disabled style="background:#555; margin-top:5px;">✅ Есть</button>' : `<button class="buyStickerBtn" data-id="${s.id}" data-price="${s.price}">Купить</button>`}
+                    ${owned ? `<button class="shareStickerBtn" data-id="${s.id}" style="margin-top:5px; background:#3498db; padding:2px 6px;">📢 Поделиться</button>` : ''}
                 </div>
             `;
         });
         stickersHtml += '</div>';
-        // Блок коллекции
-        stickersHtml += `<h3>📦 Мои стикеры</h3><div id="myStickersContainer" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>`;
+        stickersHtml += `<h3>📦 Моя коллекция (${purchasedStickers.length} шт.)</h3><div id="myStickersContainer" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>`;
         stickersHtml += `<button id="closeShopBtn" style="background:#e74c3c; width:100%; padding:8px; border-radius:30px;">Закрыть</button>`;
-        shopModal.innerHTML = stickersHtml;
+        shopModal.innerHTML = streakHtml + stickersHtml;
         document.body.appendChild(shopModal);
 
-        // Обновляем отображение коллекции
         function renderMyStickers() {
             const container = shopModal.querySelector('#myStickersContainer');
             if (!container) return;
@@ -11478,14 +11523,14 @@ else showInstallButton();
                 if (st) {
                     const isActive = (activeSticker == st.id);
                     const div = document.createElement('div');
-                    div.style.cssText = `background:${isActive ? '#f39c12' : '#34495e'}; border-radius:12px; padding:8px; text-align:center; width:80px; cursor:pointer; transition:0.2s;`;
-                    div.innerHTML = `<div style="font-size:32px;">${st.emoji}</div><div style="font-size:11px;">${st.name}</div>`;
+                    div.style.cssText = `background:${isActive ? '#f39c12' : '#34495e'}; border-radius:12px; padding:8px; text-align:center; width:90px; cursor:pointer; transition:0.2s;`;
+                    div.innerHTML = `<div style="font-size:40px;">${st.imgUrl ? '' : st.emoji}</div><div style="font-size:11px;">${st.name}</div>`;
+                    if (st.imgUrl) div.style.backgroundImage = `url(${st.imgUrl})`;
                     div.onclick = () => {
                         activeSticker = st.id;
                         saveActiveSticker();
-                        applyStickerToAvatar();
                         renderMyStickers();
-                        showToast(`✨ Стикер ${st.emoji} активирован!`);
+                        showToast(`✨ Стикер "${st.name}" активирован!`);
                     };
                     container.appendChild(div);
                 }
@@ -11502,12 +11547,8 @@ else showInstallButton();
                     saveBalance();
                     savePurchased();
                     updateBalanceUI();
-                    showToast(`🎉 Вы купили стикер ${stickers.find(s => s.id === id).emoji}!`);
-                    // Обновляем магазин (убираем кнопку "Купить")
-                    btn.textContent = '✅ Есть';
-                    btn.disabled = true;
-                    btn.style.background = '#555';
-                    renderMyStickers();
+                    showToast(`🎉 Вы купили стикер "${stickers.find(s => s.id === id).name}"!`);
+                    openStickerShop(); // переоткрываем для обновления
                 } else if (purchasedStickers.includes(id)) {
                     showToast('У вас уже есть этот стикер');
                 } else {
@@ -11515,41 +11556,29 @@ else showInstallButton();
                 }
             };
         });
+        shopModal.querySelectorAll('.shareStickerBtn').forEach(btn => {
+            btn.onclick = async () => {
+                const id = parseInt(btn.dataset.id);
+                const sticker = stickers.find(s => s.id === id);
+                if (sticker) await shareSticker(sticker);
+            };
+        });
         renderMyStickers();
         document.getElementById('closeShopBtn').onclick = () => shopModal.remove();
     }
 
-    // ---------- 3. ОТОБРАЖЕНИЕ ТРОПЫ И БАЛАНСА ----------
+    // ---------- 3. ОТОБРАЖЕНИЕ БАЛАНСА (без аватара) ----------
     function updateBalanceUI() {
         const balanceSpan = document.getElementById('coinBalance');
         if (balanceSpan) balanceSpan.innerText = coins;
-        const streakSpan = document.getElementById('streakDisplay');
-        if (streakSpan) streakSpan.innerText = loginStreak;
-        const nextBonusSpan = document.getElementById('nextBonus');
-        if (nextBonusSpan) {
-            let next = loginStreak + 1;
-            if (next > 7) next = 1;
-            nextBonusSpan.innerText = bonuses[next];
-        }
-        // Обновляем тропу (визуальные индикаторы)
-        for (let i = 1; i <= 7; i++) {
-            const dayDiv = document.getElementById(`day${i}`);
-            if (dayDiv) {
-                if (i <= loginStreak) dayDiv.style.background = '#27ae60';
-                else if (i === loginStreak + 1) dayDiv.style.background = '#f39c12';
-                else dayDiv.style.background = '#2c3e50';
-                dayDiv.style.border = (i === loginStreak + 1) ? '2px solid #f1c40f' : 'none';
-            }
-        }
     }
 
-    // ---------- 4. СОЗДАНИЕ ВИДЖЕТОВ ----------
     const widget = document.createElement('div');
     widget.id = 'bonusWidget';
     widget.style.cssText = `
         position: fixed;
         top: 10px;
-        right: 60px;
+        right: 10px;
         background: #2c3e50;
         border-radius: 40px;
         padding: 4px 12px;
@@ -11558,76 +11587,17 @@ else showInstallButton();
         gap: 8px;
         z-index: 10000;
         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        font-size: 13px;
+        font-size: 14px;
         font-weight: bold;
         cursor: pointer;
     `;
-    widget.innerHTML = `
-        <span>💰 <span id="coinBalance">${coins}</span></span>
-        <button id="openShopBtn" style="background:#f39c12; border:none; border-radius:30px; padding:2px 8px; cursor:pointer;">🛒</button>
-    `;
+    widget.innerHTML = `<span>💰 <span id="coinBalance">${coins}</span></span><button id="openShopBtn" style="background:#f39c12; border:none; border-radius:30px; padding:2px 8px; cursor:pointer;">🛒</button>`;
     document.body.appendChild(widget);
-
-    // Аватар со стикером (справа от баланса)
-    const avatarDiv = document.createElement('div');
-    avatarDiv.id = 'avatarWithSticker';
-    avatarDiv.style.cssText = `
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: #1e272e;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        z-index: 10000;
-    `;
-    avatarDiv.innerHTML = `<span style="font-size:28px;">👤</span>`;
-    avatarDiv.onclick = () => openStickerShop(); // по клику на аватар открываем магазин
-    document.body.appendChild(avatarDiv);
-
-    // Тропа прогресса (отображается под виджетами)
-    const trail = document.createElement('div');
-    trail.id = 'bonusTrail';
-    trail.style.cssText = `
-        position: fixed;
-        top: 55px;
-        right: 10px;
-        background: #1e272e;
-        border-radius: 20px;
-        padding: 8px 12px;
-        z-index: 10000;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        font-size: 12px;
-    `;
-    trail.innerHTML = `
-        <div style="display: flex; gap: 5px;">
-            ${[1,2,3,4,5,6,7].map(day => `<div id="day${day}" style="width:32px; height:32px; border-radius:50%; background:#2c3e50; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; transition:0.2s;">${day}</div>`).join('')}
-        </div>
-        <div style="margin-left:10px;">🔥 Серия: <span id="streakDisplay">${loginStreak}</span>/7</div>
-        <div>📈 След. бонус: <span id="nextBonus">${bonuses[loginStreak+1 > 7 ? 1 : loginStreak+1]}</span></div>
-    `;
-    document.body.appendChild(trail);
-
     document.getElementById('openShopBtn').onclick = openStickerShop;
 
-    // Инициализация: проверяем бонус и применяем стикер
     checkDailyBonus();
-    applyStickerToAvatar();
     updateBalanceUI();
-
-    // При возвращении на вкладку проверяем бонус
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) checkDailyBonus();
-    });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDailyBonus(); });
 })();
 
 
