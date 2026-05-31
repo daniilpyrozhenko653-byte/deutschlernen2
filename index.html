@@ -11259,9 +11259,9 @@ else showInstallButton();
 
 
 
-    // ========== УЛУЧШЕННЫЕ СВАЙПЫ ДЛЯ КАРТОЧЕК (с анимацией, цветами, звуком) ==========
+    // ========== СВАЙПЫ КАРТОЧЕК С УМНОЙ ЛОГИКОЙ И ПОДСКАЗКОЙ ==========
 (function() {
-    // Скрываем старые кнопки статусов (если ещё видны)
+    // Скрываем старые кнопки статусов
     const learnedBtn = document.getElementById('markLearnedBtn');
     const repeatBtn = document.getElementById('markRepeatBtn');
     if (learnedBtn) learnedBtn.style.display = 'none';
@@ -11270,48 +11270,72 @@ else showInstallButton();
     const card = document.getElementById('flashcard');
     if (!card) return;
 
-    // ---------- ПОСТОЯННАЯ ПОДСКАЗКА ВНИЗУ ----------
-    if (!document.getElementById('swipeHintBar')) {
-        const hintBar = document.createElement('div');
-        hintBar.id = 'swipeHintBar';
-        hintBar.innerHTML = '👈 Свайп влево = <span style="color:#2ecc71;">ИЗУЧЕНО</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Свайп вправо = <span style="color:#f39c12;">НА ПОВТОР</span> 👉';
-        hintBar.style.cssText = `
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
+    // ---------- ИКОНКА-ПОДСКАЗКА НАД КАРТОЧКОЙ ----------
+    if (!document.getElementById('swipeHintIcon')) {
+        const hintIcon = document.createElement('div');
+        hintIcon.id = 'swipeHintIcon';
+        hintIcon.innerHTML = '👆';
+        hintIcon.style.cssText = `
             text-align: center;
-            background: rgba(0,0,0,0.75);
-            color: white;
-            font-size: 11px;
-            padding: 6px;
-            border-radius: 30px;
-            z-index: 100060;
-            font-weight: bold;
-            backdrop-filter: blur(4px);
-            pointer-events: none;
+            font-size: 24px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            opacity: 0.7;
+            transition: 0.2s;
         `;
-        document.body.appendChild(hintBar);
+        hintIcon.onmouseenter = () => hintIcon.style.opacity = '1';
+        hintIcon.onmouseleave = () => hintIcon.style.opacity = '0.7';
+        // Вставляем над карточкой
+        const parent = card.parentNode;
+        parent.insertBefore(hintIcon, card);
     }
 
-    // ---------- ЗВУК С РАЗБЛОКИРОВКОЙ ПО ПЕРВОМУ КАСАНИЮ ----------
+    // Всплывающая подсказка (4 секунды)
+    let activeTooltip = null;
+    function showTooltip(text, isError = false) {
+        if (activeTooltip) activeTooltip.remove();
+        const tooltip = document.createElement('div');
+        tooltip.innerText = text;
+        tooltip.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: ${isError ? '#e74c3c' : '#2c3e50'};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 100080;
+            text-align: center;
+            white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        `;
+        document.body.appendChild(tooltip);
+        activeTooltip = tooltip;
+        setTimeout(() => {
+            if (activeTooltip === tooltip) activeTooltip.remove();
+        }, 4000);
+    }
+
+    // Обработчик клика по иконке
+    document.getElementById('swipeHintIcon')?.addEventListener('click', () => {
+        showTooltip('👈 Свайп влево = ИЗУЧЕНО   |   Свайп вправо = НА ПОВТОР 👉');
+    });
+
+    // ---------- ЗВУК ----------
     let audioUnlocked = false;
     let audioCtx = null;
-
     function unlockAudio() {
         if (audioUnlocked) return;
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtx.resume().then(() => {
-                audioUnlocked = true;
-                console.log('Audio unlocked');
-            });
+            audioCtx.resume().then(() => { audioUnlocked = true; });
         } catch(e) {}
     }
-    // Разблокируем звук при первом касании страницы
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
     document.body.addEventListener('click', unlockAudio, { once: true });
-
     function playSwipeSound() {
         if (!audioUnlocked || !audioCtx) return;
         try {
@@ -11332,43 +11356,73 @@ else showInstallButton();
     let startX = 0, startY = 0;
     let isSwiping = false;
     let startTime = 0;
-    let currentStatusHint = null;
 
-    function showDirectionHint(direction) {
-        if (currentStatusHint) currentStatusHint.remove();
-        const hintDiv = document.createElement('div');
-        if (direction === 'learned') {
-            hintDiv.innerText = '✅ ИЗУЧЕНО';
-            hintDiv.style.background = '#2e7d64';
-        } else {
-            hintDiv.innerText = '🔄 НА ПОВТОР';
-            hintDiv.style.background = '#f39c12';
+    // Функция умного изменения статуса с учётом текущего фильтра
+    function smartToggleStatus(direction) {
+        // direction: 'left' (влево) или 'right' (вправо)
+        // Получаем текущий фильтр (глобальная переменная currentFilter)
+        const filter = typeof currentFilter !== 'undefined' ? currentFilter : 'all';
+        const realIdx = typeof currentCardIndexReal === 'function' ? currentCardIndexReal() : null;
+        if (realIdx === null) {
+            showTooltip('Нет активной карточки', true);
+            return;
         }
-        hintDiv.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 18px;
-            font-weight: bold;
-            z-index: 100070;
-            opacity: 0;
-            transition: opacity 0.1s ease;
-            white-space: nowrap;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        `;
-        document.body.appendChild(hintDiv);
-        hintDiv.style.opacity = '1';
-        currentStatusHint = hintDiv;
-        setTimeout(() => {
-            if (currentStatusHint) currentStatusHint.remove();
-            currentStatusHint = null;
-        }, 250);
+        const currentStatus = getCardStatus(realIdx); // функция из вашего кода
+
+        let newStatus = null;
+        let actionDescription = '';
+
+        // Логика в зависимости от фильтра
+        if (filter === 'all') {
+            // Вкладка "Все (неизученные)"
+            if (direction === 'left') {
+                newStatus = 'learned';
+                actionDescription = '✅ Изучено';
+            } else {
+                newStatus = 'repeat';
+                actionDescription = '🔄 На повтор';
+            }
+        } 
+        else if (filter === 'learned') {
+            // Вкладка "Изучено"
+            if (direction === 'left') {
+                // убрать из изученных -> вернуть в "Все" (снять статус)
+                newStatus = null;
+                actionDescription = '↩️ Вернуть во "Все"';
+            } else {
+                // вправо -> сделать "На повтор"
+                newStatus = 'repeat';
+                actionDescription = '🔄 Переместить в "На повтор"';
+            }
+        }
+        else if (filter === 'repeat') {
+            // Вкладка "На повтор"
+            if (direction === 'left') {
+                // влево -> сделать "Изучено"
+                newStatus = 'learned';
+                actionDescription = '✅ Переместить в "Изучено"';
+            } else {
+                // вправо -> вернуть во "Все" (снять статус)
+                newStatus = null;
+                actionDescription = '↩️ Вернуть во "Все"';
+            }
+        }
+
+        // Применяем новый статус
+        if (newStatus === null) {
+            setCardStatusTo(null);
+        } else {
+            setCardStatusTo(newStatus);
+        }
+        showTooltip(actionDescription);
+        playSwipeSound();
+        // Принудительно обновляем фильтр и синхронизацию (это делает applyFilterAndSync)
+        if (typeof applyFilterAndSync === 'function') {
+            applyFilterAndSync();
+        }
     }
 
+    // Обработчики свайпов
     card.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
@@ -11386,7 +11440,6 @@ else showInstallButton();
             let translateX = Math.min(150, Math.max(-150, deltaX));
             card.style.transform = `translateX(${translateX}px)`;
             card.style.opacity = `${1 - Math.abs(translateX) / 200}`;
-            // Меняем цвет карточки в зависимости от направления
             if (deltaX > 30) {
                 card.style.backgroundColor = '#f39c12';
                 card.style.color = '#1f2c2c';
@@ -11407,7 +11460,6 @@ else showInstallButton();
         const deltaX = endX - startX;
         const elapsed = Date.now() - startTime;
 
-        // Сбрасываем визуальные эффекты
         card.style.transition = 'transform 0.2s ease, background 0.2s';
         card.style.transform = '';
         card.style.opacity = '1';
@@ -11416,23 +11468,10 @@ else showInstallButton();
 
         if (Math.abs(deltaX) < 50 || elapsed > 300) return;
 
-        let status = null;
-        if (deltaX > 0) status = 'repeat';
-        else status = 'learned';
-
-        if (status && typeof toggleStatus === 'function') {
-            playSwipeSound();
-            showDirectionHint(status);
-            toggleStatus(status);
-        }
-
-        setTimeout(() => {
-            card.style.transform = '';
-            card.style.opacity = '1';
-        }, 50);
+        const direction = deltaX > 0 ? 'right' : 'left';
+        smartToggleStatus(direction);
     });
 })();
-
 
 
    
