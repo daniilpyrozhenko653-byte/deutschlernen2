@@ -10739,23 +10739,19 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 
 
-
-
-
-    // ========== КРАСИВАЯ ТЕТРАДЬ (1500 СТРАНИЦ, ПЕРЕЛИСТЫВАНИЕ, АВТОСОХРАНЕНИЕ) ==========
+// ========== КОМПАКТНАЯ ТЕТРАДЬ 1500 СТРАНИЦ ==========
 (function() {
-    if (document.getElementById('notebookApp')) return;
+    if (document.getElementById('compactNotebook')) return;
     const notesSection = document.querySelector('.notes-section');
     if (!notesSection) return;
 
     const TOTAL_PAGES = 1500;
     const STORAGE_KEY = 'notebook_pages';
     let pages = new Array(TOTAL_PAGES).fill('');
-    let currentPage = 0; // 0-индекс
+    let currentPage = 0;
     let animating = false;
     let touchStartX = 0, touchEndX = 0;
 
-    // Загрузка
     function loadPages() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -10767,36 +10763,29 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         pages[idx] = document.getElementById('pageTextarea')?.value || '';
         localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
     }
-    function saveAll() { localStorage.setItem(STORAGE_KEY, JSON.stringify(pages)); }
 
-    // Рендер текущей страницы
     function renderPage() {
         const container = document.getElementById('notebookContent');
         if (!container) return;
         const pageNum = currentPage + 1;
         const text = pages[currentPage] || '';
         container.innerHTML = `
-            <div class="notebook-page" style="
+            <div style="
                 background: #fffdf7;
-                border-radius: 16px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                border-radius: 14px;
                 height: 100%;
                 display: flex;
                 flex-direction: column;
-                position: relative;
+                box-shadow: inset 0 0 0 1px #f0e4c8, 0 2px 6px rgba(0,0,0,0.05);
             ">
-                <div style="padding: 6px 15px 0 15px; border-bottom: 1px solid #ecd9b0; display: flex; justify-content: space-between; align-items: baseline;">
-                    <span style="font-size: 0.7rem; color: #b4946a;">Страница ${pageNum}</span>
+                <div style="padding: 6px 12px; border-bottom: 1px solid #ecd9b0; display: flex; justify-content: space-between;">
+                    <span style="font-size: 0.7rem; color: #b4946a;">Стр. ${pageNum}</span>
                     <span style="font-size: 0.65rem; color: #b4946a;" id="saveStatus">✍️</span>
                 </div>
                 <div style="
                     flex: 1;
                     background-image: repeating-linear-gradient(transparent, transparent 28px, #e9ddc7 28px, #e9ddc7 29px);
-                    padding: 8px 18px 12px 18px;
-                    margin: 0;
-                    border-radius: 0 0 12px 12px;
-                    display: flex;
-                    flex-direction: column;
+                    padding: 8px 16px;
                 ">
                     <textarea id="pageTextarea" style="
                         width: 100%;
@@ -10804,21 +10793,19 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
                         background: transparent;
                         border: none;
                         font-family: 'Georgia', 'Segoe UI', serif;
-                        font-size: 16px;
-                        line-height: 29px;
+                        font-size: 15px;
+                        line-height: 28px;
                         color: #2c2418;
                         resize: none;
                         outline: none;
                         box-sizing: border-box;
-                        flex: 1;
-                    " placeholder="Что вы хотите записать?"></textarea>
+                    " placeholder="Запишите что-нибудь...">${escapeHtml(text)}</textarea>
                 </div>
             </div>
         `;
 
         const textarea = document.getElementById('pageTextarea');
         if (textarea) {
-            textarea.value = pages[currentPage] || '';
             let timer = null;
             const update = () => {
                 if (timer) clearTimeout(timer);
@@ -10826,18 +10813,16 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
                     pages[currentPage] = textarea.value;
                     savePage(currentPage);
                     const status = document.getElementById('saveStatus');
-                    if (status) { status.innerHTML = '✓'; setTimeout(() => status.innerHTML = '✍️', 1200); }
-                }, 500);
+                    if (status) { status.innerText = '✓'; setTimeout(() => status.innerText = '✍️', 1000); }
+                }, 400);
             };
             textarea.addEventListener('input', update);
             textarea.addEventListener('blur', () => { pages[currentPage] = textarea.value; savePage(currentPage); });
         }
-        // Обновить индикатор
         const indicator = document.getElementById('pageIndicator');
         if (indicator) indicator.innerText = `${pageNum} / ${TOTAL_PAGES}`;
     }
 
-    // Анимация перелистывания
     function changePage(delta) {
         if (animating) return;
         let newPage = currentPage + delta;
@@ -10847,7 +10832,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         if (!container) return;
         container.style.transition = 'opacity 0.2s ease, transform 0.15s ease';
         container.style.opacity = '0';
-        container.style.transform = delta > 0 ? 'translateX(-15px)' : 'translateX(15px)';
+        container.style.transform = delta > 0 ? 'translateX(-10px)' : 'translateX(10px)';
         setTimeout(() => {
             currentPage = newPage;
             renderPage();
@@ -10857,7 +10842,6 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         }, 150);
     }
 
-    // Свайпы
     function handleTouchStart(e) { touchStartX = e.touches[0].clientX; }
     function handleTouchEnd(e) {
         touchEndX = e.changedTouches[0].clientX;
@@ -10865,40 +10849,48 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
         if (Math.abs(diff) > 50) changePage(diff > 0 ? 1 : -1);
     }
 
-    // Построение интерфейса — уменьшили общую высоту
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
     notesSection.innerHTML = `
-        <div id="notebookApp" style="
+        <div id="compactNotebook" style="
             background: #d9c8a9;
-            border-radius: 20px;
-            padding: 10px 8px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-radius: 18px;
+            padding: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         ">
-            <div style="background: #fef7e0; border-radius: 16px; overflow: hidden; min-height: 260px; display: flex; flex-direction: column;">
-                <div id="notebookContent" style="flex:1; min-height: 220px;"></div>
+            <div style="
+                background: #fef7e0;
+                border-radius: 14px;
+                height: 320px;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            ">
+                <div id="notebookContent" style="flex:1; height: 100%;"></div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px;">
                 <button id="prevPageBtn" style="
                     background: #5d3a1a;
                     border: none;
                     color: white;
-                    font-size: 1rem;
+                    font-size: 0.9rem;
                     padding: 5px 14px;
                     border-radius: 40px;
                     cursor: pointer;
                     font-weight: bold;
-                    min-width: 65px;
                 ">◀ Назад</button>
-                <span id="pageIndicator" style="font-size: 0.8rem; color: #5a3e1b; background: #f5e5c8; padding: 4px 12px; border-radius: 30px;">1 / ${TOTAL_PAGES}</span>
+                <span id="pageIndicator" style="font-size: 0.75rem; color: #5a3e1b; background: #f5e5c8; padding: 4px 12px; border-radius: 30px;">1 / ${TOTAL_PAGES}</span>
                 <button id="nextPageBtn" style="
                     background: #5d3a1a;
                     border: none;
                     color: white;
-                    font-size: 1rem;
+                    font-size: 0.9rem;
                     padding: 5px 14px;
                     border-radius: 40px;
                     cursor: pointer;
                     font-weight: bold;
-                    min-width: 65px;
                 ">Вперёд ▶</button>
             </div>
         </div>
@@ -10917,6 +10909,12 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 })();
 
 
+
+
+
+
+
+    
 
 
 
