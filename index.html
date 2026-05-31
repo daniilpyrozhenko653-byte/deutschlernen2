@@ -11021,6 +11021,164 @@ else showInstallButton();
 
 
 
+
+
+
+    // ========== ЕЖЕДНЕВНЫЕ ЦЕЛИ И ДОСТИЖЕНИЯ ==========
+(function() {
+    if (document.getElementById('goalsWidget')) return;
+
+    // Создаём виджет – можно разместить в правой панели, например после викторины
+    const targetPanel = document.querySelector('.panel:last-child .quiz-area'); // или другое место
+    if (!targetPanel) return;
+
+    const widget = document.createElement('div');
+    widget.id = 'goalsWidget';
+    widget.style.cssText = 'margin-top: 20px; background: #2c3e50; border-radius: 20px; padding: 12px; color: white;';
+    widget.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="margin:0;">🎯 Моя цель</h4>
+            <button id="resetProgressBtn" style="background:#e74c3c; border:none; padding:2px 10px; border-radius:20px; font-size:10px;">Сброс</button>
+        </div>
+        <div style="margin: 8px 0;">
+            <label>📅 Дневная цель (карточек): </label>
+            <input type="number" id="dailyGoalInput" value="10" min="1" max="100" style="width:70px; background:#34495e; color:white; border:none; border-radius:20px; padding:4px; text-align:center;">
+            <button id="setGoalBtn" style="background:#1abc9c; border:none; padding:2px 10px; border-radius:20px;">Установить</button>
+        </div>
+        <div>📊 Сегодня: <span id="todayCount">0</span> / <span id="dailyGoalDisplay">10</span></div>
+        <div>🔥 Серия дней: <span id="streakDays">0</span></div>
+        <div>🏆 Достижения: <span id="badgesList">—</span></div>
+        <button id="requestNotificationBtn" style="margin-top:8px; background:#3498db; border:none; padding:4px 12px; border-radius:20px;">🔔 Включить напоминания</button>
+    `;
+    targetPanel.appendChild(widget);
+
+    // Загружаем данные
+    let dailyGoal = localStorage.getItem('dailyGoal') ? parseInt(localStorage.getItem('dailyGoal')) : 10;
+    let todayCount = parseInt(localStorage.getItem('todayCount') || '0');
+    let lastDate = localStorage.getItem('lastActivityDate');
+    let streak = parseInt(localStorage.getItem('streakDays') || '0');
+    let badges = localStorage.getItem('badges') ? JSON.parse(localStorage.getItem('badges')) : [];
+
+    function updateUI() {
+        document.getElementById('dailyGoalDisplay').innerText = dailyGoal;
+        document.getElementById('dailyGoalInput').value = dailyGoal;
+        document.getElementById('todayCount').innerText = todayCount;
+        document.getElementById('streakDays').innerText = streak;
+        if (badges.length) document.getElementById('badgesList').innerHTML = badges.map(b => `🏅 ${b}`).join(' • ');
+        else document.getElementById('badgesList').innerHTML = '—';
+    }
+
+    // Проверка смены дня и обновление серии
+    function checkNewDay() {
+        const today = new Date().toDateString();
+        if (lastDate !== today) {
+            if (lastDate && todayCount >= dailyGoal) {
+                streak++;
+                // Проверка бейджей за серию
+                if (streak === 7 && !badges.includes('Неделя')) { badges.push('Неделя'); saveBadges(); }
+                if (streak === 30 && !badges.includes('Месяц')) { badges.push('Месяц'); saveBadges(); }
+                if (streak === 365 && !badges.includes('Год')) { badges.push('Год'); saveBadges(); }
+            } else if (lastDate && todayCount < dailyGoal) {
+                streak = 0;
+            }
+            todayCount = 0;
+            localStorage.setItem('todayCount', '0');
+            localStorage.setItem('streakDays', streak);
+            localStorage.setItem('lastActivityDate', today);
+            updateUI();
+        }
+    }
+
+    function saveDailyGoal() { localStorage.setItem('dailyGoal', dailyGoal); updateUI(); }
+    function saveBadges() { localStorage.setItem('badges', JSON.stringify(badges)); }
+
+    // Засчитываем активность (вызываем при перевороте карточки или ответе в викторине)
+    function addActivity() {
+        checkNewDay();
+        todayCount++;
+        localStorage.setItem('todayCount', todayCount);
+        updateUI();
+        // Проверка бейджей за количество слов
+        const totalWordsLearned = parseInt(localStorage.getItem('totalWordsLearned') || '0') + 1;
+        localStorage.setItem('totalWordsLearned', totalWordsLearned);
+        if (totalWordsLearned >= 100 && !badges.includes('100 слов')) { badges.push('100 слов'); saveBadges(); updateUI(); }
+        if (totalWordsLearned >= 500 && !badges.includes('500 слов')) { badges.push('500 слов'); saveBadges(); updateUI(); }
+        if (totalWordsLearned >= 1000 && !badges.includes('1000 слов')) { badges.push('1000 слов'); saveBadges(); updateUI(); }
+        // Если цель достигнута, показываем поздравление
+        if (todayCount === dailyGoal) {
+            const msg = document.createElement('div');
+            msg.textContent = '🎉 Поздравляем! Вы выполнили дневную цель!';
+            msg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#f1c40f; color:#2c3e50; padding:15px 25px; border-radius:30px; z-index:100000; font-weight:bold;';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 3000);
+        }
+    }
+
+    // Привязываем активность к существующим действиям (карточки и викторина)
+    // Флип карточки – считаем активность (не более раза за минуту на странице)
+    let lastFlipTime = 0;
+    const flashcard = document.getElementById('flashcard');
+    if (flashcard) {
+        flashcard.addEventListener('click', () => {
+            const now = Date.now();
+            if (now - lastFlipTime > 30000) { // не чаще раза в 30 секунд
+                addActivity();
+                lastFlipTime = now;
+            }
+        });
+    }
+    // Викторина – правильный ответ
+    const originalHandle = window.handleQuizAnswer;
+    if (typeof originalHandle === 'function') {
+        window.handleQuizAnswer = function(selected, btn) {
+            if (selected === currentQuizQuestion?.correctAnswer) addActivity();
+            originalHandle(selected, btn);
+        };
+    }
+
+    // Установка цели
+    document.getElementById('setGoalBtn').onclick = () => {
+        dailyGoal = parseInt(document.getElementById('dailyGoalInput').value);
+        if (isNaN(dailyGoal)) dailyGoal = 10;
+        saveDailyGoal();
+        updateUI();
+    };
+    // Сброс прогресса
+    document.getElementById('resetProgressBtn').onclick = () => {
+        if (confirm('Сбросить все цели, серию и достижения?')) {
+            todayCount = 0; streak = 0; badges = [];
+            localStorage.setItem('todayCount', '0');
+            localStorage.setItem('streakDays', '0');
+            localStorage.setItem('badges', JSON.stringify([]));
+            localStorage.removeItem('totalWordsLearned');
+            updateUI();
+        }
+    };
+    // Напоминания (Push)
+    let notificationPermission = false;
+    document.getElementById('requestNotificationBtn').onclick = () => {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(perm => {
+                if (perm === 'granted') {
+                    notificationPermission = true;
+                    // Устанавливаем интервал на 21:00 каждый день (проверяем каждую минуту)
+                    setInterval(() => {
+                        const now = new Date();
+                        if (now.getHours() === 21 && now.getMinutes() === 0) {
+                            new Notification('Напоминание', { body: 'Не забудьте выполнить дневную цель по немецкому!' });
+                        }
+                    }, 60000);
+                    alert('Уведомления включены! Приходите учиться каждый день.');
+                } else alert('Разрешите уведомления в браузере.');
+            });
+        } else alert('Ваш браузер не поддерживает уведомления.');
+    };
+
+    // Инициализация
+    checkNewDay();
+    updateUI();
+})();
+
     
 
 
