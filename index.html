@@ -10731,316 +10731,269 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 
 
-// ========== КНИГА С ПЕРЕЛИСТЫВАНИЕМ СТРАНИЦ ==========
-(function() {
-    if (document.getElementById('flipbookNotebook')) return;
 
+
+
+    // ========== ЭЛЕКТРОННАЯ КНИГА (1500 СТРАНИЦ) С ОБЛОЖКОЙ И ПЕРЕЛИСТЫВАНИЕМ ==========
+(function() {
+    if (document.getElementById('ebookContainer')) return;
     const notesSection = document.querySelector('.notes-section');
     if (!notesSection) return;
 
-    // Параметры
-    const STORAGE_PREFIX = 'notebook_page_';
-    const TOTAL_PAGES = 5;      // 5 страниц (можно увеличить)
-    let currentPage = 0;        // 0-индекс
-    let pagesText = [];
+    // === НАСТРОЙКИ ===
+    const TOTAL_PAGES = 1500;       // 1500 чистых страниц + обложка (всего 1501)
+    const STORAGE_KEY = 'ebook_pages';
+    let currentPage = 0;            // 0 = обложка, 1..1500
+    let pagesContent = new Array(TOTAL_PAGES + 1).fill(''); // индексы 0..1500
+    let isLoading = false;
+    let touchStartX = 0, touchEndX = 0;
 
-    // Загружаем текст всех страниц из localStorage
-    function loadAllPages() {
-        for (let i = 0; i < TOTAL_PAGES; i++) {
-            const saved = localStorage.getItem(STORAGE_PREFIX + i);
-            pagesText[i] = saved !== null ? saved : '';
-        }
-    }
-
-    // Сохраняем текст конкретной страницы
-    function savePage(index, text) {
-        pagesText[index] = text;
-        localStorage.setItem(STORAGE_PREFIX + index, text);
-        updateSaveStatus(true);
-    }
-
-    function updateSaveStatus(isSaved = false) {
-        const statusSpan = document.getElementById('flipbookSaveStatus');
-        if (statusSpan) {
-            if (isSaved) {
-                statusSpan.textContent = '✓ Сохранено';
-                setTimeout(() => {
-                    if (statusSpan && statusSpan.textContent === '✓ Сохранено') 
-                        statusSpan.textContent = '✍️ Автосохранение';
-                }, 1500);
+    // === ЗАГРУЗКА / СОХРАНЕНИЕ ===
+    function loadPages() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const arr = JSON.parse(saved);
+            if (arr.length === TOTAL_PAGES + 1) {
+                pagesContent = arr;
             } else {
-                statusSpan.textContent = '✍️ Автосохранение';
+                // несовпадение длины – сбрасываем
+                localStorage.removeItem(STORAGE_KEY);
             }
         }
+        // Если ни одного сохранения, обложка может иметь приветствие
+        if (!pagesContent[0]) pagesContent[0] = '';
+    }
+    function savePage(pageIndex) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(pagesContent));
+    }
+    function saveAll() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(pagesContent));
     }
 
-    // Рендерим текущую страницу с сохранённым текстом
+    // === РЕНДЕР ТЕКУЩЕЙ СТРАНИЦЫ ===
     function renderPage() {
-        const textarea = document.getElementById('flipbookTextarea');
-        if (textarea) {
-            textarea.value = pagesText[currentPage];
-        }
-        const pageIndicator = document.getElementById('flipbookPageIndicator');
-        if (pageIndicator) {
-            pageIndicator.textContent = `${currentPage+1} / ${TOTAL_PAGES}`;
-        }
-        // Обновляем стили кнопок
-        const prevBtn = document.getElementById('flipbookPrev');
-        const nextBtn = document.getElementById('flipbookNext');
-        if (prevBtn) prevBtn.disabled = (currentPage === 0);
-        if (nextBtn) nextBtn.disabled = (currentPage === TOTAL_PAGES-1);
-    }
+        const container = document.getElementById('ebookContent');
+        if (!container) return;
 
-    // Сохраняем текущий текст перед переключением страницы
-    function saveCurrentPage() {
-        const textarea = document.getElementById('flipbookTextarea');
-        if (textarea) {
-            const newText = textarea.value;
-            if (pagesText[currentPage] !== newText) {
-                pagesText[currentPage] = newText;
-                localStorage.setItem(STORAGE_PREFIX + currentPage, newText);
-                updateSaveStatus(true);
-            }
-        }
-    }
+        const isCover = (currentPage === 0);
+        const pageNum = currentPage;
+        const text = pagesContent[currentPage] || '';
 
-    function nextPage() {
-        if (currentPage < TOTAL_PAGES-1) {
-            saveCurrentPage();
-            currentPage++;
-            renderPage();
-        }
-    }
-
-    function prevPage() {
-        if (currentPage > 0) {
-            saveCurrentPage();
-            currentPage--;
-            renderPage();
-        }
-    }
-
-    // Автосохранение при вводе (на текущей странице)
-    let saveTimeout = null;
-    function autoSaveCurrent() {
-        if (saveTimeout) clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-            const textarea = document.getElementById('flipbookTextarea');
-            if (textarea) {
-                const newText = textarea.value;
-                if (pagesText[currentPage] !== newText) {
-                    pagesText[currentPage] = newText;
-                    localStorage.setItem(STORAGE_PREFIX + currentPage, newText);
-                    updateSaveStatus(true);
-                } else {
-                    updateSaveStatus(true);
-                }
-            }
-        }, 600);
-    }
-
-    // Создаём HTML книги
-    notesSection.innerHTML = `
-        <div id="flipbookNotebook" style="
-            background: #e3d5b5;
-            border-radius: 24px;
-            padding: 20px 15px;
-            box-shadow: 0 20px 35px rgba(0,0,0,0.3);
-            position: relative;
-            font-family: 'Georgia', 'Times New Roman', serif;
-        ">
-            <!-- Обложка (только стиль) -->
-            <div style="
-                position: absolute;
-                top: -8px;
-                left: -8px;
-                right: -8px;
-                bottom: -8px;
-                background: #c9b27c;
-                border-radius: 28px;
-                z-index: -1;
-                box-shadow: 0 0 0 2px #ab8e54, 0 8px 20px rgba(0,0,0,0.2);
-            "></div>
-
-            <!-- Корешок -->
-            <div style="
-                position: absolute;
-                left: -18px;
-                top: 10px;
-                bottom: 10px;
-                width: 20px;
-                background: linear-gradient(135deg, #a07e4a, #7a5a32);
-                border-radius: 8px 0 0 8px;
-                box-shadow: -2px 0 8px rgba(0,0,0,0.3);
-            "></div>
-
-            <!-- Внутренний блок страницы -->
-            <div style="
-                background: #fefaf0;
-                border-radius: 16px;
-                padding: 20px 18px;
-                box-shadow: inset 0 0 0 1px #fff8e7, 0 4px 12px rgba(0,0,0,0.1);
-                margin: 0 5px;
-                position: relative;
-            ">
-                <!-- Заголовок с кнопками -->
-                <div style="
+        let innerHtml = '';
+        if (isCover) {
+            // ОБЛОЖКА – красивая, без текстового поля
+            innerHtml = `
+                <div class="ebook-cover" style="
+                    background: linear-gradient(135deg, #5d3a1a, #3a2410);
+                    border-radius: 16px;
+                    box-shadow: 8px 8px 20px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,215,140,0.3);
+                    padding: 30px 20px;
+                    text-align: center;
+                    color: #ffecb3;
+                    height: 100%;
                     display: flex;
-                    justify-content: space-between;
-                    align-items: baseline;
-                    flex-wrap: wrap;
-                    gap: 10px;
-                    margin-bottom: 20px;
-                    border-bottom: 1px solid #e2cfaa;
-                    padding-bottom: 8px;
+                    flex-direction: column;
+                    justify-content: center;
+                    position: relative;
                 ">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1.6rem;">📘</span>
-                        <span style="font-size: 1rem; color: #5a3e1b;">Тетрадь-книга</span>
+                    <div style="position: absolute; top: 20px; right: 20px; font-size: 0.8rem; opacity: 0.6;">№ обложка</div>
+                    <div style="font-size: 3.5rem; margin-bottom: 20px;">📖</div>
+                    <h1 style="font-family: 'Georgia', serif; font-size: 2rem; margin: 0 0 10px;">Моя тетрадь</h1>
+                    <p style="font-size: 1rem; opacity: 0.8;">Личные записи, идеи, заметки</p>
+                    <div style="margin-top: 40px;">
+                        <span style="border-top: 1px solid #ffecb3; padding-top: 10px; display: inline-block;">Всего ${TOTAL_PAGES} страниц</span>
                     </div>
-                    <div style="display: flex; gap: 12px;">
-                        <button id="flipbookPrev" style="
-                            background: #e0ceaa;
-                            border: none;
-                            border-radius: 40px;
-                            padding: 5px 14px;
-                            font-size: 0.8rem;
-                            cursor: pointer;
-                            font-family: inherit;
-                            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-                        " disabled>◀ Назад</button>
-                        <span id="flipbookPageIndicator" style="font-size: 0.9rem; color: #7a5516;">1 / ${TOTAL_PAGES}</span>
-                        <button id="flipbookNext" style="
-                            background: #e0ceaa;
-                            border: none;
-                            border-radius: 40px;
-                            padding: 5px 14px;
-                            font-size: 0.8rem;
-                            cursor: pointer;
-                            font-family: inherit;
-                            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-                        ">Вперёд ▶</button>
-                        <button id="flipbookCapture" style="
-                            background: #c9b27c;
-                            border: none;
-                            border-radius: 40px;
-                            padding: 5px 12px;
-                            font-size: 0.7rem;
-                            cursor: pointer;
-                            font-family: inherit;
-                        ">📸 Фото</button>
-                    </div>
+                    <div style="position: absolute; bottom: 20px; left: 0; right: 0; font-size: 0.7rem; opacity: 0.5;">© Ваша тетрадь</div>
                 </div>
-
-                <!-- Текстовое поле с линиями (как в блокноте) -->
-                <div style="
-                    background: #fffcf5;
-                    background-image: repeating-linear-gradient(transparent, transparent 28px, #e9ddc7 28px, #e9ddc7 29px);
-                    border: 1px solid #ecd9b0;
+            `;
+        } else {
+            // Текстовая страница с разлиновкой
+            innerHtml = `
+                <div class="ebook-page" style="
+                    background: #fffdf7;
                     border-radius: 12px;
-                    padding: 12px 18px;
-                    margin-bottom: 8px;
-                ">
-                    <textarea id="flipbookTextarea" rows="8" style="
-                        width: 100%;
-                        background: transparent;
-                        border: none;
-                        font-family: 'Georgia', 'Segoe UI', serif;
-                        font-size: 16px;
-                        line-height: 29px;
-                        color: #2c2418;
-                        resize: vertical;
-                        outline: none;
-                        box-sizing: border-box;
-                    " placeholder="Запишите здесь что-нибудь..."></textarea>
-                </div>
-
-                <!-- Статус автосохранения -->
-                <div style="
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    height: 100%;
                     display: flex;
-                    justify-content: flex-end;
-                    align-items: center;
-                    gap: 8px;
-                    margin-top: 6px;
-                    padding-right: 5px;
+                    flex-direction: column;
+                    position: relative;
                 ">
-                    <span style="font-size: 0.7rem; color: #b4946a;">✍️</span>
-                    <span id="flipbookSaveStatus" style="font-size: 0.7rem; color: #2c7a5e;">Автосохранение</span>
+                    <div style="padding: 12px 15px 0 15px; border-bottom: 1px solid #ecd9b0; display: flex; justify-content: space-between; align-items: baseline;">
+                        <span style="font-size: 0.75rem; color: #b4946a;">Страница ${pageNum}</span>
+                        <span style="font-size: 0.7rem; color: #b4946a;" id="saveStatus-${pageNum}">✍️</span>
+                    </div>
+                    <div style="
+                        flex: 1;
+                        background-image: repeating-linear-gradient(transparent, transparent 28px, #e9ddc7 28px, #e9ddc7 29px);
+                        padding: 12px 18px;
+                        margin: 5px 8px 8px 8px;
+                        border-radius: 8px;
+                    ">
+                        <textarea id="pageTextarea" data-page="${pageNum}" style="
+                            width: 100%;
+                            height: 100%;
+                            background: transparent;
+                            border: none;
+                            font-family: 'Georgia', 'Segoe UI', serif;
+                            font-size: 16px;
+                            line-height: 29px;
+                            color: #2c2418;
+                            resize: none;
+                            outline: none;
+                            box-sizing: border-box;
+                        " placeholder="Что вы хотите записать?">${escapeHtml(text)}</textarea>
+                    </div>
                 </div>
+            `;
+        }
+        container.innerHTML = innerHtml;
 
-                <!-- Декоративные уголки -->
-                <div style="position: absolute; bottom: 12px; left: 12px; width: 24px; height: 24px; border-left: 2px solid #d9c8a9; border-bottom: 2px solid #d9c8a9;"></div>
-                <div style="position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; border-right: 2px solid #d9c8a9; border-top: 2px solid #d9c8a9;"></div>
+        // Если страница не обложка – привязываем обработчик для textarea
+        if (!isCover) {
+            const textarea = document.getElementById('pageTextarea');
+            if (textarea) {
+                let saveTimer = null;
+                const updatePage = () => {
+                    if (saveTimer) clearTimeout(saveTimer);
+                    saveTimer = setTimeout(() => {
+                        pagesContent[currentPage] = textarea.value;
+                        savePage(currentPage);
+                        const statusSpan = document.getElementById(`saveStatus-${currentPage}`);
+                        if (statusSpan) {
+                            statusSpan.innerHTML = '✓';
+                            setTimeout(() => statusSpan.innerHTML = '✍️', 1500);
+                        }
+                    }, 500);
+                };
+                textarea.addEventListener('input', updatePage);
+                textarea.addEventListener('blur', () => {
+                    pagesContent[currentPage] = textarea.value;
+                    savePage(currentPage);
+                });
+            }
+        }
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+    // === ПЕРЕЛИСТЫВАНИЕ С АНИМАЦИЕЙ ===
+    let animating = false;
+    function changePage(delta) {
+        if (animating) return;
+        let newPage = currentPage + delta;
+        if (newPage < 0) newPage = 0;
+        if (newPage > TOTAL_PAGES) newPage = TOTAL_PAGES;
+        if (newPage === currentPage) return;
+
+        animating = true;
+        const container = document.getElementById('ebookContent');
+        if (!container) return;
+
+        // Анимация – кратковременное затухание и сдвиг
+        container.style.transition = 'opacity 0.2s ease, transform 0.15s ease';
+        container.style.opacity = '0';
+        container.style.transform = delta > 0 ? 'translateX(-15px)' : 'translateX(15px)';
+
+        setTimeout(() => {
+            currentPage = newPage;
+            renderPage();
+            // Обновляем номер страницы в навигаторе
+            const pageIndicator = document.getElementById('pageIndicator');
+            if (pageIndicator) {
+                if (currentPage === 0) pageIndicator.innerText = 'Обложка';
+                else pageIndicator.innerText = `Стр. ${currentPage} / ${TOTAL_PAGES}`;
+            }
+            // Возвращаем видимость
+            container.style.opacity = '1';
+            container.style.transform = 'translateX(0)';
+            setTimeout(() => {
+                animating = false;
+                container.style.transition = '';
+            }, 200);
+        }, 150);
+    }
+
+    // === ОБРАБОТЧИКИ СВАЙПОВ ===
+    function handleTouchStart(e) { touchStartX = e.touches[0].clientX; }
+    function handleTouchEnd(e) {
+        touchEndX = e.changedTouches[0].clientX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) changePage(1);   // листаем вперёд
+            else changePage(-1);            // назад
+        }
+    }
+
+    // === СОЗДАНИЕ ДОМА КНИГИ ===
+    notesSection.innerHTML = `
+        <div id="ebookContainer" style="
+            background: #d9c8a9;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            padding: 12px 10px 12px 14px;
+            position: relative;
+        ">
+            <!-- Корешок книги -->
+            <div style="position: absolute; left: -8px; top: 15px; bottom: 15px; width: 14px; background: linear-gradient(135deg, #9b7e55, #6b4e2a); border-radius: 4px 0 0 4px; box-shadow: -2px 0 6px rgba(0,0,0,0.3);"></div>
+            <!-- "Страницы" внутри -->
+            <div style="background: #fef7e0; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,245,215,0.8), 0 2px 6px rgba(0,0,0,0.1);">
+                <div id="ebookContent" style="min-height: 380px; transition: all 0.2s;">
+                    <!-- сюда вставляется текущая страница -->
+                </div>
+            </div>
+            <!-- Навигация -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px;">
+                <button id="ebookPrevBtn" style="
+                    background: #5d3a1a;
+                    border: none;
+                    color: white;
+                    font-size: 1.2rem;
+                    padding: 8px 16px;
+                    border-radius: 40px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                    min-width: 70px;
+                ">◀ Назад</button>
+                <span id="pageIndicator" style="font-size: 0.85rem; color: #5a3e1b; background: #f5e5c8; padding: 5px 12px; border-radius: 30px;">Обложка</span>
+                <button id="ebookNextBtn" style="
+                    background: #5d3a1a;
+                    border: none;
+                    color: white;
+                    font-size: 1.2rem;
+                    padding: 8px 16px;
+                    border-radius: 40px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                    min-width: 70px;
+                ">Вперёд ▶</button>
             </div>
         </div>
     `;
 
-    // Инициализация
-    loadAllPages();
+    // Загружаем данные
+    loadPages();
     renderPage();
 
-    // Элементы управления
-    const textareaElem = document.getElementById('flipbookTextarea');
-    const prevBtn = document.getElementById('flipbookPrev');
-    const nextBtn = document.getElementById('flipbookNext');
-    const captureBtn = document.getElementById('flipbookCapture');
-
-    // События
-    textareaElem.addEventListener('input', () => {
-        autoSaveCurrent();
-    });
-    textareaElem.addEventListener('blur', () => {
-        saveCurrentPage();
-    });
-
-    prevBtn.addEventListener('click', prevPage);
-    nextBtn.addEventListener('click', nextPage);
-
-    // Функция для фото (с html2canvas)
-    let html2canvasLoaded = false;
-    async function ensureHtml2Canvas() {
-        if (window.html2canvas) {
-            html2canvasLoaded = true;
-            return true;
-        }
-        return new Promise((resolve) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-            script.onload = () => { html2canvasLoaded = true; resolve(true); };
-            script.onerror = () => resolve(false);
-            document.head.appendChild(script);
-        });
+    // Привязываем события
+    const prevBtn = document.getElementById('ebookPrevBtn');
+    const nextBtn = document.getElementById('ebookNextBtn');
+    if (prevBtn) prevBtn.addEventListener('click', () => changePage(-1));
+    if (nextBtn) nextBtn.addEventListener('click', () => changePage(1));
+    const contentDiv = document.getElementById('ebookContent');
+    if (contentDiv) {
+        contentDiv.addEventListener('touchstart', handleTouchStart);
+        contentDiv.addEventListener('touchend', handleTouchEnd);
     }
 
-    captureBtn.addEventListener('click', async () => {
-        const bookElem = document.getElementById('flipbookNotebook');
-        if (!bookElem) return;
-        const loaded = await ensureHtml2Canvas();
-        if (!loaded) {
-            alert('Не удалось загрузить библиотеку для фото');
-            return;
-        }
-        try {
-            captureBtn.disabled = true;
-            captureBtn.textContent = '📸...';
-            const canvas = await html2canvas(bookElem, { scale: 2, backgroundColor: '#e3d5b5' });
-            const link = document.createElement('a');
-            link.download = `tetrad_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-        } catch(e) {
-            console.error(e);
-            alert('Ошибка фото');
-        } finally {
-            captureBtn.disabled = false;
-            captureBtn.textContent = '📸 Фото';
-        }
-    });
+    // Обновляем индикатор после рендера
+    const pageIndicator = document.getElementById('pageIndicator');
+    if (pageIndicator) {
+        if (currentPage === 0) pageIndicator.innerText = 'Обложка';
+        else pageIndicator.innerText = `Стр. ${currentPage} / ${TOTAL_PAGES}`;
+    }
 })();
-
-
-
-
 
 
 
