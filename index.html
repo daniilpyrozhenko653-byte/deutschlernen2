@@ -11259,64 +11259,297 @@ else showInstallButton();
 
 
 
-    // ========== ДЛЯ ПК: СТРЕЛОЧКИ ПОД КАРТОЧКОЙ (дублируют свайп) ==========
+    // ========== УМНЫЕ СВАЙПЫ + СТРЕЛКИ ДЛЯ ПК ==========
 (function() {
-    const cardContainer = document.querySelector('.panel:first-child .card-nav');
-    if (!cardContainer) return;
+    // Скрываем старые кнопки статусов
+    const learnedBtn = document.getElementById('markLearnedBtn');
+    const repeatBtn = document.getElementById('markRepeatBtn');
+    if (learnedBtn) learnedBtn.style.display = 'none';
+    if (repeatBtn) repeatBtn.style.display = 'none';
 
-    // Добавляем блок со стрелочками, если ещё нет
-    if (!document.getElementById('pcSwipeButtons')) {
-        const btnDiv = document.createElement('div');
-        btnDiv.id = 'pcSwipeButtons';
-        btnDiv.style.cssText = 'display: flex; justify-content: center; gap: 20px; margin: 10px 0;';
-        btnDiv.innerHTML = `
-            <button id="pcLeftSwipe" style="background:#2e7d64; color:white; border:none; padding:6px 18px; border-radius:30px; font-size:14px; cursor:pointer;">👈 ИЗУЧЕНО</button>
-            <button id="pcRightSwipe" style="background:#f39c12; color:#1f2c2c; border:none; padding:6px 18px; border-radius:30px; font-size:14px; cursor:pointer;">НА ПОВТОР 👉</button>
+    const card = document.getElementById('flashcard');
+    if (!card) return;
+
+    // ---------- КОНТЕЙНЕР ДЛЯ СТРЕЛОК (только на ПК) ----------
+    let arrowsContainer = document.getElementById('swipeArrowsContainer');
+    if (!arrowsContainer) {
+        arrowsContainer = document.createElement('div');
+        arrowsContainer.id = 'swipeArrowsContainer';
+        arrowsContainer.style.cssText = `
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 12px;
+            margin-bottom: 8px;
         `;
-        cardContainer.parentNode.insertBefore(btnDiv, cardContainer.nextSibling);
+        // Вставляем после карточки
+        card.parentNode.insertBefore(arrowsContainer, card.nextSibling);
     }
 
-    // Функция обновления текста кнопок в зависимости от фильтра
-    function updatePcButtonsText() {
-        const leftBtn = document.getElementById('pcLeftSwipe');
-        const rightBtn = document.getElementById('pcRightSwipe');
-        if (!leftBtn || !rightBtn) return;
+    function updateArrows() {
         const filter = getCurrentFilter();
+        let leftText = '', rightText = '', leftColor = '', rightColor = '';
+
         if (filter === 'all') {
-            leftBtn.innerHTML = '👈 ИЗУЧЕНО';
-            rightBtn.innerHTML = 'НА ПОВТОР 👉';
+            leftText = '◀ Изучено';
+            leftColor = '#2e7d64';
+            rightText = 'На повтор ▶';
+            rightColor = '#f39c12';
         } else if (filter === 'learned') {
-            leftBtn.innerHTML = '👈 ВЕРНУТЬ ВО ВСЕ';
-            rightBtn.innerHTML = 'НА ПОВТОР 👉';
+            leftText = '◀ Вернуть во Все';
+            leftColor = '#7f8c8d';
+            rightText = 'На повтор ▶';
+            rightColor = '#f39c12';
         } else if (filter === 'repeat') {
-            leftBtn.innerHTML = '👈 ИЗУЧЕНО';
-            rightBtn.innerHTML = 'ВЕРНУТЬ ВО ВСЕ 👉';
+            leftText = '◀ Изучено';
+            leftColor = '#2e7d64';
+            rightText = 'Вернуть во Все ▶';
+            rightColor = '#7f8c8d';
         }
-        // Стили под цвет
-        leftBtn.style.background = '#2e7d64';
-        rightBtn.style.background = '#f39c12';
-        if (filter === 'learned') leftBtn.style.background = '#7f8c8d';
-        if (filter === 'repeat') rightBtn.style.background = '#7f8c8d';
+
+        arrowsContainer.innerHTML = `
+            <button id="swipeLeftBtn" style="background: ${leftColor}; border: none; color: white; padding: 6px 14px; border-radius: 40px; font-size: 12px; cursor: pointer; transition: 0.2s;">${leftText}</button>
+            <button id="swipeRightBtn" style="background: ${rightColor}; border: none; color: white; padding: 6px 14px; border-radius: 40px; font-size: 12px; cursor: pointer; transition: 0.2s;">${rightText}</button>
+        `;
+        const leftBtn = document.getElementById('swipeLeftBtn');
+        const rightBtn = document.getElementById('swipeRightBtn');
+        if (leftBtn) leftBtn.onclick = () => applySwipeAction('left');
+        if (rightBtn) rightBtn.onclick = () => applySwipeAction('right');
     }
 
-    // Привязываем кнопки к тем же действиям, что и свайп
-    document.getElementById('pcLeftSwipe')?.addEventListener('click', () => applySwipeAction('left'));
-    document.getElementById('pcRightSwipe')?.addEventListener('click', () => applySwipeAction('right'));
-
-    // Обновляем текст при смене фильтра (наблюдаем за кнопками фильтров)
-    const filterObserver = new MutationObserver(() => updatePcButtonsText());
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => filterObserver.observe(btn, { attributes: true, attributeFilter: ['class'] }));
-    updatePcButtonsText();
-
-    // Переопределяем функцию applySwipeAction, чтобы она также обновляла кнопки после действия
-    const originalApply = window.applySwipeAction;
-    if (originalApply) {
-        window.applySwipeAction = function(direction) {
-            originalApply(direction);
-            setTimeout(updatePcButtonsText, 100);
-        };
+    // ---------- ИКОНКА-ПОДСКАЗКА НАД КАРТОЧКОЙ ----------
+    if (!document.getElementById('swipeHelpBtn')) {
+        const helpBtn = document.createElement('div');
+        helpBtn.id = 'swipeHelpBtn';
+        helpBtn.innerHTML = '👆 <span style="font-size:10px;">Подсказка</span>';
+        helpBtn.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #34495e;
+            color: #f1c40f;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            transition: 0.2s;
+        `;
+        helpBtn.onmouseenter = () => helpBtn.style.transform = 'scale(1.02)';
+        helpBtn.onmouseleave = () => helpBtn.style.transform = 'scale(1)';
+        helpBtn.onclick = () => showHelpMessage();
+        card.parentNode.insertBefore(helpBtn, card);
     }
+
+    function showHelpMessage() {
+        let msgDiv = document.getElementById('helpMessage');
+        if (msgDiv) msgDiv.remove();
+        msgDiv = document.createElement('div');
+        msgDiv.id = 'helpMessage';
+        msgDiv.innerHTML = `
+            👈 Свайп влево / стрелка = <span style="color:#2ecc71;">ИЗУЧЕНО</span><br>
+            👉 Свайп вправо / стрелка = <span style="color:#f39c12;">НА ПОВТОР</span><br>
+        `;
+        msgDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            text-align: center;
+            z-index: 100080;
+            max-width: 85vw;
+            white-space: normal;
+            word-break: break-word;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        `;
+        document.body.appendChild(msgDiv);
+        setTimeout(() => msgDiv.remove(), 4000);
+    }
+
+    // ---------- ЗВУК ----------
+    let audioCtx = null;
+    let audioUnlocked = false;
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtx.resume().then(() => { audioUnlocked = true; });
+        } catch(e) {}
+    }
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    function playSwipeSound() {
+        if (!audioUnlocked || !audioCtx) return;
+        try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 880;
+            osc.type = 'sine';
+            gain.gain.value = 0.1;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
+            osc.stop(now + 0.1);
+        } catch(e) {}
+    }
+
+    // ---------- ЛОГИКА ФИЛЬТРА ----------
+    function getCurrentFilter() {
+        if (document.getElementById('showAllBtn')?.classList.contains('active-filter')) return 'all';
+        if (document.getElementById('showLearnedBtn')?.classList.contains('active-filter')) return 'learned';
+        if (document.getElementById('showRepeatBtn')?.classList.contains('active-filter')) return 'repeat';
+        return 'all';
+    }
+
+    function showDirectionHint(text, bgColor) {
+        let hintDiv = document.getElementById('tempSwipeHint');
+        if (hintDiv) hintDiv.remove();
+        hintDiv = document.createElement('div');
+        hintDiv.id = 'tempSwipeHint';
+        hintDiv.innerText = text;
+        hintDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: ${bgColor};
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: bold;
+            z-index: 100070;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        `;
+        document.body.appendChild(hintDiv);
+        hintDiv.style.opacity = '1';
+        setTimeout(() => hintDiv.remove(), 250);
+    }
+
+    function applySwipeAction(direction) { // 'left' или 'right'
+        const filter = getCurrentFilter();
+        let statusToSet = null;
+        let actionText = '';
+
+        if (filter === 'all') {
+            if (direction === 'left') {
+                statusToSet = 'learned';
+                actionText = '✅ ИЗУЧЕНО';
+            } else {
+                statusToSet = 'repeat';
+                actionText = '🔄 НА ПОВТОР';
+            }
+        } else if (filter === 'learned') {
+            if (direction === 'left') {
+                statusToSet = null;   // убрать пометку изучено
+                actionText = '➖ ВЕРНУТЬ ВО ВСЕ';
+            } else {
+                statusToSet = 'repeat';
+                actionText = '🔄 НА ПОВТОР';
+            }
+        } else if (filter === 'repeat') {
+            if (direction === 'left') {
+                statusToSet = 'learned';
+                actionText = '✅ ИЗУЧЕНО';
+            } else {
+                statusToSet = null;   // убрать пометку повтора
+                actionText = '➖ ВЕРНУТЬ ВО ВСЕ';
+            }
+        }
+
+        if (typeof toggleStatusWithValue === 'function') {
+            toggleStatusWithValue(statusToSet);
+        } else if (typeof toggleStatus === 'function') {
+            if (statusToSet) toggleStatus(statusToSet);
+            else if (typeof removeStatus === 'function') removeStatus();
+        }
+
+        playSwipeSound();
+        showDirectionHint(actionText, statusToSet === 'learned' ? '#2e7d64' : (statusToSet === 'repeat' ? '#f39c12' : '#7f8c8d'));
+        
+        // Обновляем стрелки после изменения статуса (может измениться фильтр)
+        setTimeout(updateArrows, 100);
+    }
+
+    window.removeStatus = function() {
+        if (typeof setCardStatusTo === 'function') setCardStatusTo(null);
+    };
+    window.toggleStatusWithValue = function(value) {
+        if (value === null) window.removeStatus();
+        else if (typeof toggleStatus === 'function') toggleStatus(value);
+    };
+
+    // ---------- СВАЙПЫ НА КАРТОЧКЕ ----------
+    let startX = 0, startY = 0, isSwiping = false, startTime = 0;
+    card.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startTime = Date.now();
+        isSwiping = true;
+        card.style.transition = 'none';
+    });
+    card.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        const deltaX = e.touches[0].clientX - startX;
+        const deltaY = e.touches[0].clientY - startY;
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+            e.preventDefault();
+            let translateX = Math.min(150, Math.max(-150, deltaX));
+            card.style.transform = `translateX(${translateX}px)`;
+            card.style.opacity = `${1 - Math.abs(translateX) / 200}`;
+            if (deltaX > 30) {
+                card.style.backgroundColor = '#f39c12';
+                card.style.color = '#1f2c2c';
+            } else if (deltaX < -30) {
+                card.style.backgroundColor = '#2e7d64';
+                card.style.color = 'white';
+            } else {
+                card.style.backgroundColor = '';
+                card.style.color = '';
+            }
+        }
+    });
+    card.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        const endX = e.changedTouches[0].clientX;
+        const deltaX = endX - startX;
+        const elapsed = Date.now() - startTime;
+        card.style.transition = 'transform 0.2s ease, background 0.2s';
+        card.style.transform = '';
+        card.style.opacity = '1';
+        card.style.backgroundColor = '';
+        card.style.color = '';
+        if (Math.abs(deltaX) < 50 || elapsed > 300) return;
+        if (deltaX > 0) applySwipeAction('right');
+        else applySwipeAction('left');
+        setTimeout(() => { card.style.transform = ''; }, 50);
+    });
+
+    // Обновляем стрелки при смене фильтра (перехватываем нажатия на кнопки фильтров)
+    function hookFilterButtons() {
+        const allBtn = document.getElementById('showAllBtn');
+        const learnedBtnF = document.getElementById('showLearnedBtn');
+        const repeatBtnF = document.getElementById('showRepeatBtn');
+        if (allBtn) allBtn.addEventListener('click', () => setTimeout(updateArrows, 100));
+        if (learnedBtnF) learnedBtnF.addEventListener('click', () => setTimeout(updateArrows, 100));
+        if (repeatBtnF) repeatBtnF.addEventListener('click', () => setTimeout(updateArrows, 100));
+    }
+    hookFilterButtons();
+    updateArrows();
 })();
 
 
