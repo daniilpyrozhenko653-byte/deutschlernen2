@@ -11350,7 +11350,7 @@ else showInstallButton();
 
 
 
-    // ========== ЕЖЕДНЕВНЫЕ БОНУСЫ + МАГАЗИН СТИКЕРОВ ==========
+    // ========== ЕЖЕДНЕВНЫЕ БОНУСЫ + МАГАЗИН СТИКЕРОВ (С СОХРАНЕНИЕМ СТИКЕРА) ==========
 (function() {
     if (document.getElementById('bonusWidget')) return;
 
@@ -11358,7 +11358,8 @@ else showInstallButton();
     let balance = 500;          // для теста даю много монет
     let lastLoginDate = null;
     let streak = 0;
-    let stickers = [];          // массив купленных стикеров {id, name, icon, appliedToCard?}
+    let stickers = [];          // массив купленных стикеров {id, name, icon}
+    let currentStickerOnCard = null;   // {id, icon}
     let availableStickers = [
         { id: 'star', name: '⭐ Звезда', price: 30, icon: '⭐' },
         { id: 'heart', name: '❤️ Сердце', price: 40, icon: '❤️' },
@@ -11367,7 +11368,6 @@ else showInstallButton();
         { id: 'dragon', name: '🐉 Дракон', price: 100, icon: '🐉' },
         { id: 'crown', name: '👑 Корона', price: 120, icon: '👑' }
     ];
-    let currentStickerOnCard = null;   // id стикера, наклеенного на текущую карточку
 
     // Загрузка из localStorage
     function loadData() {
@@ -11380,12 +11380,16 @@ else showInstallButton();
         const savedStickers = localStorage.getItem('userStickers');
         if (savedStickers) stickers = JSON.parse(savedStickers);
         else stickers = [];
+        const savedSticker = localStorage.getItem('currentCardSticker');
+        if (savedSticker) currentStickerOnCard = JSON.parse(savedSticker);
     }
     function saveData() {
         localStorage.setItem('bonusBalance', balance);
         localStorage.setItem('bonusStreak', streak);
         localStorage.setItem('bonusLastDate', lastLoginDate ? lastLoginDate.toISOString() : '');
         localStorage.setItem('userStickers', JSON.stringify(stickers));
+        if (currentStickerOnCard) localStorage.setItem('currentCardSticker', JSON.stringify(currentStickerOnCard));
+        else localStorage.removeItem('currentCardSticker');
     }
 
     // Проверка ежедневного бонуса
@@ -11409,8 +11413,7 @@ else showInstallButton();
         if (diffDays === 1) {
             // подряд
             streak++;
-            let bonus = 10 + Math.min(10, Math.floor(streak / 2) * 2); // +2 за каждый день после 2го? упростим: база 10, +5 за каждый день подряд, но не более x2
-            bonus = Math.min(20, 10 + Math.floor((streak-1) * 2));
+            let bonus = 10 + Math.min(10, Math.floor((streak-1) * 2));
             balance += bonus;
             lastLoginDate = today;
             saveData();
@@ -11436,7 +11439,76 @@ else showInstallButton();
         setTimeout(() => msg.remove(), 2500);
     }
 
-    // ---- 2. ИНТЕРФЕЙС ВИДЖЕТА (в правой панели, под викториной) ----
+    // ---- 2. ВИДЖЕТ БАЛАНСА В ПРАВОМ ВЕРХНЕМ УГЛУ ----
+    const balanceBadge = document.createElement('div');
+    balanceBadge.id = 'balanceBadge';
+    balanceBadge.innerHTML = `💰 <span id="balanceAmountTop">${balance}</span>`;
+    balanceBadge.style.cssText = `
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        background: #f1c40f;
+        color: #2c3e50;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-weight: bold;
+        font-size: 16px;
+        z-index: 100200;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        cursor: pointer;
+    `;
+    balanceBadge.onclick = () => openShop(); // по клику можно открыть магазин
+    document.body.appendChild(balanceBadge);
+
+    // ---- 3. ПРОГРЕСС-ТРОПА (ПОЛОСА ДНЕЙ) ----
+    const streakBar = document.createElement('div');
+    streakBar.id = 'streakBar';
+    streakBar.style.cssText = `
+        position: fixed;
+        top: 70px;
+        right: 15px;
+        background: #2c3e50;
+        border-radius: 40px;
+        padding: 6px 12px;
+        display: flex;
+        gap: 8px;
+        z-index: 100200;
+        font-size: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    `;
+    document.body.appendChild(streakBar);
+
+    function updateStreakBar() {
+        const days = [1,2,3,4,5,6,7];
+        let html = '';
+        for (let i = 0; i < days.length; i++) {
+            const day = days[i];
+            let bonus = 10;
+            if (day === 1) bonus = 10;
+            else if (day === 2) bonus = 12;
+            else if (day === 3) bonus = 14;
+            else if (day === 4) bonus = 16;
+            else if (day === 5) bonus = 18;
+            else if (day === 6) bonus = 20;
+            else if (day === 7) bonus = 25;
+            const isActive = (streak >= day);
+            html += `<div style="
+                text-align: center;
+                background: ${isActive ? '#f39c12' : '#7f8c8d'};
+                padding: 4px 8px;
+                border-radius: 30px;
+                color: white;
+                font-weight: bold;
+                min-width: 45px;
+            ">
+                День ${day}<br>
+                <span style="font-size: 10px;">+${bonus}</span>
+            </div>`;
+        }
+        streakBar.innerHTML = html;
+    }
+
+    // ---- 4. ОСНОВНОЙ ВИДЖЕТ (под викториной) ----
     const targetPanel = document.querySelector('.panel:last-child .quiz-area') || document.querySelector('.panel:last-child');
     if (!targetPanel) return;
 
@@ -11445,14 +11517,11 @@ else showInstallButton();
     widget.style.cssText = 'margin-top: 20px; background: #2c3e50; border-radius: 20px; padding: 12px; color: white;';
     widget.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h4 style="margin:0;">💰 Мои монеты: <span id="balanceAmount">${balance}</span></h4>
-            <button id="claimBonusBtn" style="background:#f39c12; border:none; padding:4px 12px; border-radius:30px;">🎁 Забрать бонус</button>
+            <h4 style="margin:0;">🎁 Ежедневные бонусы</h4>
+            <button id="claimBonusBtn" style="background:#f39c12; border:none; padding:4px 12px; border-radius:30px;">🎁 Забрать</button>
         </div>
         <div style="margin-top:10px;">
-            <div style="display:flex; justify-content:space-between;">
-                <span>🔥 Серия: <span id="streakCount">${streak}</span> дн.</span>
-                <span>🏆 След. бонус: +${Math.min(20, 10 + Math.floor(streak * 2))}</span>
-            </div>
+            <span>🔥 Серия: <span id="streakCount">${streak}</span> дн.</span>
         </div>
         <div style="margin-top:15px;">
             <button id="openShopBtn" style="background:#9b59b6; border:none; padding:5px 12px; border-radius:30px;">🛒 Магазин стикеров</button>
@@ -11463,17 +11532,24 @@ else showInstallButton();
     targetPanel.appendChild(widget);
 
     // Элементы
-    const balanceSpan = document.getElementById('balanceAmount');
+    const balanceTopSpan = document.getElementById('balanceAmountTop');
     const streakSpan = document.getElementById('streakCount');
     const claimBtn = document.getElementById('claimBonusBtn');
     const openShopBtn = document.getElementById('openShopBtn');
     const showStickersBtn = document.getElementById('showStickersBtn');
     const stickerDisplay = document.getElementById('stickerOnCardDisplay');
 
-    function updateBalanceUI() { balanceSpan.innerText = balance; }
-    function updateStreakUI() { streakSpan.innerText = streak; }
+    function updateBalanceUI() {
+        balanceTopSpan.innerText = balance;
+        const bottomBalance = document.getElementById('balanceAmount');
+        if (bottomBalance) bottomBalance.innerText = balance;
+    }
+    function updateStreakUI() {
+        streakSpan.innerText = streak;
+        updateStreakBar();
+    }
 
-    // ---- 3. МАГАЗИН СТИКЕРОВ (МОДАЛЬНОЕ ОКНО) ----
+    // ---- 5. МАГАЗИН СТИКЕРОВ ----
     function openShop() {
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100200; width:90%; max-width:500px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
@@ -11513,7 +11589,7 @@ else showInstallButton();
         document.getElementById('closeShopBtn').onclick = () => modal.remove();
     }
 
-    // ---- 4. МОИ СТИКЕРЫ (КОЛЛЕКЦИЯ) С ВОЗМОЖНОСТЬЮ НАКЛЕИТЬ НА КАРТОЧКУ ----
+    // ---- 6. МОИ СТИКЕРЫ (С ВОЗМОЖНОСТЬЮ НАКЛЕИТЬ) ----
     function showStickersCollection() {
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; padding:20px; z-index:100200; width:90%; max-width:500px; max-height:70vh; overflow:auto; box-shadow:0 0 0 1000px rgba(0,0,0,0.8);';
@@ -11538,6 +11614,7 @@ else showInstallButton();
                 const stickerId = btn.dataset.id;
                 const stickerIcon = btn.dataset.icon;
                 currentStickerOnCard = { id: stickerId, icon: stickerIcon };
+                saveData();
                 updateStickerOnCardDisplay();
                 modal.remove();
                 showMessage(`✨ Стикер ${stickerIcon} наклеен на карточку!`);
@@ -11546,19 +11623,18 @@ else showInstallButton();
         document.getElementById('closeCollectionBtn').onclick = () => modal.remove();
     }
 
+    // ---- 7. ОТОБРАЖЕНИЕ СТИКЕРА НА КАРТОЧКЕ (СОХРАНЯЕТСЯ) ----
     function updateStickerOnCardDisplay() {
         if (currentStickerOnCard) {
             stickerDisplay.innerHTML = `🎨 На карточке: ${currentStickerOnCard.icon}`;
-            // Применяем стикер к элементу карточки
             const card = document.getElementById('flashcard');
             if (card) {
-                // Удаляем старый стикер
-                const oldSticker = card.querySelector('.card-sticker');
+                let oldSticker = card.querySelector('.card-sticker');
                 if (oldSticker) oldSticker.remove();
                 const stickerDiv = document.createElement('div');
                 stickerDiv.className = 'card-sticker';
                 stickerDiv.innerText = currentStickerOnCard.icon;
-                stickerDiv.style.cssText = 'position:absolute; bottom:10px; right:10px; font-size:48px; opacity:0.8; pointer-events:none; text-shadow:0 0 5px white;';
+                stickerDiv.style.cssText = 'position:absolute; bottom:10px; right:10px; font-size:48px; opacity:0.9; pointer-events:none; text-shadow:0 0 5px white;';
                 card.style.position = 'relative';
                 card.appendChild(stickerDiv);
             }
@@ -11572,15 +11648,15 @@ else showInstallButton();
         }
     }
 
-    // ---- 5. ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ ----
+    // ---- 8. ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ ----
     loadData();
     updateBalanceUI();
     updateStreakUI();
-    checkDailyBonus();      // при загрузке страницы проверим и начислим, если нужно
+    checkDailyBonus();
     updateStickerOnCardDisplay();
 
     claimBtn.onclick = () => {
-        checkDailyBonus();   // повторно проверим (но можно отдельно)
+        checkDailyBonus();
         updateBalanceUI();
         updateStreakUI();
         saveData();
@@ -11588,8 +11664,19 @@ else showInstallButton();
     openShopBtn.onclick = openShop;
     showStickersBtn.onclick = showStickersCollection;
 
-    // При переключении карточки (следующая/предыдущая) стикер остаётся на месте (если был наклеен)
-    // Стикер сохраняется в localStorage? Можно по желанию. Пока просто на сессию.
+    // При переключении карточки (следующая/предыдущая) стикер должен перерисовываться
+    const nextCardBtn = document.getElementById('nextCardBtn');
+    const prevCardBtn = document.getElementById('prevCardBtn');
+    const randomCardBtn = document.getElementById('randomCardBtn');
+    function reapplySticker() {
+        setTimeout(updateStickerOnCardDisplay, 50);
+    }
+    if (nextCardBtn) nextCardBtn.addEventListener('click', reapplySticker);
+    if (prevCardBtn) prevCardBtn.addEventListener('click', reapplySticker);
+    if (randomCardBtn) randomCardBtn.addEventListener('click', reapplySticker);
+    // Также при перевороте карточки
+    const flashcard = document.getElementById('flashcard');
+    if (flashcard) flashcard.addEventListener('click', reapplySticker);
 })();
 
 
