@@ -11259,7 +11259,7 @@ else showInstallButton();
 
 
 
-    // ========== СВАЙПЫ КАРТОЧЕК С УМНОЙ ЛОГИКОЙ И ПОДСКАЗКОЙ ==========
+    // ========== УМНЫЕ СВАЙПЫ С ПОДСКАЗКОЙ И ЗВУКОМ ==========
 (function() {
     // Скрываем старые кнопки статусов
     const learnedBtn = document.getElementById('markLearnedBtn');
@@ -11271,71 +11271,81 @@ else showInstallButton();
     if (!card) return;
 
     // ---------- ИКОНКА-ПОДСКАЗКА НАД КАРТОЧКОЙ ----------
-    if (!document.getElementById('swipeHintIcon')) {
-        const hintIcon = document.createElement('div');
-        hintIcon.id = 'swipeHintIcon';
-        hintIcon.innerHTML = '👆';
-        hintIcon.style.cssText = `
-            text-align: center;
-            font-size: 24px;
+    if (!document.getElementById('swipeHelpBtn')) {
+        const helpBtn = document.createElement('div');
+        helpBtn.id = 'swipeHelpBtn';
+        helpBtn.innerHTML = '👆 <span style="font-size:10px;">Подсказка</span>';
+        helpBtn.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #34495e;
+            color: #f1c40f;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 12px;
             cursor: pointer;
             margin-bottom: 8px;
-            opacity: 0.7;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
             transition: 0.2s;
         `;
-        hintIcon.onmouseenter = () => hintIcon.style.opacity = '1';
-        hintIcon.onmouseleave = () => hintIcon.style.opacity = '0.7';
-        // Вставляем над карточкой
-        const parent = card.parentNode;
-        parent.insertBefore(hintIcon, card);
+        helpBtn.onmouseenter = () => helpBtn.style.transform = 'scale(1.02)';
+        helpBtn.onmouseleave = () => helpBtn.style.transform = 'scale(1)';
+        helpBtn.onclick = () => showHelpMessage();
+        // Вставляем перед карточкой
+        card.parentNode.insertBefore(helpBtn, card);
     }
 
-    // Всплывающая подсказка (4 секунды)
-    let activeTooltip = null;
-    function showTooltip(text, isError = false) {
-        if (activeTooltip) activeTooltip.remove();
-        const tooltip = document.createElement('div');
-        tooltip.innerText = text;
-        tooltip.style.cssText = `
+    function showHelpMessage() {
+        let msgDiv = document.getElementById('helpMessage');
+        if (msgDiv) msgDiv.remove();
+        msgDiv = document.createElement('div');
+        msgDiv.id = 'helpMessage';
+        msgDiv.innerHTML = `
+            👈 Свайп влево = <span style="color:#2ecc71;">ИЗУЧЕНО</span><br>
+            👉 Свайп вправо = <span style="color:#f39c12;">НА ПОВТОР</span><br>
+            🔄 В разделах «Изучено» и «Повтор» свайпы возвращают в «Все»
+        `;
+        msgDiv.style.cssText = `
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: ${isError ? '#e74c3c' : '#2c3e50'};
+            background: rgba(0,0,0,0.9);
             color: white;
-            padding: 12px 24px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 100080;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 13px;
             text-align: center;
-            white-space: nowrap;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 100080;
+            max-width: 85vw;
+            white-space: normal;
+            word-break: break-word;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         `;
-        document.body.appendChild(tooltip);
-        activeTooltip = tooltip;
-        setTimeout(() => {
-            if (activeTooltip === tooltip) activeTooltip.remove();
-        }, 4000);
+        document.body.appendChild(msgDiv);
+        setTimeout(() => msgDiv.remove(), 4000);
     }
 
-    // Обработчик клика по иконке
-    document.getElementById('swipeHintIcon')?.addEventListener('click', () => {
-        showTooltip('👈 Свайп влево = ИЗУЧЕНО   |   Свайп вправо = НА ПОВТОР 👉');
-    });
-
-    // ---------- ЗВУК ----------
-    let audioUnlocked = false;
+    // ---------- ЗВУК (гарантированно работает) ----------
     let audioCtx = null;
+    let audioUnlocked = false;
+
     function unlockAudio() {
         if (audioUnlocked) return;
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtx.resume().then(() => { audioUnlocked = true; });
+            audioCtx.resume().then(() => {
+                audioUnlocked = true;
+                console.log('Audio unlocked');
+            });
         } catch(e) {}
     }
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
     document.body.addEventListener('click', unlockAudio, { once: true });
+
     function playSwipeSound() {
         if (!audioUnlocked || !audioCtx) return;
         try {
@@ -11346,83 +11356,106 @@ else showInstallButton();
             gain.connect(audioCtx.destination);
             osc.frequency.value = 880;
             osc.type = 'sine';
-            gain.gain.value = 0.12;
+            gain.gain.value = 0.1;
             osc.start();
             gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
             osc.stop(now + 0.1);
         } catch(e) {}
     }
 
+    // ---------- ПОЛУЧАЕМ ТЕКУЩИЙ ФИЛЬТР ----------
+    function getCurrentFilter() {
+        if (document.getElementById('showAllBtn')?.classList.contains('active-filter')) return 'all';
+        if (document.getElementById('showLearnedBtn')?.classList.contains('active-filter')) return 'learned';
+        if (document.getElementById('showRepeatBtn')?.classList.contains('active-filter')) return 'repeat';
+        return 'all';
+    }
+
+    // ---------- ЛОГИКА СВАЙПОВ ----------
     let startX = 0, startY = 0;
     let isSwiping = false;
     let startTime = 0;
+    let currentStatusHint = null;
 
-    // Функция умного изменения статуса с учётом текущего фильтра
-    function smartToggleStatus(direction) {
-        // direction: 'left' (влево) или 'right' (вправо)
-        // Получаем текущий фильтр (глобальная переменная currentFilter)
-        const filter = typeof currentFilter !== 'undefined' ? currentFilter : 'all';
-        const realIdx = typeof currentCardIndexReal === 'function' ? currentCardIndexReal() : null;
-        if (realIdx === null) {
-            showTooltip('Нет активной карточки', true);
-            return;
-        }
-        const currentStatus = getCardStatus(realIdx); // функция из вашего кода
+    function showDirectionHint(text, bgColor) {
+        if (currentStatusHint) currentStatusHint.remove();
+        const hintDiv = document.createElement('div');
+        hintDiv.innerText = text;
+        hintDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: ${bgColor};
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: bold;
+            z-index: 100070;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        `;
+        document.body.appendChild(hintDiv);
+        hintDiv.style.opacity = '1';
+        currentStatusHint = hintDiv;
+        setTimeout(() => {
+            if (currentStatusHint) currentStatusHint.remove();
+            currentStatusHint = null;
+        }, 250);
+    }
 
-        let newStatus = null;
-        let actionDescription = '';
+    function applySwipeAction(direction) { // direction: 'left' или 'right'
+        const filter = getCurrentFilter();
+        let statusToSet = null;
+        let actionText = '';
 
-        // Логика в зависимости от фильтра
         if (filter === 'all') {
-            // Вкладка "Все (неизученные)"
             if (direction === 'left') {
-                newStatus = 'learned';
-                actionDescription = '✅ Изучено';
+                statusToSet = 'learned';
+                actionText = '✅ ИЗУЧЕНО';
             } else {
-                newStatus = 'repeat';
-                actionDescription = '🔄 На повтор';
+                statusToSet = 'repeat';
+                actionText = '🔄 НА ПОВТОР';
             }
-        } 
+        }
         else if (filter === 'learned') {
-            // Вкладка "Изучено"
             if (direction === 'left') {
-                // убрать из изученных -> вернуть в "Все" (снять статус)
-                newStatus = null;
-                actionDescription = '↩️ Вернуть во "Все"';
+                statusToSet = null;   // убрать пометку изучено
+                actionText = '➖ ВЕРНУТЬ ВО ВСЕ';
             } else {
-                // вправо -> сделать "На повтор"
-                newStatus = 'repeat';
-                actionDescription = '🔄 Переместить в "На повтор"';
+                statusToSet = 'repeat';
+                actionText = '🔄 НА ПОВТОР';
             }
         }
         else if (filter === 'repeat') {
-            // Вкладка "На повтор"
             if (direction === 'left') {
-                // влево -> сделать "Изучено"
-                newStatus = 'learned';
-                actionDescription = '✅ Переместить в "Изучено"';
+                statusToSet = 'learned';
+                actionText = '✅ ИЗУЧЕНО';
             } else {
-                // вправо -> вернуть во "Все" (снять статус)
-                newStatus = null;
-                actionDescription = '↩️ Вернуть во "Все"';
+                statusToSet = null;   // убрать пометку повтора
+                actionText = '➖ ВЕРНУТЬ ВО ВСЕ';
             }
         }
 
-        // Применяем новый статус
-        if (newStatus === null) {
-            setCardStatusTo(null);
+        if (typeof toggleStatusWithValue === 'function') {
+            toggleStatusWithValue(statusToSet);
+        } else if (typeof toggleStatus === 'function') {
+            // fallback – старая функция (только для all, но попробуем)
+            if (statusToSet) toggleStatus(statusToSet);
+            else if (typeof removeStatus === 'function') removeStatus();
+            else console.warn('Не удалось применить действие');
         } else {
-            setCardStatusTo(newStatus);
+            console.warn('toggleStatus not found');
         }
-        showTooltip(actionDescription);
+
         playSwipeSound();
-        // Принудительно обновляем фильтр и синхронизацию (это делает applyFilterAndSync)
-        if (typeof applyFilterAndSync === 'function') {
-            applyFilterAndSync();
-        }
+        showDirectionHint(actionText, statusToSet === 'learned' ? '#2e7d64' : (statusToSet === 'repeat' ? '#f39c12' : '#7f8c8d'));
     }
 
-    // Обработчики свайпов
+    // ---------- ОБРАБОТЧИКИ СВАЙПОВ ----------
     card.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
@@ -11468,9 +11501,28 @@ else showInstallButton();
 
         if (Math.abs(deltaX) < 50 || elapsed > 300) return;
 
-        const direction = deltaX > 0 ? 'right' : 'left';
-        smartToggleStatus(direction);
+        if (deltaX > 0) applySwipeAction('right');
+        else applySwipeAction('left');
+
+        setTimeout(() => {
+            card.style.transform = '';
+            card.style.opacity = '1';
+        }, 50);
     });
+
+    // Функция для снятия статуса (если toggleStatus не поддерживает null)
+    window.removeStatus = function() {
+        if (typeof setCardStatusTo === 'function') {
+            setCardStatusTo(null);
+        } else {
+            console.warn('setCardStatusTo not found');
+        }
+    };
+    window.toggleStatusWithValue = function(value) {
+        if (value === null) window.removeStatus();
+        else if (typeof toggleStatus === 'function') toggleStatus(value);
+        else console.warn('toggleStatus not found');
+    };
 })();
 
 
