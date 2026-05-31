@@ -11553,7 +11553,232 @@ else showInstallButton();
 })();
 
 
-   
+
+
+
+
+
+
+
+
+
+
+    // ========== ДОБАВЛЯЕМ СТАТУСЫ И ФИЛЬТРЫ В РАЗДЕЛ "ДРУГИЕ ЯЗЫКИ" (без замены) ==========
+(function() {
+    // Ждём, пока загрузится модалка языков
+    let attempts = 0;
+    const interval = setInterval(() => {
+        const modal = document.getElementById('languagesModal');
+        const cardsArea = document.getElementById('langCardsArea');
+        if (!modal || !cardsArea || cardsArea.children.length === 0) {
+            attempts++;
+            if (attempts > 30) clearInterval(interval);
+            return;
+        }
+        clearInterval(interval);
+        
+        // Проверяем, не добавлены ли уже фильтры
+        if (document.getElementById('langFilterBar')) return;
+
+        // Находим контейнер карточек (старый интерфейс)
+        // Создаём панель фильтров и кнопок статусов
+        const filterBar = document.createElement('div');
+        filterBar.id = 'langFilterBar';
+        filterBar.style.cssText = 'display:flex; gap:8px; justify-content:center; margin:10px 0; flex-wrap:wrap;';
+        filterBar.innerHTML = `
+            <button id="langShowAllBtn" style="background:#f39c12; border:none; padding:4px 12px; border-radius:30px;">📚 Все</button>
+            <button id="langShowLearnedBtn" style="background:#2c3e50; border:none; padding:4px 12px; border-radius:30px;">✅ Изучено</button>
+            <button id="langShowRepeatBtn" style="background:#2c3e50; border:none; padding:4px 12px; border-radius:30px;">🔄 На повтор</button>
+        `;
+        
+        const statusBar = document.createElement('div');
+        statusBar.id = 'langStatusBar';
+        statusBar.style.cssText = 'display:flex; gap:12px; justify-content:center; margin:10px 0;';
+        statusBar.innerHTML = `
+            <button id="langMarkLearnedBtn" style="background:#2c3e50; border:1px solid #2ecc71; padding:5px 15px; border-radius:30px;">✅ Изучено</button>
+            <button id="langMarkRepeatBtn" style="background:#2c3e50; border:1px solid #f39c12; padding:5px 15px; border-radius:30px;">🔄 На повтор</button>
+        `;
+
+        // Вставляем после select-ов (находим первый div с селектами)
+        const selectsDiv = cardsArea.querySelector('div[style*="gap:10px"]');
+        if (selectsDiv) {
+            selectsDiv.insertAdjacentElement('afterend', filterBar);
+            filterBar.insertAdjacentElement('afterend', statusBar);
+        } else {
+            cardsArea.prepend(filterBar);
+            cardsArea.prepend(statusBar);
+        }
+
+        // Переменные состояния (глобальные для этого модуля)
+        let langCurrentLang = 'en';
+        let langCurrentLevel = 'A1';
+        let langCurrentFilter = 'all';
+        let langCurrentIndex = 0;
+        let langIsFlipped = false;
+        let langFullWords = [];
+        let langFilteredWords = [];
+
+        // Функции для статусов
+        function getLangStatusKey(idx) { return `langStatus_${langCurrentLang}_${langCurrentLevel}_${idx}`; }
+        function getCardStatus(idx) { return localStorage.getItem(getLangStatusKey(idx)); }
+        function setCardStatusTo(status, idx) {
+            if (status === null) localStorage.removeItem(getLangStatusKey(idx));
+            else localStorage.setItem(getLangStatusKey(idx), status);
+            applyLangFilter();
+        }
+        function toggleLangStatus(status) {
+            if (langCurrentIndex >= langFilteredWords.length) return;
+            const realIdx = langFullWords.findIndex(w => w === langFilteredWords[langCurrentIndex]);
+            if (realIdx === -1) return;
+            const current = getCardStatus(realIdx);
+            if (current === status) setCardStatusTo(null, realIdx);
+            else setCardStatusTo(status, realIdx);
+        }
+
+        function applyLangFilter() {
+            const all = langFullWords;
+            if (langCurrentFilter === 'all') {
+                langFilteredWords = all.filter((_, idx) => getCardStatus(idx) !== 'learned');
+            } else if (langCurrentFilter === 'learned') {
+                langFilteredWords = all.filter((_, idx) => getCardStatus(idx) === 'learned');
+            } else {
+                langFilteredWords = all.filter((_, idx) => getCardStatus(idx) === 'repeat');
+            }
+            if (langFilteredWords.length === 0) {
+                langFilteredWords = [{ word: 'Нет карточек', trans: 'Смените фильтр' }];
+            }
+            if (langCurrentIndex >= langFilteredWords.length) langCurrentIndex = 0;
+            updateLangCardDisplay();
+        }
+
+        function updateLangCardDisplay() {
+            const pair = langFilteredWords[langCurrentIndex];
+            const wordDiv = document.getElementById('cardWord');
+            const transDiv = document.getElementById('cardTrans');
+            const flipInner = document.getElementById('flipInner');
+            if (!wordDiv) return;
+            if (pair && pair.word) {
+                wordDiv.innerText = pair.word;
+                transDiv.innerText = pair.trans;
+            } else {
+                wordDiv.innerText = '—';
+                transDiv.innerText = 'Нет слов';
+            }
+            if (flipInner) flipInner.style.transform = langIsFlipped ? 'rotateY(180deg)' : '';
+            // Обновляем счётчик (если есть)
+            const counter = document.getElementById('cardCounter');
+            if (counter) counter.innerText = `${langCurrentIndex+1} / ${langFilteredWords.length}`;
+        }
+
+        // Перехватываем события смены языка/уровня
+        const langSelect = document.getElementById('langSelect');
+        const levelSelect = document.getElementById('levelSelect');
+        
+        function refreshFullList() {
+            const wordsObj = window.langData?.[langCurrentLang]?.words?.[langCurrentLevel] || 
+                             (() => { try { return eval(`langData['${langCurrentLang}'].words['${langCurrentLevel}']`); } catch(e) { return []; } })();
+            if (!wordsObj) return;
+            langFullWords = wordsObj.map(pair => {
+                const [word, trans] = pair.split('-');
+                return { word, trans };
+            });
+            applyLangFilter();
+        }
+
+        // Оригинальные обработчики селектов (сохраняем)
+        const origLangChange = langSelect?.onchange;
+        const origLevelChange = levelSelect?.onchange;
+        if (langSelect) {
+            langSelect.onchange = (e) => {
+                if (origLangChange) origLangChange(e);
+                langCurrentLang = e.target.value;
+                langCurrentLevel = 'A1';
+                if (levelSelect) levelSelect.value = 'A1';
+                refreshFullList();
+                langCurrentIndex = 0;
+                langIsFlipped = false;
+                updateLangCardDisplay();
+                // Также обновляем селект уровней
+                if (levelSelect && window.langData && window.langData[langCurrentLang]) {
+                    const levels = Object.keys(window.langData[langCurrentLang].words);
+                    levelSelect.innerHTML = levels.map(lvl => `<option value="${lvl}">${lvl}</option>`).join('');
+                }
+            };
+        }
+        if (levelSelect) {
+            levelSelect.onchange = (e) => {
+                if (origLevelChange) origLevelChange(e);
+                langCurrentLevel = e.target.value;
+                refreshFullList();
+                langCurrentIndex = 0;
+                langIsFlipped = false;
+                updateLangCardDisplay();
+            };
+        }
+
+        // Кнопки статусов
+        document.getElementById('langMarkLearnedBtn').onclick = () => toggleLangStatus('learned');
+        document.getElementById('langMarkRepeatBtn').onclick = () => toggleLangStatus('repeat');
+
+        // Фильтры
+        document.getElementById('langShowAllBtn').onclick = () => { langCurrentFilter = 'all'; applyLangFilter(); updateLangFilterButtons('all'); };
+        document.getElementById('langShowLearnedBtn').onclick = () => { langCurrentFilter = 'learned'; applyLangFilter(); updateLangFilterButtons('learned'); };
+        document.getElementById('langShowRepeatBtn').onclick = () => { langCurrentFilter = 'repeat'; applyLangFilter(); updateLangFilterButtons('repeat'); };
+
+        function updateLangFilterButtons(active) {
+            const btns = {
+                all: document.getElementById('langShowAllBtn'),
+                learned: document.getElementById('langShowLearnedBtn'),
+                repeat: document.getElementById('langShowRepeatBtn')
+            };
+            for (let [k, btn] of Object.entries(btns)) {
+                if (btn) btn.style.background = (k === active) ? '#f39c12' : '#2c3e50';
+            }
+        }
+
+        // Перехватываем навигационные кнопки (предыдущая, следующая, случайная)
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const randBtn = document.getElementById('randBtn');
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                if (langFilteredWords.length) {
+                    langCurrentIndex = (langCurrentIndex - 1 + langFilteredWords.length) % langFilteredWords.length;
+                    langIsFlipped = false;
+                    updateLangCardDisplay();
+                }
+            };
+        }
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                if (langFilteredWords.length) {
+                    langCurrentIndex = (langCurrentIndex + 1) % langFilteredWords.length;
+                    langIsFlipped = false;
+                    updateLangCardDisplay();
+                }
+            };
+        }
+        if (randBtn) {
+            randBtn.onclick = () => {
+                if (langFilteredWords.length) {
+                    langCurrentIndex = Math.floor(Math.random() * langFilteredWords.length);
+                    langIsFlipped = false;
+                    updateLangCardDisplay();
+                }
+            };
+        }
+
+        // Инициализация
+        langCurrentLang = langSelect ? langSelect.value : 'en';
+        langCurrentLevel = levelSelect ? levelSelect.value : 'A1';
+        // Ждём данные словаря (они могут быть глобальными)
+        setTimeout(() => {
+            refreshFullList();
+            updateLangCardDisplay();
+            updateLangFilterButtons('all');
+        }, 100);
+    }, 200);
+})();
 
 
 
