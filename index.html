@@ -11259,7 +11259,7 @@ else showInstallButton();
 
 
 
-    // ========== УМНЫЕ СВАЙПЫ С ПОДСКАЗКОЙ И ЗВУКОМ ==========
+    // ========== УМНЫЕ СВАЙПЫ + КНОПКИ ДЛЯ ПК (стрелочки) ==========
 (function() {
     // Скрываем старые кнопки статусов
     const learnedBtn = document.getElementById('markLearnedBtn');
@@ -11294,18 +11294,66 @@ else showInstallButton();
         helpBtn.onmouseenter = () => helpBtn.style.transform = 'scale(1.02)';
         helpBtn.onmouseleave = () => helpBtn.style.transform = 'scale(1)';
         helpBtn.onclick = () => showHelpMessage();
-        // Вставляем перед карточкой
         card.parentNode.insertBefore(helpBtn, card);
     }
 
+    // ---------- КНОПКИ-СТРЕЛКИ ДЛЯ ПК (влево/вправо) ----------
+    const buttonContainer = document.createElement('div');
+    buttonContainer.id = 'swipeButtonsPC';
+    buttonContainer.style.cssText = `
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin: 12px 0 8px;
+    `;
+    const leftBtn = document.createElement('button');
+    leftBtn.innerHTML = '◀ Изучено';
+    leftBtn.style.cssText = `
+        background: #2e7d64;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+    `;
+    leftBtn.onmouseenter = () => leftBtn.style.transform = 'scale(1.02)';
+    leftBtn.onmouseleave = () => leftBtn.style.transform = 'scale(1)';
+    const rightBtn = document.createElement('button');
+    rightBtn.innerHTML = 'Повтор ▶';
+    rightBtn.style.cssText = `
+        background: #f39c12;
+        color: #1f2c2c;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+    `;
+    rightBtn.onmouseenter = () => rightBtn.style.transform = 'scale(1.02)';
+    rightBtn.onmouseleave = () => rightBtn.style.transform = 'scale(1)';
+    buttonContainer.appendChild(leftBtn);
+    buttonContainer.appendChild(rightBtn);
+    // Вставляем под карточкой (после неё)
+    card.parentNode.insertBefore(buttonContainer, card.nextSibling);
+
+    // На телефонах кнопки можно уменьшить или скрыть, но для простоты оставим (они не мешают)
+    // При желании можно добавить медиа-запрос: @media (max-width: 768px) { #swipeButtonsPC { display: none; } }
+
+    // ---------- ПОДСКАЗКА ----------
     function showHelpMessage() {
         let msgDiv = document.getElementById('helpMessage');
         if (msgDiv) msgDiv.remove();
         msgDiv = document.createElement('div');
         msgDiv.id = 'helpMessage';
         msgDiv.innerHTML = `
-            👈 Свайп влево = <span style="color:#2ecc71;">ИЗУЧЕНО</span><br>
-            👉 Свайп вправо = <span style="color:#f39c12;">НА ПОВТОР</span><br>
+            👈 Свайп влево / кнопка = <span style="color:#2ecc71;">ИЗУЧЕНО</span><br>
+            👉 Свайп вправо / кнопка = <span style="color:#f39c12;">НА ПОВТОР</span><br>
+            🔄 В разделах «Изучено» и «Повтор» действия меняются (вернуть во все)
         `;
         msgDiv.style.cssText = `
             position: fixed;
@@ -11328,7 +11376,7 @@ else showInstallButton();
         setTimeout(() => msgDiv.remove(), 4000);
     }
 
-    // ---------- ЗВУК (гарантированно работает) ----------
+    // ---------- ЗВУК ----------
     let audioCtx = null;
     let audioUnlocked = false;
 
@@ -11362,7 +11410,7 @@ else showInstallButton();
         } catch(e) {}
     }
 
-    // ---------- ПОЛУЧАЕМ ТЕКУЩИЙ ФИЛЬТР ----------
+    // ---------- ЛОГИКА СТАТУСОВ (общая для свайпов и кнопок) ----------
     function getCurrentFilter() {
         if (document.getElementById('showAllBtn')?.classList.contains('active-filter')) return 'all';
         if (document.getElementById('showLearnedBtn')?.classList.contains('active-filter')) return 'learned';
@@ -11370,12 +11418,7 @@ else showInstallButton();
         return 'all';
     }
 
-    // ---------- ЛОГИКА СВАЙПОВ ----------
-    let startX = 0, startY = 0;
-    let isSwiping = false;
-    let startTime = 0;
     let currentStatusHint = null;
-
     function showDirectionHint(text, bgColor) {
         if (currentStatusHint) currentStatusHint.remove();
         const hintDiv = document.createElement('div');
@@ -11442,7 +11485,6 @@ else showInstallButton();
         if (typeof toggleStatusWithValue === 'function') {
             toggleStatusWithValue(statusToSet);
         } else if (typeof toggleStatus === 'function') {
-            // fallback – старая функция (только для all, но попробуем)
             if (statusToSet) toggleStatus(statusToSet);
             else if (typeof removeStatus === 'function') removeStatus();
             else console.warn('Не удалось применить действие');
@@ -11454,7 +11496,15 @@ else showInstallButton();
         showDirectionHint(actionText, statusToSet === 'learned' ? '#2e7d64' : (statusToSet === 'repeat' ? '#f39c12' : '#7f8c8d'));
     }
 
-    // ---------- ОБРАБОТЧИКИ СВАЙПОВ ----------
+    // Привязываем кнопки
+    leftBtn.onclick = () => applySwipeAction('left');
+    rightBtn.onclick = () => applySwipeAction('right');
+
+    // ---------- СВАЙПЫ ----------
+    let startX = 0, startY = 0;
+    let isSwiping = false;
+    let startTime = 0;
+
     card.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
@@ -11509,13 +11559,10 @@ else showInstallButton();
         }, 50);
     });
 
-    // Функция для снятия статуса (если toggleStatus не поддерживает null)
+    // Функции для совместимости
     window.removeStatus = function() {
-        if (typeof setCardStatusTo === 'function') {
-            setCardStatusTo(null);
-        } else {
-            console.warn('setCardStatusTo not found');
-        }
+        if (typeof setCardStatusTo === 'function') setCardStatusTo(null);
+        else console.warn('setCardStatusTo not found');
     };
     window.toggleStatusWithValue = function(value) {
         if (value === null) window.removeStatus();
