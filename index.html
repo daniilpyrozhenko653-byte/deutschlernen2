@@ -11363,7 +11363,7 @@ else showInstallButton();
 
 
 
-    // ========== КРАСИВЫЙ МАГАЗИН СТИКЕРОВ + БОНУСЫ (ВИДЖЕТ В САМОМ ВЕРХУ СПРАВА, ПРОКРУЧИВАЕТСЯ) ==========
+    // ========== КРАСИВЫЙ МАГАЗИН СТИКЕРОВ + БОНУСЫ (ВИДЖЕТ В ПРАВОМ ВЕРХНЕМ УГЛУ, ПРОКРУЧИВАЕТСЯ) ==========
 (function() {
     if (document.getElementById('bonusWidget')) return;
 
@@ -11657,7 +11657,7 @@ else showInstallButton();
         document.getElementById('closeShopBtn').onclick = () => shopModal.remove();
     }
 
-    // ---------- ВИДЖЕТ БАЛАНСА В САМОМ ВЕРХУ СПРАВА (ПРОКРУЧИВАЕТСЯ) ----------
+    // ---------- ВИДЖЕТ БАЛАНСА В САМОМ ВЕРХУ ПРАВОГО УГЛА (ПРОКРУЧИВАЕТСЯ) ----------
     function updateBalanceUI() {
         const balanceSpan = document.getElementById('coinBalance');
         if (balanceSpan) balanceSpan.innerText = coins;
@@ -11666,37 +11666,31 @@ else showInstallButton();
     const oldWidget = document.getElementById('bonusWidget');
     if (oldWidget) oldWidget.remove();
 
-    const container = document.querySelector('.app-container');
-    if (container) {
-        // Создаём элемент-виджет и вставляем его самым первым внутри .app-container
-        const widget = document.createElement('div');
-        widget.id = 'bonusWidget';
-        widget.style.cssText = `
-            display: flex;
-            justify-content: flex-end;
-            padding: 8px 12px 0 0;
-            margin-bottom: 5px;
-        `;
-        widget.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); border-radius: 60px; padding: 4px 12px; border: 1px solid rgba(255,215,0,0.5);">
-                <span style="font-size:18px;">💰</span>
-                <span id="coinBalance" style="color:#FFD966; font-weight:bold; font-size:15px;">${coins}</span>
-                <button id="openShopBtn" style="background: linear-gradient(135deg, #f39c12, #e67e22); border: none; border-radius: 40px; padding: 4px 12px; color: white; font-weight: bold; cursor: pointer; font-size: 11px;">🛍️</button>
-            </div>
-        `;
-        // Вставляем в самое начало контейнера
-        if (container.firstChild) container.insertBefore(widget, container.firstChild);
-        else container.appendChild(widget);
-        document.getElementById('openShopBtn').onclick = openStickerShop;
-    } else {
-        // fallback
-        const widget = document.createElement('div');
-        widget.id = 'bonusWidget';
-        widget.style.cssText = 'display:flex; justify-content:flex-end; padding:8px; background:#1e272e; border-bottom:1px solid #f39c12;';
-        widget.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><span>💰</span><span id="coinBalance">${coins}</span><button id="openShopBtn" style="background:#f39c12; border:none; border-radius:30px; padding:4px 12px;">🛍️</button></div>`;
+    // Создаём виджет и вставляем его самым первым элементом в body
+    const widget = document.createElement('div');
+    widget.id = 'bonusWidget';
+    widget.style.cssText = `
+        display: flex;
+        justify-content: flex-end;
+        margin: 0;
+        padding: 8px 12px 0 0;
+        background: transparent;
+    `;
+    widget.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border-radius: 60px; padding: 4px 12px; border: 1px solid rgba(255,215,0,0.6);">
+            <span style="font-size:18px;">💰</span>
+            <span id="coinBalance" style="color: #FFD966; font-weight: bold; font-size: 15px;">${coins}</span>
+            <button id="openShopBtn" style="background: linear-gradient(135deg, #f39c12, #e67e22); border: none; border-radius: 40px; padding: 4px 12px; color: white; font-weight: bold; cursor: pointer; font-size: 11px;">🛍️</button>
+        </div>
+    `;
+    // Вставляем в самое начало body, чтобы он был выше всего остального
+    if (document.body.firstChild) {
         document.body.insertBefore(widget, document.body.firstChild);
-        document.getElementById('openShopBtn').onclick = openStickerShop;
+    } else {
+        document.body.appendChild(widget);
     }
+    
+    document.getElementById('openShopBtn').onclick = openStickerShop;
 
     checkDailyBonus();
     updateBalanceUI();
