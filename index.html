@@ -11657,50 +11657,55 @@ else showInstallButton();
         document.getElementById('closeShopBtn').onclick = () => shopModal.remove();
     }
 
-    // ---------- РАЗМЕЩАЕМ ВИДЖЕТ В ПРАВОМ ВЕРХНЕМ УГЛУ (ПРОКРУЧИВАЕТСЯ) ----------
+    // ---------- ВИДЖЕТ БАЛАНСА В ПРАВОМ ВЕРХНЕМ УГЛУ (ПРОКРУЧИВАЕТСЯ) ----------
     function updateBalanceUI() {
         const balanceSpan = document.getElementById('coinBalance');
         if (balanceSpan) balanceSpan.innerText = coins;
     }
 
-    // Удаляем старый виджет, если был
+    // Удаляем старый виджет, если есть
     const oldWidget = document.getElementById('bonusWidget');
     if (oldWidget) oldWidget.remove();
 
-    // Находим контейнер .app-container
+    // Находим контейнер .app-container и добавляем виджет справа после h1
     const container = document.querySelector('.app-container');
     if (container) {
-        // Создаём виджет
+        const h1 = container.querySelector('h1');
+        // Создаём обёртку для выравнивания по правому краю
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display: flex; justify-content: flex-end; margin: 5px 0 10px 0;';
+        
         const widget = document.createElement('div');
         widget.id = 'bonusWidget';
         widget.style.cssText = `
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
-            margin: 10px 15px 10px auto;
-            padding: 6px 15px;
-            background: rgba(0,0,0,0.4);
+            gap: 8px;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(8px);
             border-radius: 60px;
-            width: fit-content;
-            backdrop-filter: blur(4px);
+            padding: 4px 12px;
             border: 1px solid rgba(255,215,0,0.5);
+            font-size: 14px;
+            font-weight: bold;
+            width: fit-content;
         `;
         widget.innerHTML = `
             <span style="font-size:18px;">💰</span>
-            <span id="coinBalance" style="font-weight:bold; color:#FFD966; font-size:16px;">${coins}</span>
-            <button id="openShopBtn" style="background: linear-gradient(135deg, #f39c12, #e67e22); border:none; border-radius:40px; padding:5px 14px; color:white; font-weight:bold; cursor:pointer; font-size:12px;">🛍️ Магазин</button>
+            <span id="coinBalance" style="color:#FFD966; font-size:15px;">${coins}</span>
+            <button id="openShopBtn" style="background: linear-gradient(135deg, #f39c12, #e67e22); border:none; border-radius:40px; padding:4px 12px; color:white; font-weight:bold; cursor:pointer; font-size:11px;">🛍️</button>
         `;
-        // Вставляем сразу после заголовка h1 (или в начало контейнера)
-        const h1 = container.querySelector('h1');
-        if (h1 && h1.nextSibling) container.insertBefore(widget, h1.nextSibling);
-        else container.prepend(widget);
+        wrapper.appendChild(widget);
+        
+        if (h1 && h1.nextSibling) container.insertBefore(wrapper, h1.nextSibling);
+        else container.appendChild(wrapper);
+        
         document.getElementById('openShopBtn').onclick = openStickerShop;
     } else {
-        // fallback – если нет .app-container
+        // fallback
         const widget = document.createElement('div');
         widget.id = 'bonusWidget';
-        widget.style.cssText = `display:flex; justify-content:flex-end; padding:10px; background:#1e272e; border-bottom:1px solid #f39c12;`;
+        widget.style.cssText = 'display:flex; justify-content:flex-end; padding:8px; background:#1e272e; border-bottom:1px solid #f39c12;';
         widget.innerHTML = `<span style="margin-right:10px;">💰 <span id="coinBalance">${coins}</span></span><button id="openShopBtn" style="background:#f39c12; border:none; border-radius:30px; padding:4px 12px;">🛍️</button>`;
         document.body.insertBefore(widget, document.body.firstChild);
         document.getElementById('openShopBtn').onclick = openStickerShop;
