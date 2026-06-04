@@ -11363,7 +11363,7 @@ else showInstallButton();
 
 
 
-    // ========== КРАСИВЫЙ МАГАЗИН СТИКЕРОВ + БОНУСЫ (КНОПКА ПРОКРУЧИВАЕТСЯ) ==========
+    // ========== КРАСИВЫЙ МАГАЗИН СТИКЕРОВ + БОНУСЫ (КНОПКА В ПРАВОМ ВЕРХНЕМ УГЛУ, ПРОКРУЧИВАЕТСЯ) ==========
 (function() {
     if (document.getElementById('bonusWidget')) return;
 
@@ -11657,7 +11657,7 @@ else showInstallButton();
         document.getElementById('closeShopBtn').onclick = () => shopModal.remove();
     }
 
-    // ---------- КНОПКА БАЛАНСА (ПРОКРУЧИВАЕТСЯ, НЕ ФИКСИРОВАНА) ----------
+    // ---------- РАЗМЕЩАЕМ ВИДЖЕТ В ПРАВОМ ВЕРХНЕМ УГЛУ (ПРОКРУЧИВАЕТСЯ) ----------
     function updateBalanceUI() {
         const balanceSpan = document.getElementById('coinBalance');
         if (balanceSpan) balanceSpan.innerText = coins;
@@ -11667,10 +11667,10 @@ else showInstallButton();
     const oldWidget = document.getElementById('bonusWidget');
     if (oldWidget) oldWidget.remove();
 
-    // Находим контейнер, куда вставим виджет (например, после заголовка h1)
+    // Находим контейнер .app-container
     const container = document.querySelector('.app-container');
     if (container) {
-        const h1 = container.querySelector('h1');
+        // Создаём виджет
         const widget = document.createElement('div');
         widget.id = 'bonusWidget';
         widget.style.cssText = `
@@ -11678,12 +11678,11 @@ else showInstallButton();
             align-items: center;
             justify-content: flex-end;
             gap: 12px;
-            margin: 10px 15px 10px 0;
+            margin: 10px 15px 10px auto;
             padding: 6px 15px;
             background: rgba(0,0,0,0.4);
             border-radius: 60px;
             width: fit-content;
-            margin-left: auto;
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255,215,0,0.5);
         `;
@@ -11692,11 +11691,13 @@ else showInstallButton();
             <span id="coinBalance" style="font-weight:bold; color:#FFD966; font-size:16px;">${coins}</span>
             <button id="openShopBtn" style="background: linear-gradient(135deg, #f39c12, #e67e22); border:none; border-radius:40px; padding:5px 14px; color:white; font-weight:bold; cursor:pointer; font-size:12px;">🛍️ Магазин</button>
         `;
+        // Вставляем сразу после заголовка h1 (или в начало контейнера)
+        const h1 = container.querySelector('h1');
         if (h1 && h1.nextSibling) container.insertBefore(widget, h1.nextSibling);
-        else container.appendChild(widget);
+        else container.prepend(widget);
         document.getElementById('openShopBtn').onclick = openStickerShop;
     } else {
-        // fallback – просто добавим в начало body
+        // fallback – если нет .app-container
         const widget = document.createElement('div');
         widget.id = 'bonusWidget';
         widget.style.cssText = `display:flex; justify-content:flex-end; padding:10px; background:#1e272e; border-bottom:1px solid #f39c12;`;
@@ -11710,7 +11711,6 @@ else showInstallButton();
     updateBalanceUI();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDailyBonus(); });
 })();
-
     
 
 
