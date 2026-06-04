@@ -11363,11 +11363,11 @@ else showInstallButton();
 
 
 
-    // ========== СИСТЕМА БОНУСОВ + МАГАЗИН (СТИКЕРЫ + СКИНЫ ДЛЯ КАРТОЧЕК) ==========
+    // ========== КРАСИВЫЙ МАГАЗИН СТИКЕРОВ + БОНУСЫ (БЕЗ СКИНОВ, 0 МОНЕТ СТАРТ) ==========
 (function() {
     if (document.getElementById('bonusWidget')) return;
 
-    // ---------- 1. СТИКЕРЫ (ВАШИ PNG) ----------
+    // ---------- 1. ВАШИ СТИКЕРЫ ----------
     const stickers = [
         { id: 1, name: 'Learn', imgUrl: 'learn.png', price: 50 },
         { id: 2, name: 'Top', imgUrl: 'Top.png', price: 50 },
@@ -11381,134 +11381,15 @@ else showInstallButton();
         { id: 10, name: 'kemo', imgUrl: 'kemo.png', price: 1000 }
     ];
 
-    // ---------- 2. СКИНЫ ДЛЯ КАРТОЧЕК ----------
-    const skins = [
-        { id: 1, name: 'Стандартная', price: 0, type: 'standard', bg_front: '#2c3e50', bg_back: '#1e8449', text_front: 'white', text_back: 'white', border: 'none' },
-        { id: 2, name: 'Ночь', price: 200, type: 'night', bg_front: '#1a1a2e', bg_back: '#16213e', text_front: '#c4c4c4', text_back: '#c4c4c4', border: '1px solid #4a4a6a' },
-        { id: 3, name: 'Море', price: 200, type: 'sea', bg_front: '#0b3b5f', bg_back: '#1b5a7a', text_front: '#e0f7fa', text_back: '#e0f7fa', border: '1px solid #2c7da0' },
-        { id: 4, name: 'Лес', price: 200, type: 'forest', bg_front: '#1e3b2b', bg_back: '#2d5a3f', text_front: '#d4e6c3', text_back: '#d4e6c3', border: '1px solid #4c8c4a' },
-        { id: 5, name: 'Космос', price: 300, type: 'space', bg_front: '#1b1b3a', bg_back: '#2d1b4e', text_front: '#e2d9ff', text_back: '#e2d9ff', border: '1px solid #9b59b6' }
-    ];
-
-    let purchasedStickers = JSON.parse(localStorage.getItem('purchasedStickers')) || [];
-    let purchasedSkins = JSON.parse(localStorage.getItem('purchasedSkins')) || [1]; // стандартная всегда есть
-    let activeSkin = parseInt(localStorage.getItem('activeSkin')) || 1;
-
-    // ---------- 3. БАЛАНС И БОНУСЫ (С УВЕЛИЧЕННЫМИ НАГРАДАМИ) ----------
-    let coins = parseInt(localStorage.getItem('userCoins')) || 2000; // 2000 для теста
+    // ---------- 2. БАЛАНС 0, БОНУСЫ ----------
+    let coins = parseInt(localStorage.getItem('userCoins')) || 0;   // старт 0
     let lastLoginDate = localStorage.getItem('lastLoginDate');
     let loginStreak = parseInt(localStorage.getItem('loginStreak')) || 0;
     const bonuses = [0, 20, 40, 80, 160, 320, 2000, 4000];
 
     function saveBalance() { localStorage.setItem('userCoins', coins); }
-    function savePurchasedStickers() { localStorage.setItem('purchasedStickers', JSON.stringify(purchasedStickers)); }
-    function savePurchasedSkins() { localStorage.setItem('purchasedSkins', JSON.stringify(purchasedSkins)); }
-    function saveActiveSkin() { localStorage.setItem('activeSkin', activeSkin); }
 
-    // ---------- ПРИМЕНЕНИЕ СКИНА К КАРТОЧКЕ ----------
-    function applySkinToCard() {
-        const skin = skins.find(s => s.id === activeSkin);
-        if (!skin) return;
-        const frontDiv = document.querySelector('#flipInner .front');
-        const backDiv = document.querySelector('#flipInner .back');
-        if (frontDiv) {
-            frontDiv.style.background = skin.bg_front;
-            frontDiv.style.color = skin.text_front;
-            if (skin.border) frontDiv.style.border = skin.border;
-        }
-        if (backDiv) {
-            backDiv.style.background = skin.bg_back;
-            backDiv.style.color = skin.text_back;
-            if (skin.border) backDiv.style.border = skin.border;
-        }
-        // Также применяем к карточке в разделе "Другие языки" (если он открыт)
-        const otherFront = document.querySelector('#langCardsArea .front');
-        const otherBack = document.querySelector('#langCardsArea .back');
-        if (otherFront) {
-            otherFront.style.background = skin.bg_front;
-            otherFront.style.color = skin.text_front;
-            if (skin.border) otherFront.style.border = skin.border;
-        }
-        if (otherBack) {
-            otherBack.style.background = skin.bg_back;
-            otherBack.style.color = skin.text_back;
-            if (skin.border) otherBack.style.border = skin.border;
-        }
-    }
-
-    // Следим за появлением карточек (для "Других языков")
-    const observer = new MutationObserver(() => applySkinToCard());
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // ---------- АНИМАЦИЯ БОНУСА (исправленная, без конфликта со свайпами) ----------
-    function showBonusAnimation(message) {
-        const oldToast = document.getElementById('bonusToast');
-        if (oldToast) oldToast.remove();
-
-        const toast = document.createElement('div');
-        toast.id = 'bonusToast';
-        toast.innerHTML = `💰 ${message} 💰`;
-        toast.style.cssText = `
-            position: fixed;
-            top: 35%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.5) rotate(-10deg);
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            color: #2c2418;
-            padding: 10px 18px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: center;
-            z-index: 100200;
-            box-shadow: 0 0 20px rgba(255,215,0,0.8);
-            white-space: nowrap;
-            font-family: 'Segoe UI', system-ui;
-            border: 2px solid #fff0b5;
-            opacity: 0;
-            transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.3s ease;
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translate(-50%, -50%) scale(1) rotate(0deg)';
-        }, 10);
-
-        // Падающие монетки
-        for (let i = 0; i < 30; i++) {
-            const coin = document.createElement('div');
-            coin.innerHTML = '💰';
-            coin.style.cssText = `
-                position: fixed;
-                left: ${Math.random() * 100}%;
-                top: 0;
-                font-size: 20px;
-                pointer-events: none;
-                z-index: 100200;
-                animation: dropCoin ${1 + Math.random() * 1.5}s linear forwards;
-            `;
-            document.body.appendChild(coin);
-            setTimeout(() => coin.remove(), 2000);
-        }
-        if (!document.getElementById('coinStyle')) {
-            const style = document.createElement('style');
-            style.id = 'coinStyle';
-            style.textContent = `
-                @keyframes dropCoin {
-                    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translate(-50%, -50%) scale(0.8) rotate(5deg)';
-            setTimeout(() => toast.remove(), 400);
-        }, 3500);
-    }
-
-    // Звук
+    // Звук для бонуса
     let audioCtx = null;
     let audioUnlocked = false;
     function unlockAudio() {
@@ -11531,16 +11412,85 @@ else showInstallButton();
             gain.connect(audioCtx.destination);
             osc.frequency.value = 880;
             osc.type = 'sine';
-            gain.gain.value = 0.15;
+            gain.gain.value = 0.12;
             osc.start();
             gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
             osc.stop(now + 0.2);
         } catch(e) {}
     }
 
+    // Красивая анимация бонуса (монетки)
+    function showBonusAnimation(message) {
+        const oldToast = document.getElementById('bonusToast');
+        if (oldToast) oldToast.remove();
+
+        const toast = document.createElement('div');
+        toast.id = 'bonusToast';
+        toast.innerHTML = `💰 ${message} 💰`;
+        toast.style.cssText = `
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: linear-gradient(135deg, #FFD966, #F39C12);
+            color: #2c2418;
+            padding: 10px 18px;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: bold;
+            white-space: nowrap;
+            z-index: 100200;
+            box-shadow: 0 0 20px rgba(255,215,0,0.6);
+            border: 1px solid #FFF0B5;
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.2s ease;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, -50%) scale(1)';
+        }, 10);
+
+        // падающие монетки
+        for (let i = 0; i < 25; i++) {
+            const coin = document.createElement('div');
+            coin.innerHTML = '💰';
+            coin.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * 100}%;
+                top: 0;
+                font-size: 20px;
+                pointer-events: none;
+                z-index: 100200;
+                animation: fallCoin ${1 + Math.random() * 1.5}s linear forwards;
+            `;
+            document.body.appendChild(coin);
+            setTimeout(() => coin.remove(), 2000);
+        }
+        if (!document.getElementById('coinFallStyle')) {
+            const style = document.createElement('style');
+            style.id = 'coinFallStyle';
+            style.textContent = `
+                @keyframes fallCoin {
+                    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        playCoinSound();
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
     function checkDailyBonus() {
         const today = new Date().toDateString();
         if (lastLoginDate === today) return;
+
         let newStreak = 1;
         if (lastLoginDate) {
             const yesterday = new Date();
@@ -11548,8 +11498,6 @@ else showInstallButton();
             if (lastLoginDate === yesterday.toDateString()) {
                 newStreak = loginStreak + 1;
                 if (newStreak > 7) newStreak = 1;
-            } else {
-                newStreak = 1;
             }
         }
         const bonus = bonuses[newStreak];
@@ -11560,9 +11508,9 @@ else showInstallButton();
         localStorage.setItem('loginStreak', loginStreak);
         updateBalanceUI();
         showBonusAnimation(`+${bonus} монет! День ${loginStreak}/7`);
-        playCoinSound();
     }
 
+    // Обычный тост для покупок
     function showToast(message, isError = false) {
         const toast = document.createElement('div');
         toast.textContent = message;
@@ -11571,181 +11519,152 @@ else showInstallButton();
         setTimeout(() => toast.remove(), 2500);
     }
 
-    // ---------- МАГАЗИН (ВКЛАДКИ: СТИКЕРЫ / СКИНЫ) ----------
-    function openShop() {
+    let purchasedStickers = JSON.parse(localStorage.getItem('purchasedStickers')) || [];
+    function savePurchased() { localStorage.setItem('purchasedStickers', JSON.stringify(purchasedStickers)); }
+
+    // Защита изображений от скачивания
+    function protectImage(img) {
+        img.style.pointerEvents = 'none';
+        img.style.userSelect = 'none';
+        img.setAttribute('draggable', 'false');
+        img.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    // Шеринг стикера
+    async function shareSticker(sticker) {
+        const siteUrl = window.location.origin + window.location.pathname;
+        try {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = sticker.imgUrl;
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            const file = new File([blob], `${sticker.name}.png`, { type: 'image/png' });
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'Мой стикер',
+                    text: '',
+                    url: siteUrl,
+                    files: [file]
+                });
+            } else {
+                await navigator.clipboard.writeText(siteUrl);
+                showToast('🔗 Ссылка скопирована');
+            }
+        } catch (err) {
+            showToast('Не удалось поделиться', true);
+        }
+    }
+
+    // ---------- КРАСИВЫЙ МАГАЗИН СТИКЕРОВ (С МОНЕТКАМИ) ----------
+    function openStickerShop() {
         const shopModal = document.createElement('div');
-        shopModal.id = 'shopModal';
-        shopModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:95%; max-width:600px; max-height:85vh; overflow:auto; z-index:100100; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); color:white;';
-        
-        // Вкладки
-        shopModal.innerHTML = `
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button id="tabStickersBtn" style="flex:1; background:#f39c12; border:none; padding:8px; border-radius:30px;">🖼️ Стикеры</button>
-                <button id="tabSkinsBtn" style="flex:1; background:#2c3e50; border:none; padding:8px; border-radius:30px;">🎨 Скины карточек</button>
-            </div>
-            <div id="shopStickersPanel"></div>
-            <div id="shopSkinsPanel" style="display:none;"></div>
-            <button id="closeShopBtn" style="margin-top:20px; background:#e74c3c; width:100%; padding:8px; border-radius:30px;">Закрыть</button>
+        shopModal.id = 'stickerShopModal';
+        shopModal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #2c3e50, #1e272e);
+            border-radius: 32px;
+            width: 90%;
+            max-width: 550px;
+            max-height: 85vh;
+            overflow: auto;
+            z-index: 100100;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid #f39c12;
         `;
+
+        let nextBonus = (loginStreak === 7) ? bonuses[1] : bonuses[loginStreak + 1];
+        let trailHtml = `
+            <div style="text-align:center; margin-bottom:25px; padding:12px; background:#00000033; border-radius:28px;">
+                <h4 style="margin:0 0 8px 0;">🔥 Прогресс серии</h4>
+                <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 10px;">
+                    ${[1,2,3,4,5,6,7].map(day => `<div style="width:36px; height:36px; border-radius:50%; background:${day <= loginStreak ? '#f39c12' : '#2c3e50'}; display:flex; align-items:center; justify-content:center; font-weight:bold; ${day === loginStreak+1 ? 'border:2px solid #ffdd99;' : 'border:1px solid #7f8c8d;'}">${day}</div>`).join('')}
+                </div>
+                <div>Серия: ${loginStreak} / 7 &nbsp;|&nbsp; 🎁 След.: ${nextBonus}</div>
+            </div>
+        `;
+        
+        let stickersHtml = '<h3 style="text-align:center; margin-bottom:20px;">🛍️ МАГАЗИН СТИКЕРОВ</h3>';
+        stickersHtml += '<div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center;">';
+        stickers.forEach(s => {
+            const owned = purchasedStickers.includes(s.id);
+            stickersHtml += `
+                <div style="background:#1e2a36; border-radius:20px; padding:12px; width:100px; text-align:center; box-shadow:0 4px 8px rgba(0,0,0,0.3);">
+                    <img src="${s.imgUrl}" style="width:64px; height:64px; object-fit:contain; display:block; margin:0 auto;" oncontextmenu="return false;" draggable="false">
+                    <div style="margin-top:8px; font-size:13px;">💰 ${s.price}</div>
+                    ${owned ? '<button disabled style="background:#555; margin-top:6px; padding:4px 8px; border-radius:40px;">✅ Есть</button>' : `<button class="buyStickerBtn" data-id="${s.id}" data-price="${s.price}" style="background:#f39c12; border:none; padding:6px 12px; border-radius:40px; cursor:pointer; font-weight:bold;">Купить</button>`}
+                </div>
+            `;
+        });
+        stickersHtml += '</div>';
+        stickersHtml += `<h3 style="margin:20px 0 10px;">📦 Мои стикеры</h3><div id="myStickersContainer" style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px;"></div>`;
+        stickersHtml += `<button id="closeShopBtn" style="background:#e74c3c; width:100%; padding:10px; border-radius:60px; border:none; color:white; font-weight:bold; cursor:pointer;">Закрыть</button>`;
+        shopModal.innerHTML = trailHtml + stickersHtml;
         document.body.appendChild(shopModal);
 
-        // Переключение вкладок
-        document.getElementById('tabStickersBtn').onclick = () => {
-            document.getElementById('shopStickersPanel').style.display = 'block';
-            document.getElementById('shopSkinsPanel').style.display = 'none';
-            document.getElementById('tabStickersBtn').style.background = '#f39c12';
-            document.getElementById('tabSkinsBtn').style.background = '#2c3e50';
-        };
-        document.getElementById('tabSkinsBtn').onclick = () => {
-            document.getElementById('shopStickersPanel').style.display = 'none';
-            document.getElementById('shopSkinsPanel').style.display = 'block';
-            document.getElementById('tabSkinsBtn').style.background = '#f39c12';
-            document.getElementById('tabStickersBtn').style.background = '#2c3e50';
-            renderSkinsPanel();
-        };
-
-        // Панель стикеров (как раньше, но без дублирования кода)
-        function renderStickersPanel() {
-            let html = '<h3>🖼️ Стикеры</h3><div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-bottom:20px;">';
-            stickers.forEach(s => {
-                const owned = purchasedStickers.includes(s.id);
-                html += `
-                    <div style="background:#2c3e50; border-radius:16px; padding:12px; width:100px; text-align:center;">
-                        <img src="${s.imgUrl}" style="width:64px; height:64px; object-fit:contain;" oncontextmenu="return false;" draggable="false">
-                        <div>💰 ${s.price}</div>
-                        ${owned ? '<button disabled>✅ Есть</button>' : `<button class="buySticker" data-id="${s.id}" data-price="${s.price}">Купить</button>`}
-                    </div>
-                `;
-            });
-            html += '</div><h3>📦 Мои стикеры</h3><div id="myStickersPanel" style="display:flex; flex-wrap:wrap; gap:12px;"></div>';
-            document.getElementById('shopStickersPanel').innerHTML = html;
-            // Привязка покупки стикеров
-            document.querySelectorAll('.buySticker').forEach(btn => {
-                btn.onclick = () => {
-                    const id = parseInt(btn.dataset.id);
-                    const price = parseInt(btn.dataset.price);
-                    if (coins >= price && !purchasedStickers.includes(id)) {
-                        coins -= price;
-                        purchasedStickers.push(id);
-                        saveBalance();
-                        savePurchasedStickers();
-                        updateBalanceUI();
-                        showToast(`🎉 Стикер куплен!`);
-                        renderStickersPanel(); // обновить панель
-                        renderMyStickersPanel();
-                    } else if (purchasedStickers.includes(id)) showToast('Уже есть', true);
-                    else showToast('Не хватает монет', true);
-                };
-            });
-            renderMyStickersPanel();
-        }
-
-        function renderMyStickersPanel() {
-            const container = document.getElementById('myStickersPanel');
+        function renderMyStickers() {
+            const container = shopModal.querySelector('#myStickersContainer');
             if (!container) return;
             if (purchasedStickers.length === 0) {
-                container.innerHTML = '<div style="color:#aaa;">Нет стикеров</div>';
+                container.innerHTML = '<div style="color:#aaa;">У вас пока нет стикеров. Купите первый!</div>';
                 return;
             }
-            let html = '';
-            purchasedStickers.forEach(id => {
-                const st = stickers.find(s => s.id === id);
+            container.innerHTML = '';
+            purchasedStickers.forEach(stickerId => {
+                const st = stickers.find(s => s.id === stickerId);
                 if (st) {
-                    html += `<div style="background:#34495e; border-radius:12px; padding:6px; text-align:center; width:80px;">
-                                <img src="${st.imgUrl}" style="width:48px; height:48px;">
-                                <button class="shareStickerBtn" data-id="${st.id}" style="background:#3498db; border:none; border-radius:20px; padding:2px 6px; font-size:10px;">📤</button>
-                            </div>`;
+                    const div = document.createElement('div');
+                    div.style.cssText = 'background:#2c3e50; border-radius:16px; padding:6px; text-align:center; width:70px; cursor:pointer; transition:0.2s;';
+                    div.innerHTML = `<img src="${st.imgUrl}" style="width:48px; height:48px; object-fit:contain;" draggable="false"><div style="margin-top:4px;"><button class="shareStickerBtn" data-id="${st.id}" style="background:#3498db; border:none; border-radius:30px; padding:3px 8px; font-size:10px;">📤</button></div>`;
+                    div.querySelector('.shareStickerBtn').onclick = (e) => {
+                        e.stopPropagation();
+                        shareSticker(st);
+                    };
+                    container.appendChild(div);
                 }
             });
-            container.innerHTML = html;
-            document.querySelectorAll('.shareStickerBtn').forEach(btn => {
-                btn.onclick = async () => {
-                    const id = parseInt(btn.dataset.id);
-                    const st = stickers.find(s => s.id === id);
-                    if (st) await shareSticker(st);
-                };
-            });
         }
 
-        // Панель скинов
-        function renderSkinsPanel() {
-            let html = '<h3>🎨 Скины для карточек</h3><div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-bottom:20px;">';
-            skins.forEach(skin => {
-                const owned = purchasedSkins.includes(skin.id);
-                const isActive = (activeSkin === skin.id);
-                html += `
-                    <div style="background:#2c3e50; border-radius:16px; padding:12px; width:120px; text-align:center;">
-                        <div style="width:100px; height:60px; background:${skin.bg_front}; color:${skin.text_front}; border-radius:10px; display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:12px;">Пример</div>
-                        <div><strong>${skin.name}</strong></div>
-                        <div>💰 ${skin.price}</div>
-                        ${!owned ? `<button class="buySkinBtn" data-id="${skin.id}" data-price="${skin.price}">Купить</button>` : 
-                                   (isActive ? '<button disabled style="background:#27ae60;">✅ Активен</button>' : `<button class="activateSkinBtn" data-id="${skin.id}">Активировать</button>`)}
-                    </div>
-                `;
-            });
-            html += '</div>';
-            document.getElementById('shopSkinsPanel').innerHTML = html;
-
-            document.querySelectorAll('.buySkinBtn').forEach(btn => {
-                btn.onclick = () => {
-                    const id = parseInt(btn.dataset.id);
-                    const price = parseInt(btn.dataset.price);
-                    if (coins >= price && !purchasedSkins.includes(id)) {
-                        coins -= price;
-                        purchasedSkins.push(id);
-                        saveBalance();
-                        savePurchasedSkins();
-                        updateBalanceUI();
-                        showToast(`Скин "${skins.find(s=>s.id===id).name}" куплен!`);
-                        renderSkinsPanel();
-                    } else if (purchasedSkins.includes(id)) showToast('Уже есть', true);
-                    else showToast('Не хватает монет', true);
-                };
-            });
-            document.querySelectorAll('.activateSkinBtn').forEach(btn => {
-                btn.onclick = () => {
-                    const id = parseInt(btn.dataset.id);
-                    if (purchasedSkins.includes(id)) {
-                        activeSkin = id;
-                        saveActiveSkin();
-                        applySkinToCard();
-                        showToast(`Скин "${skins.find(s=>s.id===id).name}" активирован!`);
-                        renderSkinsPanel();
-                    }
-                };
-            });
-        }
-
-        // Шеринг стикера (оставляем как есть)
-        async function shareSticker(sticker) {
-            const siteUrl = window.location.origin + window.location.pathname;
-            try {
-                const img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.src = sticker.imgUrl;
-                await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                const file = new File([blob], `${sticker.name}.png`, { type: 'image/png' });
-                if (navigator.share) {
-                    await navigator.share({ title: 'Мой стикер', text: '', url: siteUrl, files: [file] });
+        shopModal.querySelectorAll('.buyStickerBtn').forEach(btn => {
+            btn.onclick = () => {
+                const id = parseInt(btn.dataset.id);
+                const price = parseInt(btn.dataset.price);
+                if (coins >= price && !purchasedStickers.includes(id)) {
+                    coins -= price;
+                    purchasedStickers.push(id);
+                    saveBalance();
+                    savePurchased();
+                    updateBalanceUI();
+                    showToast(`🎉 Вы купили стикер!`);
+                    btn.textContent = '✅ Есть';
+                    btn.disabled = true;
+                    btn.style.background = '#555';
+                    renderMyStickers();
+                } else if (purchasedStickers.includes(id)) {
+                    showToast('У вас уже есть этот стикер');
                 } else {
-                    await navigator.clipboard.writeText(siteUrl);
-                    showToast('Ссылка скопирована');
+                    showToast('Недостаточно монет', true);
                 }
-            } catch(e) { showToast('Ошибка', true); }
-        }
-
-        renderStickersPanel();
-        renderSkinsPanel();
+            };
+        });
+        renderMyStickers();
         document.getElementById('closeShopBtn').onclick = () => shopModal.remove();
     }
 
-    // ---------- ВИДЖЕТ БАЛАНСА ----------
+    // ---------- КРАСИВАЯ КНОПКА-МОНЕТКА (ВМЕСТО МЕШКА) ----------
     function updateBalanceUI() {
         const balanceSpan = document.getElementById('coinBalance');
         if (balanceSpan) balanceSpan.innerText = coins;
@@ -11755,29 +11674,30 @@ else showInstallButton();
     widget.id = 'bonusWidget';
     widget.style.cssText = `
         position: fixed;
-        top: 10px;
-        right: 10px;
-        background: #2c3e50;
-        border-radius: 40px;
-        padding: 6px 12px;
+        top: 12px;
+        right: 12px;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(8px);
+        border-radius: 50px;
+        padding: 5px 12px;
         display: flex;
         align-items: center;
         gap: 8px;
         z-index: 10000;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        font-size: 14px;
-        font-weight: bold;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,215,0,0.5);
         cursor: pointer;
+        transition: 0.2s;
     `;
-    widget.innerHTML = `<span>💰 <span id="coinBalance">${coins}</span></span>
-                        <button id="openShopBtn" style="background:#f39c12; border:none; border-radius:30px; padding:2px 8px; cursor:pointer;">🛒</button>`;
+    widget.innerHTML = `
+        <span style="font-size:18px;">💰</span>
+        <span id="coinBalance" style="font-weight:bold; color:#FFD966; font-size:16px;">${coins}</span>
+        <button id="openShopBtn" style="background: linear-gradient(135deg, #f39c12, #e67e22); border:none; border-radius:40px; padding:4px 12px; color:white; font-weight:bold; cursor:pointer; font-size:12px;">🛍️</button>
+    `;
     document.body.appendChild(widget);
-    document.getElementById('openShopBtn').onclick = openShop;
+    document.getElementById('openShopBtn').onclick = openStickerShop;
 
-    // Применяем скин при загрузке
-    setTimeout(applySkinToCard, 100);
-
-    // Инициализация бонусов
+    // Инициализация
     checkDailyBonus();
     updateBalanceUI();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDailyBonus(); });
