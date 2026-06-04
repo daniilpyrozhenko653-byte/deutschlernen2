@@ -11363,7 +11363,7 @@ else showInstallButton();
 
 
 
-    // ========== СИСТЕМА БОНУСОВ + МАГАЗИН СТИКЕРОВ (ТОЛЬКО ВАШИ PNG) ==========
+    // ========== СИСТЕМА БОНУСОВ + МАГАЗИН СТИКЕРОВ (С КРАСИВОЙ АНИМАЦИЕЙ) ==========
 (function() {
     if (document.getElementById('bonusWidget')) return;
 
@@ -11376,11 +11376,9 @@ else showInstallButton();
         { id: 5, name: 'Faf', imgUrl: 'Faf.png', price: 1000 },
         { id: 6, name: 'yoyo', imgUrl: 'yoyo.png', price: 1000 },
         { id: 7, name: 'brat', imgUrl: 'brat.png', price: 1000 },
-        // Два новых стикера (цены по умолчанию 50, измените если нужно)
         { id: 8, name: 'dog1', imgUrl: 'dog1.png', price: 1000 },
         { id: 9, name: 'tuzik', imgUrl: 'tuzik.png', price: 1000 },
-        { id: 10, name: 'kemo', imgUrl: 'kemo.png', price: 1000 },
-    
+        { id: 10, name: 'kemo', imgUrl: 'kemo.png', price: 1000 }
     ];
 
     // ---------- 2. БАЛАНС И БОНУСЫ (ПРОГРЕССИРУЮЩАЯ ТРОПА) ----------
@@ -11391,12 +11389,85 @@ else showInstallButton();
 
     function saveBalance() { localStorage.setItem('userCoins', coins); }
 
-    function showToast(message, isError = false) {
+    // ---------- НОВАЯ КРАСИВАЯ АНИМАЦИЯ БОНУСА ----------
+    function showBonusAnimation(message) {
+        // Удаляем старый тост, если есть
+        const oldToast = document.getElementById('bonusToast');
+        if (oldToast) oldToast.remove();
+
         const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:${isError ? '#e74c3c' : '#27ae60'}; color:white; padding:8px 16px; border-radius:30px; z-index:100090; font-size:14px;`;
+        toast.id = 'bonusToast';
+        toast.innerHTML = `💰 ${message} 💰`;
+        toast.style.cssText = `
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 16px 28px;
+            border-radius: 60px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 100200;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            font-family: 'Segoe UI', system-ui;
+            letter-spacing: 1px;
+            border: 2px solid #ffdd99;
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        `;
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2500);
+
+        // Анимация появления
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, -50%) scale(1)';
+        }, 10);
+
+        // Удаляем через 4 секунды с анимацией исчезновения
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }, 4000);
+    }
+
+    // Эффект конфетти (падающие цветные кружочки)
+    function showConfetti() {
+        for (let i = 0; i < 60; i++) {
+            const conf = document.createElement('div');
+            conf.style.cssText = `
+                position: fixed;
+                left: ${Math.random() * 100}%;
+                top: 0;
+                width: 8px;
+                height: 8px;
+                background: hsl(${Math.random() * 360}, 80%, 60%);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 100200;
+                animation: dropConfetti ${1 + Math.random() * 2}s linear forwards;
+            `;
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 2000);
+        }
+        // Добавляем стили, если ещё нет
+        if (!document.getElementById('confettiStyle')) {
+            const style = document.createElement('style');
+            style.id = 'confettiStyle';
+            style.textContent = `
+                @keyframes dropConfetti {
+                    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 
     function checkDailyBonus() {
@@ -11418,14 +11489,25 @@ else showInstallButton();
         localStorage.setItem('lastLoginDate', today);
         localStorage.setItem('loginStreak', loginStreak);
         updateBalanceUI();
-        showToast(`🎁 Бонус дня ${loginStreak}/7: +${bonus} монет!`);
+
+        // Показываем красивый бонус с анимацией и конфетти
+        showBonusAnimation(`Бонус дня ${loginStreak}/7: +${bonus} монет!`);
+        showConfetti();
+    }
+
+    // Обычный тост для ошибок и покупок (без анимации)
+    function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:${isError ? '#e74c3c' : '#27ae60'}; color:white; padding:8px 16px; border-radius:30px; z-index:100090; font-size:14px;`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
     }
 
     let purchasedStickers = JSON.parse(localStorage.getItem('purchasedStickers')) || [];
-
     function savePurchased() { localStorage.setItem('purchasedStickers', JSON.stringify(purchasedStickers)); }
 
-    // ---------- 3. ЗАЩИТА ИЗОБРАЖЕНИЙ ОТ СКАЧИВАНИЯ ----------
+    // ---------- 3. ЗАЩИТА ИЗОБРАЖЕНИЙ ----------
     function protectImage(imgElement) {
         imgElement.style.pointerEvents = 'none';
         imgElement.style.userSelect = 'none';
@@ -11433,7 +11515,7 @@ else showInstallButton();
         imgElement.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
-    // ---------- 4. ШЕРИНГ СТИКЕРА (ссылка + картинка) ----------
+    // ---------- 4. ШЕРИНГ СТИКЕРА ----------
     async function shareSticker(sticker) {
         const siteUrl = window.location.origin + window.location.pathname;
         try {
@@ -11474,8 +11556,6 @@ else showInstallButton();
         shopModal.id = 'stickerShopModal';
         shopModal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1e272e; border-radius:20px; width:90%; max-width:550px; max-height:85vh; overflow:auto; z-index:100100; padding:20px; box-shadow:0 0 0 1000px rgba(0,0,0,0.8); color:white;';
         
-        // Тропа прогресса (серия) внутри магазина
-        // Вычисляем следующий бонус правильно: если серия 7, следующий = 10 (начало нового цикла)
         let nextBonus = (loginStreak === 7) ? bonuses[1] : bonuses[loginStreak + 1];
         let trailHtml = `
             <div style="text-align:center; margin-bottom:20px; padding:10px; background:#2c3e50; border-radius:20px;">
